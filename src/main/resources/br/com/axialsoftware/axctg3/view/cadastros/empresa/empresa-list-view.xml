@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
+      title="msg://empresaListView.title"
+      focusComponent="empresasDataGrid">
+    <data>
+        <collection id="empresasDc"
+                    class="br.com.axialsoftware.axctg3.entity.cadastros.Empresa">
+            <fetchPlan extends="_base"/>
+            <loader id="empresasDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from Empresa e order by e.codigo]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <genericFilter component="genericFilter"/>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <genericFilter id="genericFilter" opened="false" visible="false"
+                       dataLoader="empresasDl">
+            <properties include=".*"/>
+        </genericFilter>
+        <hbox id="buttonsPanel" classNames="buttons-panel">
+            <button id="createBtn" action="empresasDataGrid.create" themeNames="small"/>
+            <button id="editBtn" action="empresasDataGrid.edit" themeNames="small"/>
+            <button id="removeBtn" action="empresasDataGrid.remove" themeNames="small"/>
+            <simplePagination id="pagination" dataLoader="empresasDl"/>
+        </hbox>
+        <dataGrid id="empresasDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="empresasDc" themeNames="compact"
+                  columnReorderingAllowed="true">
+            <actions>
+                <action id="create" type="list_create"/>
+                <action id="edit" type="list_edit"/>
+                <action id="remove" type="list_remove"/>
+            </actions>
+            <columns resizable="true">
+                <column property="codigo" width="10%" filterable="true"/>
+                <column property="nome" width="55%" filterable="true"/>
+                <column property="apelido" width="20%" filterable="true"/>
+                <column property="selecionada" width="15%" textAlign="CENTER"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectBtn" action="selectAction" themeNames="small"/>
+            <button id="discardBtn" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

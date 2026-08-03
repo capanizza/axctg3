@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/020-user-empresa-periodo.xml">
+
+    <changeSet id="1" author="axctg3" context="!cuba">
+
+        <addColumn tableName="USER_">
+            <column name="COD_EMPRESA" type="int"/>
+            <column name="ANO_CONTABIL" type="int"/>
+            <column name="MES_CONTABIL" type="int"/>
+            <column name="ANO_FISCAL" type="int"/>
+            <column name="MES_FISCAL" type="int"/>
+        </addColumn>
+
+    </changeSet>
+
+    <changeSet id="2" author="axctg3" context="!cuba">
+
+        <sql>
+            ALTER TABLE USER_ ADD CONSTRAINT CHK_USER__MES_CONTABIL
+            CHECK (MES_CONTABIL IS NULL OR MES_CONTABIL BETWEEN 1 AND 12)
+        </sql>
+        <sql>
+            ALTER TABLE USER_ ADD CONSTRAINT CHK_USER__MES_FISCAL
+            CHECK (MES_FISCAL IS NULL OR MES_FISCAL BETWEEN 1 AND 12)
+        </sql>
+
+        <rollback>
+            <sql>ALTER TABLE USER_ DROP CONSTRAINT CHK_USER__MES_CONTABIL</sql>
+            <sql>ALTER TABLE USER_ DROP CONSTRAINT CHK_USER__MES_FISCAL</sql>
+        </rollback>
+
+    </changeSet>
+
+</databaseChangeLog>

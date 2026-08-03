@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
+      title="msg://centroCustoListView.title"
+      focusComponent="centroCustoesDataGrid">
+    <data>
+        <collection id="centroCustoesDc"
+                    class="br.com.axialsoftware.axctg3.entity.cadastros.CentroCusto">
+            <fetchPlan extends="_base"/>
+            <loader id="centroCustoesDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from CentroCusto e
+                    where e.codEmpresa = :codEmpresa
+                    order by e.codigo]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <startSlot>
+                <button id="createButton" action="centroCustoesDataGrid.createAction" themeNames="small"/>
+                <button id="editButton" action="centroCustoesDataGrid.editAction" themeNames="small"/>
+                <button id="removeButton" action="centroCustoesDataGrid.removeAction" themeNames="small"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="centroCustoesDl"/>
+            </endSlot>
+        </hbox>
+        <sidePanelLayout id="sidePanelLayout"
+                         width="100%"
+                         height="100%"
+                         sidePanelHorizontalSize="25em">
+            <dataGrid id="centroCustoesDataGrid"
+                      width="100%"
+                      minHeight="20em"
+                      dataContainer="centroCustoesDc"
+                      columnReorderingAllowed="true" themeNames="compact">
+                <actions>
+                    <action id="createAction" type="list_create"/>
+                    <action id="editAction" type="list_edit"/>
+                    <action id="removeAction" type="list_remove"/>
+                </actions>
+                <columns resizable="true">
+                    <column property="codigo" width="10%"/>
+                    <column property="nome" width="90%"/>
+                </columns>
+            </dataGrid>
+            <vbox>
+                <hbox width="100%" justifyContent="BETWEEN" alignItems="CENTER">
+                    <h4 id="header" text="msg://centroCustoListView.sidePanel.title"/>
+                    <button id="closeButton" icon="lumo:cross" themeNames="tertiary icon contrast"/>
+                </hbox>
+                <vbox>
+                    <textField id="codigoField" width="50%"
+                               label="msg://br.com.axialsoftware.axctg3.entity.cadastros/CentroCusto.codigo"/>
+                    <textField id="nomeField" width="100%"
+                               label="msg://br.com.axialsoftware.axctg3.entity.cadastros/CentroCusto.nome"/>
+                    <hbox id="detailActions">
+                        <button id="saveAndCloseBtn" text="msg://br.com.axialsoftware.axctg3/actions.ok" themeNames="primary, small" icon="CHECK"/>
+                        <button id="closeBtn" text="msg://br.com.axialsoftware.axctg3/actions.cancelar" themeNames="small" icon="CANCEL"/>
+                    </hbox>
+                </vbox>
+            </vbox>
+        </sidePanelLayout>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction" themeNames="small"/>
+            <button id="discardButton" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

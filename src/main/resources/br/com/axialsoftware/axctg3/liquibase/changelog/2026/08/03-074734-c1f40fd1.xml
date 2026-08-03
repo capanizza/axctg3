@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/03-074734-c1f40fd1.xml">
+    <changeSet id="1" author="axctg3">
+        <createTable tableName="CONTA_CONTABIL">
+            <column name="ID" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_CONTA_CONTABIL"/>
+            </column>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="${offsetDateTime.type}"/>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="LAST_MODIFIED_BY" type="VARCHAR(255)"/>
+            <column name="LAST_MODIFIED_DATE" type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY" type="VARCHAR(255)"/>
+            <column name="DELETED_DATE" type="${offsetDateTime.type}"/>
+            <column name="CODIGO" type="VARCHAR(25)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ANO" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="COD_EMPRESA" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="NOME" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="GRAU" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ANALITICA" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="COD_NAT" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="COD_CONTA_ENC" type="VARCHAR(25)"/>
+            <column name="COD_CONTA_REF" type="VARCHAR(25)"/>
+            <column name="COD_CONTA_SUP" type="VARCHAR(25)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="SALDO_TRANSF" type="DECIMAL(19, 2)"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="2" author="axctg3">
+        <createTable tableName="SALDO_CONTA">
+            <column name="ID" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_SALDO_CONTA"/>
+            </column>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="${offsetDateTime.type}"/>
+            <column name="LAST_MODIFIED_BY" type="VARCHAR(255)"/>
+            <column name="LAST_MODIFIED_DATE" type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY" type="VARCHAR(255)"/>
+            <column name="DELETED_DATE" type="${offsetDateTime.type}"/>
+            <column name="CONTA_CONTABIL_ID" type="UUID"/>
+            <column name="MES" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="SALDO_ANTERIOR" type="DECIMAL(19, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DEBITO_MES" type="DECIMAL(19, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREDITO_MES" type="DECIMAL(19, 2)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="3" author="axctg3" dbms="postgresql">
+        <createIndex indexName="IDX_CONTA_CONTABIL_UNQ" tableName="CONTA_CONTABIL" unique="true">
+            <column name="CODIGO"/>
+            <column name="COD_EMPRESA"/>
+            <column name="ANO"/>
+        </createIndex>
+
+        <modifySql>
+            <append value="where DELETED_DATE is null"/>
+        </modifySql>
+    </changeSet>
+    <changeSet id="4" author="axctg3">
+        <createIndex indexName="IDX_SALDO_CONTA_CONTA_CONTABIL" tableName="SALDO_CONTA">
+            <column name="CONTA_CONTABIL_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="CONTA_CONTABIL_ID" baseTableName="SALDO_CONTA"
+                                 constraintName="FK_SALDO_CONTA_ON_CONTA_CONTABIL" referencedColumnNames="ID"
+                                 referencedTableName="CONTA_CONTABIL"/>
+    </changeSet>
+</databaseChangeLog>

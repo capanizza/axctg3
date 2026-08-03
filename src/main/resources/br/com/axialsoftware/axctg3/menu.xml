@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<menu-config xmlns="http://jmix.io/schema/flowui/menu">
+
+    <menu id="application" title="msg://br.com.axialsoftware.axctg3/menu.application.title" opened="true">
+        <item view="SelecionarEmpresa.list"
+              title="msg://br.com.axialsoftware.axctg3.view.cadastros.empresa/selecionarEmpresaListView.title"/>
+    </menu>
+
+    <menu id="contabil" title="msg://br.com.axialsoftware.axctg3/menu.contabil.title">
+        <menu id="cadastrosContabeis" title="msg://br.com.axialsoftware.axctg3/menu.cadastrosContabeis.title">
+            <item view="CentroCusto.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.cadastros.centrocusto/centroCustoListView.title"/>
+            <item view="HistoricoContabil.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.contabil.historicocontabil/historicoContabilListView.title"/>
+        </menu>
+    </menu>
+
+    <menu id="administracao" title="msg://br.com.axialsoftware.axctg3/menu.administracao.title">
+        <item view="User.list" title="msg://br.com.axialsoftware.axctg3.view.user/UserListView.title"/>
+        <item view="Empresa.list"
+              title="msg://br.com.axialsoftware.axctg3.view.cadastros.empresa/empresaListView.title"/>
+    </menu>
+
+    <menu id="tabelas" title="msg://br.com.axialsoftware.axctg3/menu.tabelas.title">
+        <item view="Municipio.list"
+              title="msg://br.com.axialsoftware.axctg3.view.tabelas.municipio/municipioListView.title"/>
+        <item view="TipoLogradouro.list"
+              title="msg://br.com.axialsoftware.axctg3.view.tabelas.tipologradouro/tipoLogradouroListView.title"/>
+    </menu>
+
+</menu-config>

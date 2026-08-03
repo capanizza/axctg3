@@ -1,0 +1,60 @@
+# CLAUDE.md
+
+Definições para o Claude Code.
+
+## Projeto
+
+- Projeto principal: `c:/projetos/jmix/axctg3`.
+- Em algumas situações será preciso copiar arquivos dos projetos `axctg-flow` ou `axctg3-salvo` (cujas pastas ficam "ao lado" da pasta `axctg3`) para o `axctg3` (este projeto).
+
+## Estrutura de pastas
+
+Pastas em `src/main/java/br/com/axialsoftware/axctg3`:
+
+- `entity`
+- `security`
+- `view`
+- `service`
+- `bean`
+- `listener`
+
+Dentro de `entity`, adicionar a pasta `enums`.
+
+Pastas para separação em módulos:
+
+- `tabelas`
+- `cadastros`
+- `contabil`
+- `financeiro`
+- `fiscal`
+- `almoxarifado`
+- `compras`
+
+## Cópia de arquivos
+
+- **Entidades:** copiar mantendo a subpasta de origem.
+- **Listeners:** usar a pasta `listener`; **services:** a pasta `service`; e assim por diante.
+- **Views:** no projeto de origem as views não estão separadas em subpastas. Nesse caso, copiar para a subpasta da view correspondente à da entidade.
+- Se a pasta de destino não existir, criar.
+- As entidades no axctg3 devem ter o suporte a soft delete, o que não acontecia no axctg-flow. Se não houver os campos deletedBy e deletedDate, incluir no arquivo destino.
+
+## Entidades
+
+Na criação ou cópia de entidades de um projeto anterior, definir valores padrão:
+
+- `0` para inteiros, longs e BigDecimals;
+- `false` para booleanos.
+
+## i18n
+
+Atenção à manutenção das mensagens i18n nos arquivos `messages_en.properties` e `messages_pt_BR.properties`.
+
+## Changelogs
+
+Respeitar o padrão usado pelo Jmix:
+
+- Criar subpastas por ano a partir da pasta `changelog`.
+- Dentro do ano, subpastas por mês (numéricas, com 2 dígitos).
+- Criar o arquivo XML do changelog na pasta do mês, no formato `dd-hhMMsscccccccc-descrição`.
+  - `cccccccc` é um código alfanumérico (aparentemente aleatório e sempre o mesmo para aquele usuário), usado para evitar conflitos quando há vários desenvolvedores gerando changelogs.
+  - Na descrição, colocar o nome da entidade e o que o changelog faz — por exemplo, `empresa-criar`.

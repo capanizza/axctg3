@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/02-231248-c1f40fd1-empresa-criar.xml">
+    <changeSet id="1" author="axctg3">
+        <createTable tableName="EMPRESA">
+            <column name="ID" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_EMPRESA"/>
+            </column>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="${offsetDateTime.type}"/>
+            <column name="LAST_MODIFIED_BY" type="VARCHAR(255)"/>
+            <column name="LAST_MODIFIED_DATE" type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY" type="VARCHAR(255)"/>
+            <column name="DELETED_DATE" type="${offsetDateTime.type}"/>
+            <column name="CODIGO" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="NOME" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="APELIDO" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TIPO_LOGRADOURO_ID" type="UUID"/>
+            <column name="LOGRADOURO" type="VARCHAR(50)"/>
+            <column name="NUMERO" type="VARCHAR(10)"/>
+            <column name="COMPLEMENTO" type="VARCHAR(20)"/>
+            <column name="BAIRRO" type="VARCHAR(20)"/>
+            <column name="MUNICIPIO_ID" type="UUID"/>
+            <column name="CEP" type="VARCHAR(8)"/>
+            <column name="CNPJ" type="VARCHAR(14)"/>
+            <column name="INSC_EST" type="VARCHAR(20)"/>
+            <column name="INSC_MUN" type="VARCHAR(20)"/>
+            <column name="NIRE" type="VARCHAR(11)"/>
+            <column name="IND_SIT_ESP" type="INT"/>
+            <column name="IND_SIT_INI_PER" type="INT"/>
+            <column name="IND_NIRE" type="INT"/>
+            <column name="IND_FIN_ESC" type="INT"/>
+            <column name="IND_GRANDE_PORTE" type="INT"/>
+            <column name="TIP_ECD" type="INT"/>
+            <column name="COD_SCP" type="BIGINT"/>
+            <column name="IDENT_MF" type="BOOLEAN"/>
+            <column name="IND_ESC_CONS" type="BOOLEAN"/>
+            <column name="IND_CENTRALIZADA" type="INT"/>
+            <column name="IND_MUDANCA_PC" type="INT"/>
+            <column name="COD_PLAN_REF" type="INT"/>
+            <column name="NM_RESPONSAVEL" type="VARCHAR(50)"/>
+            <column name="CPF_RESPONSAVEL" type="VARCHAR(11)"/>
+            <column name="COD_ASSIN_RESPONSAVEL" type="INT"/>
+            <column name="EMAIL_RESPONSAVEL" type="VARCHAR(60)"/>
+            <column name="FONE_RESPONSAVEL" type="VARCHAR(14)"/>
+            <column name="IND_RESP_LEGAL" type="BOOLEAN"/>
+            <column name="NM_CONTABILISTA" type="VARCHAR(50)"/>
+            <column name="CPF_CONTABILISTA" type="VARCHAR(11)"/>
+            <column name="COD_ASSIN_CONTABILISTA" type="INT"/>
+            <column name="EMAIL_CONTABILISTA" type="VARCHAR(60)"/>
+            <column name="FONE_CONTABILISTA" type="VARCHAR(14)"/>
+            <column name="INSC_CRC" type="VARCHAR(20)"/>
+            <column name="NUM_SEQ_CRC" type="VARCHAR(20)"/>
+            <column name="DT_CRC" type="DATE"/>
+            <column name="UF_CRC" type="VARCHAR(2)"/>
+            <column name="MASC_CONTABIL" type="VARCHAR(25)"/>
+            <column name="SELECIONADA" type="BOOLEAN"/>
+            <column name="LOGO" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="2" author="axctg3">
+        <addForeignKeyConstraint baseColumnNames="MUNICIPIO_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_MUNICIPIO" referencedColumnNames="ID"
+                                 referencedTableName="MUNICIPIO"/>
+    </changeSet>
+    <changeSet id="3" author="axctg3">
+        <addForeignKeyConstraint baseColumnNames="TIPO_LOGRADOURO_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_TIPO_LOGRADOURO" referencedColumnNames="ID"
+                                 referencedTableName="TIPO_LOGRADOURO"/>
+    </changeSet>
+</databaseChangeLog>

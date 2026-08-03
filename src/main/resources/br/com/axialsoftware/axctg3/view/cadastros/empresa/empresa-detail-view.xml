@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://empresaDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="empresaDc"
+                  class="br.com.axialsoftware.axctg3.entity.cadastros.Empresa">
+            <fetchPlan extends="_base">
+                <property name="tipoLogradouro" fetchPlan="_base"/>
+                <property name="municipio" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="empresaDl"/>
+        </instance>
+        <collection id="tipoLogradourosDc"
+                    class="br.com.axialsoftware.axctg3.entity.tabelas.TipoLogradouro"
+                    fetchPlan="_base">
+            <loader id="tipoLogradourosDl">
+                <query>
+                    <![CDATA[select e from TipoLogradouro e
+                    order by e.codigo]]>
+                </query>
+            </loader>
+        </collection>
+        <collection id="municipiosDc"
+                    class="br.com.axialsoftware.axctg3.entity.tabelas.Municipio"
+                    fetchPlan="_base">
+            <loader id="municipiosDl">
+                <query>
+                    <![CDATA[select e from Municipio e
+                    order by e.codigo]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <!--formLayout id="form" dataContainer="empresaDc">
+            <responsiveSteps>
+                <responsiveStep minWidth="0" columns="1"/>
+                <responsiveStep minWidth="40em" columns="2"/>
+            </responsiveSteps>
+            <textField id="codigoField" property="codigo"/>
+            <textField id="nomeField" property="nome"/>
+            <textField id="apelidoField" property="apelido"/>
+            <textField id="logradouroField" property="logradouro"/>
+            <textField id="numeroField" property="numero"/>
+            <textField id="complementoField" property="complemento"/>
+            <textField id="bairroField" property="bairro"/>
+            <textField id="cepField" property="cep"/>
+            <textField id="cnpjField" property="cnpj"/>
+            <textField id="inscEstField" property="inscEst"/>
+            <textField id="inscMunField" property="inscMun"/>
+            <textField id="nireField" property="nire"/>
+            <select id="indSitEspField" property="indSitEsp"/>
+            <select id="indSitIniPerField" property="indSitIniPer"/>
+            <select id="indNireField" property="indNire"/>
+            <select id="indFinEscField" property="indFinEsc"/>
+            <select id="indGrandePorteField" property="indGrandePorte"/>
+            <select id="tipEcdField" property="tipEcd"/>
+            <textField id="codScpField" property="codScp"/>
+            <checkbox id="identMfField" property="identMf"/>
+            <checkbox id="indEscConsField" property="indEscCons"/>
+            <select id="indCentralizadaField" property="indCentralizada"/>
+            <select id="indMudancaPcField" property="indMudancaPc"/>
+            <select id="codPlanRefField" property="codPlanRef"/>
+            <textField id="nmResponsavelField" property="nmResponsavel"/>
+            <textField id="cpfResponsavelField" property="cpfResponsavel"/>
+            <select id="codAssinResponsavelField" property="codAssinResponsavel"/>
+            <textField id="emailResponsavelField" property="emailResponsavel"/>
+            <textField id="foneResponsavelField" property="foneResponsavel"/>
+            <checkbox id="indRespLegalField" property="indRespLegal"/>
+            <textField id="nmContabilistaField" property="nmContabilista"/>
+            <textField id="cpfContabilistaField" property="cpfContabilista"/>
+            <select id="codAssinContabilistaField" property="codAssinContabilista"/>
+            <textField id="emailContabilistaField" property="emailContabilista"/>
+            <textField id="foneContabilistaField" property="foneContabilista"/>
+            <textField id="inscCrcField" property="inscCrc"/>
+            <textField id="numSeqCrcField" property="numSeqCrc"/>
+            <datePicker id="dtCrcField" property="dtCrc"/>
+            <textField id="ufCrcField" property="ufCrc"/>
+            <textField id="mascContabilField" property="mascContabil"/>
+        </formLayout-->
+        <vbox id="form" width="100%" spacing="true">
+            <hbox width="100%" expand="nomeField">
+                <integerField id="codigoField"
+                              property="codigo"
+                              dataContainer="empresaDc"
+                              width="10%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.codigo"/>
+                <textField id="apelidoField"
+                           property="apelido"
+                           dataContainer="empresaDc"
+                           width="10%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.apelido"/>
+                <textField id="nomeField"
+                           property="nome"
+                           dataContainer="empresaDc" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.nome"/>
+                <textField id="cnpjField"
+                           property="cnpj"
+                           dataContainer="empresaDc"
+                           width="15%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.cnpj"/>
+            </hbox>
+            <vbox id="verticalBox" width="100%">
+                <tabSheet width="100%" themeNames="small, bordered">
+                    <tab id="enderecoTab" label="Endereço">
+                        <vbox>
+                            <hbox width="100%" expand="logradouroField">
+                                <entityComboBox id="tipoLogradouroField"
+                                                property="tipoLogradouro"
+                                                dataContainer="empresaDc"
+                                                itemsContainer="tipoLogradourosDc"
+                                                width="25%"  themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.tipoLogradouro"/>
+                                <textField id="logradouroField"
+                                           property="logradouro"
+                                           dataContainer="empresaDc" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.logradouro"/>
+                                <textField id="numeroField"
+                                           property="numero"
+                                           dataContainer="empresaDc"
+                                           width="10%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.numero"/>
+                            </hbox>
+                            <hbox width="100%" expand="municipioField">
+                                <textField id="complementoField"
+                                           property="complemento"
+                                           dataContainer="empresaDc"
+                                           width="25%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.complemento"/>
+                                <textField id="bairroField"
+                                           property="bairro"
+                                           dataContainer="empresaDc"
+                                           width="25%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.bairro"/>
+                                <entityComboBox id="municipioField"
+                                                property="municipio"
+                                                dataContainer="empresaDc" themeNames="small"
+                                                itemsContainer="municipiosDc"
+                                                label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.municipio"/>
+                                <textField id="cepField"
+                                           property="cep"
+                                           dataContainer="empresaDc"
+                                           width="10%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.cep"/>
+                            </hbox>
+                            <hbox width="100%">
+                                <textField id="logoField"
+                                           property="logo"
+                                           dataContainer="empresaDc"
+                                           width="40%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.logo"/>
+                            </hbox>
+                        </vbox>
+                    </tab>
+                    <tab id="dadosContabeisTab" label="Dados contábeis">
+                        <vbox>
+                            <hbox width="100%" expand="indSitIniPerField">
+                                <textField id="mascContabilField"
+                                           property="mascContabil"
+                                           dataContainer="empresaDc"
+                                           width="15%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.mascContabil"/>
+                                <textField id="inscEstField"
+                                           property="inscEst"
+                                           dataContainer="empresaDc"
+                                           width="15%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.inscEst"/>
+                                <textField id="inscMunField"
+                                           property="inscMun"
+                                           dataContainer="empresaDc"
+                                           width="15%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.inscMun"/>
+                                <textField id="nireField"
+                                           property="nire"
+                                           dataContainer="empresaDc"
+                                           width="15%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.nire"/>
+                                <select id="indSitEspField"
+                                        property="indSitEsp"
+                                        dataContainer="empresaDc"
+                                        width="15%" themeNames="small"
+                                        label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.indSitEsp"/>
+                                <select id="indSitIniPerField"
+                                        property="indSitIniPer"
+                                        dataContainer="empresaDc" themeNames="small"
+                                        label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.indSitIniPer"/>
+                            </hbox>
+                            <hbox width="100%">
+                                <select id="indFinEscField"
+                                        property="indFinEsc"
+                                        dataContainer="empresaDc"
+                                        width="20%" themeNames="small"
+                                        label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.indFinEsc"/>
+                                <select id="indGrandePorteField"
+                                        property="indGrandePorte"
+                                        width="30%" themeNames="small"
+                                        dataContainer="empresaDc"
+                                        label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.indGrandePorte"/>
+                                <select id="tipEcdField"
+                                        property="tipEcd"
+                                        dataContainer="empresaDc"
+                                        width="30%" themeNames="small"
+                                        label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.tipEcd"/>
+                                <textField id="codScpField"
+                                           property="codScp"
+                                           dataContainer="empresaDc"
+                                           width="20%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.codScp"/>
+                            </hbox>
+                            <hbox width="100%">
+                                <checkbox id="identMfField"
+                                          property="identMf"
+                                          dataContainer="empresaDc"
+                                          width="10%"
+                                          alignSelf="END"
+                                          label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.identMf"/>
+                                <checkbox id="indEscConsField"
+                                          property="indEscCons"
+                                          dataContainer="empresaDc"
+                                          width="15%"
+                                          alignSelf="END"
+                                          label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.indEscCons"/>
+                                <select id="indCentralizadaField"
+                                        property="indCentralizada"
+                                        dataContainer="empresaDc"
+                                        width="25%" themeNames="small"
+                                        label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.indCentralizada"/>
+                                <select id="indMudancaPcField"
+                                        property="indMudancaPc"
+                                        dataContainer="empresaDc"
+                                        width="20%"
+                                        label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.indMudancaPc"/>
+                                <select id="codPlanRefField"
+                                        property="codPlanRef"
+                                        dataContainer="empresaDc"
+                                        width="25%" themeNames="small"
+                                        label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.codPlanRef"/>
+                            </hbox>
+                        </vbox>
+                    </tab>
+                    <tab id="dadosResponsaveisTab" label="Dados dos responsáveis">
+                        <vbox>
+                            <hbox width="100%">
+                                <textField id="nmResponsavelField"
+                                           property="nmResponsavel"
+                                           dataContainer="empresaDc"
+                                           width="50%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.nmResponsavel"/>
+                                <textField id="cpfResponsavelField"
+                                           property="cpfResponsavel"
+                                           dataContainer="empresaDc"
+                                           width="20%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.cpfResponsavel"/>
+                                <select id="codAssinResponsavelField"
+                                        property="codAssinResponsavel"
+                                        dataContainer="empresaDc"
+                                        width="30%" themeNames="small"
+                                        label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.codAssinResponsavel"/>
+                            </hbox>
+                            <hbox width="100%">
+                                <textField id="emailResponsavelField"
+                                           property="emailResponsavel"
+                                           dataContainer="empresaDc"
+                                           width="50%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.emailResponsavel"/>
+                                <textField id="foneResponsavelField"
+                                           property="foneResponsavel"
+                                           dataContainer="empresaDc"
+                                           width="20%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.foneResponsavel"/>
+                                <checkbox id="indRespLegal"
+                                          property="indRespLegal"
+                                          dataContainer="empresaDc"
+                                          width="30%"
+                                          alignSelf="END"
+                                          label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.indRespLegal"/>
+                            </hbox>
+                            <hbox width="100%">
+                                <textField id="nmContabilistaField"
+                                           property="nmContabilista"
+                                           dataContainer="empresaDc"
+                                           width="50%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.nmContabilista"/>
+                                <textField id="cpfContabilistaField"
+                                           property="cpfContabilista"
+                                           dataContainer="empresaDc"
+                                           width="20%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.cpfContabilista"/>
+                                <select id="codAssinContabilistaField"
+                                        property="codAssinContabilista"
+                                        dataContainer="empresaDc"
+                                        width="30%" themeNames="small"
+                                        label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.codAssinContabilista"/>
+                            </hbox>
+                            <hbox width="100%">
+                                <textField id="emailContabilistaField"
+                                           property="emailContabilista"
+                                           dataContainer="empresaDc"
+                                           width="50%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.emailContabilista"/>
+                                <textField id="foneContabilistaField"
+                                           property="foneContabilista"
+                                           dataContainer="empresaDc"
+                                           width="20%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.foneContabilista"/>
+                                <textField id="inscCrcField"
+                                           property="inscCrc"
+                                           dataContainer="empresaDc"
+                                           width="30%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.inscCrc"/>
+                            </hbox>
+                            <hbox width="60%">
+                                <textField id="numSeqCrcField"
+                                           property="numSeqCrc"
+                                           dataContainer="empresaDc"
+                                           width="33%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.numSeqCrc"/>
+                                <datePicker id="dtCrcField"
+                                            property="dtCrc"
+                                            dataContainer="empresaDc"
+                                            width="34%"  themeNames="small"
+                                            label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.dtCrc"/>
+                                <textField id="ufCrcField"
+                                           property="ufCrc"
+                                           dataContainer="empresaDc"
+                                           width="33%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.ufCrc"/>
+                            </hbox>
+                        </vbox>
+                    </tab>
+                    <!--tab id="configuracaoFiscalTab" label="Configuração fiscal">
+                        <vbox width="100%">
+                            <hbox width="100%">
+                                <entityComboBox id="contaIpiSaidaField"
+                                                property="contaIpiSaida"
+                                                dataContainer="empresaDc"
+                                                itemsContainer="contaContabilsDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.contaIpiSaida"/>
+                                <entityComboBox id="contaGnreSaidaField"
+                                                property="contaGnreSaida"
+                                                dataContainer="empresaDc"
+                                                itemsContainer="contaContabilsDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.contaGnreSaida"/>
+                                <entityComboBox id="contaSubstituicaoSaidaField"
+                                                property="contaSubstituicaoSaida"
+                                                dataContainer="empresaDc"
+                                                itemsContainer="contaContabilsDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.contaSubstituicaoSaida"/>
+                                <entityComboBox id="contaRevendaField"
+                                                property="contaRevenda"
+                                                dataContainer="empresaDc"
+                                                itemsContainer="contaContabilsDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.contaRevenda"/>
+                            </hbox>
+                            <hbox width="100%">
+                                <entityComboBox id="historicoIPIField"
+                                                property="historicoIpi"
+                                                dataContainer="empresaDc"
+                                                itemsContainer="historicoContabilsDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.historicoIpi"/>
+                                <entityComboBox id="historicoGnreSaidaField"
+                                                property="historicoGnreSaida"
+                                                dataContainer="empresaDc"
+                                                itemsContainer="historicoContabilsDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.historicoGnreSaida"/>
+                                <entityComboBox id="historicoSubstituicaoSaidaField"
+                                                property="historicoSubstituicaoSaida"
+                                                dataContainer="empresaDc"
+                                                itemsContainer="historicoContabilsDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.historicoSubstituicaoSaida"/>
+                                <entityComboBox id="historicoRevendaField"
+                                                property="historicoRevenda"
+                                                dataContainer="empresaDc"
+                                                itemsContainer="historicoContabilsDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.historicoRevenda"/>
+                            </hbox>
+                        </vbox>
+                    </tab-->
+                    <!--tab id="configuracaoFinanceiraTab" label="Configuração financeira">
+                        <vbox>
+                            <hbox width="100%">
+                                <entityComboBox id="contaParceiroSaidaField"
+                                                property="contaParceiroSaida"
+                                                dataContainer="empresaDc"
+                                                itemsContainer="contaContabilsDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.contaParceiroSaida"/>
+                                <entityComboBox id="contaParceiroEntradaField"
+                                                property="contaParceiroEntrada"
+                                                dataContainer="empresaDc"
+                                                itemsContainer="contaContabilsDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.contaParceiroEntrada"/>
+                                <entityComboBox id="contaCaixaField"
+                                                property="contaCaixa"
+                                                dataContainer="empresaDc"
+                                                itemsContainer="contaContabilsDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.contaCaixa"/>
+                                <entityComboBox id="contaMovimentoBancarioField"
+                                                property="contaMovimentoBancario"
+                                                dataContainer="empresaDc"
+                                                itemsContainer="contaContabilsDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.contaMovimentoBancario"/>
+                            </hbox>
+                            <hbox width="100%">
+                                <entityComboBox id="historicoBaixaReceberField"
+                                                property="historicoBaixaReceber"
+                                                dataContainer="empresaDc"
+                                                itemsContainer="historicoContabilsDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.historicoBaixaReceber"/>
+                                <entityComboBox id="histFinBaixaReceberField"
+                                                property="histFinBaixaReceber"
+                                                dataContainer="empresaDc"
+                                                itemsContainer="historicoFinanceirosDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.histFinBaixaReceber"/>
+                                <entityComboBox id="histFinBaixaJurosReceberField"
+                                                property="histFinBaixaJurosReceber"
+                                                dataContainer="empresaDc"
+                                                itemsContainer="historicoFinanceirosDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.histFinBaixaJurosReceber"/>
+                                <entityComboBox id="histFinBaixaDescontoReceberField"
+                                                property="histFinBaixaDescontoReceber"
+                                                dataContainer="empresaDc"
+                                                itemsContainer="historicoFinanceirosDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.histFinBaixaDescontoReceber"/>
+                            </hbox>
+                            <hbox width="100%">
+                                <entityComboBox id="historicoBaixaPagarField"
+                                                property="historicoBaixaPagar"
+                                                dataContainer="empresaDc"
+                                                itemsContainer="historicoContabilsDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.historicoBaixaPagar"/>
+                                <entityComboBox id="histFinBaixaPagarField"
+                                                property="histFinBaixaPagar"
+                                                dataContainer="empresaDc"
+                                                itemsContainer="historicoFinanceirosDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.histFinBaixaPagar"/>
+                                <entityComboBox id="histFinBaixaJurosPagarField"
+                                                property="histFinBaixaJurosPagar"
+                                                dataContainer="empresaDc"
+                                                itemsContainer="historicoFinanceirosDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.histFinBaixaJurosPagar"/>
+                                <entityComboBox id="histFinBaixaDescontoPagarField"
+                                                property="histFinBaixaDescontoPagar"
+                                                dataContainer="empresaDc"
+                                                itemsContainer="historicoFinanceirosDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.histFinBaixaDescontoPagar"/>
+                            </hbox>
+                        </vbox>
+                    </tab-->
+                </tabSheet>
+            </vbox>
+        </vbox>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>
