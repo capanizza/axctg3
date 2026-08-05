@@ -29,9 +29,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.jmix.flowui.app.inputdialog.InputParameter.localDateParameter;
 
@@ -42,6 +43,12 @@ import static io.jmix.flowui.app.inputdialog.InputParameter.localDateParameter;
 @LookupComponent("lancamentoesDataGrid")
 @DialogMode(width = "64em")
 public class LancamentoListView extends StandardListView<Lancamento> {
+
+    /**
+     * Folga para a importação inteira. A tentativa anterior usava 20 <em>segundos</em> e o
+     * watchdog derrubava a tarefa no meio de qualquer volume real.
+     */
+    private static final long TIMEOUT_IMPORTACAO_MINUTOS = 30;
 
     static Boolean isNew = false;
     @Autowired
@@ -143,24 +150,7 @@ public class LancamentoListView extends StandardListView<Lancamento> {
 
     @Subscribe("lancamentoesDataGrid.importarAction")
     public void onLancamentoesDataGridImportarAction(final ActionPerformedEvent event) {
-
-        List<LancamentoTmp> lancamentosTmp = lancamentoService.getLancamentosTmp();
-        if (lancamentosTmp.isEmpty()) {
-            dialogs.createMessageDialog()
-                    .withHeader("Lançamentos contábeis")
-                    .withText("Nenhum lançamento a ser importado")
-                    .open();
-            return;
-        }
-
-        LancamentoTmp lancamentoTmp = lancamentosTmp.getFirst();
-        LocalDate dataLancamentoInicial = lancamentoTmp.getDataLancamento();
-        lancamentoTmp = lancamentosTmp.getLast();
-        LocalDate dataLancamentoFinal = lancamentoTmp.getDataLancamento();
-        if (dataLancamentoInicial.getYear() != utilGeralService.getAnoContabil() ||
-                dataLancamentoInicial.getMonthValue() != utilGeralService.getMesContabil() ||
-                dataLancamentoFinal.getYear() != utilGeralService.getAnoContabil() ||
-                dataLancamentoFinal.getMonthValue() != utilGeralService.getMesContabil()) {
+        if (!lancamentoService.periodoDelimitadoDentroDoMesContabil()) {
             dialogs.createMessageDialog()
                     .withHeader("Importação de lançamentos")
                     .withText("Intervalo de datas fora do mês contábil")
@@ -168,78 +158,92 @@ public class LancamentoListView extends StandardListView<Lancamento> {
             return;
         }
 
+        List<LancamentoTmp> pendentes = lancamentoService.lancamentosTmpPendentes();
+        if (pendentes.isEmpty()) {
+            dialogs.createMessageDialog()
+                    .withHeader("Importação de lançamentos")
+                    .withText("Nenhum lançamento a ser importado no período delimitado")
+                    .open();
+            return;
+        }
+
         dialogs.createOptionDialog()
-                .withHeader("Lançamentos contábeis")
-                .withText("Confirma importação do sistema antigo?")
+                .withHeader("Importar lançamentos contábeis")
+                .withText("Confirma importação de " + pendentes.size() +
+                        " lançamentos do sistema antigo?")
                 .withActions(
                         new DialogAction(DialogAction.Type.YES)
-                                .withHandler(e -> {
-                                    dialogs.createBackgroundTaskDialog(new SampleTask(20
-                                                    , this
-                                                    , lancamentosTmp))
-                                            .withHeader("Importação de lançamentos")
-                                            .withText("Importando lançamentos...")
-                                            .withTotal(lancamentosTmp.size())
-                                            // .withShowProgressInPercentage(true)
-                                            .withCancelAllowed(true)
-                                            .open();
-
-                                }),
+                                .withHandler(e -> dialogs
+                                        .createBackgroundTaskDialog(new ImportarLancamentosTask(pendentes))
+                                        .withHeader("Importação de lançamentos")
+                                        .withText("Importando lançamentos do sistema antigo...")
+                                        .withTotal(pendentes.size())
+                                        .withShowProgressInPercentage(true)
+                                        .withCancelAllowed(true)
+                                        .open()),
                         new DialogAction(DialogAction.Type.NO)
-                                .withHandler(e -> {
-                                })
                 )
                 .open();
     }
 
-    protected class SampleTask extends BackgroundTask<Integer, Void> {
-        int count;
-        List<LancamentoTmp> lancamentosTmp;
+    /**
+     * Importa um {@code LancamentoTmp} por iteração. O save de cada registro é o que dispara o
+     * rateio de saldos no {@code LancamentoEventListener} — a parte lenta —, então publicar o
+     * progresso a cada item faz a barra andar junto com o trabalho real, em vez de encher
+     * primeiro e congelar depois.
+     * <p>
+     * O {@code BackgroundWorker} do Jmix copia o {@code Authentication} da sessão para a thread
+     * do worker, por isso {@code UtilGeralService} continua respondendo empresa e período aqui
+     * dentro. Em contrapartida, nada de UI dentro de {@link #run}: diálogos e recarga do grid só
+     * em {@link #done} e {@link #canceled}, que o framework executa com acesso à UI.
+     */
+    protected class ImportarLancamentosTask extends BackgroundTask<Integer, Integer> {
 
-        public SampleTask(long timeoutSeconds, View<?> view, List<LancamentoTmp> lancamentosTmp) {
-            super(timeoutSeconds, view);
-            this.count = lancamentosTmp.size();
-            this.lancamentosTmp = lancamentosTmp;
+        private final List<LancamentoTmp> pendentes;
+        private final AtomicInteger importados = new AtomicInteger();
+
+        protected ImportarLancamentosTask(List<LancamentoTmp> pendentes) {
+            super(TIMEOUT_IMPORTACAO_MINUTOS, TimeUnit.MINUTES, LancamentoListView.this);
+            this.pendentes = pendentes;
         }
 
         @Override
-        public Void run(TaskLifeCycle<Integer> taskLifeCycle) throws Exception {
-            int i = 1;
-            for (LancamentoTmp lancamentoTmp : lancamentosTmp) {
+        public Integer run(TaskLifeCycle<Integer> taskLifeCycle) throws Exception {
+            int ultimoNumero = 0;
+            for (LancamentoTmp lancamentoTmp : pendentes) {
+                if (taskLifeCycle.isCancelled() || taskLifeCycle.isInterrupted()) {
+                    break;
+                }
                 lancamentoService.gravarLancamento(lancamentoTmp);
-                taskLifeCycle.publish(i++);
+                ultimoNumero = Math.max(ultimoNumero, lancamentoTmp.getNumero());
+                taskLifeCycle.publish(importados.incrementAndGet());
             }
-            return null;
+            // também no cancelamento: os números já gravados foram consumidos de fato
+            if (ultimoNumero > 0) {
+                lancamentoService.ajustarSequenciaLancamento(ultimoNumero);
+            }
+            return importados.get();
         }
 
         @Override
-        public void done(Void result) {
-            super.done(result);
+        public void done(Integer total) {
             lancamentoesDl.load();
             dialogs.createMessageDialog()
-                    .withHeader("Importação de lançamentos antigos")
-                    .withText(lancamentosTmp.size() + " lançamentos importados")
+                    .withHeader("Importação de lançamentos")
+                    .withText(total + " lançamentos importados")
+                    .open();
+        }
+
+        @Override
+        public void canceled() {
+            lancamentoesDl.load();
+            dialogs.createMessageDialog()
+                    .withHeader("Importação de lançamentos")
+                    .withText("Importação interrompida com " + importados.get() +
+                            " lançamentos gravados. Repetir a importação retoma de onde parou.")
                     .open();
         }
     }
-
-/*
-    @Subscribe("lancamentoesDataGrid.importarAction")
-    public void onLancamentoesDataGridImportarAction(final ActionPerformedEvent event) {
-        dialogs.createOptionDialog()
-                .withHeader("Importar lançamentos contábeis")
-                .withText("Confirma importação dos lançamentos do sistema antigo?")
-                .withActions(
-                        new DialogAction(DialogAction.Type.YES)
-                                .withHandler(e -> {
-                                    lancamentoService.importarLancamentos();
-                                    lancamentoesDl.load();
-                                }),
-                        new DialogAction(DialogAction.Type.NO)
-                )
-                .open();
-    }
-*/
 
 
     @Subscribe("listagemSwitcher.listagemItem.listagemAction")

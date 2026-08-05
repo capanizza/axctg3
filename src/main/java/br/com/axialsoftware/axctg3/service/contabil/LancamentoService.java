@@ -9,9 +9,9 @@ import io.jmix.core.DataManager;
 import io.jmix.core.Id;
 import io.jmix.core.SaveContext;
 import io.jmix.core.event.EntityChangedEvent;
+import io.jmix.data.PersistenceHints;
 import io.jmix.data.Sequence;
 import io.jmix.data.Sequences;
-import io.jmix.flowui.Dialogs;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.slf4j.Logger;
@@ -27,6 +27,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class LancamentoService {
@@ -34,14 +37,12 @@ public class LancamentoService {
     private final UtilGeralService utilGeralService;
     private final DataManager dataManager;
     private final RelatorioService relatorioService;
-    private final Dialogs dialogs;
     private final Sequences sequences;
 
-    public LancamentoService(UtilGeralService utilGeralService, DataManager dataManager, RelatorioService relatorioService, Dialogs dialogs, Sequences sequences) {
+    public LancamentoService(UtilGeralService utilGeralService, DataManager dataManager, RelatorioService relatorioService, Sequences sequences) {
         this.utilGeralService = utilGeralService;
         this.dataManager = dataManager;
         this.relatorioService = relatorioService;
-        this.dialogs = dialogs;
         this.sequences = sequences;
     }
 
@@ -447,99 +448,89 @@ public class LancamentoService {
         return saldoAnterior.add(debitoAnterior).subtract(creditoAnterior);
     }
 
-    public void importarLancamentos() {
+    /**
+     * O intervalo delimitado na tela tem de estar dentro do mês contábil em processamento:
+     * a numeração dos importados sai da sequência {@code lancamento_seq_<aaaaMM>} desse mês
+     * e o listener reestampa ano/mês a partir do contexto da sessão.
+     */
+    public boolean periodoDelimitadoDentroDoMesContabil() {
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
+        int anoContabil = utilGeralService.getAnoContabil();
+        int mesContabil = utilGeralService.getMesContabil();
+        return dentroDoMesContabil(dataInicialDelimitada(configRel), anoContabil, mesContabil)
+                && dentroDoMesContabil(dataFinalDelimitada(configRel), anoContabil, mesContabil);
+    }
+
+    /**
+     * Lançamentos do sistema antigo ainda não importados no intervalo delimitado, em ordem
+     * de numeração.
+     * <p>
+     * {@code Lancamento} reaproveita o id do {@code LancamentoTmp}, então gravar duas vezes o
+     * mesmo registro violaria a chave primária. Descartar aqui os já gravados é o que permite
+     * repetir uma importação interrompida — ela retoma de onde parou. A consulta dos já
+     * gravados ignora o soft delete de propósito: a linha excluída logicamente continua no
+     * banco e o id continua ocupado.
+     */
+    public List<LancamentoTmp> lancamentosTmpPendentes() {
         ConfigRel configRel = utilGeralService.prepararConfigRel();
         Integer codEmpresa = utilGeralService.getCodEmpresa();
+        LocalDate dataInicial = dataInicialDelimitada(configRel);
+        LocalDate dataFinal = dataFinalDelimitada(configRel);
 
-        LocalDate dataLancamentoInicial = configRel.getDataLancamentoInicial() == null ?
-                LocalDate.now() :
-                configRel.getDataLancamentoInicial();
-        LocalDate dataLancamentoFinal = configRel.getDataLancamentoFinal() == null ?
-                LocalDate.now() :
-                configRel.getDataLancamentoFinal();
-
-        LocalDate dataInicial = LocalDate.of(utilGeralService.getAnoContabil(),
-                utilGeralService.getMesContabil(),
-                1);
-        LocalDate dataFinal = dataInicial.with(TemporalAdjusters.lastDayOfMonth());
-        int ano = dataInicial.getYear(), mes = dataInicial.getMonthValue();
-
-        if (dataLancamentoInicial.getYear() != utilGeralService.getAnoContabil() ||
-                dataLancamentoInicial.getMonthValue() != utilGeralService.getMesContabil() ||
-                dataLancamentoFinal.getYear() != utilGeralService.getAnoContabil() ||
-                dataLancamentoFinal.getMonthValue() != utilGeralService.getMesContabil()) {
-            dialogs.createMessageDialog()
-                    .withHeader("Importação de lançamentos")
-                    .withText("Intervalo de datas fora do mês contábil")
-                    .open();
-            return;
-        }
-
-        List<LancamentoTmp> lancamentoTmps = dataManager.load(LancamentoTmp.class)
+        List<LancamentoTmp> lancamentosTmp = dataManager.load(LancamentoTmp.class)
                 .query("select e from LancamentoTmp e " +
                         "where e.dataLancamento between :dataInicial and :dataFinal " +
                         "and e.codEmpresa = :codEmpresa " +
                         "order by e.numero")
-                .parameter("dataInicial", dataLancamentoInicial)
-                .parameter("dataFinal", dataLancamentoFinal)
+                .parameter("dataInicial", dataInicial)
+                .parameter("dataFinal", dataFinal)
                 .parameter("codEmpresa", codEmpresa)
                 .list();
-        long lancamentoFinal = 0L;
-        List<Lancamento> lancamentos = new ArrayList<>();
-        for (LancamentoTmp lanc: lancamentoTmps) {
-            Lancamento lancamento = dataManager.create(Lancamento.class);
-            lancamento.setId(lanc.getId());
-            lancamento.setVersion(lanc.getVersion());
-            lancamento.setNumero(lanc.getNumero());
-            lancamento.setCreatedBy(lanc.getCreatedBy());
-            lancamento.setCreatedDate(lanc.getCreatedDate());
-            lancamento.setLastModifiedBy(lanc.getLastModifiedBy());
-            lancamento.setLastModifiedDate(lanc.getLastModifiedDate());
-            lancamento.setComplementoHistorico(lanc.getComplementoHistorico());
-//            lancamento.setContaCredora(lanc.getContaCredora());
-//            lancamento.setContaDevedora(lanc.getContaDevedora());
-//            lancamento.setHistoricoContabil(lanc.getHistoricoContabil());
-//            lancamento.setCentroCusto(lanc.getCentroCusto());
-            ContaContabil conta = lerContaContabil(lanc.getDevedora(), codEmpresa);
-            lancamento.setContaDevedora(conta);
-            conta = lerContaContabil(lanc.getCredora(), codEmpresa);
-            lancamento.setContaCredora(conta);
-            HistoricoContabil historico = lerHistoricoContabil(lanc.getHist(), codEmpresa);
-            lancamento.setHistoricoContabil(historico);
-            CentroCusto centro = lerCentroCusto(lanc.getcCusto(), codEmpresa);
-            lancamento.setCentroCusto(centro);
-            lancamento.setAno(lanc.getAno());
-            lancamento.setMes(lanc.getMes());
-            lancamento.setDia(lanc.getDia());
-            lancamento.setValor(lanc.getValor());
-            lancamento.setCodEmpresa(codEmpresa);
-            lancamento.setDataLancamento(lanc.getDataLancamento());
-            lancamento.setOrigem(lanc.getOrigem());
-            ano = lancamento.getAno();
-            mes = lancamento.getMes();
-            lancamentos.add(lancamento);
-            lancamentoFinal++;
-        }
-        if (lancamentos.isEmpty()) {
-            dialogs.createMessageDialog()
-                    .withHeader("Êrro na importação de lançamentos")
-                    .withText("Importação não efetuada")
-                    .open();
-        }
-        else {
-            SaveContext saveContext = new SaveContext();
-            for (Lancamento lancamento : lancamentos) {
-                saveContext.saving(lancamento);
-            }
-            dataManager.save(saveContext);
-            String st = "lancamento_seq_" + String.format("%4d%02d", ano, mes);
-            sequences.setCurrentValue(Sequence.withName(st), lancamentoFinal);
 
-            dialogs.createMessageDialog()
-                    .withHeader("Importação de lançamentos")
-                    .withText("Importação concluída com sucesso!")
-                    .open();
-        }
+        Set<UUID> jaImportados = dataManager.loadValues(
+                        "select e.id from Lancamento e " +
+                                "where e.dataLancamento between :dataInicial and :dataFinal " +
+                                "and e.codEmpresa = :codEmpresa")
+                .property("id")
+                .hint(PersistenceHints.SOFT_DELETION, false)
+                .parameter("dataInicial", dataInicial)
+                .parameter("dataFinal", dataFinal)
+                .parameter("codEmpresa", codEmpresa)
+                .list()
+                .stream()
+                .map(kv -> (UUID) kv.getValue("id"))
+                .collect(Collectors.toSet());
+
+        return lancamentosTmp.stream()
+                .filter(lanc -> !jaImportados.contains(lanc.getId()))
+                .toList();
+    }
+
+    /**
+     * Reposiciona a sequência do mês contábil para que o próximo lançamento manual não
+     * receba um número já usado pelos importados.
+     */
+    public void ajustarSequenciaLancamento(int ultimoNumero) {
+        int ano = utilGeralService.getAnoContabil();
+        int mes = utilGeralService.getMesContabil();
+        String st = "lancamento_seq_" + String.format("%4d%02d", ano, mes);
+        sequences.setCurrentValue(Sequence.withName(st), ultimoNumero);
+    }
+
+    private LocalDate dataInicialDelimitada(ConfigRel configRel) {
+        return configRel.getDataLancamentoInicial() == null ?
+                LocalDate.now() :
+                configRel.getDataLancamentoInicial();
+    }
+
+    private LocalDate dataFinalDelimitada(ConfigRel configRel) {
+        return configRel.getDataLancamentoFinal() == null ?
+                LocalDate.now() :
+                configRel.getDataLancamentoFinal();
+    }
+
+    private boolean dentroDoMesContabil(LocalDate data, int anoContabil, int mesContabil) {
+        return data.getYear() == anoContabil && data.getMonthValue() == mesContabil;
     }
 
     private CentroCusto lerCentroCusto(String centro, Integer codEmpresa) {
@@ -578,13 +569,11 @@ public class LancamentoService {
                 .orElse(null);
     }
 
-    public List<LancamentoTmp> getLancamentosTmp() {
-        return dataManager.load(LancamentoTmp.class)
-                .query("select e from LancamentoTmp e " +
-                        "order by e.numero")
-                .list();
-    }
-
+    /**
+     * Grava um registro do sistema antigo como {@code Lancamento}. É a unidade de trabalho da
+     * importação em background: o save dispara o {@code LancamentoEventListener} e, com ele, o
+     * rateio de saldos — a parte cara do processo.
+     */
     public void gravarLancamento(LancamentoTmp lancamentoTmp) {
         Lancamento lancamento = dataManager.create(Lancamento.class);
         int codEmpresa = utilGeralService.getCodEmpresa();
