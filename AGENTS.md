@@ -1,175 +1,222 @@
-# Agent Instructions
+# AGENTS.md
 
-Use these instructions when working on a Jmix 3 application.
+This file provides guidance to coding agents when working with code in this repository.
 
-## Project stack
+Axctg3 is a Brazilian multi-company accounting application (contabilidade) built on
+Jmix 3 / Spring Boot 4 / Vaadin 25, Java 21, Gradle, PostgreSQL + Liquibase.
 
-- Java 21
-- Jmix 3, Spring Boot 4, Vaadin 25
-- Gradle
-- Relational database with Liquibase migrations
+`CLAUDE.md` and `.junie/guidelines.md` hold the same guidance for other tools. These
+three files are kept identical apart from this header — mirror any change to all three.
 
-## Step 0 — map the task to artifacts, READ the matching skill BEFORE writing
+## Commands
 
-The most common cause of defects is writing a Jmix artifact from memory instead
-of from the rule that governs it. Your Jmix/Vaadin priors are the single biggest
-source of wrong API names and broken descriptors.
+```bash
+./gradlew compileJava                 # fast syntax/API check — BLIND to *-view.xml defects
+./gradlew clean test                  # Gate 2: boots the Spring/Jmix context + Liquibase, then EXITS
+./gradlew test --tests "br.com.axialsoftware.axctg3.user.UserUiTest"                 # one class
+./gradlew test --tests "br.com.axialsoftware.axctg3.user.UserUiTest.test_createUser" # one method
+./gradlew bootRun                     # http://localhost:8085/axctg3 — admin/admin
+```
 
-Before writing a single file:
+- Dev DB: PostgreSQL `jdbc:postgresql://localhost/axctg3` (postgres/root). Liquibase
+  runs on every startup from `br/com/axialsoftware/axctg3/liquibase/changelog.xml`.
+- Tests use a file-backed HSQLDB at `.jmix/hsqldb/axctg3_test` (`@ActiveProfiles("test")`).
+- NEVER use `bootRun` as a verification gate — it does not exit and will hang the turn.
+  If you must render-walk, run it in the background, poll `/actuator/health` until UP,
+  then shut it down.
 
-1. List every artifact the task implies — entities, enums, list views, detail
-   views, composition children, services, event listeners, resource roles,
-   changelogs, menu entries, message bundles, scheduled/background entry points.
-2. For EACH artifact, READ the matching skill in **Skill routing** before you
-   write it.
-3. Only then start writing.
+## Architecture
 
-The verification skills (`jmix-ide-static-analysis`, `jmix-verify-bootrun`) are
-gates, not how-to. They do not replace the artifact skill.
+### Company + period is application state carried on `User`
 
-## Tooling — MCP first, universal floor always
+There is no Jmix multi-tenancy addon here. `User` carries `codEmpresa`, `anoContabil`,
+`mesContabil` (and `anoFiscal`/`mesFiscal`), and **every query filters on those columns
+by hand**. Entities store a plain `Integer codEmpresa` — not a FK to `Empresa`.
 
-This profile may ship MCP servers — a Jmix-aware IDE inspection (e.g. JetBrains
-`get_file_problems`), Context7 (`/jmix-framework/jmix-context7`), and Playwright
-for the browser. **When a server is connected, it is your PRIMARY check — reach
-for it first.** ANY server may be absent; when one is, do NOT skip the check —
-fall back to the universal floor: `compileJava`, `./gradlew clean test`, and
-the mechanical-floor commands in `jmix-ide-static-analysis`.
+`UtilGeralService` is the single accessor for this context (`getCodEmpresa()`,
+`getAnoContabil()`, `getMesContabil()`, `getMascContabil()`, `getNomeEmpresa()`,
+`getLogoEmpresa()`, `prepararDatas()`). Go through it — do not read
+`CurrentAuthentication` for these values in new code.
 
-## Gates before declaring a task done
+`SelecionarEmpresaListView` switches company/period. It writes the **persisted** `User`
+row *and* mutates the in-memory principal (so the header updates), then calls
+`UI.getCurrent().getPage().reload()`. Follow that pattern if you add another switcher.
 
-A task is NOT done after the code compiles. Three gates, in order; never assert
-a gate passed without showing the evidence. At each gate use the MCP tool if it
-is connected (primary); fall back to the universal check only when it is not.
+### Reports: menu → MenuBean → service → JasperReports
 
-| Gate            | Primary — MCP, if connected                                                                                                                                                                                                                                                                                     | Fallback — always available                                                                                             |
-|-----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|
-| 1 API & static  | verify EVERY Jmix/Vaadin symbol via **Context7** (`/jmix-framework/jmix-context7`) before you type it, AND run the IDE inspection (**`get_file_problems`**) on every file you wrote — for `*-view.xml` it is the only static catch for unresolved `msg://`, invalid property paths, and missing data containers | `compileJava` + the mechanical-floor commands in `jmix-ide-static-analysis`                                             |
-| 2 Context loads | *(no MCP substitute — always run the fallback)*                                                                                                                                                                                                                                                                 | `./gradlew --no-daemon clean test` — boots the Spring/Jmix context, runs Liquibase + project tests, then EXITS          |
-| 3 Render        | render-walk every view/button/field with the **browser tool** (Playwright) — confirm no error overlay, server exception, or raw `msg://` caption                                                                                                                                                                | no universal substitute — run the mechanical checks (the render-defect floor), then state `render not browser-verified` |
+`jmix.ui.composite-menu=true`, so `menu.xml` items can invoke bean methods.
+`MenuBean` (`@Component("MenuBean")`) is the entry point for every report:
 
-NEVER use `bootRun` (or any non-terminating server start) as the Gate-2 check —
-it does not exit and will hang your turn. Gate 2 is `clean test`. If you DO
-start a server to render-walk, run it in the background and poll
-`/actuator/health` until it is UP before driving the browser, then shut it down
-cleanly.
+1. `UtilGeralService.prepararConfigRel()` loads-or-creates the caller's `ConfigRel` —
+   one row per user holding last-used report filters (dates, account ranges, grau).
+2. An `InputDialog` (`io.jmix.flowui.Dialogs`) prefilled from `ConfigRel`.
+3. On OK: write the values back to `ConfigRel`, save, then call the domain service.
+4. The service builds a `List<XxxDto>` and hands it to
+   `RelatorioService.emitirRelatorio(...)` as a `JRBeanCollectionDataSource`.
 
-`compileJava` is BLIND to XML descriptors. Every `*-view.xml` defect — a
-reference/enum field bound wrong, a broken `itemsQuery`, an action opening a
-view id that does not exist (`NoSuchViewException`) — compiles perfectly clean.
-A green `clean test` is necessary but NEVER sufficient: the context-load tests
-boot the Spring/Jmix context but do NOT open your new views, exercise your new
-roles, or fire your schedulers, `@Async` methods, and message listeners. 
-A defect survives every gate when nothing enters its
-code path: add the caller — a test or a render walk — or report it as unverified.
+`RelatorioService` resolves templates from `<user.dir>/relatorios/*.jasper` — **on disk,
+not on the classpath**. A report added to `relatorios/` needs no build step, but the
+process working directory must be the project root.
 
-Emit the evidence in your completion report. Per file you touched: its
-static-check verdict. Per view/button/field you created: how you verified it
-(inspection, mechanical check, or render walk). "BUILD SUCCESSFUL, all done"
-with no per-file check and no render evidence is a non-answer.
+The `*Dto` classes in `entity/contabil` (`BalanceteDto`, `RazaoDto`, `LancamentoDto`,
+`ContaContabilDto`) are non-persistent `@JmixEntity` beans with `@JmixId
+@JmixGeneratedValue UUID id`. They serve double duty as Jasper beans and UI-bindable
+model.
 
-## Anti-hallucination — verify a symbol before you type it
+### Accounting posting and balance rollup
 
-Inventing plausible-looking API names is a top failure mode: they survive
-typing but blow up at compile or runtime. Before you type any Jmix/Vaadin
-symbol not already used in this project's `src/`, verify it — Context7 is your
-PRIMARY check when connected, else an IDE symbol search, else grep this project
-for a working example. (If the exact symbol is already used in `src/`, copy
-that call site.) High-frequency wrong→right traps are catalogued in
-`jmix-verify-api-symbol`.
+`LancamentoEventListener` is where the accounting rules live, not the view:
 
-## Skill routing
+- `EntitySavingEvent` (new entry): stamps `codEmpresa`/`ano`/`mes`/`dia`/`dataLancamento`
+  from the session context, and takes `numero` from a **per-period Jmix `Sequence`**
+  named `lancamento_seq_<yyyy><MM>` (`Sequences.createNextValue`).
+- `EntityChangedEvent`: `CREATED` → `LancamentoService.atualizarSaldos()`;
+  `UPDATED` → `excluirSaldosAnteriores()` first (reverse the old amounts), then re-apply;
+  `DELETED` → reverse only.
 
-READ the most specific skill for each artifact:
+`atualizarSaldos` walks the chart of accounts **upward** via `ContaContabil.codContaSup`
+and `grau`, updating a `SaldoConta` row per month on every ancestor account. Any change
+to posting logic must keep debit/credit reversal symmetric or balances silently drift —
+this is the highest-risk area in the codebase.
 
-- Verify a Jmix/Vaadin API: `jmix-verify-api-symbol`
-- Static checks / inspections / mechanical floor: `jmix-ide-static-analysis`
-- Gate-2 context-load test (+ optional Gate-3 render walk): `jmix-verify-bootrun`
-- Persistent entity: `jmix-create-entity`
-- Enum used by an entity: `jmix-create-enum`
-- List view: `jmix-create-list-view`
-- Detail view: `jmix-create-detail-view`
-- Parent-child composition editing (property-bound container, NO query loader): `jmix-create-composition-detail-view`
-- Service-layer business logic: `jmix-create-service`
-- Code running outside a user request (Quartz/`@Scheduled` job, `@Async` method, startup runner, message listener): `jmix-run-background-code`
-- Detail dialog from a button/action, OR master-row selection → filtered child grid: `jmix-add-dialog-detail-flow`
-- Entity lifecycle/event business logic: `jmix-add-entity-event-listener`
-- Database schema: `jmix-create-liquibase-changelog`
-- Resource roles: `jmix-create-resource-role`
-- User-visible text / entity-enum captions: `jmix-add-i18n-keys`
-- Tests: `jmix-create-test`
-- Fetch plans / unfetched-reference / N+1 tuning: `jmix-configure-fetch-plan`
-- DTO / non-persistent UI-bound model: `jmix-create-dto-entity`
-- Reusable Flow UI fragment: `jmix-create-fragment`
-- Component styling / theme tokens (`--aura-*`, `--lumo-*`) / CSS classes: `jmix-style-ui`
+`ContaContabil` owns `List<SaldoConta>` as `@Composition` + `@OnDelete(CASCADE)`;
+`SaldoContaService.criarSaldos()` seeds the 12 monthly rows for a new account.
 
-## A skill's framework rule beats sample code in a plan or brief
+### Enum convention (SPED/ECD numeric codes)
 
-When a plan, brief, issue, or hand-off note carries verbatim code, that code is a
-SUGGESTION. The skill's rule is the authority. Sample code in a plan is written
-without the skill open, so it drops framework details that look optional and are
-not — and because it arrives as "the code to write", implementers paste it over
-the correct pattern without noticing.
+Enums implement `EnumClass<Integer>` with a static `fromId`. The entity field is declared
+as a raw `Integer` column and converted in the getter/setter:
 
-So: when you are handed code to write, READ the skill for that artifact and
-reconcile the two BEFORE writing. Where they disagree, the skill wins — and say in
-your report that you diverged from the sample and why. Check especially entity
-annotations, view descriptors, fetch plans, and lifecycle-method overrides.
+```java
+@Column(name = "COD_NAT", nullable = false) private Integer codNat;
+public CodNat getCodNat() { return codNat == null ? null : CodNat.fromId(codNat); }
+public void setCodNat(CodNat v) { this.codNat = v == null ? null : v.getId(); }
+```
 
-## Under-checked files leave debt — carry it forward
+The integer IDs are fiscal codes mandated by SPED/ECD — never renumber them.
 
-When Gate 1 falls back to `compileJava` because no Jmix inspection is connected,
-NAME those files in your completion report as inspected-by-compile-only. The Jmix
-semantic findings (unresolved `msg://`, invalid property paths, discarded
-`DataManager.save()` results) are invisible to the compiler, so those files are
-not actually checked yet — re-inspect them in the next session that has the
-inspection available. See `jmix-ide-static-analysis`.
+### Layout
 
-## Cross-cutting checklist for a new entity / view
+Java under `src/main/java/br/com/axialsoftware/axctg3/`: `entity/`, `entity/enums/`,
+`view/`, `service/`, `bean/`, `listener/`, `security/`. Domain modules split each of
+those: `tabelas`, `cadastros`, `contabil`, `financeiro`, `fiscal`, `almoxarifado`,
+`compras`.
 
-For each new persistent entity, run through: `jmix-create-entity` +
-`jmix-create-liquibase-changelog` + `jmix-create-resource-role` +
-`jmix-add-i18n-keys`. For a user-facing entity, also add a list and/or detail
-view (`jmix-create-list-view`, `jmix-create-detail-view`) and a view policy in
-every role that can open them — **including dialog-only detail views opened
-from a composition table**.
+View XML mirrors the Java package under
+`src/main/resources/br/com/axialsoftware/axctg3/view/<modulo>/<entidade>/`.
 
-Service- or listener-level defaulting does NOT relieve the entity from
-defaulting required fields on initial persist — defaults must work through
-`DataManager.create()` + `DataManager.save()` directly (tests bypass the view
-layer). See `jmix-create-entity`.
+i18n is **one pair of bundles** for the whole app —
+`src/main/resources/br/com/axialsoftware/axctg3/messages_{en,pt_BR}.properties`, not
+per-package bundles. Both files must stay key-for-key identical. Keys are
+`<entity.package>/<Entity>.<attr>` and `<view.package>/<viewId>.<element>`.
 
-## When tests fail — it is almost never "pre-existing"
+Themes `axctg3-aura` (active — wired via `@StyleSheet` on `Axctg3Application`) and
+`axctg3-lumo` live in `src/main/resources/META-INF/resources/themes/`.
+Never edit `src/main/frontend/generated/` — regenerated every build.
 
-If the project ships a passing test suite and a test goes red after your change,
-assume you broke it. A red `clean test` means the task is not done; investigate
-before declaring a red gate "pre-existing." Common causes:
+## Project conventions (obrigatórias)
 
-- **`NoSuchViewException` after you added views** → you broke the VIEW REGISTRY;
-  it scans all `@ViewController` classes at startup and one broken view poisons
-  navigation to EVERY view, including pre-existing ones. Check, in order: (1) every new
-  view `.java` has a `package` line matching its directory — a class in the
-  default package registers its `@Route`/`@ViewController` wrong; (2) no two
-  `@ViewController(id=…)` share an id; (3) every `@ViewDescriptor` path resolves
-  to a real XML next to the class; (4) no `*-view.xml` is empty/malformed — an
-  empty descriptor throws `SAXParseException: Premature end of file` and poisons
-  the registry.
-- **`MetaClass not found for class X`** → the entity is missing `@JmixEntity`, or
-  its package is outside the application scan root.
-- **`ConstraintViolationException` on save** → a `@NotNull` persistent field has
-  no value on the `DataManager` path (see `jmix-create-entity`).
+### Entidades
 
-Fix the cause, re-run `clean test` until green. A test that goes red and you
-cannot explain is a blocker, never a footnote in your "done" summary.
+- **Soft delete em todas as entidades.** Campos `deletedBy` (`@DeletedBy`) e
+  `deletedDate` (`@DeletedDate`) mais o quarteto de auditoria
+  `createdBy`/`createdDate`/`lastModifiedBy`/`lastModifiedDate`.
+- Por causa do soft delete, chave única **nunca** por `@UniqueConstraint` — sempre
+  `@Index(name = "IDX_<TABELA>_UNQ", columnList = "...", unique = true)`.
+- Booleanos recebem valor padrão `false` na declaração do campo
+  (`private Boolean analitica = false;`).
+- Campos monetários: `BigDecimal`, `precision = 19, scale = 2`, com
+  `@NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")`.
 
-## File-write trap
+### Changelogs Liquibase
 
-Always pass absolute paths to file-writing tools; in nested-project layouts the
-working directory may not be what you assume. After a batch of writes, `ls` the
-path you intended AND confirm each file is NON-EMPTY — a tool that silently
-writes a 0-byte file leaves a defect that compile and `clean test` will NOT
-catch (an empty role class drops all its policies; an empty `*-view.xml`
-poisons the view registry). If a file is missing or empty, find and rewrite
-it; do NOT `rm -rf` to "clean up".
+Padrão Jmix: `changelog/<ano>/<mês 2 dígitos>/dd-hhMMss<cccccccc>-<descrição>.xml`.
+`cccccccc` é o código do desenvolvedor — neste projeto, `c1f40fd1`. Na descrição, o
+nome da entidade e a ação: `empresa-criar`, `lancamento_tmp-criar`.
 
-Never edit generated frontend files — they are regenerated on every build.
+### Cópia dos projetos legados
+
+`axctg-flow` e `axctg3-salvo` ficam "ao lado" da pasta `axctg3`. Ao copiar:
+
+- **Entidades:** manter a subpasta de origem. **Listeners** → `listener/`,
+  **services** → `service/`, e assim por diante. Criar a pasta de destino se não existir.
+- **Views:** na origem não há subpastas — copiar para a subpasta correspondente à da
+  entidade.
+- O legado não tinha soft delete: acrescentar `deletedBy`/`deletedDate` no destino e
+  converter chaves únicas para índice `unique = true`.
+
+## Verification discipline
+
+A task is not done when it compiles. Three gates, in order; never claim a gate passed
+without showing the evidence.
+
+| Gate | Primary (MCP, if connected) | Fallback (always available) |
+|---|---|---|
+| 1. API & static | Context7 (`/jmix-framework/jmix-context7`) for every Jmix/Vaadin symbol before typing it, plus the IDE inspection (`get_file_problems`) on every file written — the only static catch for unresolved `msg://`, invalid property paths, missing data containers in `*-view.xml` | `./gradlew compileJava` |
+| 2. Context loads | *(no MCP substitute)* | `./gradlew clean test` |
+| 3. Render | Playwright render-walk of every new view/button/field — no error overlay, no server exception, no raw `msg://` caption | none; state plainly `render not browser-verified` |
+
+`compileJava` is blind to XML descriptors: a field bound to the wrong reference, a broken
+`itemsQuery`, or an action opening a nonexistent view id (`NoSuchViewException`) all
+compile clean. A green `clean test` boots the context but does **not** open your views,
+exercise your roles, or fire your listeners — if nothing enters the code path, add a
+caller or report it unverified.
+
+In the completion report, give a per-file static verdict and, per new view/button/field,
+how it was verified. When Gate 1 fell back to `compileJava`, name those files as
+inspected-by-compile-only so the next session re-checks them.
+
+### Verify a symbol before you type it
+
+Inventing plausible Jmix/Vaadin API names is the top failure mode. Before typing any
+symbol not already used in this project's `src/`: check Context7, else an IDE symbol
+search, else grep this repo for a working call site and copy it.
+
+Reference implementations already in the tree, worth reading before writing a new one:
+
+| Artifact | Read |
+|---|---|
+| Entity (soft delete, audit, composition, enum column) | `entity/contabil/ContaContabil.java` |
+| Non-persistent DTO | `entity/contabil/RazaoDto.java` |
+| Enum | `entity/enums/CodNat.java` |
+| Entity lifecycle logic | `listener/contabil/LancamentoEventListener.java` |
+| Service + report emission | `service/contabil/ContaContabilService.java` |
+| List view with custom renderer, side panel, dialogs | `view/cadastros/empresa/SelecionarEmpresaListView.java` |
+| Menu-invoked bean + InputDialog | `bean/MenuBean.java` |
+| Resource role | `security/FullAccessRole.java` |
+| UI integration test | `src/test/java/.../user/UserUiTest.java` |
+| Changelog | `liquibase/changelog/2026/08/02-231248-c1f40fd1-empresa-criar.xml` |
+
+Service- or listener-level defaulting does NOT relieve an entity from defaulting its
+required fields on initial persist — defaults must hold through `DataManager.create()` +
+`DataManager.save()`, because tests bypass the view layer entirely.
+
+### When tests go red, you broke them
+
+Do not label a newly red `clean test` "pre-existing." Usual causes:
+
+- **`NoSuchViewException`** after adding views → the view registry is poisoned and
+  navigation to *every* view breaks. Check: each view `.java` has a `package` line
+  matching its directory; no duplicate `@ViewController(id=…)`; every `@ViewDescriptor`
+  path resolves; no empty/malformed `*-view.xml` (an empty descriptor throws
+  `SAXParseException: Premature end of file`).
+- **`MetaClass not found for class X`** → missing `@JmixEntity`, or the package sits
+  outside the scan root `br.com.axialsoftware.axctg3`.
+- **`ConstraintViolationException` on save** → a `@NotNull` field has no value on the
+  `DataManager` path.
+
+### File-write trap
+
+Always pass absolute paths to file-writing tools. After a batch of writes, `ls` the
+target and confirm each file is non-empty — a 0-byte write survives both `compileJava`
+and `clean test` (an empty role class silently drops all its policies; an empty
+`*-view.xml` poisons the registry). If a file is missing or empty, rewrite it; do not
+`rm -rf` to "clean up".
+
+## Known rough edges
+
+- `RelatorioService.emitirRelatorio2()` opens a hardcoded JDBC connection to a different
+  database (`axialdb`) with inline credentials — legacy path, prefer `emitirRelatorio()`
+  with a bean datasource.
+- `application.properties` ships dev DB credentials and `ui.login.defaultUsername`/
+  `defaultPassword`; both must go before any production deploy.
