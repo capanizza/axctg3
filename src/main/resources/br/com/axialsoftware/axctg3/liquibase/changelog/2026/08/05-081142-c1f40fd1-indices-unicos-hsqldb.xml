@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/05-081142-c1f40fd1-indices-unicos-hsqldb.xml">
+
+    <!--
+        Réplica, para HSQLDB (banco dos testes), dos índices únicos que os changelogs
+        anteriores criam apenas com dbms="postgresql". Sem isto as chaves únicas não
+        existem durante os testes e nenhuma violação de unicidade é detectada.
+
+        DIVERGÊNCIA DELIBERADA: no Postgres o índice é PARCIAL — leva
+        "where DELETED_DATE is null", de modo que várias linhas com soft delete podem
+        repetir o mesmo código. O HSQLDB não suporta índice parcial, então aqui o
+        índice cobre TODAS as linhas, inclusive as excluídas logicamente. O efeito é
+        um índice MAIS restritivo que o de produção: nos testes, recriar um registro
+        com o mesmo código após um soft delete falha, o que no Postgres funcionaria.
+
+        Incluir DELETED_DATE nas colunas do índice NÃO resolve: tanto no Postgres
+        quanto no HSQLDB dois NULLs são considerados distintos, e o índice deixaria
+        de barrar duplicatas entre as linhas ativas — justamente o que se quer testar.
+
+        IDX_LANCAMENTO_TMP_UNQ não é replicado aqui: no changelog de origem ele
+        aponta para a tabela LANCAMENTO (não LANCAMENTO_TMP), duplicando o
+        IDX_LANCAMENTO_UNQ nas mesmas quatro colunas.
+    -->
+
+    <changeSet id="1" author="axctg3" dbms="hsqldb">
+        <createIndex indexName="IDX_TIPO_LOGRADOURO_UNQ" tableName="TIPO_LOGRADOURO" unique="true">
+            <column name="CODIGO"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="2" author="axctg3" dbms="hsqldb">
+        <createIndex indexName="IDX_MUNICIPIO_UNQ" tableName="MUNICIPIO" unique="true">
+            <column name="CODIGO"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="3" author="axctg3" dbms="hsqldb">
+        <createIndex indexName="IDX_CENTRO_CUSTO_UNQ" tableName="CENTRO_CUSTO" unique="true">
+            <column name="CODIGO"/>
+            <column name="COD_EMPRESA"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="4" author="axctg3" dbms="hsqldb">
+        <createIndex indexName="IDX_HISTORICO_CONTABIL_UNQ" tableName="HISTORICO_CONTABIL" unique="true">
+            <column name="CODIGO"/>
+            <column name="COD_EMPRESA"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="5" author="axctg3" dbms="hsqldb">
+        <createIndex indexName="IDX_CONTA_CONTABIL_UNQ" tableName="CONTA_CONTABIL" unique="true">
+            <column name="CODIGO"/>
+            <column name="COD_EMPRESA"/>
+            <column name="ANO"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="6" author="axctg3" dbms="hsqldb">
+        <createIndex indexName="IDX_LANCAMENTO_UNQ" tableName="LANCAMENTO" unique="true">
+            <column name="NUMERO"/>
+            <column name="ANO"/>
+            <column name="MES"/>
+            <column name="COD_EMPRESA"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

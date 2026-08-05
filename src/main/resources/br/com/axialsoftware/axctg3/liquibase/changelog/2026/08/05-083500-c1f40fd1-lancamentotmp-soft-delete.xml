@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/05-083500-c1f40fd1-lancamentotmp-soft-delete.xml">
+
+    <!-- Soft delete em LANCAMENTO_TMP, que havia ficado sem DELETED_BY/DELETED_DATE. -->
+    <changeSet id="1" author="axctg3">
+        <addColumn tableName="LANCAMENTO_TMP">
+            <column name="DELETED_BY" type="VARCHAR(255)"/>
+            <column name="DELETED_DATE" type="${offsetDateTime.type}"/>
+        </addColumn>
+    </changeSet>
+
+    <!--
+        Correção do IDX_LANCAMENTO_TMP_UNQ. Em
+        03-125502-c1f40fd1-lancamento_tmp-criar.xml o índice foi criado com
+        tableName="LANCAMENTO" em vez de "LANCAMENTO_TMP", de modo que:
+          - duplicava o IDX_LANCAMENTO_UNQ nas mesmas quatro colunas de LANCAMENTO;
+          - deixava LANCAMENTO_TMP sem a chave única declarada na entidade
+            (@Index em LancamentoTmp: NUMERO, ANO, MES, COD_EMPRESA).
+        O changeset de origem já rodou no Postgres, então não pode ser editado
+        (quebraria o checksum) — a correção vem por drop + create aqui.
+        O índice errado só existe no Postgres (o original tinha dbms="postgresql").
+    -->
+    <changeSet id="2" author="axctg3" dbms="postgresql">
+        <dropIndex indexName="IDX_LANCAMENTO_TMP_UNQ" tableName="LANCAMENTO"/>
+    </changeSet>
+
+    <changeSet id="3" author="axctg3" dbms="postgresql">
+        <createIndex indexName="IDX_LANCAMENTO_TMP_UNQ" tableName="LANCAMENTO_TMP" unique="true">
+            <column name="NUMERO"/>
+            <column name="ANO"/>
+            <column name="MES"/>
+            <column name="COD_EMPRESA"/>
+        </createIndex>
+
+        <modifySql>
+            <append value="where DELETED_DATE is null"/>
+        </modifySql>
+    </changeSet>
+
+    <!--
+        Equivalente para HSQLDB (testes). Sem índice parcial, cobre também as linhas
+        com soft delete — mais restritivo que o Postgres. Ver o comentário em
+        05-081142-c1f40fd1-indices-unicos-hsqldb.xml.
+    -->
+    <changeSet id="4" author="axctg3" dbms="hsqldb">
+        <createIndex indexName="IDX_LANCAMENTO_TMP_UNQ" tableName="LANCAMENTO_TMP" unique="true">
+            <column name="NUMERO"/>
+            <column name="ANO"/>
+            <column name="MES"/>
+            <column name="COD_EMPRESA"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
