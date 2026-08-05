@@ -42,7 +42,7 @@
                       width="100%"
                       minHeight="20em"
                       dataContainer="empresasDc"
-                      columnReorderingAllowed="true" themeNames="compact">
+                      columnReorderingAllowed="true" themeNames="small">
                 <actions>
                     <!--action id="createAction" type="list_create"/>
                     <action id="editAction" type="list_edit"/>

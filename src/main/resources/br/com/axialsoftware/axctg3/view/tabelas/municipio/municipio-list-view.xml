@@ -42,7 +42,7 @@
                       minHeight="20em"
                       dataContainer="municipiosDc"
                       columnReorderingAllowed="true"
-                      themeNames="compact">
+                      themeNames="small">
                 <actions>
                     <action id="createAction" type="list_create"/>
                     <action id="editAction" type="list_edit"/>

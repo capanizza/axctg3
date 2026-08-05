@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
+      title="msg://lancamentoListView.title"
+      focusComponent="lancamentoesDataGrid">
+    <data>
+        <collection id="lancamentoesDc"
+                    class="br.com.axialsoftware.axctg3.entity.contabil.Lancamento">
+            <fetchPlan extends="_base">
+                <property name="contaDevedora" fetchPlan="_base"/>
+                <property name="contaCredora" fetchPlan="_base"/>
+                <property name="centroCusto" fetchPlan="_base"/>
+                <property name="historicoContabil" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="lancamentoesDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from Lancamento e
+                    where e.dataLancamento between :dataLancamentoInicial and :dataLancamentoFinal
+                    and e.codEmpresa = :codEmpresa
+                    order by e.numero desc]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <startSlot>
+                <button id="delimitarButton" action="lancamentoesDataGrid.delimitarAction" themeNames="small"/>
+                <button id="createButton" action="lancamentoesDataGrid.createAction" themeNames="small"/>
+                <button id="editButton" action="lancamentoesDataGrid.editAction" themeNames="small"/>
+                <button id="removeButton" action="lancamentoesDataGrid.removeAction" themeNames="small"/>
+                <button id="importarButton" action="lancamentoesDataGrid.importarAction" themeNames="small"/>
+                <button id="lancarBtn" action="lancamentoesDataGrid.lancarAction" themeNames="small"/>
+                <dropdownButton id="listagemSwitcher"
+                                text="Relatórios" icon="PRINT" themeNames="small"
+                                dropdownIndicatorVisible="true">
+                    <items>
+                        <actionItem id="listagemItem">
+                            <action id="listagemAction"
+                                    text="Listagem dos lançamentos" icon="PRINT"/>
+                        </actionItem>
+                        <actionItem id="razaoItem">
+                            <action id="razaoAction"
+                                    text="Razão" icon="PRINT"/>
+                        </actionItem>
+                    </items>
+                </dropdownButton>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="lancamentoesDl"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="lancamentoesDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="lancamentoesDc"
+                  columnReorderingAllowed="true" themeNames="small">
+            <actions>
+                <action id="delimitarAction" text="msg://delimitar" icon="vaadin:calendar"/>
+                <action id="createAction" type="list_create"/>
+                <action id="editAction" type="list_edit"/>
+                <action id="removeAction" type="list_remove"/>
+                <action id="importarAction" text="msg://importar" icon="lumo:download"/>
+                <action id="lancarAction" text="msg://lancar" icon="vaadin:check"/>
+            </actions>
+            <columns resizable="true">
+                <column property="dataLancamento" filterable="true" width="10%"/>
+                <column property="numero" filterable="true" width="10%"/>
+                <column property="origem" filterable="true" width="10%"/>
+                <column property="contaDevedora" filterable="true" width="28%"/>
+                <column property="contaCredora" filterable="true" width="28%"/>
+                <column property="valor" textAlign="END" filterable="true" width="14%"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction" themeNames="small"/>
+            <button id="discardButton" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

@@ -43,7 +43,7 @@
 
             <!-- MASTER: grid -->
             <dataGrid id="tipoLogradouroesDataGrid"
-                      themeNames="compact"
+                      themeNames="small"
                       width="100%"
                       minHeight="20em"
                       dataContainer="tipoLogradouroesDc"

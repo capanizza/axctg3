@@ -39,7 +39,7 @@
         <dataGrid id="empresasDataGrid"
                   width="100%"
                   minHeight="20em"
-                  dataContainer="empresasDc" themeNames="compact"
+                  dataContainer="empresasDc" themeNames="small"
                   columnReorderingAllowed="true">
             <actions>
                 <action id="create" type="list_create"/>
