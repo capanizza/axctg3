@@ -5,7 +5,7 @@ This file provides guidance to coding agents when working with code in this repo
 Axctg3 is a Brazilian multi-company accounting application (contabilidade) built on
 Jmix 3 / Spring Boot 4 / Vaadin 25, Java 21, Gradle, PostgreSQL + Liquibase.
 
-`AGENTS.md` and `.junie/guidelines.md` hold the same guidance for other tools. These
+`CLAUDE.md` and `.junie/guidelines.md` hold the same guidance for other tools. These
 three files are kept identical apart from this header — mirror any change to all three.
 
 ## Commands
@@ -22,8 +22,38 @@ three files are kept identical apart from this header — mirror any change to a
   runs on every startup from `br/com/axialsoftware/axctg3/liquibase/changelog.xml`.
 - Tests use a file-backed HSQLDB at `.jmix/hsqldb/axctg3_test` (`@ActiveProfiles("test")`).
 - NEVER use `bootRun` as a verification gate — it does not exit and will hang the turn.
-  If you must render-walk, run it in the background, poll `/actuator/health` until UP,
-  then shut it down.
+  Gate 2 is `clean test`. See below for the cases where starting the app IS the point.
+
+### Starting the app on purpose (render walk, or migrating the dev Postgres)
+
+Two things genuinely require a running app: a Gate-3 render walk, and applying a
+changelog to the dev Postgres — `clean test` only ever migrates HSQLDB, so a changeset
+scoped `dbms="postgresql"` is never exercised by the test suite.
+
+**There is no actuator on the classpath**, so do not poll `/actuator/health` — it 404s.
+Wait on the startup line that `Axctg3Application` logs from its `ApplicationStartedEvent`
+listener:
+
+```bash
+cmd.exe /c "gradlew.bat --no-daemon bootRun" > /tmp/bootrun.log 2>&1 &
+# aguarde:  "Started Axctg3Application in N seconds" / "Application started at http://..."
+# ou pare cedo em:  "APPLICATION FAILED TO START" / "BUILD FAILED"
+```
+
+Shut it down by matching the main class — matching on `axctg3` alone also hits the
+IntelliJ process that has the project open:
+
+```bash
+powershell.exe -NoProfile -Command "Get-CimInstance Win32_Process -Filter \"Name='java.exe'\" | Where-Object { \$_.CommandLine -match 'Axctg3Application' } | ForEach-Object { Stop-Process -Id \$_.ProcessId -Force }"
+```
+
+Then confirm port 8085 is free before reporting the app stopped.
+
+To inspect the dev Postgres directly, `psql` is at
+`C:\Program Files\Postgresql\16\bin\psql.exe`. Quoting it through `cmd.exe /c` fails —
+write a small `.bat` under `%TEMP%` and run that instead. A booted app proves only that
+Liquibase did not throw; query `pg_indexes` / `information_schema.columns` to confirm the
+schema actually changed.
 
 ### Running the build from a WSL shell
 
