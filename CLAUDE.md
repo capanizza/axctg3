@@ -25,6 +25,28 @@ three files are kept identical apart from this header — mirror any change to a
   If you must render-walk, run it in the background, poll `/actuator/health` until UP,
   then shut it down.
 
+### Running the build from a WSL shell
+
+There is **no JDK inside WSL** — Java lives only on the Windows side
+(`C:\Program Files\Eclipse Adoptium\jdk-21.0.9.10-hotspot`, with `JAVA_HOME` set in the
+Windows environment). A bare `./gradlew` from WSL dies with
+`ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH`.
+
+The project sits at `C:\projetos\jmix\axctg3`, so drive the Windows wrapper instead:
+
+```bash
+cmd.exe /c "gradlew.bat --no-daemon clean test"
+```
+
+**Do not pipe the result through `tail`/`tr`** — the pipeline's exit status is the last
+command's, so a failed build reports exit 0 and reads as green. Redirect, then check:
+
+```bash
+cmd.exe /c "gradlew.bat --no-daemon clean test" > /tmp/gradle.log 2>&1; echo "EXIT=$?"
+```
+
+Either way, confirm `BUILD SUCCESSFUL` in the output before calling a gate passed.
+
 ## Architecture
 
 ### Company + period is application state carried on `User`

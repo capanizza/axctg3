@@ -8,6 +8,9 @@
     <!-- DO NOT REMOVE. This is a master changelog that runs all other changelogs. -->
 
     <property name="offsetDateTime.type" dbms="postgresql" value="timestamp with time zone"/>
+    <!-- Os testes rodam em HSQLDB; sem esta linha o ${offsetDateTime.type} não é
+         substituído e a migração falha com "Unknown JDBC escape sequence: {". -->
+    <property name="offsetDateTime.type" dbms="hsqldb" value="timestamp with time zone"/>
     <include file="/io/jmix/data/liquibase/changelog.xml"/>
     <include file="/io/jmix/flowuidata/liquibase/changelog.xml"/>
     <include file="/io/jmix/securitydata/liquibase/changelog.xml"/>
