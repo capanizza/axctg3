@@ -4,6 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Axctg3 is a Brazilian multi-company accounting application (contabilidade) built on
 Jmix 3 / Spring Boot 4 / Vaadin 25, Java 21, Gradle, PostgreSQL + Liquibase.
+Pinned in `build.gradle`: `io.jmix` plugin and `bomVersion` `3.0.1`; Vaadin `25.1.3`
+(see `package.json`). Hilla/Copilot are excluded from `configurations.implementation`.
 
 `AGENTS.md` and `.junie/guidelines.md` hold the same guidance for other tools. These
 three files are kept identical apart from this header — mirror any change to all three.
@@ -94,10 +96,16 @@ by hand**. Entities store a plain `Integer codEmpresa` — not a FK to `Empresa`
 row *and* mutates the in-memory principal (so the header updates), then calls
 `UI.getCurrent().getPage().reload()`. Follow that pattern if you add another switcher.
 
-### Reports: menu → MenuBean → service → JasperReports
+### Reports: view action → MenuBean → service → JasperReports
 
-`jmix.ui.composite-menu=true`, so `menu.xml` items can invoke bean methods.
-`MenuBean` (`@Component("MenuBean")`) is the entry point for every report:
+`MenuBean` (`@Component("MenuBean")`) is the entry point for every report. Today every
+call site is a **list-view action**, not a menu item — `ContaContabilListView`
+(`listarContasContabeis`, `listarBalancete`) and `LancamentoListView`
+(`listarLancamentos`, `listarRazao`). `jmix.ui.composite-menu=true` is set, so `menu.xml`
+*could* invoke bean methods, but no item currently does; don't assume a report is
+reachable from the menu without grepping `menu.xml`.
+
+The pipeline:
 
 1. `UtilGeralService.prepararConfigRel()` loads-or-creates the caller's `ConfigRel` —
    one row per user holding last-used report filters (dates, account ranges, grau).
@@ -107,8 +115,14 @@ row *and* mutates the in-memory principal (so the header updates), then calls
    `RelatorioService.emitirRelatorio(...)` as a `JRBeanCollectionDataSource`.
 
 `RelatorioService` resolves templates from `<user.dir>/relatorios/*.jasper` — **on disk,
-not on the classpath**. A report added to `relatorios/` needs no build step, but the
-process working directory must be the project root.
+not on the classpath**, with the file name passed in full (`"Balancete.jasper"`). A report
+added to `relatorios/` needs no build step, but the process working directory must be the
+project root. The filled report goes to the browser through the Jmix `Downloader` as
+`DownloadFormat.PDF` — nothing is written to disk.
+
+`emitirRelatorio` swallows every exception into `log.info(e.getMessage())`, so a missing
+template or a bean/field mismatch produces **no error in the UI** — just no download.
+When a report "does nothing", read the app log before touching the code.
 
 The `*Dto` classes in `entity/contabil` (`BalanceteDto`, `RazaoDto`, `LancamentoDto`,
 `ContaContabilDto`) are non-persistent `@JmixEntity` beans with `@JmixId
@@ -134,6 +148,13 @@ this is the highest-risk area in the codebase.
 `ContaContabil` owns `List<SaldoConta>` as `@Composition` + `@OnDelete(CASCADE)`;
 `SaldoContaService.criarSaldos()` seeds the 12 monthly rows for a new account.
 
+`LancamentoTmp` is a staging table for entries imported from the legacy system — same
+shape as `Lancamento`, unique index on `NUMERO, ANO, MES, COD_EMPRESA`. It has no view:
+`LancamentoService.importarLancamentos()` reads it and posts real `Lancamento` rows, fired
+from `lancamentoesDataGrid.importarAction` in `LancamentoListView`. An earlier
+`BackgroundTask` + progress-dialog version of that flow is still in the file as a large
+commented-out block — read it before rewriting the import, and delete it if you replace it.
+
 ### Enum convention (SPED/ECD numeric codes)
 
 Enums implement `EnumClass<Integer>` with a static `fromId`. The entity field is declared
@@ -157,6 +178,12 @@ those: `tabelas`, `cadastros`, `contabil`, `financeiro`, `fiscal`, `almoxarifado
 View XML mirrors the Java package under
 `src/main/resources/br/com/axialsoftware/axctg3/view/<modulo>/<entidade>/`.
 
+A new view is only reachable once it is added to `menu.xml`, whose four groups are
+`application` (working set: select company, chart of accounts, entries), `contabil`,
+`administracao` and `tabelas`. Items reference the **view id** (`Lancamento.list`), never
+the class, and their `title` is a `msg://<view.package>/<viewId>.title` key that must exist
+in both bundles — a typo there renders the raw `msg://…` string in the menu.
+
 i18n is **one pair of bundles** for the whole app —
 `src/main/resources/br/com/axialsoftware/axctg3/messages_{en,pt_BR}.properties`, not
 per-package bundles. Both files must stay key-for-key identical. Keys are
@@ -165,6 +192,31 @@ per-package bundles. Both files must stay key-for-key identical. Keys are
 Themes `axctg3-aura` (active — wired via `@StyleSheet` on `Axctg3Application`) and
 `axctg3-lumo` live in `src/main/resources/META-INF/resources/themes/`.
 Never edit `src/main/frontend/generated/` — regenerated every build.
+
+### Test harness — two flavors, both `@ActiveProfiles("test")`
+
+The suite is **two sample classes only** (`user/UserTest`, `user/UserUiTest`); a green
+`clean test` therefore proves the context boots, not that any feature works.
+
+- **Data/service test** — `@SpringBootTest` + `@ExtendWith(AuthenticatedAsAdmin.class)`
+  (`test_support/AuthenticatedAsAdmin` wraps each test in `SystemAuthenticator.begin("admin")`).
+  Needed for anything touching `DataManager`; without it, saves fail unauthenticated.
+- **UI test** — `@UiTest` +
+  `@SpringBootTest(classes = {Axctg3Application.class, FlowuiTestAssistConfiguration.class})`.
+  Drive views with `ViewNavigators` + `UiTestUtils.getCurrentView()` and grab components by
+  their descriptor `id` via `UiTestUtils.getComponent(view, "usernameField")` — so a test is
+  the cheapest way to catch the XML defects `compileJava` misses.
+
+Beware the shared file-backed HSQLDB at `.jmix/hsqldb/axctg3_test`: state survives between
+runs, so tests clean up after themselves in `@AfterEach`.
+
+`UtilGeralService` reads company/period straight off the principal, and changelog `020`
+leaves those columns **nullable and unseeded** — under `AuthenticatedAsAdmin` they are
+`null`. Any test that exercises a listener or service touching `getCodEmpresa()` /
+`getAnoContabil()` must set them on the `admin` `User` row first. The accessors return
+`null` quietly; the failure lands downstream and looks unrelated — `getMascContabil()`
+throwing on `.one()` with no `Empresa`, or a `ConstraintViolationException` on the
+`@NotNull COD_EMPRESA` of the row being saved.
 
 ## Project conventions (obrigatórias)
 
@@ -185,6 +237,16 @@ Never edit `src/main/frontend/generated/` — regenerated every build.
 Padrão Jmix: `changelog/<ano>/<mês 2 dígitos>/dd-hhMMss<cccccccc>-<descrição>.xml`.
 `cccccccc` é o código do desenvolvedor — neste projeto, `c1f40fd1`. Na descrição, o
 nome da entidade e a ação: `empresa-criar`, `lancamento_tmp-criar`.
+
+O master `liquibase/changelog.xml` usa `<includeAll path=".../liquibase/changelog"/>`:
+todo arquivo colocado ali roda automaticamente, **em ordem alfabética de caminho** — é o
+nome datado que garante a ordem, não uma lista de `<include>`. Não há changelog a editar
+ao criar um changeset; e um XML mal formado nessa pasta quebra a subida inteira.
+
+O master também declara `offsetDateTime.type` para `postgresql` **e** para `hsqldb`. Sem a
+linha do hsqldb, `${offsetDateTime.type}` não é substituído e os testes falham com
+`Unknown JDBC escape sequence: {`. Ao usar uma nova propriedade de tipo, declare-a para os
+dois bancos.
 
 ### Cópia dos projetos legados
 
