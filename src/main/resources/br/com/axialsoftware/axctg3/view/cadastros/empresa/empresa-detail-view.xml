@@ -8,29 +8,29 @@
             <fetchPlan extends="_base">
                 <property name="tipoLogradouro" fetchPlan="_base"/>
                 <property name="municipio" fetchPlan="_base"/>
+                <property name="contaParceiroSaida" fetchPlan="_base"/>
+                <property name="contaParceiroEntrada" fetchPlan="_base"/>
+                <property name="contaIpiSaida" fetchPlan="_base"/>
+                <property name="contaGnreSaida" fetchPlan="_base"/>
+                <property name="contaSubstituicaoSaida" fetchPlan="_base"/>
+                <property name="contaRevenda" fetchPlan="_base"/>
+                <property name="contaCaixa" fetchPlan="_base"/>
+                <property name="contaMovimentoBancario" fetchPlan="_base"/>
+                <property name="historicoGnreSaida" fetchPlan="_base"/>
+                <property name="historicoSubstituicaoSaida" fetchPlan="_base"/>
+                <property name="historicoRevenda" fetchPlan="_base"/>
+                <property name="historicoIpi" fetchPlan="_base"/>
+                <property name="historicoBaixaReceber" fetchPlan="_base"/>
+                <property name="historicoBaixaPagar" fetchPlan="_base"/>
+                <property name="histFinBaixaReceber" fetchPlan="_base"/>
+                <property name="histFinBaixaJurosReceber" fetchPlan="_base"/>
+                <property name="histFinBaixaDescontoReceber" fetchPlan="_base"/>
+                <property name="histFinBaixaPagar" fetchPlan="_base"/>
+                <property name="histFinBaixaJurosPagar" fetchPlan="_base"/>
+                <property name="histFinBaixaDescontoPagar" fetchPlan="_base"/>
             </fetchPlan>
             <loader id="empresaDl"/>
         </instance>
-        <collection id="tipoLogradourosDc"
-                    class="br.com.axialsoftware.axctg3.entity.tabelas.TipoLogradouro"
-                    fetchPlan="_base">
-            <loader id="tipoLogradourosDl">
-                <query>
-                    <![CDATA[select e from TipoLogradouro e
-                    order by e.codigo]]>
-                </query>
-            </loader>
-        </collection>
-        <collection id="municipiosDc"
-                    class="br.com.axialsoftware.axctg3.entity.tabelas.Municipio"
-                    fetchPlan="_base">
-            <loader id="municipiosDl">
-                <query>
-                    <![CDATA[select e from Municipio e
-                    order by e.codigo]]>
-                </query>
-            </loader>
-        </collection>
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
@@ -40,52 +40,6 @@
         <action id="closeAction" type="detail_close"/>
     </actions>
     <layout>
-        <!--formLayout id="form" dataContainer="empresaDc">
-            <responsiveSteps>
-                <responsiveStep minWidth="0" columns="1"/>
-                <responsiveStep minWidth="40em" columns="2"/>
-            </responsiveSteps>
-            <textField id="codigoField" property="codigo"/>
-            <textField id="nomeField" property="nome"/>
-            <textField id="apelidoField" property="apelido"/>
-            <textField id="logradouroField" property="logradouro"/>
-            <textField id="numeroField" property="numero"/>
-            <textField id="complementoField" property="complemento"/>
-            <textField id="bairroField" property="bairro"/>
-            <textField id="cepField" property="cep"/>
-            <textField id="cnpjField" property="cnpj"/>
-            <textField id="inscEstField" property="inscEst"/>
-            <textField id="inscMunField" property="inscMun"/>
-            <textField id="nireField" property="nire"/>
-            <select id="indSitEspField" property="indSitEsp"/>
-            <select id="indSitIniPerField" property="indSitIniPer"/>
-            <select id="indNireField" property="indNire"/>
-            <select id="indFinEscField" property="indFinEsc"/>
-            <select id="indGrandePorteField" property="indGrandePorte"/>
-            <select id="tipEcdField" property="tipEcd"/>
-            <textField id="codScpField" property="codScp"/>
-            <checkbox id="identMfField" property="identMf"/>
-            <checkbox id="indEscConsField" property="indEscCons"/>
-            <select id="indCentralizadaField" property="indCentralizada"/>
-            <select id="indMudancaPcField" property="indMudancaPc"/>
-            <select id="codPlanRefField" property="codPlanRef"/>
-            <textField id="nmResponsavelField" property="nmResponsavel"/>
-            <textField id="cpfResponsavelField" property="cpfResponsavel"/>
-            <select id="codAssinResponsavelField" property="codAssinResponsavel"/>
-            <textField id="emailResponsavelField" property="emailResponsavel"/>
-            <textField id="foneResponsavelField" property="foneResponsavel"/>
-            <checkbox id="indRespLegalField" property="indRespLegal"/>
-            <textField id="nmContabilistaField" property="nmContabilista"/>
-            <textField id="cpfContabilistaField" property="cpfContabilista"/>
-            <select id="codAssinContabilistaField" property="codAssinContabilista"/>
-            <textField id="emailContabilistaField" property="emailContabilista"/>
-            <textField id="foneContabilistaField" property="foneContabilista"/>
-            <textField id="inscCrcField" property="inscCrc"/>
-            <textField id="numSeqCrcField" property="numSeqCrc"/>
-            <datePicker id="dtCrcField" property="dtCrc"/>
-            <textField id="ufCrcField" property="ufCrc"/>
-            <textField id="mascContabilField" property="mascContabil"/>
-        </formLayout-->
         <vbox id="form" width="100%" spacing="true">
             <hbox width="100%" expand="nomeField">
                 <integerField id="codigoField"
@@ -113,12 +67,16 @@
                     <tab id="enderecoTab" label="Endereço">
                         <vbox>
                             <hbox width="100%" expand="logradouroField">
-                                <entityComboBox id="tipoLogradouroField"
-                                                property="tipoLogradouro"
-                                                dataContainer="empresaDc"
-                                                itemsContainer="tipoLogradourosDc"
-                                                width="25%"  themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.tipoLogradouro"/>
+                                <entityPicker id="tipoLogradouroField"
+                                              property="tipoLogradouro"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.tipoLogradouro">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
                                 <textField id="logradouroField"
                                            property="logradouro"
                                            dataContainer="empresaDc" themeNames="small"
@@ -140,11 +98,15 @@
                                            dataContainer="empresaDc"
                                            width="25%" themeNames="small"
                                            label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.bairro"/>
-                                <entityComboBox id="municipioField"
-                                                property="municipio"
-                                                dataContainer="empresaDc" themeNames="small"
-                                                itemsContainer="municipiosDc"
-                                                label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.municipio"/>
+                                <entityPicker id="municipioField"
+                                              property="municipio"
+                                              dataContainer="empresaDc" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.municipio">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
                                 <textField id="cepField"
                                            property="cep"
                                            dataContainer="empresaDc"
@@ -336,144 +298,224 @@
                             </hbox>
                         </vbox>
                     </tab>
-                    <!--tab id="configuracaoFiscalTab" label="Configuração fiscal">
+                    <tab id="configuracaoFiscalTab" label="Configuração fiscal">
                         <vbox width="100%">
                             <hbox width="100%">
-                                <entityComboBox id="contaIpiSaidaField"
-                                                property="contaIpiSaida"
-                                                dataContainer="empresaDc"
-                                                itemsContainer="contaContabilsDc"
-                                                width="25%" themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.contaIpiSaida"/>
-                                <entityComboBox id="contaGnreSaidaField"
-                                                property="contaGnreSaida"
-                                                dataContainer="empresaDc"
-                                                itemsContainer="contaContabilsDc"
-                                                width="25%" themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.contaGnreSaida"/>
-                                <entityComboBox id="contaSubstituicaoSaidaField"
-                                                property="contaSubstituicaoSaida"
-                                                dataContainer="empresaDc"
-                                                itemsContainer="contaContabilsDc"
-                                                width="25%" themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.contaSubstituicaoSaida"/>
-                                <entityComboBox id="contaRevendaField"
-                                                property="contaRevenda"
-                                                dataContainer="empresaDc"
-                                                itemsContainer="contaContabilsDc"
-                                                width="25%" themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.contaRevenda"/>
+                                <entityPicker id="contaIpiSaidaField"
+                                              property="contaIpiSaida"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.contaIpiSaida">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
+                                <entityPicker id="contaGnreSaidaField"
+                                              property="contaGnreSaida"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.contaGnreSaida">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
+                                <entityPicker id="contaSubstituicaoSaidaField"
+                                              property="contaSubstituicaoSaida"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.contaSubstituicaoSaida">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
+                                <entityPicker id="contaRevendaField"
+                                              property="contaRevenda"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.contaRevenda">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
                             </hbox>
                             <hbox width="100%">
-                                <entityComboBox id="historicoIPIField"
-                                                property="historicoIpi"
-                                                dataContainer="empresaDc"
-                                                itemsContainer="historicoContabilsDc"
-                                                width="25%" themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.historicoIpi"/>
-                                <entityComboBox id="historicoGnreSaidaField"
-                                                property="historicoGnreSaida"
-                                                dataContainer="empresaDc"
-                                                itemsContainer="historicoContabilsDc"
-                                                width="25%" themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.historicoGnreSaida"/>
-                                <entityComboBox id="historicoSubstituicaoSaidaField"
-                                                property="historicoSubstituicaoSaida"
-                                                dataContainer="empresaDc"
-                                                itemsContainer="historicoContabilsDc"
-                                                width="25%" themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.historicoSubstituicaoSaida"/>
-                                <entityComboBox id="historicoRevendaField"
-                                                property="historicoRevenda"
-                                                dataContainer="empresaDc"
-                                                itemsContainer="historicoContabilsDc"
-                                                width="25%" themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.historicoRevenda"/>
+                                <entityPicker id="historicoIPIField"
+                                              property="historicoIpi"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.historicoIpi">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
+                                <entityPicker id="historicoGnreSaidaField"
+                                              property="historicoGnreSaida"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.historicoGnreSaida">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
+                                <entityPicker id="historicoSubstituicaoSaidaField"
+                                              property="historicoSubstituicaoSaida"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.historicoSubstituicaoSaida">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
+                                <entityPicker id="historicoRevendaField"
+                                              property="historicoRevenda"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.historicoRevenda">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
                             </hbox>
                         </vbox>
-                    </tab-->
-                    <!--tab id="configuracaoFinanceiraTab" label="Configuração financeira">
+                    </tab>
+                    <tab id="configuracaoFinanceiraTab" label="Configuração financeira">
                         <vbox>
                             <hbox width="100%">
-                                <entityComboBox id="contaParceiroSaidaField"
-                                                property="contaParceiroSaida"
-                                                dataContainer="empresaDc"
-                                                itemsContainer="contaContabilsDc"
-                                                width="25%" themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.contaParceiroSaida"/>
-                                <entityComboBox id="contaParceiroEntradaField"
-                                                property="contaParceiroEntrada"
-                                                dataContainer="empresaDc"
-                                                itemsContainer="contaContabilsDc"
-                                                width="25%" themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.contaParceiroEntrada"/>
-                                <entityComboBox id="contaCaixaField"
-                                                property="contaCaixa"
-                                                dataContainer="empresaDc"
-                                                itemsContainer="contaContabilsDc"
-                                                width="25%" themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.contaCaixa"/>
-                                <entityComboBox id="contaMovimentoBancarioField"
-                                                property="contaMovimentoBancario"
-                                                dataContainer="empresaDc"
-                                                itemsContainer="contaContabilsDc"
-                                                width="25%" themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.contaMovimentoBancario"/>
+                                <entityPicker id="contaParceiroSaidaField"
+                                              property="contaParceiroSaida"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.contaParceiroSaida">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
+                                <entityPicker id="contaParceiroEntradaField"
+                                              property="contaParceiroEntrada"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.contaParceiroEntrada">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
+                                <entityPicker id="contaCaixaField"
+                                              property="contaCaixa"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.contaCaixa">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
+                                <entityPicker id="contaMovimentoBancarioField"
+                                              property="contaMovimentoBancario"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.contaMovimentoBancario">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
                             </hbox>
                             <hbox width="100%">
-                                <entityComboBox id="historicoBaixaReceberField"
-                                                property="historicoBaixaReceber"
-                                                dataContainer="empresaDc"
-                                                itemsContainer="historicoContabilsDc"
-                                                width="25%" themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.historicoBaixaReceber"/>
-                                <entityComboBox id="histFinBaixaReceberField"
-                                                property="histFinBaixaReceber"
-                                                dataContainer="empresaDc"
-                                                itemsContainer="historicoFinanceirosDc"
-                                                width="25%" themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.histFinBaixaReceber"/>
-                                <entityComboBox id="histFinBaixaJurosReceberField"
-                                                property="histFinBaixaJurosReceber"
-                                                dataContainer="empresaDc"
-                                                itemsContainer="historicoFinanceirosDc"
-                                                width="25%" themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.histFinBaixaJurosReceber"/>
-                                <entityComboBox id="histFinBaixaDescontoReceberField"
-                                                property="histFinBaixaDescontoReceber"
-                                                dataContainer="empresaDc"
-                                                itemsContainer="historicoFinanceirosDc"
-                                                width="25%" themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.histFinBaixaDescontoReceber"/>
+                                <entityPicker id="historicoBaixaReceberField"
+                                              property="historicoBaixaReceber"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.historicoBaixaReceber">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
+                                <entityPicker id="histFinBaixaReceberField"
+                                              property="histFinBaixaReceber"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.histFinBaixaReceber">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
+                                <entityPicker id="histFinBaixaJurosReceberField"
+                                              property="histFinBaixaJurosReceber"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.histFinBaixaJurosReceber">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
+                                <entityPicker id="histFinBaixaDescontoReceberField"
+                                              property="histFinBaixaDescontoReceber"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.histFinBaixaDescontoReceber">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
                             </hbox>
                             <hbox width="100%">
-                                <entityComboBox id="historicoBaixaPagarField"
-                                                property="historicoBaixaPagar"
-                                                dataContainer="empresaDc"
-                                                itemsContainer="historicoContabilsDc"
-                                                width="25%" themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.historicoBaixaPagar"/>
-                                <entityComboBox id="histFinBaixaPagarField"
-                                                property="histFinBaixaPagar"
-                                                dataContainer="empresaDc"
-                                                itemsContainer="historicoFinanceirosDc"
-                                                width="25%" themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.histFinBaixaPagar"/>
-                                <entityComboBox id="histFinBaixaJurosPagarField"
-                                                property="histFinBaixaJurosPagar"
-                                                dataContainer="empresaDc"
-                                                itemsContainer="historicoFinanceirosDc"
-                                                width="25%" themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.histFinBaixaJurosPagar"/>
-                                <entityComboBox id="histFinBaixaDescontoPagarField"
-                                                property="histFinBaixaDescontoPagar"
-                                                dataContainer="empresaDc"
-                                                itemsContainer="historicoFinanceirosDc"
-                                                width="25%" themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg.entity.cadastros/Empresa.histFinBaixaDescontoPagar"/>
+                                <entityPicker id="historicoBaixaPagarField"
+                                              property="historicoBaixaPagar"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.historicoBaixaPagar">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
+                                <entityPicker id="histFinBaixaPagarField"
+                                              property="histFinBaixaPagar"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.histFinBaixaPagar">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
+                                <entityPicker id="histFinBaixaJurosPagarField"
+                                              property="histFinBaixaJurosPagar"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.histFinBaixaJurosPagar">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
+                                <entityPicker id="histFinBaixaDescontoPagarField"
+                                              property="histFinBaixaDescontoPagar"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.histFinBaixaDescontoPagar">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
                             </hbox>
                         </vbox>
-                    </tab-->
+                    </tab>
                 </tabSheet>
             </vbox>
         </vbox>

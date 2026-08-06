@@ -1,6 +1,9 @@
 package br.com.axialsoftware.axctg3.entity.cadastros;
 
+import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
+import br.com.axialsoftware.axctg3.entity.contabil.HistoricoContabil;
 import br.com.axialsoftware.axctg3.entity.enums.*;
+import br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro;
 import br.com.axialsoftware.axctg3.entity.tabelas.Municipio;
 import br.com.axialsoftware.axctg3.entity.tabelas.TipoLogradouro;
 import io.jmix.core.MetadataTools;
@@ -191,6 +194,86 @@ public class Empresa {
 
     @Column(name = "MASC_CONTABIL", length = 25)
     private String mascContabil;
+
+    @JoinColumn(name = "CONTA_PARCEIRO_SAIDA_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private ContaContabil contaParceiroSaida;
+
+    @JoinColumn(name = "CONTA_PARCEIRO_ENTRADA_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private ContaContabil contaParceiroEntrada;
+
+    @JoinColumn(name = "CONTA_IPI_SAIDA_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private ContaContabil contaIpiSaida;
+
+    @JoinColumn(name = "CONTA_GNRE_SAIDA_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private ContaContabil contaGnreSaida;
+
+    @JoinColumn(name = "CONTA_SUBSTITUICAO_SAIDA_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private ContaContabil contaSubstituicaoSaida;
+
+    @JoinColumn(name = "CONTA_REVENDA_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private ContaContabil contaRevenda;
+
+    @JoinColumn(name = "CONTA_CAIXA_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private ContaContabil contaCaixa;
+
+    @JoinColumn(name = "CONTA_MOVIMENTO_BANCARIO_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private ContaContabil contaMovimentoBancario;
+
+    @JoinColumn(name = "HISTORICO_GNRE_SAIDA_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private HistoricoContabil historicoGnreSaida;
+
+    @JoinColumn(name = "HISTORICO_SUBSTITUICAO_SAIDA_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private HistoricoContabil historicoSubstituicaoSaida;
+
+    @JoinColumn(name = "HISTORICO_REVENDA_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private HistoricoContabil historicoRevenda;
+
+    @JoinColumn(name = "HISTORICO_IPI_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private HistoricoContabil historicoIpi;
+
+    @JoinColumn(name = "HISTORICO_BAIXA_RECEBER_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private HistoricoContabil historicoBaixaReceber;
+
+    @JoinColumn(name = "HISTORICO_BAIXA_PAGAR_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private HistoricoContabil historicoBaixaPagar;
+
+    @JoinColumn(name = "HIST_FIN_BAIXA_RECEBER_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private HistoricoFinanceiro histFinBaixaReceber;
+
+    @JoinColumn(name = "HIST_FIN_BAIXA_JUROS_RECEBER_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private HistoricoFinanceiro histFinBaixaJurosReceber;
+
+    @JoinColumn(name = "HIST_FIN_BAIXA_DESCONTO_RECEBER_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private HistoricoFinanceiro histFinBaixaDescontoReceber;
+
+    @JoinColumn(name = "HIST_FIN_BAIXA_PAGAR_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private HistoricoFinanceiro histFinBaixaPagar;
+
+    @JoinColumn(name = "HIST_FIN_BAIXA_JUROS_PAGAR_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private HistoricoFinanceiro histFinBaixaJurosPagar;
+
+    @JoinColumn(name = "HIST_FIN_BAIXA_DESCONTO_PAGAR_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private HistoricoFinanceiro histFinBaixaDescontoPagar;
 
     @Column(name = "SELECIONADA")
     private Boolean selecionada = false;
@@ -548,6 +631,166 @@ public class Empresa {
 
     public void setMascContabil(String mascContabil) {
         this.mascContabil = mascContabil;
+    }
+
+    public ContaContabil getContaParceiroSaida() {
+        return contaParceiroSaida;
+    }
+
+    public void setContaParceiroSaida(ContaContabil contaParceiroSaida) {
+        this.contaParceiroSaida = contaParceiroSaida;
+    }
+
+    public ContaContabil getContaParceiroEntrada() {
+        return contaParceiroEntrada;
+    }
+
+    public void setContaParceiroEntrada(ContaContabil contaParceiroEntrada) {
+        this.contaParceiroEntrada = contaParceiroEntrada;
+    }
+
+    public ContaContabil getContaIpiSaida() {
+        return contaIpiSaida;
+    }
+
+    public void setContaIpiSaida(ContaContabil contaIpiSaida) {
+        this.contaIpiSaida = contaIpiSaida;
+    }
+
+    public ContaContabil getContaGnreSaida() {
+        return contaGnreSaida;
+    }
+
+    public void setContaGnreSaida(ContaContabil contaGnreSaida) {
+        this.contaGnreSaida = contaGnreSaida;
+    }
+
+    public ContaContabil getContaSubstituicaoSaida() {
+        return contaSubstituicaoSaida;
+    }
+
+    public void setContaSubstituicaoSaida(ContaContabil contaSubstituicaoSaida) {
+        this.contaSubstituicaoSaida = contaSubstituicaoSaida;
+    }
+
+    public ContaContabil getContaRevenda() {
+        return contaRevenda;
+    }
+
+    public void setContaRevenda(ContaContabil contaRevenda) {
+        this.contaRevenda = contaRevenda;
+    }
+
+    public ContaContabil getContaCaixa() {
+        return contaCaixa;
+    }
+
+    public void setContaCaixa(ContaContabil contaCaixa) {
+        this.contaCaixa = contaCaixa;
+    }
+
+    public ContaContabil getContaMovimentoBancario() {
+        return contaMovimentoBancario;
+    }
+
+    public void setContaMovimentoBancario(ContaContabil contaMovimentoBancario) {
+        this.contaMovimentoBancario = contaMovimentoBancario;
+    }
+
+    public HistoricoContabil getHistoricoGnreSaida() {
+        return historicoGnreSaida;
+    }
+
+    public void setHistoricoGnreSaida(HistoricoContabil historicoGnreSaida) {
+        this.historicoGnreSaida = historicoGnreSaida;
+    }
+
+    public HistoricoContabil getHistoricoSubstituicaoSaida() {
+        return historicoSubstituicaoSaida;
+    }
+
+    public void setHistoricoSubstituicaoSaida(HistoricoContabil historicoSubstituicaoSaida) {
+        this.historicoSubstituicaoSaida = historicoSubstituicaoSaida;
+    }
+
+    public HistoricoContabil getHistoricoRevenda() {
+        return historicoRevenda;
+    }
+
+    public void setHistoricoRevenda(HistoricoContabil historicoRevenda) {
+        this.historicoRevenda = historicoRevenda;
+    }
+
+    public HistoricoContabil getHistoricoIpi() {
+        return historicoIpi;
+    }
+
+    public void setHistoricoIpi(HistoricoContabil historicoIpi) {
+        this.historicoIpi = historicoIpi;
+    }
+
+    public HistoricoContabil getHistoricoBaixaReceber() {
+        return historicoBaixaReceber;
+    }
+
+    public void setHistoricoBaixaReceber(HistoricoContabil historicoBaixaReceber) {
+        this.historicoBaixaReceber = historicoBaixaReceber;
+    }
+
+    public HistoricoContabil getHistoricoBaixaPagar() {
+        return historicoBaixaPagar;
+    }
+
+    public void setHistoricoBaixaPagar(HistoricoContabil historicoBaixaPagar) {
+        this.historicoBaixaPagar = historicoBaixaPagar;
+    }
+
+    public HistoricoFinanceiro getHistFinBaixaReceber() {
+        return histFinBaixaReceber;
+    }
+
+    public void setHistFinBaixaReceber(HistoricoFinanceiro histFinBaixaReceber) {
+        this.histFinBaixaReceber = histFinBaixaReceber;
+    }
+
+    public HistoricoFinanceiro getHistFinBaixaJurosReceber() {
+        return histFinBaixaJurosReceber;
+    }
+
+    public void setHistFinBaixaJurosReceber(HistoricoFinanceiro histFinBaixaJurosReceber) {
+        this.histFinBaixaJurosReceber = histFinBaixaJurosReceber;
+    }
+
+    public HistoricoFinanceiro getHistFinBaixaDescontoReceber() {
+        return histFinBaixaDescontoReceber;
+    }
+
+    public void setHistFinBaixaDescontoReceber(HistoricoFinanceiro histFinBaixaDescontoReceber) {
+        this.histFinBaixaDescontoReceber = histFinBaixaDescontoReceber;
+    }
+
+    public HistoricoFinanceiro getHistFinBaixaPagar() {
+        return histFinBaixaPagar;
+    }
+
+    public void setHistFinBaixaPagar(HistoricoFinanceiro histFinBaixaPagar) {
+        this.histFinBaixaPagar = histFinBaixaPagar;
+    }
+
+    public HistoricoFinanceiro getHistFinBaixaJurosPagar() {
+        return histFinBaixaJurosPagar;
+    }
+
+    public void setHistFinBaixaJurosPagar(HistoricoFinanceiro histFinBaixaJurosPagar) {
+        this.histFinBaixaJurosPagar = histFinBaixaJurosPagar;
+    }
+
+    public HistoricoFinanceiro getHistFinBaixaDescontoPagar() {
+        return histFinBaixaDescontoPagar;
+    }
+
+    public void setHistFinBaixaDescontoPagar(HistoricoFinanceiro histFinBaixaDescontoPagar) {
+        this.histFinBaixaDescontoPagar = histFinBaixaDescontoPagar;
     }
 
     public OffsetDateTime getDeletedDate() {

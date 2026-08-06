@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/06-140000-c1f40fd1-empresa-adicionar-referencias.xml">
+    <changeSet id="1" author="axctg3">
+        <addColumn tableName="EMPRESA">
+            <column name="CONTA_PARCEIRO_SAIDA_ID" type="UUID"/>
+            <column name="CONTA_PARCEIRO_ENTRADA_ID" type="UUID"/>
+            <column name="CONTA_IPI_SAIDA_ID" type="UUID"/>
+            <column name="CONTA_GNRE_SAIDA_ID" type="UUID"/>
+            <column name="CONTA_SUBSTITUICAO_SAIDA_ID" type="UUID"/>
+            <column name="CONTA_REVENDA_ID" type="UUID"/>
+            <column name="CONTA_CAIXA_ID" type="UUID"/>
+            <column name="CONTA_MOVIMENTO_BANCARIO_ID" type="UUID"/>
+            <column name="HISTORICO_GNRE_SAIDA_ID" type="UUID"/>
+            <column name="HISTORICO_SUBSTITUICAO_SAIDA_ID" type="UUID"/>
+            <column name="HISTORICO_REVENDA_ID" type="UUID"/>
+            <column name="HISTORICO_IPI_ID" type="UUID"/>
+            <column name="HISTORICO_BAIXA_RECEBER_ID" type="UUID"/>
+            <column name="HISTORICO_BAIXA_PAGAR_ID" type="UUID"/>
+            <column name="HIST_FIN_BAIXA_RECEBER_ID" type="UUID"/>
+            <column name="HIST_FIN_BAIXA_JUROS_RECEBER_ID" type="UUID"/>
+            <column name="HIST_FIN_BAIXA_DESCONTO_RECEBER_ID" type="UUID"/>
+            <column name="HIST_FIN_BAIXA_PAGAR_ID" type="UUID"/>
+            <column name="HIST_FIN_BAIXA_JUROS_PAGAR_ID" type="UUID"/>
+            <column name="HIST_FIN_BAIXA_DESCONTO_PAGAR_ID" type="UUID"/>
+        </addColumn>
+    </changeSet>
+    <changeSet id="2" author="axctg3">
+        <createIndex indexName="IDX_EMPRESA_CONTA_PARCEIRO_SAIDA" tableName="EMPRESA">
+            <column name="CONTA_PARCEIRO_SAIDA_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="CONTA_PARCEIRO_SAIDA_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_CONTA_PARCEIRO_SAIDA" referencedColumnNames="ID"
+                                 referencedTableName="CONTA_CONTABIL"/>
+    </changeSet>
+    <changeSet id="3" author="axctg3">
+        <createIndex indexName="IDX_EMPRESA_CONTA_PARCEIRO_ENTRADA" tableName="EMPRESA">
+            <column name="CONTA_PARCEIRO_ENTRADA_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="CONTA_PARCEIRO_ENTRADA_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_CONTA_PARCEIRO_ENTRADA" referencedColumnNames="ID"
+                                 referencedTableName="CONTA_CONTABIL"/>
+    </changeSet>
+    <changeSet id="4" author="axctg3">
+        <createIndex indexName="IDX_EMPRESA_CONTA_IPI_SAIDA" tableName="EMPRESA">
+            <column name="CONTA_IPI_SAIDA_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="CONTA_IPI_SAIDA_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_CONTA_IPI_SAIDA" referencedColumnNames="ID"
+                                 referencedTableName="CONTA_CONTABIL"/>
+    </changeSet>
+    <changeSet id="5" author="axctg3">
+        <createIndex indexName="IDX_EMPRESA_CONTA_GNRE_SAIDA" tableName="EMPRESA">
+            <column name="CONTA_GNRE_SAIDA_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="CONTA_GNRE_SAIDA_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_CONTA_GNRE_SAIDA" referencedColumnNames="ID"
+                                 referencedTableName="CONTA_CONTABIL"/>
+    </changeSet>
+    <changeSet id="6" author="axctg3">
+        <createIndex indexName="IDX_EMPRESA_CONTA_SUBSTITUICAO_SAIDA" tableName="EMPRESA">
+            <column name="CONTA_SUBSTITUICAO_SAIDA_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="CONTA_SUBSTITUICAO_SAIDA_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_CONTA_SUBSTITUICAO_SAIDA" referencedColumnNames="ID"
+                                 referencedTableName="CONTA_CONTABIL"/>
+    </changeSet>
+    <changeSet id="7" author="axctg3">
+        <createIndex indexName="IDX_EMPRESA_CONTA_REVENDA" tableName="EMPRESA">
+            <column name="CONTA_REVENDA_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="CONTA_REVENDA_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_CONTA_REVENDA" referencedColumnNames="ID"
+                                 referencedTableName="CONTA_CONTABIL"/>
+    </changeSet>
+    <changeSet id="8" author="axctg3">
+        <createIndex indexName="IDX_EMPRESA_CONTA_CAIXA" tableName="EMPRESA">
+            <column name="CONTA_CAIXA_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="CONTA_CAIXA_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_CONTA_CAIXA" referencedColumnNames="ID"
+                                 referencedTableName="CONTA_CONTABIL"/>
+    </changeSet>
+    <changeSet id="9" author="axctg3">
+        <createIndex indexName="IDX_EMPRESA_CONTA_MOVIMENTO_BANCARIO" tableName="EMPRESA">
+            <column name="CONTA_MOVIMENTO_BANCARIO_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="CONTA_MOVIMENTO_BANCARIO_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_CONTA_MOVIMENTO_BANCARIO" referencedColumnNames="ID"
+                                 referencedTableName="CONTA_CONTABIL"/>
+    </changeSet>
+    <changeSet id="10" author="axctg3">
+        <createIndex indexName="IDX_EMPRESA_HISTORICO_GNRE_SAIDA" tableName="EMPRESA">
+            <column name="HISTORICO_GNRE_SAIDA_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="HISTORICO_GNRE_SAIDA_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_HISTORICO_GNRE_SAIDA" referencedColumnNames="ID"
+                                 referencedTableName="HISTORICO_CONTABIL"/>
+    </changeSet>
+    <changeSet id="11" author="axctg3">
+        <createIndex indexName="IDX_EMPRESA_HISTORICO_SUBSTITUICAO_SAIDA" tableName="EMPRESA">
+            <column name="HISTORICO_SUBSTITUICAO_SAIDA_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="HISTORICO_SUBSTITUICAO_SAIDA_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_HISTORICO_SUBSTITUICAO_SAIDA" referencedColumnNames="ID"
+                                 referencedTableName="HISTORICO_CONTABIL"/>
+    </changeSet>
+    <changeSet id="12" author="axctg3">
+        <createIndex indexName="IDX_EMPRESA_HISTORICO_REVENDA" tableName="EMPRESA">
+            <column name="HISTORICO_REVENDA_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="HISTORICO_REVENDA_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_HISTORICO_REVENDA" referencedColumnNames="ID"
+                                 referencedTableName="HISTORICO_CONTABIL"/>
+    </changeSet>
+    <changeSet id="13" author="axctg3">
+        <createIndex indexName="IDX_EMPRESA_HISTORICO_IPI" tableName="EMPRESA">
+            <column name="HISTORICO_IPI_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="HISTORICO_IPI_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_HISTORICO_IPI" referencedColumnNames="ID"
+                                 referencedTableName="HISTORICO_CONTABIL"/>
+    </changeSet>
+    <changeSet id="14" author="axctg3">
+        <createIndex indexName="IDX_EMPRESA_HISTORICO_BAIXA_RECEBER" tableName="EMPRESA">
+            <column name="HISTORICO_BAIXA_RECEBER_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="HISTORICO_BAIXA_RECEBER_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_HISTORICO_BAIXA_RECEBER" referencedColumnNames="ID"
+                                 referencedTableName="HISTORICO_CONTABIL"/>
+    </changeSet>
+    <changeSet id="15" author="axctg3">
+        <createIndex indexName="IDX_EMPRESA_HISTORICO_BAIXA_PAGAR" tableName="EMPRESA">
+            <column name="HISTORICO_BAIXA_PAGAR_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="HISTORICO_BAIXA_PAGAR_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_HISTORICO_BAIXA_PAGAR" referencedColumnNames="ID"
+                                 referencedTableName="HISTORICO_CONTABIL"/>
+    </changeSet>
+    <changeSet id="16" author="axctg3">
+        <createIndex indexName="IDX_EMPRESA_HIST_FIN_BAIXA_RECEBER" tableName="EMPRESA">
+            <column name="HIST_FIN_BAIXA_RECEBER_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="HIST_FIN_BAIXA_RECEBER_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_HIST_FIN_BAIXA_RECEBER" referencedColumnNames="ID"
+                                 referencedTableName="HISTORICO_FINANCEIRO"/>
+    </changeSet>
+    <changeSet id="17" author="axctg3">
+        <createIndex indexName="IDX_EMPRESA_HIST_FIN_BAIXA_JUROS_RECEBER" tableName="EMPRESA">
+            <column name="HIST_FIN_BAIXA_JUROS_RECEBER_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="HIST_FIN_BAIXA_JUROS_RECEBER_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_HIST_FIN_BAIXA_JUROS_RECEBER" referencedColumnNames="ID"
+                                 referencedTableName="HISTORICO_FINANCEIRO"/>
+    </changeSet>
+    <changeSet id="18" author="axctg3">
+        <createIndex indexName="IDX_EMPRESA_HIST_FIN_BAIXA_DESCONTO_RECEBER" tableName="EMPRESA">
+            <column name="HIST_FIN_BAIXA_DESCONTO_RECEBER_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="HIST_FIN_BAIXA_DESCONTO_RECEBER_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_HIST_FIN_BAIXA_DESCONTO_RECEBER" referencedColumnNames="ID"
+                                 referencedTableName="HISTORICO_FINANCEIRO"/>
+    </changeSet>
+    <changeSet id="19" author="axctg3">
+        <createIndex indexName="IDX_EMPRESA_HIST_FIN_BAIXA_PAGAR" tableName="EMPRESA">
+            <column name="HIST_FIN_BAIXA_PAGAR_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="HIST_FIN_BAIXA_PAGAR_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_HIST_FIN_BAIXA_PAGAR" referencedColumnNames="ID"
+                                 referencedTableName="HISTORICO_FINANCEIRO"/>
+    </changeSet>
+    <changeSet id="20" author="axctg3">
+        <createIndex indexName="IDX_EMPRESA_HIST_FIN_BAIXA_JUROS_PAGAR" tableName="EMPRESA">
+            <column name="HIST_FIN_BAIXA_JUROS_PAGAR_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="HIST_FIN_BAIXA_JUROS_PAGAR_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_HIST_FIN_BAIXA_JUROS_PAGAR" referencedColumnNames="ID"
+                                 referencedTableName="HISTORICO_FINANCEIRO"/>
+    </changeSet>
+    <changeSet id="21" author="axctg3">
+        <createIndex indexName="IDX_EMPRESA_HIST_FIN_BAIXA_DESCONTO_PAGAR" tableName="EMPRESA">
+            <column name="HIST_FIN_BAIXA_DESCONTO_PAGAR_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="HIST_FIN_BAIXA_DESCONTO_PAGAR_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_HIST_FIN_BAIXA_DESCONTO_PAGAR" referencedColumnNames="ID"
+                                 referencedTableName="HISTORICO_FINANCEIRO"/>
+    </changeSet>
+</databaseChangeLog>
