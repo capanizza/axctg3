@@ -7,6 +7,8 @@
         <menu id="cadastros" title="msg://br.com.axialsoftware.axctg3/menu.cadastros.title">
             <item view="CentroCusto.list"
                   title="msg://br.com.axialsoftware.axctg3.view.cadastros.centrocusto/centroCustoListView.title"/>
+            <item view="Parceiro.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.cadastros.parceiro/parceiroListView.title"/>
         </menu>
         <menu id="contabil" title="msg://br.com.axialsoftware.axctg3/menu.contabil.title">
             <item view="HistoricoContabil.list"

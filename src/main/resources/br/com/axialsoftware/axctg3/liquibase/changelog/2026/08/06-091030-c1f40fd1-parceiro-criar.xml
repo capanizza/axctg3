@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/06-091030-c1f40fd1-parceiro-criar.xml">
+    <changeSet id="1" author="axctg3">
+        <createTable tableName="PARCEIRO">
+            <column name="ID" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_PARCEIRO"/>
+            </column>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="${offsetDateTime.type}"/>
+            <column name="LAST_MODIFIED_BY" type="VARCHAR(255)"/>
+            <column name="LAST_MODIFIED_DATE" type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY" type="VARCHAR(255)"/>
+            <column name="DELETED_DATE" type="${offsetDateTime.type}"/>
+            <column name="CODIGO" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="COD_EMPRESA" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="NOME" type="VARCHAR(80)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="APELIDO" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CNPJ" type="VARCHAR(18)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="INSCRICAO" type="VARCHAR(25)"/>
+            <column name="TIPO_LOGRADOURO_ID" type="UUID"/>
+            <column name="LOGRADOURO" type="VARCHAR(50)"/>
+            <column name="NUMERO" type="VARCHAR(10)"/>
+            <column name="COMPLEMENTO" type="VARCHAR(20)"/>
+            <column name="BAIRRO" type="VARCHAR(20)"/>
+            <column name="MUNICIPIO_ID" type="UUID"/>
+            <column name="CEP" type="VARCHAR(8)"/>
+            <column name="ESTADO" type="VARCHAR(2)"/>
+            <column name="TELEFONE" type="VARCHAR(15)"/>
+            <column name="OBSERVACAO" type="CLOB"/>
+            <column name="CONTATO" type="VARCHAR(40)"/>
+            <column name="CLIENTE" type="BOOLEAN" defaultValue="FALSE"/>
+            <column name="FORNECEDOR" type="BOOLEAN" defaultValue="FALSE"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="2" author="axctg3">
+        <createIndex indexName="IDX_PARCEIRO_TIPO_LOGRADOURO" tableName="PARCEIRO">
+            <column name="TIPO_LOGRADOURO_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="TIPO_LOGRADOURO_ID" baseTableName="PARCEIRO"
+                                 constraintName="FK_PARCEIRO_ON_TIPO_LOGRADOURO" referencedColumnNames="ID"
+                                 referencedTableName="TIPO_LOGRADOURO"/>
+    </changeSet>
+    <changeSet id="3" author="axctg3">
+        <createIndex indexName="IDX_PARCEIRO_MUNICIPIO" tableName="PARCEIRO">
+            <column name="MUNICIPIO_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="MUNICIPIO_ID" baseTableName="PARCEIRO"
+                                 constraintName="FK_PARCEIRO_ON_MUNICIPIO" referencedColumnNames="ID"
+                                 referencedTableName="MUNICIPIO"/>
+    </changeSet>
+    <changeSet id="4" author="axctg3" dbms="postgresql">
+        <createIndex indexName="IDX_PARCEIRO_UNQ_CODIGO_COD_EMPRESA" tableName="PARCEIRO" unique="true">
+            <column name="CODIGO"/>
+            <column name="COD_EMPRESA"/>
+        </createIndex>
+
+        <modifySql>
+            <append value="where DELETED_DATE is null"/>
+        </modifySql>
+    </changeSet>
+
+</databaseChangeLog>
