@@ -74,13 +74,8 @@ public class SelecionarEmpresaListView extends StandardListView<Empresa> {
         return new ComponentRenderer<>(empresa -> {
             JmixCheckbox checkbox = uiComponents.create(JmixCheckbox.class);
             checkbox.setValue(Boolean.TRUE.equals(empresa.getSelecionada()));
-            // checkbox.setReadOnly(true);
-            checkbox.addValueChangeListener(e -> {
-                if (e.isFromClient()) {
-                    // Reverte para o valor original
-                    checkbox.setValue(Boolean.TRUE.equals(empresa.getSelecionada()));
-                }
-            });
+            checkbox.setReadOnly(true);
+            checkbox.addClassName("grid-value-checkbox");
             return checkbox;
         });
     }

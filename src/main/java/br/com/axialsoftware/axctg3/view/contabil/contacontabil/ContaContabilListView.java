@@ -87,13 +87,9 @@ public class ContaContabilListView extends StandardListView<ContaContabil> {
     private Renderer<ContaContabil> contaContabilsDataGridAnaliticaRenderer() {
         return new ComponentRenderer<>(contaContabil -> {
             JmixCheckbox checkbox = uiComponents.create(JmixCheckbox.class);
-            checkbox.setValue(contaContabil.getAnalitica());
-            checkbox.addValueChangeListener(e -> {
-                if (e.isFromClient()) {
-                    // Reverte para o valor original
-                    checkbox.setValue(contaContabil.getAnalitica());
-                }
-            });
+            checkbox.setValue(Boolean.TRUE.equals(contaContabil.getAnalitica()));
+            checkbox.setReadOnly(true);
+            checkbox.addClassName("grid-value-checkbox");
             return checkbox;
         });
     }

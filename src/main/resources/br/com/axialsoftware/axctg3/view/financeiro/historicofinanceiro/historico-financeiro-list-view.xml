@@ -50,11 +50,11 @@
             <columns resizable="true">
                 <column property="codigo" width="10%"/>
                 <column property="nome" width="40%"/>
-                <column property="emissao" width="10%"/>
-                <column property="baixa" width="10%"/>
-                <column property="parcial" width="10%"/>
-                <column property="juros" width="10%"/>
-                <column property="desconto" width="10%"/>
+                <column property="emissao" width="10%" textAlign="CENTER"/>
+                <column property="baixa" width="10%" textAlign="CENTER"/>
+                <column property="parcial" width="10%" textAlign="CENTER"/>
+                <column property="juros" width="10%" textAlign="CENTER"/>
+                <column property="desconto" width="10%" textAlign="CENTER"/>
             </columns>
         </dataGrid>
         <hbox id="lookupActions" visible="false">

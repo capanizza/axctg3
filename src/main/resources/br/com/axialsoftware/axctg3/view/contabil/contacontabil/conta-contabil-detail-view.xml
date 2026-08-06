@@ -25,15 +25,19 @@
         <action id="closeAction" type="detail_close"/>
     </actions>
     <layout>
-        <vbox id="form" classNames="border rounded-m">
+        <vbox id="form">
             <hbox expand="nomeField" width="100%" alignItems="BASELINE" classNames="border">
                 <textField id="codigoField"
                            property="codigo"
-                           dataContainer="contaContabilDc" themeNames="small"
+                           dataContainer="contaContabilDc"
+                           width="10%"
+                           themeNames="small"
                            label="msg://br.com.axialsoftware.axctg3.entity.contabil/ContaContabil.codigo"/>
                 <textField id="nomeField"
                            property="nome"
-                           dataContainer="contaContabilDc" themeNames="small"
+                           dataContainer="contaContabilDc"
+                           width="45%"
+                           themeNames="small"
                            label="msg://br.com.axialsoftware.axctg3.entity.contabil/ContaContabil.nome"/>
                 <integerField id="grauField"
                               property="grau"
@@ -42,13 +46,17 @@
                               label="msg://br.com.axialsoftware.axctg3.entity.contabil/ContaContabil.grau"/>
                 <checkbox id="analiticaField"
                           property="analitica"
-                          dataContainer="contaContabilDc" alignSelf="BASELINE"
+                          dataContainer="contaContabilDc"
+                          alignSelf="BASELINE"
+                          width="30%"
                           label="msg://br.com.axialsoftware.axctg3.entity.contabil/ContaContabil.analitica"/>
             </hbox>
-            <hbox expand="codNatField" width="100%" alignItems="START" classNames="border">
+            <hbox width="100%">
                 <select id="codNatField"
                         property="codNat"
-                        dataContainer="contaContabilDc" themeNames="small"
+                        dataContainer="contaContabilDc"
+                        themeNames="small"
+                        width="30%"
                         label="msg://br.com.axialsoftware.axctg3.entity.contabil/ContaContabil.codNat"/>
                 <textField id="codContaEncField"
                            property="codContaEnc"
@@ -63,7 +71,7 @@
                 <textField id="codContaSupField"
                            property="codContaSup"
                            dataContainer="contaContabilDc"
-                           width="15%" themeNames="small"
+                           width="25%" themeNames="small"
                            label="msg://br.com.axialsoftware.axctg3.entity.contabil/ContaContabil.codContaSup"/>
                 <textField id="saldoTransfField"
                            property="saldoTransf"
@@ -73,23 +81,12 @@
             </hbox>
         </vbox>
         <h4 text="msg://br.com.axialsoftware.axctg3.entity.contabil/ContaContabil.saldosConta"/>
-        <!--dataGrid id="saldosContaDataGrid"
-                  dataContainer="saldosContaDc"
-                  width="100%"
-                  minHeight="20em" themeNames="small">
-            <columns>
-                <column property="mes"/>
-                <column property="saldoAnterior"/>
-                <column property="debitoMes"/>
-                <column property="creditoMes"/>
-                <column property="saldoAtual"/>
-            </columns>
-        </dataGrid-->
-        <hbox width="100%" spacing="true">
+        <hbox width="100%">
             <dataGrid id="saldos1DataGrid"
                       dataContainer="saldos1Dc"
                       width="50%"
-                      minHeight="20em" themeNames="small">
+                      minHeight="10em" maxHeight="18em"
+                      themeNames="small">
                 <columns>
                     <column property="mes" width="8%"/>
                     <column property="saldoAnterior" width="23%" textAlign="END"/>
@@ -102,7 +99,8 @@
             <dataGrid id="saldos2DataGrid"
                       dataContainer="saldos2Dc"
                       width="50%"
-                      minHeight="20em" themeNames="small">
+                      minHeight="10em" maxHeight="18em"
+                      themeNames="small">
                 <columns>
                     <column property="mes" width="8%"/>
                     <column property="saldoAnterior" width="23%" textAlign="END"/>

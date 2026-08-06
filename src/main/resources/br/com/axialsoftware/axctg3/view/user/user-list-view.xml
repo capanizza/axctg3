@@ -67,7 +67,7 @@
                 <column property="lastName"/>
                 <column property="email"/>
                 <column property="timeZoneId"/>
-                <column property="active"/>
+                <column property="active" textAlign="CENTER"/>
             </columns>
         </dataGrid>
         <hbox id="lookupActions" visible="false">
