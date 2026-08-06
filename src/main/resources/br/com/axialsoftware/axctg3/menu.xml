@@ -2,33 +2,43 @@
 <menu-config xmlns="http://jmix.io/schema/flowui/menu">
 
     <menu id="application" title="msg://br.com.axialsoftware.axctg3/menu.application.title" opened="true">
-        <menu id="cadastros" title="msg://br.com.axialsoftware.axctg3.view.financeiro.historicofinanceiro/historicoFinanceiroListView.title">
+        <item view="SelecionarEmpresa.list"
+              title="msg://br.com.axialsoftware.axctg3.view.cadastros.empresa/selecionarEmpresaListView.title"/>
+        <menu id="cadastros" title="msg://br.com.axialsoftware.axctg3/menu.cadastros.title">
+            <item view="CentroCusto.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.cadastros.centrocusto/centroCustoListView.title"/>
+            <item view="Parceiro.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.cadastros.parceiro/parceiroListView.title"/>
+        </menu>
+        <menu id="contabil" title="msg://br.com.axialsoftware.axctg3/menu.contabil.title">
+            <item view="HistoricoContabil.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.contabil.historicocontabil/historicoContabilListView.title"/>
+            <item view="ContaContabil.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.contabil.contacontabil/contaContabilListView.title"/>
+            <item view="Lancamento.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.contabil.lancamento/lancamentoListView.title"/>
+        </menu>
+        <menu id="financeiro" title="msg://br.com.axialsoftware.axctg3/menu.financeiro.title">
+            <item view="Banco.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.financeiro.banco/bancoListView.title"/>
             <item view="HistoricoFinanceiro.list"
                   title="msg://br.com.axialsoftware.axctg3.view.financeiro.historicofinanceiro/historicoFinanceiroListView.title"/>
         </menu>
-        <item view="SelecionarEmpresa.list"
-              title="msg://br.com.axialsoftware.axctg3.view.cadastros.empresa/selecionarEmpresaListView.title"/>
-        <item view="ContaContabil.list"
-              title="msg://br.com.axialsoftware.axctg3.view.contabil.contacontabil/contaContabilListView.title"/>
-        <item view="Lancamento.list"
-              title="msg://br.com.axialsoftware.axctg3.view.contabil.lancamento/lancamentoListView.title"/>
-    </menu>
+        <menu id="fiscal" title="msg://br.com.axialsoftware.axctg3/menu.fiscal.title">
 
-    <menu id="contabil" title="msg://br.com.axialsoftware.axctg3/menu.contabil.title">
-        <menu id="cadastrosContabeis" title="msg://br.com.axialsoftware.axctg3/menu.cadastrosContabeis.title">
-            <item view="CentroCusto.list"
-                  title="msg://br.com.axialsoftware.axctg3.view.cadastros.centrocusto/centroCustoListView.title"/>
-            <item view="HistoricoContabil.list"
-                  title="msg://br.com.axialsoftware.axctg3.view.contabil.historicocontabil/historicoContabilListView.title"/>
+        </menu>
+        <menu id="compras" title="msg://br.com.axialsoftware.axctg3/menu.compras.title">
+
+        </menu>
+        <menu id="almoxarifado" title="msg://br.com.axialsoftware.axctg3/menu.almoxarifado.title">
+
         </menu>
     </menu>
-
     <menu id="administracao" title="msg://br.com.axialsoftware.axctg3/menu.administracao.title">
         <item view="User.list" title="msg://br.com.axialsoftware.axctg3.view.user/UserListView.title"/>
         <item view="Empresa.list"
               title="msg://br.com.axialsoftware.axctg3.view.cadastros.empresa/empresaListView.title"/>
     </menu>
-
     <menu id="tabelas" title="msg://br.com.axialsoftware.axctg3/menu.tabelas.title">
         <item view="Municipio.list"
               title="msg://br.com.axialsoftware.axctg3.view.tabelas.municipio/municipioListView.title"/>

@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://bancoDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="bancoDc"
+                  class="br.com.axialsoftware.axctg3.entity.financeiro.Banco">
+            <fetchPlan extends="_base">
+                <property name="contaContabil" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="bancoDl"/>
+        </instance>
+        <collection id="contaContabilsDc"
+                    class="br.com.axialsoftware.axctg3.entity.contabil.ContaContabil"
+                    fetchPlan="_base">
+            <loader id="contaContabilsDl">
+                <query>
+                    <![CDATA[select e from ContaContabil e
+                    where e.codigo > '1'
+                    and e.codEmpresa = :codEmpresa
+                    and e.analitica = true
+                    and e.ano = :ano
+                    order by e.codigo]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <!--formLayout id="form" dataContainer="bancoDc">
+            <responsiveSteps>
+                <responsiveStep minWidth="0" columns="1"/>
+                <responsiveStep minWidth="40em" columns="2"/>
+            </responsiveSteps>
+            <textField id="codigoField" property="codigo"/>
+            <textField id="codEmpresaField" property="codEmpresa"/>
+            <textField id="codGeralField" property="codGeral"/>
+            <textField id="nomeField" property="nome"/>
+            <entityPicker id="contaContabilField" property="contaContabil">
+                <actions>
+                    <action id="entityLookupAction" type="entity_lookup"/>
+                    <action id="entityClearAction" type="entity_clear"/>
+                </actions>
+            </entityPicker>
+            <textField id="codContabilField" property="codContabil"/>
+            <textField id="agenciaField" property="agencia"/>
+            <textField id="digAgenciaField" property="digAgencia"/>
+            <textField id="contaField" property="conta"/>
+            <textField id="digContaField" property="digConta"/>
+            <textField id="codCedenteField" property="codCedente"/>
+            <textField id="digCedenteField" property="digCedente"/>
+            <textField id="nomeCedenteField" property="nomeCedente"/>
+            <textField id="localPagamentoField" property="localPagamento"/>
+            <textField id="baixaNormalField" property="baixaNormal"/>
+            <textField id="baixaJurosField" property="baixaJuros"/>
+            <textField id="baixaDescontoField" property="baixaDesconto"/>
+            <textField id="multaAtrasoField" property="multaAtraso"/>
+            <textField id="multaDiaField" property="multaDia"/>
+            <textField id="diasProtestoField" property="diasProtesto"/>
+            <textField id="carteiraField" property="carteira"/>
+            <textField id="convenioField" property="convenio"/>
+            <textField id="nossoNumInicialField" property="nossoNumInicial"/>
+            <textField id="nossoNumFinalField" property="nossoNumFinal"/>
+            <textField id="nossoNumAtualField" property="nossoNumAtual"/>
+            <textField id="pastaRemessaField" property="pastaRemessa"/>
+            <textField id="pastaRetornoField" property="pastaRetorno"/>
+            <textField id="numRemessaField" property="numRemessa"/>
+            <textField id="especieField" property="especie"/>
+        </formLayout-->
+        <vbox id="form" width="100%">
+            <hbox width="100%">
+                <integerField id="codigoField"
+                              property="codigo"
+                              dataContainer="bancoDc"
+                              width="10%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.codigo"/>
+                <integerField id="codigoGeralField"
+                              property="codGeral"
+                              dataContainer="bancoDc"
+                              width="10%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.codGeral"/>
+                <textField id="nomeField"
+                           property="nome"
+                           dataContainer="bancoDc"
+                           width="40%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.nome"/>
+                <textField id="nomeCedenteField"
+                           property="nomeCedente"
+                           dataContainer="bancoDc"
+                           width="40%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.nomeCedente"/>
+            </hbox>
+            <hbox width="100%">
+                <textField id="localPagamentoField"
+                           property="localPagamento"
+                           dataContainer="bancoDc"
+                           width="40%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.localPagamento"/>
+                <integerField id="baixaNormalField"
+                              property="baixaNormal"
+                              dataContainer="bancoDc"
+                              width="10%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.baixaNormal"/>
+                <integerField id="baixaJurosField"
+                              property="baixaJuros"
+                              dataContainer="bancoDc"
+                              width="10%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.baixaJuros"/>
+                <integerField id="baixaDescontoField"
+                              property="baixaDesconto"
+                              dataContainer="bancoDc"
+                              width="10%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.baixaDesconto"/>
+                <bigDecimalField id="multaAtrasoField"
+                              property="multaAtraso"
+                              dataContainer="bancoDc"
+                              width="10%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.multaAtraso"/>
+                <bigDecimalField id="multaDiaField"
+                                 property="multaDia"
+                                 dataContainer="bancoDc"
+                                 width="10%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.multaDia"/>
+                <integerField id="diasProtestoField"
+                              property="diasProtesto"
+                              dataContainer="bancoDc"
+                              width="10%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.diasProtesto"/>
+            </hbox>
+            <hbox width="100%">
+                <textField id="carteiraField"
+                           property="carteira"
+                           dataContainer="bancoDc"
+                           width="10%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.carteira"/>
+                <textField id="codCedenteField"
+                           property="codCedente"
+                           dataContainer="bancoDc"
+                           width="12%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.codCedente"/>
+                <textField id="digCedenteField"
+                           property="digCedente"
+                           dataContainer="bancoDc"
+                           width="12%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.digCedente"/>
+                <textField id="agenciaField"
+                           property="agencia"
+                           dataContainer="bancoDc"
+                           width="10%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.agencia"/>
+                <textField id="digAgenciaField"
+                           property="digAgencia"
+                           dataContainer="bancoDc"
+                           width="10%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.digAgencia"/>
+                <textField id="contaField"
+                           property="conta"
+                           dataContainer="bancoDc"
+                           width="10%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.conta"/>
+                <textField id="digContaField"
+                           property="digConta"
+                           dataContainer="bancoDc"
+                           width="10%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.digConta"/>
+                <textField id="convenioField"
+                           property="convenio"
+                           dataContainer="bancoDc"
+                           width="10%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.convenio"/>
+                <textField id="especieField"
+                           property="especie"
+                           dataContainer="bancoDc"
+                           width="10%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.especie"/>
+            </hbox>
+            <hbox width="100%">
+                <integerField id="numRemessaField"
+                              property="numRemessa"
+                              dataContainer="bancoDc"
+                              width="10%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.numRemessa"/>
+                <textField id="nossoNumInicialField"
+                           property="nossoNumInicial"
+                           dataContainer="bancoDc"
+                           width="12%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.nossoNumInicial"/>
+                <textField id="nossoNumFinalField"
+                           property="nossoNumFinal"
+                           dataContainer="bancoDc"
+                           width="12%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.nossoNumFinal"/>
+                <textField id="nossoNumAtualField"
+                           property="nossoNumAtual"
+                           dataContainer="bancoDc"
+                           width="12%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.nossoNumAtual"/>
+                <textField id="pastaRemessaField"
+                           property="pastaRemessa"
+                           dataContainer="bancoDc"
+                           width="32%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.pastaRemessa"/>
+                <textField id="pastaRetornoField"
+                           property="pastaRetorno"
+                           dataContainer="bancoDc"
+                           width="32%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.pastaRetorno"/>
+            </hbox>
+        </vbox>
+        <hbox width="100%">
+            <entityPicker id="contaContabilField"
+                          property="contaContabil"
+                          dataContainer="bancoDc" themeNames="small"
+                          width="50%"
+                          label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.contaContabil">
+                <actions>
+                    <action id="entityLookupAction" type="entity_lookup"/>
+                    <action id="entityClearAction" type="entity_clear"/>
+                </actions>
+            </entityPicker>
+            <textArea id="mensagemField"
+                      property="mensagem"
+                      dataContainer="bancoDc"
+                      width="50%" themeNames="small"
+                      label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.mensagem"/>
+        </hbox>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction"/>
+            <button id="closeButton" action="closeAction"/>
+        </hbox>
+    </layout>
+</view>

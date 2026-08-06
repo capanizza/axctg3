@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://parceiroDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="parceiroDc"
+                  class="br.com.axialsoftware.axctg3.entity.cadastros.Parceiro">
+            <fetchPlan extends="_base">
+                <property name="tipoLogradouro" fetchPlan="_base"/>
+                <property name="municipio" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="parceiroDl"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <vbox id="form" width="100%">
+            <hbox width="100%" expand="nomeField">
+                <textField id="codigoField"
+                           property="codigo"
+                           dataContainer="parceiroDc"
+                           width="7%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.codigo"/>
+                <textField id="nomeField"
+                           property="nome"
+                           dataContainer="parceiroDc" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.nome"/>
+                <textField id="apelidoField"
+                           property="apelido"
+                           dataContainer="parceiroDc"
+                           width="25%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.apelido"/>
+            </hbox>
+            <hbox width="100%">
+                <textField id="cnpjField"
+                           property="cnpj"
+                           dataContainer="parceiroDc"
+                           width="15%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.cnpj"/>
+                <textField id="inscricaoField"
+                           property="inscricao"
+                           dataContainer="parceiroDc"
+                           width="15%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.inscricao"/>
+                <textField id="telefoneField"
+                           property="telefone"
+                           dataContainer="parceiroDc"
+                           width="15%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.telefone"/>
+                <textField id="contatoField"
+                           property="contato"
+                           dataContainer="parceiroDc"
+                           width="20%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.contato"/>
+            </hbox>
+            <hbox width="100%" expand="logradouroField">
+                <entityPicker id="tipoLogradouroField"
+                              property="tipoLogradouro"
+                              dataContainer="parceiroDc"
+                              width="25%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.tipoLogradouro">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+                <textField id="logradouroField"
+                           property="logradouro"
+                           dataContainer="parceiroDc" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.logradouro"/>
+                <textField id="numeroField"
+                           property="numero"
+                           dataContainer="parceiroDc"
+                           width="10%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.numero"/>
+            </hbox>
+            <hbox width="100%" expand="municipioField">
+                <textField id="complementoField"
+                           property="complemento"
+                           dataContainer="parceiroDc"
+                           width="25%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.complemento"/>
+                <textField id="bairroField"
+                           property="bairro"
+                           dataContainer="parceiroDc"
+                           width="25%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.bairro"/>
+                <entityPicker id="municipioField"
+                              property="municipio"
+                              dataContainer="parceiroDc" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.municipio">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+                <textField id="cepField"
+                           property="cep"
+                           dataContainer="parceiroDc"
+                           width="10%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.cep"/>
+                <textField id="estadoField"
+                           property="estado"
+                           dataContainer="parceiroDc"
+                           width="10%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.estado"/>
+            </hbox>
+            <hbox width="30%">
+                <checkbox id="clienteField"
+                          property="cliente"
+                          dataContainer="parceiroDc"
+                          width="50%"
+                          label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.cliente"/>
+                <checkbox id="fornecedorField"
+                          property="fornecedor"
+                          dataContainer="parceiroDc"
+                          width="50%"
+                          label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.fornecedor"/>
+            </hbox>
+            <hbox width="60%">
+                <textArea id="observacaoField"
+                          property="observacao"
+                          dataContainer="parceiroDc"
+                          width="100%" themeNames="small"
+                          label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.observacao"/>
+            </hbox>
+        </vbox>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

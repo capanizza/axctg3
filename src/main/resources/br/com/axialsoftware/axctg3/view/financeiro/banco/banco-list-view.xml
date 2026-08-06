@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view"
       xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
-      title="msg://historicoFinanceiroListView.title"
-      focusComponent="historicoFinanceiroesDataGrid">
+      title="msg://bancoListView.title"
+      focusComponent="bancoesDataGrid">
     <data>
-        <collection id="historicoFinanceiroesDc"
-                    class="br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro">
+        <collection id="bancoesDc"
+                    class="br.com.axialsoftware.axctg3.entity.financeiro.Banco">
             <fetchPlan extends="_base"/>
-            <loader id="historicoFinanceiroesDl" readOnly="true">
+            <loader id="bancoesDl" readOnly="true">
                 <query>
-                    <![CDATA[select e from HistoricoFinanceiro e
-                        where e.codEmpresa = :codEmpresa
-                        order by e.codigo]]>
+                    <![CDATA[select e from Banco e
+                    where e.codEmpresa = :codEmpresa
+                    order by e.codigo]]>
                 </query>
             </loader>
         </collection>
@@ -29,18 +29,18 @@
     <layout>
         <hbox id="buttonsPanel" wrap="true" width="100%">
             <startSlot>
-                <button id="createButton" action="historicoFinanceiroesDataGrid.createAction" themeNames="small"/>
-                <button id="editButton" action="historicoFinanceiroesDataGrid.editAction" themeNames="small"/>
-                <button id="removeButton" action="historicoFinanceiroesDataGrid.removeAction" themeNames="small"/>
+                <button id="createButton" action="bancoesDataGrid.createAction" themeNames="small"/>
+                <button id="editButton" action="bancoesDataGrid.editAction" themeNames="small"/>
+                <button id="removeButton" action="bancoesDataGrid.removeAction" themeNames="small"/>
             </startSlot>
             <endSlot>
-                <simplePagination id="pagination" dataLoader="historicoFinanceiroesDl"/>
+                <simplePagination id="pagination" dataLoader="bancoesDl"/>
             </endSlot>
         </hbox>
-        <dataGrid id="historicoFinanceiroesDataGrid"
+        <dataGrid id="bancoesDataGrid"
                   width="100%"
                   minHeight="20em"
-                  dataContainer="historicoFinanceiroesDc"
+                  dataContainer="bancoesDc"
                   columnReorderingAllowed="true" themeNames="small">
             <actions>
                 <action id="createAction" type="list_create"/>
@@ -49,12 +49,12 @@
             </actions>
             <columns resizable="true">
                 <column property="codigo" width="10%"/>
+                <column property="codGeral" width="10%"/>
                 <column property="nome" width="40%"/>
-                <column property="emissao" width="10%" textAlign="CENTER"/>
-                <column property="baixa" width="10%" textAlign="CENTER"/>
-                <column property="parcial" width="10%" textAlign="CENTER"/>
-                <column property="juros" width="10%" textAlign="CENTER"/>
-                <column property="desconto" width="10%" textAlign="CENTER"/>
+                <column property="agencia" width="10%"/>
+                <column property="digAgencia" width="10%"/>
+                <column property="conta" width="10%"/>
+                <column property="digConta" width="10%"/>
             </columns>
         </dataGrid>
         <hbox id="lookupActions" visible="false">

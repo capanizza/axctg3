@@ -1,1 +1,16 @@
 /* Define your styles here */
+
+/*
+ * Checkbox somente-leitura usado para exibir valores booleanos em colunas de dataGrid
+ * (ver @Supply(subject = "renderer") nos *ListView.java). O Aura, de propósito, não
+ * aplica o preenchimento de cor de destaque (accent) em checkboxes com readonly — só em
+ * checkboxes editáveis marcados — então sem esta regra "true" e "false" ficam visualmente
+ * quase idênticos. Repete aqui o mesmo estilo que o Aura já usa para o estado marcado
+ * editável, restrito à classe abaixo para não afetar nenhum outro checkbox readOnly.
+ */
+vaadin-checkbox.grid-value-checkbox[checked]::part(checkbox) {
+    background: var(--aura-accent-color);
+    border-color: var(--vaadin-border-color-secondary);
+    box-shadow: var(--aura-shadow-s);
+    --vaadin-checkbox-marker-color: var(--aura-accent-contrast-color);
+}
