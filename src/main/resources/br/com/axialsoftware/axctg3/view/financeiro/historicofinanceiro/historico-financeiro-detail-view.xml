@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://historicoFinanceiroDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="historicoFinanceiroDc"
+                  class="br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro">
+            <fetchPlan extends="_base">
+                <property name="contaContabilReceber" fetchPlan="_base"/>
+                <property name="historicoContabilReceber" fetchPlan="_base"/>
+                <property name="contaContabilPagar" fetchPlan="_base"/>
+                <property name="historicoContabilPagar" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="historicoFinanceiroDl"/>
+        </instance>
+        <collection id="contaContabilsDc"
+                    class="br.com.axialsoftware.axctg3.entity.contabil.ContaContabil"
+                    fetchPlan="_base">
+            <loader id="contaContabilsDl">
+                <query>
+                    <![CDATA[select e from ContaContabil e
+                    where e.codigo > '1'
+                    and e.codEmpresa = :codEmpresa
+                    and e.analitica = true
+                    and e.ano = :anoContabil
+                    order by e.codigo]]>
+                </query>
+            </loader>
+        </collection>
+        <collection id="historicoContabilsDc"
+                    class="br.com.axialsoftware.axctg3.entity.contabil.HistoricoContabil"
+                    fetchPlan="_base">
+            <loader id="historicoContabilsDl">
+                <query>
+                    <![CDATA[select e from HistoricoContabil e
+                    where e.codEmpresa = :codEmpresa
+                    order by e.codigo]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <vbox id="form" width="100%">
+            <hbox width="60%" expand="nomeField">
+                <integerField id="codigoField"
+                              property="codigo"
+                              dataContainer="historicoFinanceiroDc"
+                              width="30%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/HistoricoFinanceiro.codigo"/>
+                <textField id="nomeField"
+                           property="nome"
+                           dataContainer="historicoFinanceiroDc"
+                           width="70%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/HistoricoFinanceiro.nome"/>
+            </hbox>
+            <hbox width="50%">
+                <checkbox id="emissaoField"
+                          property="emissao"
+                          dataContainer="historicoFinanceiroDc"
+                          label="msg://br.com.axialsoftware.axctg3.entity.financeiro/HistoricoFinanceiro.emissao"/>
+                <checkbox id="baixaField"
+                          property="baixa"
+                          dataContainer="historicoFinanceiroDc"
+                          label="msg://br.com.axialsoftware.axctg3.entity.financeiro/HistoricoFinanceiro.baixa"/>
+                <checkbox id="parcialField"
+                          property="parcial"
+                          dataContainer="historicoFinanceiroDc"
+                          label="msg://br.com.axialsoftware.axctg3.entity.financeiro/HistoricoFinanceiro.parcial"/>
+                <checkbox id="jurosField"
+                          property="juros"
+                          dataContainer="historicoFinanceiroDc"
+                          label="msg://br.com.axialsoftware.axctg3.entity.financeiro/HistoricoFinanceiro.juros"/>
+                <checkbox id="descontoField"
+                          property="desconto"
+                          dataContainer="historicoFinanceiroDc"
+                          label="msg://br.com.axialsoftware.axctg3.entity.financeiro/HistoricoFinanceiro.desconto"/>
+            </hbox>
+            <hbox width="60%">
+                <entityPicker id="contaContabilReceberField"
+                              dataContainer="historicoFinanceiroDc"
+                              property="contaContabilReceber"
+                              width="60%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/HistoricoFinanceiro.contaContabilReceber">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+                <entityPicker id="historicoContabilReceberField"
+                              dataContainer="historicoFinanceiroDc"
+                              property="historicoContabilReceber"
+                              width="40%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/HistoricoFinanceiro.historicoContabilReceber">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+            </hbox>
+            <hbox width="60%">
+                <entityPicker id="contaContabilPagarField"
+                              dataContainer="historicoFinanceiroDc"
+                              property="contaContabilPagar"
+                              width="60%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/HistoricoFinanceiro.contaContabilPagar">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+                <entityPicker id="historicoContabilPagarField"
+                              dataContainer="historicoFinanceiroDc"
+                              property="historicoContabilPagar"
+                              width="40%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/HistoricoFinanceiro.historicoContabilPagar">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+            </hbox>
+        </vbox>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

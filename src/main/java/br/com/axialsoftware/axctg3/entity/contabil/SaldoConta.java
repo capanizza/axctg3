@@ -1,11 +1,13 @@
 package br.com.axialsoftware.axctg3.entity.contabil;
 
 import io.jmix.core.DeletePolicy;
+import io.jmix.core.MetadataTools;
 import io.jmix.core.annotation.DeletedBy;
 import io.jmix.core.annotation.DeletedDate;
 import io.jmix.core.entity.annotation.JmixGeneratedValue;
 import io.jmix.core.entity.annotation.OnDeleteInverse;
 import io.jmix.core.metamodel.annotation.*;
+import io.jmix.core.metamodel.datatype.DatatypeFormatter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.annotation.CreatedBy;
@@ -23,7 +25,6 @@ import java.util.UUID;
 })
 @Entity
 public class SaldoConta {
-    @InstanceName
     @JmixGeneratedValue
     @Column(name = "ID", nullable = false)
     @Id
@@ -190,6 +191,17 @@ public class SaldoConta {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    @InstanceName
+    @DependsOnProperties({"mes", "saldoAnterior", "debitoMes", "creditoMes", "saldoAtual"})
+    public String getInstanceName(MetadataTools metadataTools, DatatypeFormatter datatypeFormatter) {
+        return String.format("%s %s %s %s %s" ,
+                datatypeFormatter.formatInteger(mes),
+                datatypeFormatter.formatBigDecimal(saldoAnterior),
+                datatypeFormatter.formatBigDecimal(debitoMes),
+                datatypeFormatter.formatBigDecimal(creditoMes),
+                datatypeFormatter.formatBigDecimal(getSaldoAtual()));
     }
 
 }

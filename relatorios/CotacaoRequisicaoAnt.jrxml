@@ -1,0 +1,1506 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.21.3.final using JasperReports Library version 6.21.3-4a3078d20785ebe464f18037d738d12fc98c13cf  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="CotacaoRequisicao" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="80a9781b-6e7c-4d63-8588-10954d39f3b4">
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="TITULO_RELATORIO" class="java.lang.String"/>
+	<parameter name="NOME_EMPRESA" class="java.lang.String"/>
+	<parameter name="NUMERO_REQUISICAO" class="java.lang.Integer"/>
+	<parameter name="COD_EMPRESA" class="java.lang.Integer"/>
+	<parameter name="NOME_USUARIO" class="java.lang.String"/>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["C:\\Users\\capan\\Desktop\\Projetos\\NetBeans\\axial\\Relatorios\\"]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<field name="requisicao" class="java.lang.Integer"/>
+	<field name="observacao" class="java.lang.String"/>
+	<field name="quantidade" class="java.math.BigDecimal"/>
+	<field name="produto" class="java.lang.String"/>
+	<field name="unitario1" class="java.math.BigDecimal"/>
+	<field name="total1" class="java.math.BigDecimal"/>
+	<field name="fornecedor1" class="java.lang.String"/>
+	<field name="desconto1" class="java.math.BigDecimal"/>
+	<field name="frete1" class="java.math.BigDecimal"/>
+	<field name="liquido1" class="java.math.BigDecimal"/>
+	<field name="selecionada1" class="java.lang.Integer"/>
+	<field name="prazo1" class="java.lang.String"/>
+	<field name="condicao1" class="java.lang.String"/>
+	<field name="unitario2" class="java.math.BigDecimal"/>
+	<field name="total2" class="java.math.BigDecimal"/>
+	<field name="fornecedor2" class="java.lang.String"/>
+	<field name="desconto2" class="java.math.BigDecimal"/>
+	<field name="frete2" class="java.math.BigDecimal"/>
+	<field name="liquido2" class="java.math.BigDecimal"/>
+	<field name="selecionada2" class="java.lang.Integer"/>
+	<field name="prazo2" class="java.lang.String"/>
+	<field name="condicao2" class="java.lang.String"/>
+	<field name="unitario3" class="java.math.BigDecimal"/>
+	<field name="total3" class="java.math.BigDecimal"/>
+	<field name="fornecedor3" class="java.lang.String"/>
+	<field name="desconto3" class="java.math.BigDecimal"/>
+	<field name="frete3" class="java.math.BigDecimal"/>
+	<field name="liquido3" class="java.math.BigDecimal"/>
+	<field name="selecionada3" class="java.lang.Integer"/>
+	<field name="prazo3" class="java.lang.String"/>
+	<field name="condicao3" class="java.lang.String"/>
+	<field name="unitario4" class="java.math.BigDecimal"/>
+	<field name="total4" class="java.math.BigDecimal"/>
+	<field name="fornecedor4" class="java.lang.String"/>
+	<field name="desconto4" class="java.math.BigDecimal"/>
+	<field name="frete4" class="java.math.BigDecimal"/>
+	<field name="liquido4" class="java.math.BigDecimal"/>
+	<field name="selecionada4" class="java.lang.Integer"/>
+	<field name="prazo4" class="java.lang.String"/>
+	<field name="condicao4" class="java.lang.String"/>
+	<field name="unitario5" class="java.math.BigDecimal"/>
+	<field name="total5" class="java.math.BigDecimal"/>
+	<field name="fornecedor5" class="java.lang.String"/>
+	<field name="desconto5" class="java.math.BigDecimal"/>
+	<field name="frete5" class="java.math.BigDecimal"/>
+	<field name="liquido5" class="java.math.BigDecimal"/>
+	<field name="selecionada5" class="java.lang.Integer"/>
+	<field name="prazo5" class="java.lang.String"/>
+	<field name="condicao5" class="java.lang.String"/>
+	<field name="unitario6" class="java.math.BigDecimal"/>
+	<field name="total6" class="java.math.BigDecimal"/>
+	<field name="fornecedor6" class="java.lang.String"/>
+	<field name="desconto6" class="java.math.BigDecimal"/>
+	<field name="frete6" class="java.math.BigDecimal"/>
+	<field name="liquido6" class="java.math.BigDecimal"/>
+	<field name="selecionada6" class="java.lang.Integer"/>
+	<field name="prazo6" class="java.lang.String"/>
+	<field name="condicao6" class="java.lang.String"/>
+	<field name="numeroCotacoes" class="java.lang.Integer"/>
+	<variable name="TOTAL1" class="java.math.BigDecimal" resetType="Group" resetGroup="Requisicao" calculation="Sum">
+		<variableExpression><![CDATA[$F{RSELECIONADA1} > 0 ? $F{RTOTAL1} : BigDecimal.ZERO]]></variableExpression>
+	</variable>
+	<variable name="TOTAL2" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{RSELECIONADA2} > 0 ? $F{RTOTAL2} : BigDecimal.ZERO]]></variableExpression>
+	</variable>
+	<variable name="TOTAL3" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{RSELECIONADA3} > 0 ? $F{RTOTAL3} : BigDecimal.ZERO]]></variableExpression>
+	</variable>
+	<variable name="TOTAL4" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{RSELECIONADA4} > 0 ? $F{RTOTAL4} : BigDecimal.ZERO]]></variableExpression>
+	</variable>
+	<variable name="TOTAL5" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{RSELECIONADA5} > 0 ? $F{RTOTAL5} : BigDecimal.ZERO]]></variableExpression>
+	</variable>
+	<variable name="TOTAL6" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{RSELECIONADA6} > 0 ? $F{RTOTAL6} : BigDecimal.ZERO]]></variableExpression>
+	</variable>
+	<variable name="LIQUIDO1" class="java.math.BigDecimal" resetType="Group" resetGroup="Requisicao">
+		<variableExpression><![CDATA[$V{TOTAL1}.subtract($V{TOTAL1}.multiply($F{RDESCONTO1}.divide(new BigDecimal(100))))]]></variableExpression>
+	</variable>
+	<variable name="LIQUIDO2" class="java.math.BigDecimal" resetType="Group" resetGroup="Requisicao">
+		<variableExpression><![CDATA[$V{TOTAL2}.subtract($V{TOTAL2}.multiply($F{RDESCONTO2}.divide(new BigDecimal(100))))]]></variableExpression>
+	</variable>
+	<variable name="LIQUIDO3" class="java.math.BigDecimal" resetType="Group" resetGroup="Requisicao">
+		<variableExpression><![CDATA[$V{TOTAL3}.subtract($V{TOTAL3}.multiply($F{RDESCONTO3}.divide(new BigDecimal(100))))]]></variableExpression>
+	</variable>
+	<variable name="LIQUIDO4" class="java.math.BigDecimal" resetType="Group" resetGroup="Requisicao">
+		<variableExpression><![CDATA[$V{TOTAL4}.subtract($V{TOTAL5}.multiply($F{RDESCONTO4}.divide(new BigDecimal(100))))]]></variableExpression>
+	</variable>
+	<variable name="LIQUIDO5" class="java.math.BigDecimal" resetType="Group" resetGroup="Requisicao">
+		<variableExpression><![CDATA[$V{TOTAL5}.subtract($V{TOTAL5}.multiply($F{RDESCONTO5}.divide(new BigDecimal(100))))]]></variableExpression>
+	</variable>
+	<variable name="LIQUIDO6" class="java.math.BigDecimal" resetType="Group" resetGroup="Requisicao">
+		<variableExpression><![CDATA[$V{TOTAL6}.subtract($V{TOTAL6}.multiply($F{RDESCONTO6}.divide(new BigDecimal(100))))]]></variableExpression>
+	</variable>
+	<variable name="TOTALGERAL1" class="java.math.BigDecimal" resetType="Group" resetGroup="Requisicao" calculation="Sum">
+		<variableExpression><![CDATA[$F{RTOTAL1}]]></variableExpression>
+	</variable>
+	<variable name="TOTALGERAL2" class="java.math.BigDecimal" resetType="Group" resetGroup="Requisicao" calculation="Sum">
+		<variableExpression><![CDATA[$F{RTOTAL2}]]></variableExpression>
+	</variable>
+	<variable name="TOTALGERAL3" class="java.math.BigDecimal" resetType="Group" resetGroup="Requisicao" calculation="Sum">
+		<variableExpression><![CDATA[$F{RTOTAL3}]]></variableExpression>
+	</variable>
+	<variable name="TOTALGERAL4" class="java.math.BigDecimal" resetType="Group" resetGroup="Requisicao" calculation="Sum">
+		<variableExpression><![CDATA[$F{RTOTAL4}]]></variableExpression>
+	</variable>
+	<variable name="TOTALGERAL5" class="java.math.BigDecimal" resetType="Group" resetGroup="Requisicao" calculation="Sum">
+		<variableExpression><![CDATA[$F{RTOTAL5}]]></variableExpression>
+	</variable>
+	<variable name="TOTALGERAL6" class="java.math.BigDecimal" resetType="Group" resetGroup="Requisicao" calculation="Sum">
+		<variableExpression><![CDATA[$F{RTOTAL6}]]></variableExpression>
+	</variable>
+	<group name="Requisicao" keepTogether="true">
+		<groupExpression><![CDATA[$F{RREQUISICAO}]]></groupExpression>
+		<groupHeader>
+			<band height="40">
+				<staticText>
+					<reportElement x="36" y="20" width="190" height="20" uuid="be678c4b-12dd-4a3a-be5e-1d3d73b4ff95"/>
+					<box>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Produto]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="20" width="36" height="20" uuid="29649cc4-e6b2-43ed-a0a9-78e4866e39e2"/>
+					<box rightPadding="2">
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Quant.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="226" y="20" width="48" height="20" uuid="49492422-c9f0-4393-88e4-9b7578721c54"/>
+					<box rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Unitário]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="274" y="20" width="48" height="20" uuid="fecadfb3-8064-4142-90ae-f8940b64bab8"/>
+					<box rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Total]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="322" y="20" width="48" height="20" uuid="d7d23020-574d-4698-87ac-b3ff207f9405"/>
+					<box rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Unitário]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="370" y="20" width="48" height="20" uuid="67883a52-a214-4aaa-b4b1-b0d2267a8efb"/>
+					<box rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Total]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="418" y="20" width="48" height="20" backcolor="#FFFFFF" uuid="0e5624ba-19b8-4b4f-9323-65ec194d5a05"/>
+					<box rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Unitário]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="466" y="20" width="48" height="20" backcolor="#FFFFFF" uuid="5211cfc0-cc48-450c-9a4e-0566e5ec0e97"/>
+					<box rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Total]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="226" y="0" width="96" height="20" uuid="4d72c150-9766-4533-8e02-f2bd669a076b"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{RFORNECEDOR1}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="322" y="0" width="96" height="20" uuid="ea31800a-25d5-4810-9ac6-94834467e2a4"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{RFORNECEDOR2}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement mode="Opaque" x="418" y="0" width="96" height="20" backcolor="#FFFFFF" uuid="7722bb2e-c68c-47c1-a04c-a20001e29a2c"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{RFORNECEDOR3}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="0" width="226" height="20" uuid="1324b473-7c93-4319-be4d-906c6c4ac7b4"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="10"/>
+					</textElement>
+					<textFieldExpression><![CDATA[" "]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement mode="Opaque" x="514" y="0" width="96" height="20" backcolor="#FFFFFF" uuid="e15cf9ba-3a15-481c-8e25-d2f36f7f1016"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{RFORNECEDOR4}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement mode="Opaque" x="514" y="20" width="48" height="20" backcolor="#FFFFFF" uuid="835cd397-ab4d-43b3-b2a3-50e319436aee"/>
+					<box rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Unitário]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="562" y="20" width="48" height="20" backcolor="#FFFFFF" uuid="6f498979-8e0f-4328-8664-0827b6942915"/>
+					<box rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Total]]></text>
+				</staticText>
+				<textField>
+					<reportElement mode="Opaque" x="610" y="0" width="96" height="20" backcolor="#FFFFFF" uuid="0255ef90-44c9-4989-9430-280a2a9cc0e5"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{RFORNECEDOR5}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement mode="Opaque" x="610" y="20" width="48" height="20" backcolor="#FFFFFF" uuid="8cf0c778-5df9-4c15-91a8-cfe50c16c8bf"/>
+					<box rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Unitário]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="658" y="20" width="48" height="20" backcolor="#FFFFFF" uuid="1b7c1569-39e9-4521-911e-8c28ecbe4a9c"/>
+					<box rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Total]]></text>
+				</staticText>
+				<textField>
+					<reportElement mode="Opaque" x="706" y="0" width="96" height="20" backcolor="#FFFFFF" uuid="26b812a3-2964-43b2-af48-e56fef76e901"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{RFORNECEDOR6}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement mode="Opaque" x="706" y="20" width="48" height="20" backcolor="#FFFFFF" uuid="de232fac-31b3-406f-81a7-f05d702bd0a8"/>
+					<box rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Unitário]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="754" y="20" width="48" height="20" backcolor="#FFFFFF" uuid="db738107-734e-4236-a69d-8ad405b281d5"/>
+					<box rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Total]]></text>
+				</staticText>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="70">
+				<staticText>
+					<reportElement mode="Opaque" x="0" y="14" width="226" height="14" backcolor="#FFFFFF" uuid="40d13fc8-3a3c-40c3-8e16-9ca96efd6e3e"/>
+					<box rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Desconto]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="0" width="226" height="14" uuid="d66711c6-d38d-4a18-9f23-303e7d604c84"/>
+					<box>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="none">
+						<font fontName="Courier New" size="7"/>
+					</textElement>
+					<text><![CDATA[Valor total]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="0" y="28" width="226" height="14" backcolor="#FFFFFF" uuid="26f17670-c279-46c7-91de-4730af214db2"/>
+					<box rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Valor líquido]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="0" y="42" width="226" height="14" backcolor="#FFFFFF" uuid="d88e67ef-2a1d-475e-bde5-ecea6d44dca2"/>
+					<box rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Condição de pagamento]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="0" y="56" width="226" height="14" backcolor="#FFFFFF" uuid="5b3d0508-1c00-4742-be58-713c989ffde0"/>
+					<box rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Valor total da cotação]]></text>
+				</staticText>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement x="226" y="0" width="96" height="14" uuid="e2831087-dfa3-4440-940e-9f06dcc780c7"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{TOTAL1}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+					<reportElement mode="Opaque" x="226" y="14" width="96" height="14" backcolor="#FFFFFF" uuid="0189d8b1-6914-4a58-800a-1c7e287a901d"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{RDESCONTO1}.compareTo(BigDecimal.ZERO) != 0 ? $F{RDESCONTO1} + "%" : ""]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+					<reportElement mode="Opaque" x="226" y="28" width="96" height="14" backcolor="#FFFFFF" uuid="a09efcd1-49f4-49bf-b67e-b1b5e102e8c6"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{LIQUIDO1}]]></textFieldExpression>
+				</textField>
+				<textField pattern="" isBlankWhenNull="true">
+					<reportElement mode="Opaque" x="226" y="42" width="96" height="14" backcolor="#FFFFFF" uuid="bf671e26-c664-45a9-a8c9-3b9607e27f8b"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{RCONDICAO1} == null ? "" : $F{RCONDICAO1}.trim()]]></textFieldExpression>
+				</textField>
+				<textField pattern="¤ #,##0.00" isBlankWhenNull="true">
+					<reportElement mode="Opaque" x="226" y="56" width="96" height="14" backcolor="#FFFFFF" uuid="509df509-4423-422f-8c4d-d7919705bad4"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{TOTALGERAL1}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement x="322" y="0" width="96" height="14" uuid="b373f603-d050-4f18-b144-3e20982ea4d5"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{TOTAL2}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement mode="Opaque" x="322" y="14" width="96" height="14" backcolor="#FFFFFF" uuid="f64fb6f0-c21f-4ff2-9bae-d12d262e3e87"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{RDESCONTO2}.compareTo(BigDecimal.ZERO) != 0 ? $F{RDESCONTO2} + "%" : ""]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement mode="Opaque" x="418" y="0" width="96" height="14" backcolor="#FFFFFF" uuid="bd37771c-afd9-456b-a089-2e08017f34f2"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{TOTAL3}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement mode="Opaque" x="418" y="14" width="96" height="14" backcolor="#FFFFFF" uuid="29ab5805-c092-42fa-8dd7-07f74d646eae"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{RDESCONTO3}.compareTo(BigDecimal.ZERO) != 0 ? $F{RDESCONTO3} + "%" : ""]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement mode="Opaque" x="514" y="0" width="96" height="14" backcolor="#FFFFFF" uuid="ec9c3a56-72d7-4881-98b7-8120e0b35432"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{TOTAL4}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement mode="Opaque" x="514" y="14" width="96" height="14" backcolor="#FFFFFF" uuid="8b416cbc-7c2c-4c50-9011-7549598b00b8"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{RDESCONTO4}.compareTo(BigDecimal.ZERO) != 0 ? $F{RDESCONTO4} + "%" : ""]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement mode="Opaque" x="610" y="0" width="96" height="14" backcolor="#FFFFFF" uuid="1057ff2d-9061-4f1f-aee7-ec510fe5199f"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{TOTAL5}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement mode="Opaque" x="610" y="14" width="96" height="14" backcolor="#FFFFFF" uuid="6fb14a54-2e91-4cb3-ac09-df4a36b7aeb1"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{RDESCONTO5}.compareTo(BigDecimal.ZERO) != 0 ? $F{RDESCONTO5} + "%" : ""]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement mode="Opaque" x="706" y="0" width="96" height="14" backcolor="#FFFFFF" uuid="edd70d7e-af6d-48ca-9531-a65c9b1aa929"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{TOTAL6}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement mode="Opaque" x="706" y="14" width="96" height="14" backcolor="#FFFFFF" uuid="86fd71eb-768d-4368-ac03-6516b9bb611b"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{RDESCONTO6}.compareTo(BigDecimal.ZERO) != 0 ? $F{RDESCONTO6} + "%" : ""]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement mode="Opaque" x="322" y="28" width="96" height="14" backcolor="#FFFFFF" uuid="70487f77-f9ba-408d-bcdf-295b59b97666"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{LIQUIDO2}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement mode="Opaque" x="418" y="28" width="96" height="14" backcolor="#FFFFFF" uuid="2778d35b-eb3b-4e3d-a721-3fb2a71f880c"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{LIQUIDO3}]]></textFieldExpression>
+				</textField>
+				<textField pattern="">
+					<reportElement mode="Opaque" x="322" y="42" width="96" height="14" backcolor="#FFFFFF" uuid="053aa2b2-8c3a-428b-9382-3924de6373a1"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{RCONDICAO2} == null ? "" : $F{RCONDICAO2}.trim()]]></textFieldExpression>
+				</textField>
+				<textField pattern="">
+					<reportElement mode="Opaque" x="418" y="42" width="96" height="14" backcolor="#FFFFFF" uuid="651a688a-212f-4165-862e-d82eab90ddad"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{RCONDICAO3} == null ? "" : $F{RCONDICAO3}.trim()]]></textFieldExpression>
+				</textField>
+				<textField pattern="¤ #,##0.00">
+					<reportElement mode="Opaque" x="322" y="56" width="96" height="14" backcolor="#FFFFFF" uuid="ee26c38d-ed19-4a11-9c20-49b91ab9438d"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{TOTALGERAL2}]]></textFieldExpression>
+				</textField>
+				<textField pattern="¤ #,##0.00">
+					<reportElement mode="Opaque" x="418" y="56" width="96" height="14" backcolor="#FFFFFF" uuid="205def61-2c9a-46d7-8479-179a97557dbd"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{TOTALGERAL3}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement mode="Opaque" x="514" y="28" width="96" height="14" backcolor="#FFFFFF" uuid="2d04256f-7a8b-4ca8-9c15-63518fe754f3"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{LIQUIDO4}]]></textFieldExpression>
+				</textField>
+				<textField pattern="">
+					<reportElement mode="Opaque" x="514" y="42" width="96" height="14" backcolor="#FFFFFF" uuid="77608cc0-a506-4416-bbc4-e18033562597"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{RCONDICAO4} == null ? "" : $F{RCONDICAO4}.trim()]]></textFieldExpression>
+				</textField>
+				<textField pattern="¤ #,##0.00">
+					<reportElement mode="Opaque" x="514" y="56" width="96" height="14" backcolor="#FFFFFF" uuid="a687c2ba-38a9-4663-98fa-2f67ee245c0f"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{TOTALGERAL4}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement mode="Opaque" x="610" y="28" width="96" height="14" backcolor="#FFFFFF" uuid="dadffe2a-994e-4469-b32e-a42f92d22ce4"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{LIQUIDO5}]]></textFieldExpression>
+				</textField>
+				<textField pattern="">
+					<reportElement mode="Opaque" x="610" y="42" width="96" height="14" backcolor="#FFFFFF" uuid="eeb33fae-b346-4b6d-9e60-c0dc644ae89a"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{RCONDICAO5} == null ? "" : $F{RCONDICAO5}.trim()]]></textFieldExpression>
+				</textField>
+				<textField pattern="¤ #,##0.00">
+					<reportElement mode="Opaque" x="610" y="56" width="96" height="14" backcolor="#FFFFFF" uuid="470acb7d-707f-47bc-bdc1-7326e610cbbf"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{TOTALGERAL5}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement mode="Opaque" x="706" y="28" width="96" height="14" backcolor="#FFFFFF" uuid="6d75022f-cd58-40e8-8ae3-32f515cf8588"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{LIQUIDO6}]]></textFieldExpression>
+				</textField>
+				<textField pattern="">
+					<reportElement mode="Opaque" x="706" y="42" width="96" height="14" backcolor="#FFFFFF" uuid="3af902ac-233d-449e-b629-f0bee0563f5a"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{RCONDICAO6} == null ? "" : $F{RCONDICAO6}.trim()]]></textFieldExpression>
+				</textField>
+				<textField pattern="¤ #,##0.00">
+					<reportElement mode="Opaque" x="706" y="56" width="96" height="14" backcolor="#FFFFFF" uuid="d80b2bf1-1eaf-43b6-9c96-f9e36a6d7376"/>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<pen lineWidth="0.0"/>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{TOTALGERAL6}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupFooter>
+	</group>
+	<pageHeader>
+		<band height="60">
+			<textField>
+				<reportElement x="149" y="0" width="504" height="20" uuid="eb509a97-381c-4b69-9805-43a806b7684a"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{NOME_EMPRESA}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="149" y="20" width="504" height="20" uuid="484d6a52-0b2e-49d6-b9f8-5ecfa9b004a7"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{TITULO_RELATORIO} + " " + $F{RREQUISICAO}.toString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="733" y="0" width="69" height="20" uuid="d4861241-e9d6-43a9-9e50-929b8dfabb1b"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Folha: " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="733" y="20" width="69" height="20" uuid="6571193f-3ce5-4ced-9bd2-58649ee80142"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new SimpleDateFormat("dd/MM/yyyy").format(new Date())]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="733" y="40" width="69" height="20" uuid="56e1d63f-a6a4-47e2-b387-91123fbad49d"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new SimpleDateFormat("HH:mm").format(new Date())]]></textFieldExpression>
+			</textField>
+			<image scaleImage="FillFrame">
+				<reportElement x="0" y="0" width="49" height="40" uuid="ab9799d2-60ec-45f2-a9bf-b415213abfc8"/>
+				<imageExpression><![CDATA[System.getProperty("user.dir").replace('\\','/') + "/logo.bmp"]]></imageExpression>
+			</image>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="14" splitType="Stretch">
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement mode="Transparent" x="226" y="0" width="48" height="14" backcolor="#FFFFFF" uuid="4854db36-e3ef-4d91-bd72-ab75be6b7491">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA1} == 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RUNITARIO1}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement x="322" y="0" width="48" height="14" uuid="19c3812b-682f-474c-a51c-5e5492aa78eb">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA2} == 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RUNITARIO2}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement mode="Transparent" x="418" y="0" width="48" height="14" backcolor="#FFFFFF" uuid="fba8e7b0-528a-41be-9fc9-15fb17aa4871">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA3} == 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RUNITARIO3}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement mode="Transparent" x="466" y="0" width="48" height="14" backcolor="#FFFFFF" uuid="8ce98611-7e10-48b1-ac92-76fa5912ff0e">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA3} == 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RTOTAL3}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0;-#,##0">
+				<reportElement x="0" y="0" width="36" height="14" uuid="04822b77-ee8f-4864-adba-1c287cbd4be8"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RQUANTIDADE}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="36" y="0" width="190" height="14" uuid="4d824757-10ba-4a9b-a8b7-1c785f761b8e"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RPRODUTO}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement mode="Opaque" x="274" y="0" width="48" height="14" backcolor="#CCFFCC" uuid="062f82fa-25a0-447a-bbb6-0080353a9383">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA1} > 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RTOTAL1}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement mode="Opaque" x="370" y="0" width="48" height="14" backcolor="#CCFFCC" uuid="d6ced176-a396-419e-b733-7f02ddb84bca">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA2} > 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RTOTAL2}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement mode="Transparent" x="514" y="0" width="48" height="14" backcolor="#FFFFFF" uuid="5e38513a-e602-4a34-a9c2-89e2d98e679d">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA4} == 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RUNITARIO4}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement mode="Transparent" x="562" y="0" width="48" height="14" backcolor="#FFFFFF" uuid="d308d885-7254-4d93-8dda-4f7c151312b1">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA4} == 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RTOTAL4}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement mode="Transparent" x="610" y="0" width="48" height="14" backcolor="#FFFFFF" uuid="eba3cdfb-5ab7-43ff-a0e0-273ddcf5e869">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA5} == 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RUNITARIO5}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement mode="Transparent" x="658" y="0" width="48" height="14" backcolor="#FFFFFF" uuid="491219d7-a67b-4de7-ab87-6569604ba082">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA5} == 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RTOTAL5}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement mode="Opaque" x="226" y="0" width="48" height="14" backcolor="#CCFFCC" uuid="0a0635c8-9039-4c78-8995-5d7002676eab">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA1} > 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RUNITARIO1}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement x="274" y="0" width="48" height="14" uuid="273f09da-9ef3-4ac9-a0de-66b115592e14">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA1} == 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RTOTAL1}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement mode="Opaque" x="322" y="0" width="48" height="14" backcolor="#CCFFCC" uuid="1a218569-22a9-4521-aa18-648cfc684df0">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA2} > 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RUNITARIO2}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement x="370" y="0" width="48" height="14" uuid="f99072b3-f526-4be6-b62c-d82785bb6cc2">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA2} == 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RTOTAL2}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement mode="Opaque" x="418" y="0" width="48" height="14" backcolor="#CCFFCC" uuid="637f5cd7-9677-4719-a754-5150c467adb5">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA3} > 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RUNITARIO3}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement mode="Opaque" x="466" y="0" width="48" height="14" backcolor="#CCFFCC" uuid="09365b65-07a4-434c-906d-ec88353bea48">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA3} > 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RTOTAL3}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement mode="Opaque" x="514" y="0" width="48" height="14" backcolor="#CCFFCC" uuid="7361cbba-5cde-4aab-aa95-a16ef63bb2c1">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA4} > 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RUNITARIO4}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement mode="Opaque" x="562" y="0" width="48" height="14" backcolor="#CCFFCC" uuid="40f3c160-d58d-4db0-8b43-0de75684051c">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA4} > 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RTOTAL4}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement mode="Transparent" x="706" y="0" width="48" height="14" backcolor="#FFFFFF" uuid="4146d449-f25a-4df0-9969-44238a5be3b6">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA6} == 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RUNITARIO6}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement mode="Opaque" x="610" y="0" width="48" height="14" backcolor="#CCFFCC" uuid="c65c59bb-b42b-4346-a4ee-df53315f6d48">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA5} > 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RUNITARIO5}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement mode="Opaque" x="706" y="0" width="48" height="14" backcolor="#CCFFCC" uuid="f910abac-361d-4c68-9916-fe65003afc58">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA6} > 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RUNITARIO6}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement mode="Transparent" x="754" y="0" width="48" height="14" backcolor="#FFFFFF" uuid="5e974206-ded9-475f-864a-8f19f7394d16">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA6} == 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RTOTAL6}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement mode="Opaque" x="754" y="0" width="48" height="14" backcolor="#CCFFCC" uuid="09c88219-5dd0-49e6-a38d-e487b35d22ce">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA6} > 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RTOTAL6}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement mode="Opaque" x="658" y="0" width="48" height="14" backcolor="#CCFFCC" uuid="3a9cc17b-0c97-4a5c-9fba-20c234fa80af">
+					<printWhenExpression><![CDATA[$F{RSELECIONADA5} > 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RTOTAL5}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<summary>
+		<band height="138">
+			<textField>
+				<reportElement mode="Opaque" x="1" y="110" width="382" height="28" backcolor="#FFFFFF" uuid="e096e207-2e41-4fd0-84d3-3ae38921efc7"/>
+				<box>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="none">
+					<font fontName="Courier New" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Comprador: " + $P{NOME_USUARIO}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="12" width="243" height="14" backcolor="#FFFFFF" uuid="953caa6d-093e-4ab8-ab9c-d47ce221a9a1"/>
+				<box rightPadding="2">
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" size="10" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Fornecedores]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="243" y="12" width="140" height="14" backcolor="#FFFFFF" uuid="a34f1d25-2902-4eeb-8be1-6bafd4731843"/>
+				<box rightPadding="2">
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" size="10" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Valores]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="0" y="26" width="243" height="14" uuid="a5aca4e6-be29-40e1-b52e-c7d46d5186e4"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RFORNECEDOR1}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+				<reportElement mode="Opaque" x="243" y="26" width="140" height="14" backcolor="#FFFFFF" uuid="1145e00b-749e-4c93-b684-3c56afda9147"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{LIQUIDO1}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="40" width="243" height="14" uuid="1317ed10-cd88-47ab-8d95-0b86ec2e2e45"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RFORNECEDOR2}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+				<reportElement mode="Opaque" x="243" y="40" width="140" height="14" backcolor="#FFFFFF" uuid="6979b7bb-8f51-4659-bd79-b48df9e7107e"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{LIQUIDO2}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="54" width="243" height="14" uuid="c5edac1d-f126-4ec1-97bb-df37e0c9d59e"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RFORNECEDOR3}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+				<reportElement mode="Opaque" x="243" y="54" width="140" height="14" backcolor="#FFFFFF" uuid="f0346d07-3f9b-44b3-a3b7-7cd12826d28b"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{LIQUIDO3}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="68" width="243" height="14" uuid="2855021f-fdca-4e6c-9128-a0e2475030de"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RFORNECEDOR4}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+				<reportElement mode="Opaque" x="243" y="68" width="140" height="14" backcolor="#FFFFFF" uuid="7c646bc0-f319-4c9e-8b76-26029fcbebeb"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{LIQUIDO4}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="82" width="243" height="14" uuid="fa7205e3-3748-42c0-957f-519246ecfccf"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RFORNECEDOR5}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="96" width="243" height="14" uuid="a337ae1a-6674-4503-93c2-cf707f1f27f8"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{RFORNECEDOR6}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+				<reportElement mode="Opaque" x="243" y="82" width="140" height="14" backcolor="#FFFFFF" uuid="42e39cdf-b6d0-4aa2-9d72-0178a87125cd"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{LIQUIDO5}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00" isBlankWhenNull="true">
+				<reportElement mode="Opaque" x="243" y="96" width="140" height="14" backcolor="#FFFFFF" uuid="89683a75-d8bc-4a2b-8e1d-7c8b03dbd027"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<pen lineWidth="0.0"/>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{LIQUIDO6}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

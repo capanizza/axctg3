@@ -23,6 +23,7 @@
     </moduleSettings>
   </component>
   <component name="JmixPluginProjectSettings">
+    <option name="suppressSPNotification" value="true" />
     <option name="savedDbProperties">
       <list>
         <SavedDbProperties>

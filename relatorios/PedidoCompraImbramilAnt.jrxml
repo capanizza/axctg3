@@ -1,0 +1,1054 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PedidoCompraImbramil" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="NUMERO_PEDIDO" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="TITULO_RELATORIO" class="java.lang.String"/>
+	<parameter name="NOME_EMPRESA" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[select PedidoCompra.Registro
+     , PedidoCompra.Usuario
+     , PedidoCompra.DataPedido
+     , PedidoCompra.DataPrevistaEntrega
+     , PedidoCompra.ValorDesconto
+     , PedidoCOmpra.ValorFrete
+     , PedidoCOmpra.Observacao
+     , PedidoCompra.TipoCompra
+     , TipoCompra.Nome
+     , PedidoCompra.Centro
+     , Centro.Nome as NomeCentro
+     , PedidoCompra.Parceiro
+     , Parceiro.Razao
+     , Parceiro.Apelido
+     , Parceiro.Endereco
+     , Parceiro.Numero as NumeroParceiro
+     , Parceiro.Bairro
+     , Parceiro.Municipio
+     , Municipio.Nome as NomeMunicipio
+     , Parceiro.Cidade
+     , Parceiro.CEP
+     , Parceiro.Estado
+     , Parceiro.CNPJ
+     , Parceiro.Inscr
+     , PedidoCompra.Condicao
+     , Condicao.Nome as NomeCondicao
+     , ItemPedidoCompra.Produto
+     , ItemPedidoCompra.DescricaoProduto
+     , ItemPedidoCompra.Quantidade
+     , ItemPedidoCompra.ValorUnitario
+     , ItemPedidoCompra.AliqIPI
+     , ItemPedidoCompra.AliqICMS
+     , ItemPedidoCompra.DataEntrega
+     , ItemPedidoCompra.Moeda
+     , Cast(ItemPedidoCompra.Quantidade * ItemPedidoCompra.ValorUnitario  * ItemPedidoCompra.AliqIPI / 100 as Numeric(18, 2)) as ValorIPI
+     , Cast(ItemPedidoCompra.Quantidade * ItemPedidoCompra.ValorUnitario as Numeric(18, 2)) as SubTotal
+     , Cast(ItemPedidoCompra.ValorUnitario  * 100 / (100 - ItemPedidoCompra.AliqICMS) as Numeric(18, 2)) As ValorComICMS
+     , Parceiro.Contato as NomeContato
+     , Parceiro.Telefone as FoneContato
+     , Produto.Unidade as Unidade
+from   PedidoCompra
+left join TipoCompra on TipoCompra.Registro = PedidoCompra.TipoCompra
+left join Centro on Centro.Registro = PedidoCompra.RegCentro
+left join Parceiro on Parceiro.Registro = PedidoCompra.RegParceiro
+left join Municipio on Municipio.Codigo = Parceiro.Municipio
+left join Condicao on Condicao.Registro = PedidoCompra.RegCondicao
+left join ItemPedidoCompra on ItemPedidoCompra.Pai = PedidoCompra.Registro
+left join Produto on Produto.Registro = ItemPedidoCompra.RegProduto
+where PedidoCompra.Registro = $P{NUMERO_PEDIDO}]]>
+	</queryString>
+	<field name="REGISTRO" class="java.lang.Integer"/>
+	<field name="USUARIO" class="java.lang.String"/>
+	<field name="DATAPEDIDO" class="java.sql.Date"/>
+	<field name="DATAPREVISTAENTREGA" class="java.sql.Date"/>
+	<field name="VALORDESCONTO" class="java.math.BigDecimal"/>
+	<field name="VALORFRETE" class="java.math.BigDecimal"/>
+	<field name="OBSERVACAO" class="java.lang.String"/>
+	<field name="TIPOCOMPRA" class="java.lang.Integer"/>
+	<field name="NOME" class="java.lang.String"/>
+	<field name="CENTRO" class="java.lang.String"/>
+	<field name="NOMECENTRO" class="java.lang.String"/>
+	<field name="PARCEIRO" class="java.lang.Integer"/>
+	<field name="RAZAO" class="java.lang.String"/>
+	<field name="APELIDO" class="java.lang.String"/>
+	<field name="ENDERECO" class="java.lang.String"/>
+	<field name="NUMEROPARCEIRO" class="java.lang.Integer"/>
+	<field name="BAIRRO" class="java.lang.String"/>
+	<field name="MUNICIPIO" class="java.lang.Integer"/>
+	<field name="NOMEMUNICIPIO" class="java.lang.String"/>
+	<field name="CIDADE" class="java.lang.String"/>
+	<field name="CEP" class="java.lang.String"/>
+	<field name="ESTADO" class="java.lang.String"/>
+	<field name="CNPJ" class="java.lang.String"/>
+	<field name="INSCR" class="java.lang.String"/>
+	<field name="CONDICAO" class="java.lang.Integer"/>
+	<field name="NOMECONDICAO" class="java.lang.String"/>
+	<field name="PRODUTO" class="java.lang.Integer"/>
+	<field name="DESCRICAOPRODUTO" class="java.lang.String"/>
+	<field name="QUANTIDADE" class="java.math.BigDecimal"/>
+	<field name="VALORUNITARIO" class="java.math.BigDecimal"/>
+	<field name="ALIQIPI" class="java.math.BigDecimal"/>
+	<field name="ALIQICMS" class="java.math.BigDecimal"/>
+	<field name="DATAENTREGA" class="java.sql.Date"/>
+	<field name="MOEDA" class="java.lang.String"/>
+	<field name="VALORIPI" class="java.math.BigDecimal"/>
+	<field name="SUBTOTAL" class="java.math.BigDecimal"/>
+	<field name="VALORCOMICMS" class="java.math.BigDecimal"/>
+	<field name="NOMECONTATO" class="java.lang.String"/>
+	<field name="FONECONTATO" class="java.lang.String"/>
+	<field name="UNIDADE" class="java.lang.String"/>
+	<variable name="VALOR" class="java.math.BigDecimal" resetType="Group" resetGroup="Numero" calculation="Sum">
+		<variableExpression><![CDATA[$F{SUBTOTAL}]]></variableExpression>
+	</variable>
+	<variable name="VALORIPI" class="java.math.BigDecimal" resetType="Group" resetGroup="Numero" calculation="Sum">
+		<variableExpression><![CDATA[$F{VALORIPI}]]></variableExpression>
+	</variable>
+	<variable name="VALORICMS" class="java.math.BigDecimal" resetType="Group" resetGroup="Numero" calculation="Sum">
+		<variableExpression><![CDATA[$F{QUANTIDADE}.multiply($F{VALORUNITARIO}).multiply($F{ALIQICMS}).divide(new BigDecimal(100))]]></variableExpression>
+	</variable>
+	<group name="Numero">
+		<groupExpression><![CDATA[$F{REGISTRO}]]></groupExpression>
+		<groupHeader>
+			<band height="98">
+				<staticText>
+					<reportElement x="0" y="14" width="263" height="14"/>
+					<box leftPadding="4">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.0"/>
+					</box>
+					<textElement verticalAlignment="Middle" markup="none">
+						<font fontName="Courier New"/>
+					</textElement>
+					<text><![CDATA[RUA AMPERE 375]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="154" y="42" width="49" height="14"/>
+					<box>
+						<bottomPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="none">
+						<font fontName="Courier New"/>
+					</textElement>
+					<text><![CDATA[SP]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="0" width="802" height="14"/>
+					<box leftPadding="4">
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle" markup="none">
+						<font fontName="Courier New"/>
+					</textElement>
+					<text><![CDATA[IMBRAMIL INDUSTRIA E COMERCIO LTDA.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="28" width="802" height="14"/>
+					<box leftPadding="4">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.0"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle" markup="none">
+						<font fontName="Courier New"/>
+					</textElement>
+					<text><![CDATA[BAIRRO DA PENHA - DISTRITO INDUSTRIAL I]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="203" y="42" width="60" height="14"/>
+					<box>
+						<bottomPen lineWidth="0.0"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="none">
+						<font fontName="Courier New"/>
+					</textElement>
+					<text><![CDATA[12929-570]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="42" width="154" height="14"/>
+					<box leftPadding="4">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.0"/>
+					</box>
+					<textElement verticalAlignment="Middle" markup="none">
+						<font fontName="Courier New"/>
+					</textElement>
+					<text><![CDATA[BRAGANÇA PAULISTA]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="263" y="42" width="539" height="14"/>
+					<box>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="none">
+						<font fontName="Courier New"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{USUARIO}.equals("PRADO") ? "Email: compras@imbramil.com.br" : "Email: compras02@imbramil.com.br"]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="0" y="70" width="154" height="14"/>
+					<box leftPadding="4">
+						<leftPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle" markup="none">
+						<font fontName="Courier New"/>
+					</textElement>
+					<text><![CDATA[CNPJ: 59.227.728/0001-01]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="154" y="70" width="648" height="14"/>
+					<box>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle" markup="none">
+						<font fontName="Courier New"/>
+					</textElement>
+					<text><![CDATA[IE: 225.061.325.113]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="26" y="84" width="64" height="14"/>
+					<box>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Produto]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="90" y="84" width="260" height="14"/>
+					<box>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Descrição do Produto]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="482" y="84" width="66" height="14"/>
+					<box>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Valor]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="728" y="84" width="74" height="14"/>
+					<box>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Subtotal]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="84" width="26" height="14"/>
+					<box>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Item]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="56" width="802" height="14"/>
+					<box topPadding="0" leftPadding="4" bottomPadding="0" rightPadding="0">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.0"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Fone: 11 4035-7600       Fax: 11 4035-7618]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="350" y="84" width="22" height="14"/>
+					<box>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Un]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="432" y="84" width="50" height="14"/>
+					<box>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Quant.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="628" y="84" width="40" height="14"/>
+					<box>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[%IPI]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="668" y="84" width="60" height="14"/>
+					<box>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Valor IPI]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="263" y="14" width="539" height="14"/>
+					<box>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="372" y="84" width="60" height="14"/>
+					<box>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Entrega]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="588" y="84" width="40" height="14"/>
+					<box>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[%ICMS]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="549" y="84" width="40" height="14"/>
+					<box>
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Moeda]]></text>
+				</staticText>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="243" splitType="Stretch">
+				<staticText>
+					<reportElement x="628" y="14" width="100" height="14"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Courier New" size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Descontos]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="628" y="42" width="100" height="14"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Courier New" size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Valor IPI]]></text>
+				</staticText>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement x="668" y="0" width="60" height="14"/>
+					<box leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Courier New" size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{VALORIPI}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement x="728" y="56" width="74" height="14"/>
+					<box leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Courier New" size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{VALORFRETE}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement x="728" y="70" width="74" height="14">
+						<printWhenExpression><![CDATA[$F{QUANTIDADE}.compareTo( BigDecimal.ZERO ) > 0]]></printWhenExpression>
+					</reportElement>
+					<box leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Courier New" size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{VALOR}.subtract($F{VALORDESCONTO}).add($V{VALORIPI}).add($F{VALORFRETE})]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement x="728" y="0" width="74" height="14">
+						<printWhenExpression><![CDATA[$F{QUANTIDADE}.compareTo( BigDecimal.ZERO ) > 0]]></printWhenExpression>
+					</reportElement>
+					<box leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Courier New" size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{VALOR}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="0" y="0" width="81" height="14"/>
+					<box leftPadding="4">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.0"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Fornecedor:]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="14" width="81" height="14"/>
+					<box leftPadding="4">
+						<leftPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Razão social:]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="28" width="81" height="14"/>
+					<box leftPadding="4">
+						<leftPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Endereço:]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="42" width="81" height="14"/>
+					<box leftPadding="4">
+						<leftPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[I.E.:]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="56" width="81" height="14"/>
+					<box leftPadding="4">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Telefone:]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="81" y="0" width="378" height="14"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Courier New"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{PARCEIRO}.toString() + " " + $F{APELIDO}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="81" y="14" width="378" height="14"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Courier New"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{RAZAO}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="82" y="28" width="378" height="14"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Courier New"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{ENDERECO} + " " + $F{BAIRRO} + " " + $F{CIDADE} + " " + $F{ESTADO}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="82" y="42" width="160" height="14">
+						<printWhenExpression><![CDATA[$F{CNPJ}.length() == 11 || $F{CNPJ}.length() == 14]]></printWhenExpression>
+					</reportElement>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Courier New"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{INSCR}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="242" y="42" width="42" height="14"/>
+					<box>
+						<leftPen lineWidth="0.0"/>
+						<bottomPen lineWidth="0.0"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[CNPJ:]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="283" y="42" width="177" height="14">
+						<printWhenExpression><![CDATA[$F{CNPJ}.length() == 11 || $F{CNPJ}.length() == 14]]></printWhenExpression>
+					</reportElement>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Courier New"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{CNPJ}.length() == 11 ? $F{CNPJ}.substring(0, 3) + "." + $F{CNPJ}.substring(3, 6) + "." + $F{CNPJ}.substring(6, 9) + "-" + $F{CNPJ}.substring(9, 11): $F{CNPJ}.substring(0, 2) + "." + $F{CNPJ}.substring(2, 5) + "." + $F{CNPJ}.substring(5, 8) + "/" + $F{CNPJ}.substring(8, 12) + "-" + $F{CNPJ}.substring(12, 14)]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="81" y="56" width="160" height="14"/>
+					<box>
+						<bottomPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Courier New"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{FONECONTATO}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="241" y="56" width="42" height="14"/>
+					<box>
+						<leftPen lineWidth="0.0"/>
+						<bottomPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Contato:]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="283" y="56" width="345" height="14"/>
+					<box>
+						<bottomPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Courier New"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{NOMECONTATO} != null ? $F{NOMECONTATO} : ""]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="628" y="0" width="40" height="14"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Courier New" size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Subtotal]]></text>
+				</staticText>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement x="728" y="14" width="74" height="14"/>
+					<box leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Courier New" size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{VALORDESCONTO}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement x="728" y="42" width="74" height="14"/>
+					<box leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Courier New" size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{VALORIPI}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="628" y="84" width="70" height="14"/>
+					<box leftPadding="4">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Courier New" size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Cond.pagto.:]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="628" y="98" width="70" height="14"/>
+					<box leftPadding="4">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Courier New" size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Entrega:]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="698" y="84" width="104" height="14"/>
+					<box>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{NOMECONDICAO} != null ? $F{NOMECONDICAO} : ""]]></textFieldExpression>
+				</textField>
+				<textField pattern="dd/MM/yyyy">
+					<reportElement x="698" y="98" width="104" height="14"/>
+					<box>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Courier New" size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{DATAPREVISTAENTREGA} != null ? $F{DATAPREVISTAENTREGA} : ""]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="0" y="158" width="81" height="20"/>
+					<box leftPadding="4">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Comprador:]]></text>
+				</staticText>
+				<staticText>
+					<reportElement stretchType="RelativeToBandHeight" x="0" y="90" width="81" height="68"/>
+					<box leftPadding="4">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="70" width="81" height="20"/>
+					<box leftPadding="4">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.0"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Observações:]]></text>
+				</staticText>
+				<textField pattern="dd/MM/yyyy">
+					<reportElement x="82" y="158" width="720" height="20"/>
+					<box topPadding="4" leftPadding="4">
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Top">
+						<font fontName="Courier New"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{USUARIO} == null ? "" : $F{USUARIO}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement stretchType="RelativeToBandHeight" x="81" y="70" width="547" height="88"/>
+					<box topPadding="4" leftPadding="4">
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement verticalAlignment="Top">
+						<font fontName="Courier New" size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{OBSERVACAO} == null ? "" : $F{OBSERVACAO}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement stretchType="RelativeToBandHeight" x="628" y="112" width="174" height="46"/>
+					<box leftPadding="4">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Autorizado]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="628" y="28" width="100" height="14"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Courier New" size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Valor ICMS]]></text>
+				</staticText>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement x="728" y="28" width="74" height="14"/>
+					<box leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="Courier New" size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{VALORICMS}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="0" y="178" width="802" height="16"/>
+					<box leftPadding="4">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.0"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Courier New" size="10" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Condições gerais de compra]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="194" width="802" height="49"/>
+					<box leftPadding="4">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Courier New" size="7" isBold="false"/>
+					</textElement>
+					<text><![CDATA[1 - O produto/serviço ora encomendado está sujeito a inspeção e poderá ser rejeitado se não estiver de acordo com esse PC ou apresentar defeitos que o tornem impróprio para o uso a que se
+    destina.
+2 - O número deste PC deve constar nas notas fiscais e faturas correspondentes.
+3 - Reservamo-nos o direito de cancelar este PC se a entrega/execução estiverem em atraso.
+4 - Só serão aceitas alterações de preço ou condições autorizadas por PC complementar.
+5 - Horário de recebimento de mercadorias: segunda a sexta das 8:00 às 16:00 horas.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="628" y="56" width="100" height="14"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Courier New" size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Valor frete]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="628" y="70" width="100" height="14"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Courier New" size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Valor total]]></text>
+				</staticText>
+			</band>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="60">
+			<textField>
+				<reportElement x="213" y="0" width="376" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{NOME_EMPRESA}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="213" y="20" width="376" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{TITULO_RELATORIO} + " Nº " + $F{REGISTRO}.toString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="213" y="40" width="376" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Data: " + new SimpleDateFormat("dd/MM/yyyy").format($F{DATAPEDIDO})]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="731" y="0" width="71" height="20"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Folha: " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="731" y="20" width="71" height="20"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new SimpleDateFormat("dd/MM/yyyy").format(new Date())]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="731" y="40" width="71" height="20"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new SimpleDateFormat("HH:mm").format(new Date())]]></textFieldExpression>
+			</textField>
+			<image scaleImage="FillFrame">
+				<reportElement x="0" y="0" width="52" height="40"/>
+				<imageExpression><![CDATA["images/LogoImbramil.JPG"]]></imageExpression>
+			</image>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="14" splitType="Stretch">
+			<textField>
+				<reportElement x="90" y="0" width="260" height="14"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Courier New" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{DESCRICAOPRODUTO}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="26" y="0" width="64" height="14"/>
+				<box>
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{PRODUTO}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="0" width="26" height="14"/>
+				<box leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="350" y="0" width="22" height="14">
+					<printWhenExpression><![CDATA[$F{QUANTIDADE}.compareTo( BigDecimal.ZERO ) > 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{UNIDADE}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.000">
+				<reportElement x="432" y="0" width="50" height="14">
+					<printWhenExpression><![CDATA[$F{QUANTIDADE}.compareTo( BigDecimal.ZERO ) > 0]]></printWhenExpression>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{QUANTIDADE}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.0000;-#,##0.0000">
+				<reportElement x="482" y="0" width="66" height="14">
+					<printWhenExpression><![CDATA[$F{QUANTIDADE}.compareTo( BigDecimal.ZERO ) > 0]]></printWhenExpression>
+				</reportElement>
+				<box leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{VALORUNITARIO}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement x="628" y="0" width="40" height="14">
+					<printWhenExpression><![CDATA[$F{QUANTIDADE}.compareTo( BigDecimal.ZERO ) > 0]]></printWhenExpression>
+				</reportElement>
+				<box leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ALIQIPI}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement x="668" y="0" width="60" height="14">
+					<printWhenExpression><![CDATA[$F{QUANTIDADE}.compareTo( BigDecimal.ZERO ) > 0]]></printWhenExpression>
+				</reportElement>
+				<box leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{VALORIPI}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement x="728" y="0" width="74" height="14">
+					<printWhenExpression><![CDATA[$F{QUANTIDADE}.compareTo( BigDecimal.ZERO ) > 0]]></printWhenExpression>
+				</reportElement>
+				<box leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{SUBTOTAL}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy">
+				<reportElement x="372" y="0" width="60" height="14"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{DATAENTREGA} != null ? $F{DATAENTREGA} : ""]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement x="589" y="0" width="40" height="14">
+					<printWhenExpression><![CDATA[$F{QUANTIDADE}.compareTo( BigDecimal.ZERO ) > 0]]></printWhenExpression>
+				</reportElement>
+				<box leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Courier New" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{ALIQICMS}]]></textFieldExpression>
+			</textField>
+			<textField pattern="">
+				<reportElement x="549" y="0" width="40" height="14">
+					<printWhenExpression><![CDATA[$F{QUANTIDADE}.compareTo( BigDecimal.ZERO ) > 0]]></printWhenExpression>
+				</reportElement>
+				<box leftPadding="2" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Courier New" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{MOEDA} != null ? $F{MOEDA} : ""]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

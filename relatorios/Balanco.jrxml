@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.21.3.final using JasperReports Library version 6.21.3-4a3078d20785ebe464f18037d738d12fc98c13cf  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Balanco" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="ebf77172-1994-4629-8245-b71e1029bb49">
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="TITULO_RELATORIO" class="java.lang.String"/>
+	<parameter name="NOME_EMPRESA" class="java.lang.String"/>
+	<parameter name="GRAU_FECHAMENTO" class="java.lang.Integer"/>
+	<parameter name="LOGO" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<field name="conta" class="java.lang.String"/>
+	<field name="nome" class="java.lang.String"/>
+	<field name="grau" class="java.lang.Integer"/>
+	<field name="analitica" class="java.lang.Boolean"/>
+	<field name="sldAnt" class="java.math.BigDecimal"/>
+	<field name="debMes" class="java.math.BigDecimal"/>
+	<field name="credMes" class="java.math.BigDecimal"/>
+	<field name="sldAtual" class="java.math.BigDecimal"/>
+	<field name="grauAnterior" class="java.lang.Integer"/>
+	<field name="totalizar" class="java.lang.Boolean"/>
+	<field name="nomeAnterior" class="java.lang.String"/>
+	<field name="anterior" class="java.math.BigDecimal"/>
+	<field name="debito" class="java.math.BigDecimal"/>
+	<field name="credito" class="java.math.BigDecimal"/>
+	<field name="atual" class="java.math.BigDecimal"/>
+	<field name="posicao" class="java.lang.Integer"/>
+	<field name="tipoSaldoAnterior" class="java.lang.String"/>
+	<field name="tipoSaldoAtual" class="java.lang.String"/>
+	<field name="saldoAnteriorComLetra" class="java.lang.String"/>
+	<field name="saldoAtualComLetra" class="java.lang.String"/>
+	<variable name="sld_ant_tot" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{grau} == $P{GRAU_FECHAMENTO} ? $F{sldAnt} : BigDecimal.ZERO]]></variableExpression>
+	</variable>
+	<variable name="deb_mes_tot" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{grau} == $P{GRAU_FECHAMENTO} ? $F{debMes} : BigDecimal.ZERO]]></variableExpression>
+	</variable>
+	<variable name="cred_mes_tot" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{grau} == $P{GRAU_FECHAMENTO} ? $F{credMes} : BigDecimal.ZERO]]></variableExpression>
+	</variable>
+	<variable name="sld_atual_tot" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{grau} == $P{GRAU_FECHAMENTO} ? $F{sldAtual} : BigDecimal.ZERO]]></variableExpression>
+	</variable>
+	<group name="{conta}" isStartNewPage="true">
+		<groupExpression><![CDATA[$F{conta}.trim().substring(0, 1)]]></groupExpression>
+		<groupHeader>
+			<band/>
+		</groupHeader>
+		<groupFooter>
+			<band height="1"/>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="52">
+			<textField>
+				<reportElement x="89" y="0" width="397" height="15" uuid="71010fb0-26dd-4904-9c5a-c72b9f4dab9f"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{TITULO_RELATORIO}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="89" y="15" width="397" height="15" uuid="db022c9b-1db3-4edb-969c-fb05a4a12fa8"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{NOME_EMPRESA}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="486" y="0" width="69" height="15" uuid="ebd8f495-7344-4271-a6e6-6aca3741dd68"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Folha: " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="486" y="15" width="69" height="15" uuid="2df94895-b793-42a8-877a-5d376c4353a2"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new SimpleDateFormat("dd/MM/yyyy").format(new Date())]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="486" y="30" width="69" height="15" uuid="c255ba50-efa2-45df-be25-2d51a48b6970"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new SimpleDateFormat("HH:mm").format(new Date())]]></textFieldExpression>
+			</textField>
+			<image scaleImage="FillFrame">
+				<reportElement x="0" y="0" width="88" height="40" uuid="6685c85a-6460-4247-9615-6c3ef4a62a2f"/>
+				<imageExpression><![CDATA[$P{LOGO}]]></imageExpression>
+			</image>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="28">
+			<printWhenExpression><![CDATA[$F{totalizar} == true && $F{grau} < 99]]></printWhenExpression>
+			<staticText>
+				<reportElement stretchType="RelativeToTallestObject" x="0" y="0" width="28" height="14" uuid="30dd5cee-c26e-4cb0-b796-9642eeac781e">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle" markup="none">
+					<font fontName="DejaVu Sans Mono" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total ]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="291" y="0" width="88" height="14" uuid="0858d9a5-b242-4031-b084-b627f9830a52">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<textField pattern="#,##0.00">
+				<reportElement x="379" y="0" width="88" height="14" uuid="5e9cc4cb-5c6c-49fb-a54f-392ad8ffcc92">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{grau}.compareTo(1) > 0 && $F{sldAtual}.compareTo(BigDecimal.ZERO) != 0) ? $F{saldoAtualComLetra} : ""]]></textFieldExpression>
+			</textField>
+			<textField pattern="">
+				<reportElement x="467" y="0" width="88" height="14" uuid="792f4954-19b3-42c2-8f2c-ce3e1596c863"/>
+				<box>
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{grau}.compareTo(1) == 0 && $F{sldAtual}.compareTo(BigDecimal.ZERO) != 0 ? $F{saldoAtualComLetra} : ""]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight">
+				<reportElement stretchType="RelativeToTallestObject" x="28" y="0" width="263" height="14" uuid="198949c7-3a14-4d90-b57e-86d9bc1bb006">
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.25"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{nome}]]></textFieldExpression>
+			</textField>
+		</band>
+		<band height="14">
+			<printWhenExpression><![CDATA[$F{totalizar} == false]]></printWhenExpression>
+			<textField textAdjust="StretchHeight">
+				<reportElement stretchType="RelativeToTallestObject" x="0" y="0" width="234" height="14" uuid="b5113551-da78-4db0-bc60-c00bb1aa5e9b"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{nome}]]></textFieldExpression>
+			</textField>
+			<textField pattern="">
+				<reportElement x="291" y="0" width="88" height="14" uuid="dc3eae37-a970-4651-9896-94bff104679a">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+				</reportElement>
+				<box rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.0"/>
+					<bottomPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{grau} == $P{GRAU_FECHAMENTO} && $F{sldAtual}.compareTo(BigDecimal.ZERO) != 0 ?  $F{saldoAtualComLetra} : ""]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<summary>
+		<band height="77"/>
+	</summary>
+</jasperReport>

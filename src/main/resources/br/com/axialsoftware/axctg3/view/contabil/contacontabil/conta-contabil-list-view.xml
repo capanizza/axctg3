@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
+      title="msg://contaContabilListView.title"
+      focusComponent="contaContabilsDataGrid">
+    <data>
+        <collection id="contaContabilsDc"
+                    class="br.com.axialsoftware.axctg3.entity.contabil.ContaContabil">
+            <fetchPlan extends="_base"/>
+            <loader id="contaContabilsDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from ContaContabil e
+                    where e.codigo > '1'
+                    and e.ano = :ano
+                    and e.codEmpresa = :codEmpresa
+                    order by e.codigo]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <startSlot>
+                <button id="createButton" action="contaContabilsDataGrid.createAction" themeNames="small"/>
+                <button id="editButton" action="contaContabilsDataGrid.editAction" themeNames="small"/>
+                <button id="removeButton" action="contaContabilsDataGrid.removeAction" themeNames="small"/>
+                <dropdownButton id="listagemSwitcher"
+                                text="Relatórios" icon="PRINT" themeNames="small"
+                                dropdownIndicatorVisible="true">
+                    <items>
+                        <actionItem id="listagemItem">
+                            <action id="listagemAction"
+                                    text="Listagem das contas" icon="PRINT"/>
+                        </actionItem>
+                        <actionItem id="balanceteItem">
+                            <action id="balanceteAction"
+                                    text="Balancete" icon="PRINT"/>
+                        </actionItem>
+                        <actionItem id="balancoItem">
+                            <action id="balancoAction"
+                                    text="Balanço" icon="PRINT"/>
+                        </actionItem>
+                    </items>
+                </dropdownButton>
+                <button id="verificarButton" action="contaContabilsDataGrid.verificarAction" themeNames="small, success"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="contaContabilsDl"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="contaContabilsDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="contaContabilsDc"
+                  columnReorderingAllowed="true" themeNames="small">
+            <actions>
+                <action id="createAction" type="list_create"/>
+                <action id="editAction" type="list_edit"/>
+                <action id="removeAction" type="list_remove"/>
+                <action id="verificarAction" text="msg://contaContabilListView.verificar" icon="CHECK"/>
+            </actions>
+            <columns resizable="true">
+                <column property="codigo" autoWidth="true" filterable="true"/>
+                <column property="nome" autoWidth="true" filterable="true"/>
+                <column property="grau" autoWidth="true" filterable="true" textAlign="CENTER"/>
+                <column property="analitica" autoWidth="true" filterable="true" textAlign="CENTER"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction" themeNames="small"/>
+            <button id="discardButton" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>
