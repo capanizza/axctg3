@@ -2,8 +2,16 @@
 <menu-config xmlns="http://jmix.io/schema/flowui/menu">
 
     <menu id="application" title="msg://br.com.axialsoftware.axctg3/menu.application.title" opened="true">
+        <menu id="cadastros" title="msg://br.com.axialsoftware.axctg3.view.financeiro.historicofinanceiro/historicoFinanceiroListView.title">
+            <item view="HistoricoFinanceiro.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.financeiro.historicofinanceiro/historicoFinanceiroListView.title"/>
+        </menu>
         <item view="SelecionarEmpresa.list"
               title="msg://br.com.axialsoftware.axctg3.view.cadastros.empresa/selecionarEmpresaListView.title"/>
+        <item view="ContaContabil.list"
+              title="msg://br.com.axialsoftware.axctg3.view.contabil.contacontabil/contaContabilListView.title"/>
+        <item view="Lancamento.list"
+              title="msg://br.com.axialsoftware.axctg3.view.contabil.lancamento/lancamentoListView.title"/>
     </menu>
 
     <menu id="contabil" title="msg://br.com.axialsoftware.axctg3/menu.contabil.title">

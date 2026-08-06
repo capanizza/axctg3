@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.21.3.final using JasperReports Library version 6.21.3-4a3078d20785ebe464f18037d738d12fc98c13cf  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="cotacao" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="e4668de5-5983-43b4-8f25-d8765963939d">
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="TITULO_RELATORIO" class="java.lang.String"/>
+	<parameter name="NOME_EMPRESA" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<field name="numero" class="java.lang.Integer"/>
+	<field name="requisicao" class="java.lang.Integer"/>
+	<field name="dataCotacao" class="java.sql.Date"/>
+	<field name="condicaoPagamento" class="java.lang.Integer"/>
+	<field name="nomeCondicaoPagamento" class="java.lang.String"/>
+	<field name="parceiro" class="java.lang.Integer"/>
+	<field name="razaoParceiro" class="java.lang.String"/>
+	<field name="desconto" class="java.math.BigDecimal"/>
+	<field name="frete" class="java.math.BigDecimal"/>
+	<field name="produto" class="java.lang.Integer"/>
+	<field name="descricaoProduto" class="java.lang.String"/>
+	<field name="quantidade" class="java.math.BigDecimal"/>
+	<field name="valorUnitario" class="java.math.BigDecimal"/>
+	<variable name="SUBTOTAL" class="java.math.BigDecimal" resetType="Group" resetGroup="Registro" calculation="Sum">
+		<variableExpression><![CDATA[$F{quantidade}.multiply($F{valorUnitario})]]></variableExpression>
+	</variable>
+	<group name="Registro">
+		<groupExpression><![CDATA[$F{numero}]]></groupExpression>
+		<groupHeader>
+			<band height="120">
+				<textField>
+					<reportElement x="140" y="20" width="415" height="20" uuid="438b5470-eb0a-40d9-a28a-3a0f7047e9e8"/>
+					<box leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="8" isBold="false"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{parceiro}.toString() + " " + $F{razaoParceiro}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="0" y="100" width="300" height="20" uuid="c1b52f4a-ff52-4400-95df-05d59b0c4062"/>
+					<box leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="10" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Produto]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="300" y="100" width="84" height="20" uuid="33ff9fcb-e282-4384-9333-e9e9b80b7941"/>
+					<box leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="10" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Quantidade]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="140" y="60" width="415" height="20" uuid="0ae7c2a3-7870-4578-9870-2fab250b53e8"/>
+					<box leftPadding="2" rightPadding="2">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="8" isBold="false"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{condicaoPagamento} + " " + $F{nomeCondicaoPagamento}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="0" y="20" width="140" height="20" uuid="1e2aa062-b069-4b6f-92cf-128db11a28b0"/>
+					<box leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="8"/>
+					</textElement>
+					<text><![CDATA[Fornecedor: ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="60" width="140" height="20" uuid="5da615ba-bfdb-45cb-a632-d81de791bc14"/>
+					<box leftPadding="2" rightPadding="2">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="8"/>
+					</textElement>
+					<text><![CDATA[Condição de pagamento: ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="0" width="140" height="20" uuid="75418cf4-7fab-40b3-b7b2-7fae25cf983f"/>
+					<box leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="8"/>
+					</textElement>
+					<text><![CDATA[Data: ]]></text>
+				</staticText>
+				<textField pattern="dd/MM/yyyy">
+					<reportElement x="140" y="0" width="415" height="20" uuid="6006eb7d-b127-4c56-bbe2-391b8d3fa9ce">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.25"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="8" isBold="false"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{dataCotacao}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="0" y="40" width="140" height="20" uuid="03fb5151-06f8-4b05-90bd-0ddd9a85fd87"/>
+					<box leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="8"/>
+					</textElement>
+					<text><![CDATA[Requisição: ]]></text>
+				</staticText>
+				<textField pattern="###0">
+					<reportElement x="140" y="40" width="415" height="20" uuid="45f40c9a-8b6e-4992-ac4b-ed0b30e67b7d"/>
+					<box leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="8" isBold="false"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{requisicao}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="0" y="80" width="140" height="20" uuid="24412129-3eee-4289-a36c-9be0a1e88cb8"/>
+					<box leftPadding="2" rightPadding="2">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="8"/>
+					</textElement>
+					<text><![CDATA[Desconto: ]]></text>
+				</staticText>
+				<textField pattern="#,##0.00">
+					<reportElement x="140" y="80" width="415" height="20" uuid="ebfb224d-3acd-4111-afcc-8d73c6a3ba2a">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box leftPadding="2" rightPadding="2">
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="8" isBold="false"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{desconto}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="384" y="100" width="86" height="20" uuid="af944dc8-ef2c-4c4a-959e-b6b4ef26bc6c"/>
+					<box leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="10" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Valor unit.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="470" y="100" width="85" height="20" uuid="2bfe4138-dc8b-46ad-bbb7-6e98eabf7ceb"/>
+					<box leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="10" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Subtotal]]></text>
+				</staticText>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="70">
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement x="470" y="0" width="85" height="14" uuid="2868d43f-863f-44bc-bdc8-6ac935e0d3f3">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="8" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{SUBTOTAL}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="300" y="14" width="170" height="14" uuid="77fb4a3b-ec5f-49ea-93c4-1b813ddaa9dc"/>
+					<box leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="10" isBold="false"/>
+					</textElement>
+					<text><![CDATA[(-)Desconto: ]]></text>
+				</staticText>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement x="470" y="14" width="85" height="14" uuid="76ba64ac-0aee-4dd4-abb7-4a04858e2026">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="8" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{desconto}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="300" y="42" width="170" height="14" uuid="f71bf3ab-c690-44f5-9f29-164625a04d3f"/>
+					<box leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="10" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Valor líquido: ]]></text>
+				</staticText>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement x="470" y="42" width="85" height="14" uuid="35a614a6-49f0-4b31-8c1e-539199f64851">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="8" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{SUBTOTAL}.subtract($F{desconto}).add($F{frete})]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.00;-#,##0.00">
+					<reportElement x="470" y="28" width="85" height="14" uuid="7f7aba3f-6631-4a22-bd12-6d68f530c47f">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.25"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="8" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{frete}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="300" y="28" width="170" height="14" uuid="5e438bec-2241-4b53-9bd0-2c29a42baf95"/>
+					<box leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="10" isBold="false"/>
+					</textElement>
+					<text><![CDATA[(+)Frete: ]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="300" y="0" width="170" height="14" uuid="d9e4115a-6456-47ce-a398-02b09e296bc5"/>
+					<box leftPadding="2" rightPadding="2">
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.25"/>
+						<bottomPen lineWidth="0.25"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font fontName="DejaVu Sans Mono" size="10" isBold="false"/>
+					</textElement>
+					<text><![CDATA[Subtotal:]]></text>
+				</staticText>
+			</band>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="60">
+			<textField>
+				<reportElement x="110" y="0" width="376" height="20" uuid="26b84a0f-1844-4c5b-b86e-c9c2989440e2"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono" size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{NOME_EMPRESA}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="110" y="20" width="376" height="20" uuid="08fe9db2-ede2-4e91-a8bd-83fe8c99357a"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono" size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{TITULO_RELATORIO} + " " + $F{numero}.toString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="486" y="0" width="69" height="20" uuid="fff8200d-896a-4d05-a95f-e34540130238"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Folha: " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="486" y="20" width="69" height="20" uuid="5984dbc2-2fad-40b7-8def-44975183ab3f"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new SimpleDateFormat("dd/MM/yyyy").format(new Date())]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="486" y="40" width="69" height="20" uuid="2f85dd81-e347-4561-b164-16d0a053a212"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new SimpleDateFormat("HH:mm").format(new Date())]]></textFieldExpression>
+			</textField>
+			<image scaleImage="FillFrame">
+				<reportElement x="0" y="0" width="49" height="40" uuid="b711d2e7-65ae-470e-9ce2-c906aee28aa8"/>
+				<imageExpression><![CDATA[System.getProperty("user.dir").replace('\\','/') + "/logo.bmp"]]></imageExpression>
+			</image>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="14" splitType="Stretch">
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement x="300" y="0" width="84" height="14" uuid="ef838cd4-a883-4606-bbf8-b2130f71fdaa"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{quantidade}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="0" width="300" height="14" uuid="f982d4b3-d5d7-4730-b003-1e579362fb82"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{produto}.toString()  + " " + $F{descricaoProduto}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement x="384" y="0" width="86" height="14" uuid="e7d061f1-c26c-4806-b5bf-c3efe484d0fa"/>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{valorUnitario}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement x="470" y="0" width="85" height="14" uuid="3cb45d2a-add2-443d-8ba3-91c22e029e82">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
+					<topPen lineWidth="0.0"/>
+					<leftPen lineWidth="0.25"/>
+					<bottomPen lineWidth="0.25"/>
+					<rightPen lineWidth="0.25"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{quantidade}.multiply($F{valorUnitario})]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<summary>
+		<band height="14"/>
+	</summary>
+</jasperReport>

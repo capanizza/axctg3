@@ -331,7 +331,7 @@ public class LancamentoService {
             String st = "";
             if (lancamento.getHistoricoContabil() != null) {
                 st = lancamento.getHistoricoContabil().getCodigo().toString() + " ";
-                st = lancamento.getHistoricoContabil().getDescricao() + " ";
+                st = st + lancamento.getHistoricoContabil().getDescricao() + " ";
             }
             st = st + lancamento.getComplementoHistorico();
             razaoDto.setHistorico(st);
