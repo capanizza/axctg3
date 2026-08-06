@@ -1,0 +1,26 @@
+# Normaliza todo arquivo de texto para LF no repositório e no checkout,
+# independente de vir do git do WSL ou do git do Windows — evita diffs
+# espúrios de fim de linha (CRLF↔LF) entre os dois ambientes.
+* text=auto eol=lf
+
+# Scripts batch do Windows: convencionalmente CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Wrapper shell script do Gradle: precisa ficar LF para o shebang funcionar
+# ao rodar em runners Linux (CI) — nunca deixar o git convertê-lo para CRLF.
+/gradlew text eol=lf
+
+# Binários: nunca normalizar fim de linha (corromperia o arquivo).
+*.jasper binary
+*.jar binary
+*.bmp binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
