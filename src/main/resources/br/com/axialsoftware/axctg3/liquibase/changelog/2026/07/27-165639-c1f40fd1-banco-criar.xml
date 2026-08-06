@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/07/27-165639-c1f40fd1-banco-criar.xml">
+    <changeSet id="1" author="axctg3">
+        <createTable tableName="BANCO">
+            <column name="ID" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_BANCO"/>
+            </column>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="${offsetDateTime.type}"/>
+            <column name="LAST_MODIFIED_BY" type="VARCHAR(255)"/>
+            <column name="LAST_MODIFIED_DATE" type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY" type="VARCHAR(255)"/>
+            <column name="DELETED_DATE" type="${offsetDateTime.type}"/>
+            <column name="CODIGO" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="COD_EMPRESA" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="COD_GERAL" type="INT"/>
+            <column name="NOME" type="VARCHAR(50)"/>
+            <column name="CONTA_CONTABIL_ID" type="UUID"/>
+            <column name="COD_CONTABIL" type="VARCHAR(25)"/>
+            <column name="AGENCIA" type="VARCHAR(10)"/>
+            <column name="DIG_AGENCIA" type="VARCHAR(3)"/>
+            <column name="CONTA" type="VARCHAR(10)"/>
+            <column name="DIG_CONTA" type="VARCHAR(3)"/>
+            <column name="COD_CEDENTE" type="VARCHAR(10)"/>
+            <column name="DIG_CEDENTE" type="VARCHAR(3)"/>
+            <column name="NOME_CEDENTE" type="VARCHAR(50)"/>
+            <column name="LOCAL_PAGAMENTO" type="VARCHAR(50)"/>
+            <column name="BAIXA_NORMAL" type="INT"/>
+            <column name="BAIXA_JUROS" type="INT"/>
+            <column name="BAIXA_DESCONTO" type="INT"/>
+            <column name="MULTA_ATRASO" type="DECIMAL(19, 2)"/>
+            <column name="MULTA_DIA" type="DECIMAL(19, 2)"/>
+            <column name="DIAS_PROTESTO" type="INT"/>
+            <column name="CARTEIRA" type="VARCHAR(10)"/>
+            <column name="CONVENIO" type="VARCHAR(10)"/>
+            <column name="NOSSO_NUM_INICIAL" type="VARCHAR(10)"/>
+            <column name="NOSSO_NUM_FINAL" type="VARCHAR(10)"/>
+            <column name="NOSSO_NUM_ATUAL" type="VARCHAR(10)"/>
+            <column name="PASTA_REMESSA" type="VARCHAR(50)"/>
+            <column name="PASTA_RETORNO" type="VARCHAR(50)"/>
+            <column name="NUM_REMESSA" type="INT"/>
+            <column name="ESPECIE" type="VARCHAR(10)"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="2" author="axctg3" dbms="postgresql">
+        <createIndex indexName="IDX_BANCO_UNQ_CODIGO_COD_EMPRESA" tableName="BANCO" unique="true">
+            <column name="CODIGO"/>
+            <column name="COD_EMPRESA"/>
+        </createIndex>
+
+        <modifySql>
+            <append value="where DELETED_DATE is null"/>
+        </modifySql>
+    </changeSet>
+</databaseChangeLog>

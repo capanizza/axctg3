@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
+      title="msg://bancoListView.title"
+      focusComponent="bancoesDataGrid">
+    <data>
+        <collection id="bancoesDc"
+                    class="br.com.axialsoftware.axctg3.entity.financeiro.Banco">
+            <fetchPlan extends="_base"/>
+            <loader id="bancoesDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from Banco e
+                    where e.codEmpresa = :codEmpresa
+                    order by e.codigo]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <startSlot>
+                <button id="createButton" action="bancoesDataGrid.createAction" themeNames="small"/>
+                <button id="editButton" action="bancoesDataGrid.editAction" themeNames="small"/>
+                <button id="removeButton" action="bancoesDataGrid.removeAction" themeNames="small"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="bancoesDl"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="bancoesDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="bancoesDc"
+                  columnReorderingAllowed="true" themeNames="compact">
+            <actions>
+                <action id="createAction" type="list_create"/>
+                <action id="editAction" type="list_edit"/>
+                <action id="removeAction" type="list_remove"/>
+            </actions>
+            <columns resizable="true">
+                <column property="codigo" width="10%"/>
+                <column property="codGeral" width="10%"/>
+                <column property="nome" width="40%"/>
+                <column property="agencia" width="10%"/>
+                <column property="digAgencia" width="10%"/>
+                <column property="conta" width="10%"/>
+                <column property="digConta" width="10%"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction" themeNames="small"/>
+            <button id="discardButton" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>
