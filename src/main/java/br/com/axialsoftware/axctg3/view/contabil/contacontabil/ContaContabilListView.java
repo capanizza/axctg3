@@ -1,7 +1,6 @@
 package br.com.axialsoftware.axctg3.view.contabil.contacontabil;
 
 import br.com.axialsoftware.axctg3.bean.MenuBean;
-import br.com.axialsoftware.axctg3.entity.cadastros.ConfigRel;
 import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
 
 import br.com.axialsoftware.axctg3.service.FormatacaoService;
@@ -24,7 +23,6 @@ import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,19 +51,22 @@ public class ContaContabilListView extends StandardListView<ContaContabil> {
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
+        Dialog dialog = UiComponentUtils.findDialog(this);
+
         contaContabilsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
         contaContabilsDl.setParameter("ano", utilGeralService.getAnoContabil());
+        // Lançamentos contábeis só podem ser feitos em contas analíticas — quando esta
+        // tela abre como dialog (lookup do contaDevedoraField/contaCredoraField do
+        // Lancamento), restringe a listagem a elas. Fora do dialog (gestão do plano de
+        // contas), mostra tudo, inclusive as sintéticas.
+        contaContabilsDl.setParameter("apenasAnaliticas", dialog != null);
         contaContabilsDl.load();
 
-        Dialog dialog = UiComponentUtils.findDialog(this);
         buttonsPanel.setVisible(dialog == null);
     }
 
     @Override
     public String getPageTitle() {
-        ConfigRel configRel = utilGeralService.prepararConfigRel();
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-        SimpleDateFormat sdf2 = new SimpleDateFormat("MMM/yyyy");
         String title = super.getPageTitle();
         if (isNew) {
             isNew = false;

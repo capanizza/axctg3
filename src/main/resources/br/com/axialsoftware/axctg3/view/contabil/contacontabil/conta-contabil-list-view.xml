@@ -13,6 +13,7 @@
                     where e.codigo > '1'
                     and e.ano = :ano
                     and e.codEmpresa = :codEmpresa
+                    and (:apenasAnaliticas = false or e.analitica = true)
                     order by e.codigo]]>
                 </query>
             </loader>
