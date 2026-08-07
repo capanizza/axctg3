@@ -99,7 +99,6 @@ public class MovimentoBancoTest {
 
         assertThat(movimentoBanco.getLancamento()).isNotNull();
         assertThat(movimentoBanco.getCodEmpresa()).isEqualTo(COD_EMPRESA);
-        assertThat(movimentoBanco.getContabilizado()).isFalse();
 
         List<ItemMovimentoBanco> itens = carregarItens(movimentoBanco);
         assertThat(itens).hasSize(1);

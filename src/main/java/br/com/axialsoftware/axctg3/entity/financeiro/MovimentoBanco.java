@@ -28,8 +28,9 @@ import java.util.UUID;
  * Lançamento no extrato de um {@link Banco} — entrada ou saída, com contrapartida
  * contábil opcional ({@code contaContabil}; se vazia, {@code lancamentos} usa
  * {@code Empresa.contaMovimentoBancario}). {@code itens} é uma composição de um único
- * item interno (criado automaticamente por {@code MovimentoBancoEventListener}), que só
- * espelha o {@code contabilizado} do próprio movimento — não é editável em tela.
+ * item interno (criado automaticamente por {@code MovimentoBancoEventListener}), cujo
+ * {@code lancado} é espelhado no {@code lancado} transitório deste movimento — não é
+ * editável em tela.
  */
 @JmixEntity
 @Table(name = "MOVIMENTO_BANCO", indexes = {
@@ -119,9 +120,6 @@ public class MovimentoBanco {
     @Column(name = "ENTRADA")
     private Boolean entrada = false;
 
-    @Column(name = "CONTABILIZADO")
-    private Boolean contabilizado = false;
-
     @Column(name = "TIPO_SALDO")
     private Boolean tipoSaldo = false;
 
@@ -145,14 +143,6 @@ public class MovimentoBanco {
 
     public void setTipoSaldo(Boolean tipoSaldo) {
         this.tipoSaldo = tipoSaldo;
-    }
-
-    public Boolean getContabilizado() {
-        return contabilizado;
-    }
-
-    public void setContabilizado(Boolean contabilizado) {
-        this.contabilizado = contabilizado;
     }
 
     public Boolean getEntrada() {

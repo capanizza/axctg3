@@ -41,7 +41,6 @@ public class MovimentoBancoEventListener {
             if (movimentoBanco.getEntrada() == null) {
                 movimentoBanco.setEntrada(false);
             }
-            movimentoBanco.setContabilizado(false);
             long numero = sequences.createNextValue(Sequence.withName("movimento_banco_seq"));
             movimentoBanco.setLancamento(Math.toIntExact(numero));
         }
