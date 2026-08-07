@@ -22,7 +22,7 @@
     </actions>
     <layout>
         <vbox id="form" width="100%">
-            <hbox width="60%">
+            <hbox width="100%">
                 <integerField id="lancamentoField"
                               property="lancamento"
                               dataContainer="movimentoBancoDc"
@@ -45,7 +45,7 @@
                             width="20%" themeNames="small"
                             label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.data"/>
             </hbox>
-            <hbox width="60%">
+            <hbox width="100%">
                 <textField id="descricaoField"
                            property="descricao"
                            dataContainer="movimentoBancoDc"
@@ -62,7 +62,7 @@
                               width="20%" themeNames="small"
                               label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.cheque"/>
             </hbox>
-            <hbox width="60%">
+            <hbox width="100%">
                 <textField id="valorField"
                            property="valor"
                            dataContainer="movimentoBancoDc"
@@ -79,7 +79,7 @@
                     </actions>
                 </entityPicker>
             </hbox>
-            <hbox width="60%">
+            <hbox width="100%">
                 <entityPicker id="contaContabilField"
                               property="contaContabil"
                               dataContainer="movimentoBancoDc"
