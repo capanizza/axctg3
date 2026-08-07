@@ -136,6 +136,36 @@ public class ConfigRel {
     @Column(name = "data_baixa_receber_final_listagem")
     private LocalDate dataBaixaReceberFinalListagem;
 
+    @Column(name = "data_emissao_pagar_inicial")
+    private LocalDate dataEmissaoPagarInicial;
+
+    @Column(name = "data_emissao_pagar_final")
+    private LocalDate dataEmissaoPagarFinal;
+
+    @Column(name = "data_vencimento_pagar_inicial")
+    private LocalDate dataVencimentoPagarInicial;
+
+    @Column(name = "data_vencimento_pagar_final")
+    private LocalDate dataVencimentoPagarFinal;
+
+    @Column(name = "data_emissao_pagar_inicial_listagem")
+    private LocalDate dataEmissaoPagarInicialListagem;
+
+    @Column(name = "data_emissao_pagar_final_listagem")
+    private LocalDate dataEmissaoPagarFinalListagem;
+
+    @Column(name = "data_vencimento_pagar_inicial_listagem")
+    private LocalDate dataVencimentoPagarInicialListagem;
+
+    @Column(name = "data_vencimento_pagar_final_listagem")
+    private LocalDate dataVencimentoPagarFinalListagem;
+
+    @Column(name = "data_baixa_pagar_inicial_listagem")
+    private LocalDate dataBaixaPagarInicialListagem;
+
+    @Column(name = "data_baixa_pagar_final_listagem")
+    private LocalDate dataBaixaPagarFinalListagem;
+
     public UUID getId() {
         return id;
     }
@@ -446,5 +476,85 @@ public class ConfigRel {
 
     public void setDataBaixaReceberFinalListagem(LocalDate dataBaixaReceberFinalListagem) {
         this.dataBaixaReceberFinalListagem = dataBaixaReceberFinalListagem;
+    }
+
+    public LocalDate getDataEmissaoPagarInicial() {
+        return dataEmissaoPagarInicial;
+    }
+
+    public void setDataEmissaoPagarInicial(LocalDate dataEmissaoPagarInicial) {
+        this.dataEmissaoPagarInicial = dataEmissaoPagarInicial;
+    }
+
+    public LocalDate getDataEmissaoPagarFinal() {
+        return dataEmissaoPagarFinal;
+    }
+
+    public void setDataEmissaoPagarFinal(LocalDate dataEmissaoPagarFinal) {
+        this.dataEmissaoPagarFinal = dataEmissaoPagarFinal;
+    }
+
+    public LocalDate getDataVencimentoPagarInicial() {
+        return dataVencimentoPagarInicial;
+    }
+
+    public void setDataVencimentoPagarInicial(LocalDate dataVencimentoPagarInicial) {
+        this.dataVencimentoPagarInicial = dataVencimentoPagarInicial;
+    }
+
+    public LocalDate getDataVencimentoPagarFinal() {
+        return dataVencimentoPagarFinal;
+    }
+
+    public void setDataVencimentoPagarFinal(LocalDate dataVencimentoPagarFinal) {
+        this.dataVencimentoPagarFinal = dataVencimentoPagarFinal;
+    }
+
+    public LocalDate getDataEmissaoPagarInicialListagem() {
+        return dataEmissaoPagarInicialListagem;
+    }
+
+    public void setDataEmissaoPagarInicialListagem(LocalDate dataEmissaoPagarInicialListagem) {
+        this.dataEmissaoPagarInicialListagem = dataEmissaoPagarInicialListagem;
+    }
+
+    public LocalDate getDataEmissaoPagarFinalListagem() {
+        return dataEmissaoPagarFinalListagem;
+    }
+
+    public void setDataEmissaoPagarFinalListagem(LocalDate dataEmissaoPagarFinalListagem) {
+        this.dataEmissaoPagarFinalListagem = dataEmissaoPagarFinalListagem;
+    }
+
+    public LocalDate getDataVencimentoPagarInicialListagem() {
+        return dataVencimentoPagarInicialListagem;
+    }
+
+    public void setDataVencimentoPagarInicialListagem(LocalDate dataVencimentoPagarInicialListagem) {
+        this.dataVencimentoPagarInicialListagem = dataVencimentoPagarInicialListagem;
+    }
+
+    public LocalDate getDataVencimentoPagarFinalListagem() {
+        return dataVencimentoPagarFinalListagem;
+    }
+
+    public void setDataVencimentoPagarFinalListagem(LocalDate dataVencimentoPagarFinalListagem) {
+        this.dataVencimentoPagarFinalListagem = dataVencimentoPagarFinalListagem;
+    }
+
+    public LocalDate getDataBaixaPagarInicialListagem() {
+        return dataBaixaPagarInicialListagem;
+    }
+
+    public void setDataBaixaPagarInicialListagem(LocalDate dataBaixaPagarInicialListagem) {
+        this.dataBaixaPagarInicialListagem = dataBaixaPagarInicialListagem;
+    }
+
+    public LocalDate getDataBaixaPagarFinalListagem() {
+        return dataBaixaPagarFinalListagem;
+    }
+
+    public void setDataBaixaPagarFinalListagem(LocalDate dataBaixaPagarFinalListagem) {
+        this.dataBaixaPagarFinalListagem = dataBaixaPagarFinalListagem;
     }
 }
