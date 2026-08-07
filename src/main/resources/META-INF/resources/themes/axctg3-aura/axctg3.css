@@ -14,3 +14,14 @@ vaadin-checkbox.grid-value-checkbox[checked]::part(checkbox) {
     box-shadow: var(--aura-shadow-s);
     --vaadin-checkbox-marker-color: var(--aura-accent-contrast-color);
 }
+
+/*
+ * Reduz a fonte da mensagem "Campo xxx é obrigatório" (e demais erros de validação)
+ * abaixo dos campos de formulário. Token lido diretamente pela part "error-message"
+ * em @vaadin/field-base/src/styles/field-base-styles.js - mantém o texto (só ele
+ * explica QUAL validação falhou; a borda vermelha sozinha não diferencia obrigatório
+ * de formato/faixa inválidos), só deixa menos proeminente visualmente.
+ */
+*::part(error-message) {
+    --vaadin-input-field-error-font-size: var(--aura-font-size-xs);
+}
