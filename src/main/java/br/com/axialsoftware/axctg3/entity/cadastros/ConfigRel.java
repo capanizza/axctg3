@@ -103,6 +103,39 @@ public class ConfigRel {
     @ManyToOne(fetch = FetchType.LAZY)
     private Banco banco;
 
+    @Column(name = "data_baixa_receber")
+    private LocalDate dataBaixaReceber;
+
+    @Column(name = "data_emissao_receber_inicial")
+    private LocalDate dataEmissaoReceberInicial;
+
+    @Column(name = "data_emissao_receber_final")
+    private LocalDate dataEmissaoReceberFinal;
+
+    @Column(name = "data_vencimento_receber_inicial")
+    private LocalDate dataVencimentoReceberInicial;
+
+    @Column(name = "data_vencimento_receber_final")
+    private LocalDate dataVencimentoReceberFinal;
+
+    @Column(name = "data_vencimento_receber_inicial_listagem")
+    private LocalDate dataVencimentoReceberInicialListagem;
+
+    @Column(name = "data_vencimento_receber_final_listagem")
+    private LocalDate dataVencimentoReceberFinalListagem;
+
+    @Column(name = "data_emissao_receber_inicial_listagem")
+    private LocalDate dataEmissaoReceberInicialListagem;
+
+    @Column(name = "data_emissao_receber_final_listagem")
+    private LocalDate dataEmissaoReceberFinalListagem;
+
+    @Column(name = "data_baixa_receber_inicial_listagem")
+    private LocalDate dataBaixaReceberInicialListagem;
+
+    @Column(name = "data_baixa_receber_final_listagem")
+    private LocalDate dataBaixaReceberFinalListagem;
+
     public UUID getId() {
         return id;
     }
@@ -325,5 +358,93 @@ public class ConfigRel {
 
     public void setBanco(Banco banco) {
         this.banco = banco;
+    }
+
+    public LocalDate getDataBaixaReceber() {
+        return dataBaixaReceber;
+    }
+
+    public void setDataBaixaReceber(LocalDate dataBaixaReceber) {
+        this.dataBaixaReceber = dataBaixaReceber;
+    }
+
+    public LocalDate getDataEmissaoReceberInicial() {
+        return dataEmissaoReceberInicial;
+    }
+
+    public void setDataEmissaoReceberInicial(LocalDate dataEmissaoReceberInicial) {
+        this.dataEmissaoReceberInicial = dataEmissaoReceberInicial;
+    }
+
+    public LocalDate getDataEmissaoReceberFinal() {
+        return dataEmissaoReceberFinal;
+    }
+
+    public void setDataEmissaoReceberFinal(LocalDate dataEmissaoReceberFinal) {
+        this.dataEmissaoReceberFinal = dataEmissaoReceberFinal;
+    }
+
+    public LocalDate getDataVencimentoReceberInicial() {
+        return dataVencimentoReceberInicial;
+    }
+
+    public void setDataVencimentoReceberInicial(LocalDate dataVencimentoReceberInicial) {
+        this.dataVencimentoReceberInicial = dataVencimentoReceberInicial;
+    }
+
+    public LocalDate getDataVencimentoReceberFinal() {
+        return dataVencimentoReceberFinal;
+    }
+
+    public void setDataVencimentoReceberFinal(LocalDate dataVencimentoReceberFinal) {
+        this.dataVencimentoReceberFinal = dataVencimentoReceberFinal;
+    }
+
+    public LocalDate getDataVencimentoReceberInicialListagem() {
+        return dataVencimentoReceberInicialListagem;
+    }
+
+    public void setDataVencimentoReceberInicialListagem(LocalDate dataVencimentoReceberInicialListagem) {
+        this.dataVencimentoReceberInicialListagem = dataVencimentoReceberInicialListagem;
+    }
+
+    public LocalDate getDataVencimentoReceberFinalListagem() {
+        return dataVencimentoReceberFinalListagem;
+    }
+
+    public void setDataVencimentoReceberFinalListagem(LocalDate dataVencimentoReceberFinalListagem) {
+        this.dataVencimentoReceberFinalListagem = dataVencimentoReceberFinalListagem;
+    }
+
+    public LocalDate getDataEmissaoReceberInicialListagem() {
+        return dataEmissaoReceberInicialListagem;
+    }
+
+    public void setDataEmissaoReceberInicialListagem(LocalDate dataEmissaoReceberInicialListagem) {
+        this.dataEmissaoReceberInicialListagem = dataEmissaoReceberInicialListagem;
+    }
+
+    public LocalDate getDataEmissaoReceberFinalListagem() {
+        return dataEmissaoReceberFinalListagem;
+    }
+
+    public void setDataEmissaoReceberFinalListagem(LocalDate dataEmissaoReceberFinalListagem) {
+        this.dataEmissaoReceberFinalListagem = dataEmissaoReceberFinalListagem;
+    }
+
+    public LocalDate getDataBaixaReceberInicialListagem() {
+        return dataBaixaReceberInicialListagem;
+    }
+
+    public void setDataBaixaReceberInicialListagem(LocalDate dataBaixaReceberInicialListagem) {
+        this.dataBaixaReceberInicialListagem = dataBaixaReceberInicialListagem;
+    }
+
+    public LocalDate getDataBaixaReceberFinalListagem() {
+        return dataBaixaReceberFinalListagem;
+    }
+
+    public void setDataBaixaReceberFinalListagem(LocalDate dataBaixaReceberFinalListagem) {
+        this.dataBaixaReceberFinalListagem = dataBaixaReceberFinalListagem;
     }
 }

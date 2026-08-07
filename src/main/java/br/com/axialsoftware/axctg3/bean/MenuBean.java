@@ -2,11 +2,14 @@ package br.com.axialsoftware.axctg3.bean;
 
 import br.com.axialsoftware.axctg3.entity.cadastros.ConfigRel;
 import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
+import br.com.axialsoftware.axctg3.entity.financeiro.Banco;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.contabil.ContaContabilService;
 import br.com.axialsoftware.axctg3.service.contabil.LancamentoService;
 import br.com.axialsoftware.axctg3.service.financeiro.DiversoPagarService;
 import br.com.axialsoftware.axctg3.service.financeiro.ItemDiversoPagarService;
+import br.com.axialsoftware.axctg3.service.financeiro.ItemReceberService;
+import br.com.axialsoftware.axctg3.service.financeiro.TituloReceberService;
 import io.jmix.core.DataManager;
 import io.jmix.core.SaveContext;
 import io.jmix.flowui.Dialogs;
@@ -32,8 +35,10 @@ public class MenuBean {
     private final LancamentoService lancamentoService;
     private final DiversoPagarService diversoPagarService;
     private final ItemDiversoPagarService itemDiversoPagarService;
+    private final TituloReceberService tituloReceberService;
+    private final ItemReceberService itemReceberService;
 
-    public MenuBean(UtilGeralService utilGeralService, Dialogs dialogs, ContaContabilService contaContabilService, DataManager dataManager, LancamentoService lancamentoService, DiversoPagarService diversoPagarService, ItemDiversoPagarService itemDiversoPagarService) {
+    public MenuBean(UtilGeralService utilGeralService, Dialogs dialogs, ContaContabilService contaContabilService, DataManager dataManager, LancamentoService lancamentoService, DiversoPagarService diversoPagarService, ItemDiversoPagarService itemDiversoPagarService, TituloReceberService tituloReceberService, ItemReceberService itemReceberService) {
         this.utilGeralService = utilGeralService;
         this.dialogs = dialogs;
         this.contaContabilService = contaContabilService;
@@ -41,6 +46,8 @@ public class MenuBean {
         this.lancamentoService = lancamentoService;
         this.diversoPagarService = diversoPagarService;
         this.itemDiversoPagarService = itemDiversoPagarService;
+        this.tituloReceberService = tituloReceberService;
+        this.itemReceberService = itemReceberService;
     }
 
     public void listarLancamentos() {
@@ -258,6 +265,112 @@ public class MenuBean {
                         saveContext.saving(configRel);
                         dataManager.save(saveContext);
                         itemDiversoPagarService.listarBaixaDiversosPagar(configRel);
+                    }
+                })
+                .open();
+    }
+
+    public void listarEntradaTitulosReceber() {
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
+        LocalDate dataInicial = Optional.ofNullable(configRel.getDataEmissaoReceberInicialListagem()).orElse(LocalDate.now());
+        LocalDate dataFinal = Optional.ofNullable(configRel.getDataEmissaoReceberFinalListagem()).orElse(LocalDate.now());
+        Banco banco = configRel.getBanco();
+        dialogs.createInputDialog(UiComponentUtils.getCurrentView())
+                .withHeader("Entrada de títulos a receber")
+                .withParameters(
+                        localDateParameter("dataEmissaoInicial")
+                                .withLabel("Data emissão inicial")
+                                .withDefaultValue(dataInicial),
+                        localDateParameter("dataEmissaoFinal")
+                                .withLabel("Data emissão final")
+                                .withDefaultValue(dataFinal),
+                        entityParameter("banco", Banco.class)
+                                .withLabel("Banco (em branco = todos)")
+                                .withDefaultValue(banco)
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withCloseListener(closeEvent -> {
+                    if (closeEvent.closedWith(DialogOutcome.OK)) {
+                        SaveContext saveContext = new SaveContext();
+                        configRel.setDataEmissaoReceberInicialListagem(closeEvent.getValue("dataEmissaoInicial"));
+                        configRel.setDataEmissaoReceberFinalListagem(closeEvent.getValue("dataEmissaoFinal"));
+                        Banco bancoEscolhido = closeEvent.getValue("banco");
+                        configRel.setBancoInicial(bancoEscolhido == null ? null : bancoEscolhido.getCodigo());
+                        saveContext.saving(configRel);
+                        dataManager.save(saveContext);
+                        tituloReceberService.listarEntradaTitulosReceber(configRel);
+                    }
+                })
+                .open();
+    }
+
+    public void tituloReceberVencimento() {
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
+        LocalDate dataEmissaoInicial = Optional.ofNullable(configRel.getDataEmissaoReceberInicialListagem()).orElse(LocalDate.now());
+        LocalDate dataEmissaoFinal = Optional.ofNullable(configRel.getDataEmissaoReceberFinalListagem()).orElse(LocalDate.now());
+        LocalDate dataVencimentoInicial = Optional.ofNullable(configRel.getDataVencimentoReceberInicialListagem()).orElse(LocalDate.now());
+        LocalDate dataVencimentoFinal = Optional.ofNullable(configRel.getDataVencimentoReceberFinalListagem()).orElse(LocalDate.now());
+        dialogs.createInputDialog(UiComponentUtils.getCurrentView())
+                .withHeader("Títulos a receber por vencimento")
+                .withParameters(
+                        localDateParameter("dataEmissaoInicial")
+                                .withLabel("Data emissão inicial")
+                                .withDefaultValue(dataEmissaoInicial),
+                        localDateParameter("dataEmissaoFinal")
+                                .withLabel("Data emissão final")
+                                .withDefaultValue(dataEmissaoFinal),
+                        localDateParameter("dataVencimentoInicial")
+                                .withLabel("Data vencimento inicial")
+                                .withDefaultValue(dataVencimentoInicial),
+                        localDateParameter("dataVencimentoFinal")
+                                .withLabel("Data vencimento final")
+                                .withDefaultValue(dataVencimentoFinal)
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withCloseListener(closeEvent -> {
+                    if (closeEvent.closedWith(DialogOutcome.OK)) {
+                        SaveContext saveContext = new SaveContext();
+                        configRel.setDataEmissaoReceberInicialListagem(closeEvent.getValue("dataEmissaoInicial"));
+                        configRel.setDataEmissaoReceberFinalListagem(closeEvent.getValue("dataEmissaoFinal"));
+                        configRel.setDataVencimentoReceberInicialListagem(closeEvent.getValue("dataVencimentoInicial"));
+                        configRel.setDataVencimentoReceberFinalListagem(closeEvent.getValue("dataVencimentoFinal"));
+                        saveContext.saving(configRel);
+                        dataManager.save(saveContext);
+                        tituloReceberService.tituloReceberVencimento(configRel);
+                    }
+                })
+                .open();
+    }
+
+    public void listarBaixaTituloReceber() {
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
+        LocalDate dataInicial = Optional.ofNullable(configRel.getDataBaixaReceberInicialListagem()).orElse(LocalDate.now());
+        LocalDate dataFinal = Optional.ofNullable(configRel.getDataBaixaReceberFinalListagem()).orElse(LocalDate.now());
+        Banco banco = configRel.getBanco();
+        dialogs.createInputDialog(UiComponentUtils.getCurrentView())
+                .withHeader("Baixa de títulos a receber")
+                .withParameters(
+                        localDateParameter("dataBaixaInicial")
+                                .withLabel("Data baixa inicial")
+                                .withDefaultValue(dataInicial),
+                        localDateParameter("dataBaixaFinal")
+                                .withLabel("Data baixa final")
+                                .withDefaultValue(dataFinal),
+                        entityParameter("banco", Banco.class)
+                                .withLabel("Banco (em branco = todos)")
+                                .withDefaultValue(banco)
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withCloseListener(closeEvent -> {
+                    if (closeEvent.closedWith(DialogOutcome.OK)) {
+                        SaveContext saveContext = new SaveContext();
+                        configRel.setDataBaixaReceberInicialListagem(closeEvent.getValue("dataBaixaInicial"));
+                        configRel.setDataBaixaReceberFinalListagem(closeEvent.getValue("dataBaixaFinal"));
+                        Banco bancoEscolhido = closeEvent.getValue("banco");
+                        configRel.setBancoInicial(bancoEscolhido == null ? null : bancoEscolhido.getCodigo());
+                        saveContext.saving(configRel);
+                        dataManager.save(saveContext);
+                        itemReceberService.listarBaixaTitulosReceber(configRel);
                     }
                 })
                 .open();

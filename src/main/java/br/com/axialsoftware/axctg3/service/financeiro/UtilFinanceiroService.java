@@ -7,6 +7,7 @@ import br.com.axialsoftware.axctg3.entity.financeiro.Banco;
 import br.com.axialsoftware.axctg3.entity.financeiro.DiversoPagar;
 import br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro;
 import br.com.axialsoftware.axctg3.entity.financeiro.ItemDiversoPagar;
+import br.com.axialsoftware.axctg3.entity.financeiro.ItemReceber;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import io.jmix.core.DataManager;
 import io.jmix.flowui.Dialogs;
@@ -87,6 +88,7 @@ public class UtilFinanceiroService {
         String origem = switch (objeto) {
             case DiversoPagar ignored -> "em diverso";
             case ItemDiversoPagar ignored -> "bx diverso";
+            case ItemReceber ignored -> "bx receber";
             default -> null;
         };
         if (origem == null) {

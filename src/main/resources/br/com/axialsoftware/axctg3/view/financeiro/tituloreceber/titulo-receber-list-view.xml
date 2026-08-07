@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://tituloReceberListView.title"
+      focusComponent="tituloRecebersDataGrid">
+    <data>
+        <collection id="tituloRecebersDc"
+                    class="br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber">
+            <fetchPlan extends="_base">
+                <property name="itens" fetchPlan="_base"/>
+                <property name="parceiro" fetchPlan="_base"/>
+                <property name="banco" fetchPlan="_instance_name"/>
+                <property name="aberto"/>
+                <property name="contabilizadoEmissao"/>
+            </fetchPlan>
+            <loader id="tituloRecebersDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from TituloReceber e
+                    where e.dataEmissao between :dataEmissaoInicial and :dataEmissaoFinal
+                    and e.codEmpresa = :codEmpresa
+                    order by e.numero]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <startSlot>
+                <button id="delimitarButton" action="tituloRecebersDataGrid.delimitarAction" themeNames="small"/>
+                <button id="createButton" action="tituloRecebersDataGrid.createAction" themeNames="small"/>
+                <button id="editButton" action="tituloRecebersDataGrid.editAction" themeNames="small"/>
+                <button id="removeButton" action="tituloRecebersDataGrid.removeAction" themeNames="small"/>
+                <dropdownButton id="relatoriosSwitcher"
+                                text="Relatórios" icon="PRINT" themeNames="small"
+                                dropdownIndicatorVisible="true">
+                    <items>
+                        <actionItem id="emissaoItem">
+                            <action id="emissaoAction"
+                                    text="Por data de emissão" icon="PRINT"/>
+                        </actionItem>
+                        <actionItem id="vencimentoItem">
+                            <action id="vencimentoAction"
+                                    text="Por data de vencimento" icon="PRINT"/>
+                        </actionItem>
+                    </items>
+                </dropdownButton>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="tituloRecebersDl"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="tituloRecebersDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="tituloRecebersDc"
+                  columnReorderingAllowed="true"
+                  themeNames="small"
+                  selectionMode="MULTI">
+            <actions>
+                <action id="createAction" type="list_create"/>
+                <action id="editAction" type="list_edit"/>
+                <action id="removeAction" type="list_remove"/>
+                <action id="delimitarAction" text="Delimitar" icon="vaadin:calendar"/>
+            </actions>
+            <columns resizable="true">
+                <column property="numero" flexGrow="0" filterable="true"/>
+                <column property="dataEmissao" filterable="true"/>
+                <column property="dataVencimento" filterable="true"/>
+                <column property="parceiro" flexGrow="5" filterable="true"/>
+                <column property="banco" flexGrow="2" filterable="true"/>
+                <column property="valor" filterable="true" textAlign="END"/>
+                <column property="aberto" flexGrow="0" textAlign="CENTER"/>
+                <column property="contabilizadoEmissao" flexGrow="0" textAlign="CENTER"/>
+                <column property="numBanco" filterable="true"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction" themeNames="small"/>
+            <button id="discardButton" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>
