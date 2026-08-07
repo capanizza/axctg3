@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://movimentoBancoDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="movimentoBancoDc"
+                  class="br.com.axialsoftware.axctg3.entity.financeiro.MovimentoBanco">
+            <fetchPlan extends="_base">
+                <property name="banco" fetchPlan="_instance_name"/>
+                <property name="historicoFinanceiro" fetchPlan="_instance_name"/>
+                <property name="contaContabil" fetchPlan="_instance_name"/>
+            </fetchPlan>
+            <loader id="movimentoBancoDl"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <vbox id="form" width="100%">
+            <hbox width="60%">
+                <integerField id="lancamentoField"
+                              property="lancamento"
+                              dataContainer="movimentoBancoDc"
+                              width="15%" themeNames="small"
+                              readOnly="true"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.lancamento"/>
+                <entityPicker id="bancoField"
+                              property="banco"
+                              dataContainer="movimentoBancoDc"
+                              width="65%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.banco">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+                <datePicker id="dataField"
+                            property="data"
+                            dataContainer="movimentoBancoDc"
+                            width="20%" themeNames="small"
+                            label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.data"/>
+            </hbox>
+            <hbox width="60%">
+                <textField id="descricaoField"
+                           property="descricao"
+                           dataContainer="movimentoBancoDc"
+                           width="50%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.descricao"/>
+                <textField id="documentoField"
+                           property="documento"
+                           dataContainer="movimentoBancoDc"
+                           width="30%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.documento"/>
+                <integerField id="chequeField"
+                              property="cheque"
+                              dataContainer="movimentoBancoDc"
+                              width="20%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.cheque"/>
+            </hbox>
+            <hbox width="60%">
+                <textField id="valorField"
+                           property="valor"
+                           dataContainer="movimentoBancoDc"
+                           width="20%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.valor"/>
+                <entityPicker id="historicoFinanceiroField"
+                              property="historicoFinanceiro"
+                              dataContainer="movimentoBancoDc"
+                              width="80%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.historicoFinanceiro">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+            </hbox>
+            <hbox width="60%">
+                <entityPicker id="contaContabilField"
+                              property="contaContabil"
+                              dataContainer="movimentoBancoDc"
+                              width="55%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.contaContabil">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+                <checkbox id="entradaField"
+                          property="entrada"
+                          dataContainer="movimentoBancoDc"
+                          width="15%" alignSelf="END"
+                          label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.entrada"/>
+                <checkbox id="tipoSaldoField"
+                          property="tipoSaldo"
+                          dataContainer="movimentoBancoDc"
+                          width="15%" alignSelf="END"
+                          label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.tipoSaldo"/>
+                <checkbox id="lancadoField"
+                          property="lancado"
+                          dataContainer="movimentoBancoDc"
+                          width="15%" alignSelf="END"
+                          readOnly="true"
+                          label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.lancado"/>
+            </hbox>
+        </vbox>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

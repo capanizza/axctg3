@@ -9,6 +9,7 @@ import br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro;
 import br.com.axialsoftware.axctg3.entity.financeiro.ItemDiversoPagar;
 import br.com.axialsoftware.axctg3.entity.financeiro.ItemPagar;
 import br.com.axialsoftware.axctg3.entity.financeiro.ItemReceber;
+import br.com.axialsoftware.axctg3.entity.financeiro.MovimentoBanco;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloPagar;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import io.jmix.core.DataManager;
@@ -93,6 +94,7 @@ public class UtilFinanceiroService {
             case ItemReceber ignored -> "bx receber";
             case TituloPagar ignored -> "em pagar";
             case ItemPagar ignored -> "bx pagar";
+            case MovimentoBanco ignored -> "mov banco";
             default -> null;
         };
         if (origem == null) {

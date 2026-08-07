@@ -10,6 +10,7 @@ import br.com.axialsoftware.axctg3.service.financeiro.DiversoPagarService;
 import br.com.axialsoftware.axctg3.service.financeiro.ItemDiversoPagarService;
 import br.com.axialsoftware.axctg3.service.financeiro.ItemPagarService;
 import br.com.axialsoftware.axctg3.service.financeiro.ItemReceberService;
+import br.com.axialsoftware.axctg3.service.financeiro.MovimentoBancoService;
 import br.com.axialsoftware.axctg3.service.financeiro.TituloPagarService;
 import br.com.axialsoftware.axctg3.service.financeiro.TituloReceberService;
 import io.jmix.core.DataManager;
@@ -41,8 +42,9 @@ public class MenuBean {
     private final ItemReceberService itemReceberService;
     private final TituloPagarService tituloPagarService;
     private final ItemPagarService itemPagarService;
+    private final MovimentoBancoService movimentoBancoService;
 
-    public MenuBean(UtilGeralService utilGeralService, Dialogs dialogs, ContaContabilService contaContabilService, DataManager dataManager, LancamentoService lancamentoService, DiversoPagarService diversoPagarService, ItemDiversoPagarService itemDiversoPagarService, TituloReceberService tituloReceberService, ItemReceberService itemReceberService, TituloPagarService tituloPagarService, ItemPagarService itemPagarService) {
+    public MenuBean(UtilGeralService utilGeralService, Dialogs dialogs, ContaContabilService contaContabilService, DataManager dataManager, LancamentoService lancamentoService, DiversoPagarService diversoPagarService, ItemDiversoPagarService itemDiversoPagarService, TituloReceberService tituloReceberService, ItemReceberService itemReceberService, TituloPagarService tituloPagarService, ItemPagarService itemPagarService, MovimentoBancoService movimentoBancoService) {
         this.utilGeralService = utilGeralService;
         this.dialogs = dialogs;
         this.contaContabilService = contaContabilService;
@@ -54,6 +56,7 @@ public class MenuBean {
         this.itemReceberService = itemReceberService;
         this.tituloPagarService = tituloPagarService;
         this.itemPagarService = itemPagarService;
+        this.movimentoBancoService = movimentoBancoService;
     }
 
     public void listarLancamentos() {
@@ -477,6 +480,59 @@ public class MenuBean {
                         saveContext.saving(configRel);
                         dataManager.save(saveContext);
                         itemPagarService.listarBaixaTitulosPagar(configRel);
+                    }
+                })
+                .open();
+    }
+
+    public void listarMovimentoBanco(Integer tipoListagem) {
+        String header = tipoListagem == 1 ? "Movimento bancário" : "Movimento financeiro";
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
+        LocalDate dataInicial = Optional.ofNullable(configRel.getDataMovimentoBancoInicialListagem()).orElse(LocalDate.now());
+        LocalDate dataFinal = Optional.ofNullable(configRel.getDataMovimentoBancoFinalListagem()).orElse(LocalDate.now());
+        Integer codigoAtual = configRel.getBancoMovimentoBanco();
+        Banco bancoAtual = codigoAtual == null ? null : dataManager.load(Banco.class)
+                .query("select e from Banco e where e.codigo = :codigo and e.codEmpresa = :codEmpresa")
+                .parameter("codigo", codigoAtual)
+                .parameter("codEmpresa", utilGeralService.getCodEmpresa())
+                .optional()
+                .orElse(null);
+        dialogs.createInputDialog(UiComponentUtils.getCurrentView())
+                .withHeader(header)
+                .withParameters(
+                        localDateParameter("dataInicial")
+                                .withLabel("Data inicial")
+                                .withDefaultValue(dataInicial),
+                        localDateParameter("dataFinal")
+                                .withLabel("Data final")
+                                .withDefaultValue(dataFinal),
+                        entityParameter("banco", Banco.class)
+                                .withLabel(tipoListagem == 1 ? "Banco (em branco = todos)" : "Banco")
+                                .withDefaultValue(bancoAtual)
+                                .withRequired(tipoListagem != 1)
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withCloseListener(closeEvent -> {
+                    if (closeEvent.closedWith(DialogOutcome.OK)) {
+                        SaveContext saveContext = new SaveContext();
+                        configRel.setDataMovimentoBancoInicialListagem(closeEvent.getValue("dataInicial"));
+                        configRel.setDataMovimentoBancoFinalListagem(closeEvent.getValue("dataFinal"));
+                        Banco banco = closeEvent.getValue("banco");
+                        if (tipoListagem == 2 && banco == null) {
+                            dialogs.createMessageDialog()
+                                    .withHeader("Movimento financeiro")
+                                    .withText("Preencher banco")
+                                    .open();
+                            return;
+                        }
+                        configRel.setBancoMovimentoBanco(banco == null ? null : banco.getCodigo());
+                        saveContext.saving(configRel);
+                        dataManager.save(saveContext);
+                        if (tipoListagem == 1) {
+                            movimentoBancoService.listarMovimentoBanco(configRel);
+                        } else {
+                            movimentoBancoService.listarMovimentoFinanceiro(configRel);
+                        }
                     }
                 })
                 .open();

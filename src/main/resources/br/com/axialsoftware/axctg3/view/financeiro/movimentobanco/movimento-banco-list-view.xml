@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://movimentoBancoListView.title"
+      focusComponent="movimentoBancoesDataGrid">
+    <data>
+        <collection id="movimentoBancoesDc"
+                    class="br.com.axialsoftware.axctg3.entity.financeiro.MovimentoBanco">
+            <fetchPlan extends="_base">
+                <property name="banco" fetchPlan="_instance_name"/>
+                <property name="contaContabil" fetchPlan="_instance_name"/>
+            </fetchPlan>
+            <loader id="movimentoBancoesDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from MovimentoBanco e
+                        where e.data between :dataInicial and :dataFinal
+                        and (:listarTodos = 'sim' or e.banco.codigo = :banco)
+                        and e.tipoSaldo = :tipoSaldo
+                        and e.codEmpresa = :codEmpresa
+                        order by e.data desc, e.lancamento desc]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <startSlot>
+                <button id="delimitarButton" action="movimentoBancoesDataGrid.delimitarAction" themeNames="small"/>
+                <button id="createButton" action="movimentoBancoesDataGrid.createAction" themeNames="small"/>
+                <button id="editButton" action="movimentoBancoesDataGrid.editAction" themeNames="small"/>
+                <button id="removeButton" action="movimentoBancoesDataGrid.removeAction" themeNames="small"/>
+                <button id="lancamentoButton" action="movimentoBancoesDataGrid.lancamentoAction" themeNames="small"/>
+                <dropdownButton id="listagemSwitcher"
+                                text="Listagens" icon="PRINT" themeNames="small"
+                                dropdownIndicatorVisible="true">
+                    <items>
+                        <actionItem id="listagemItem">
+                            <action id="listagemAction"
+                                    text="Movimento bancário" icon="PRINT"/>
+                        </actionItem>
+                        <actionItem id="financeiroItem">
+                            <action id="financeiroAction"
+                                    text="Movimento financeiro" icon="PRINT"/>
+                        </actionItem>
+                    </items>
+                </dropdownButton>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="movimentoBancoesDl"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="movimentoBancoesDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="movimentoBancoesDc"
+                  columnReorderingAllowed="true"
+                  themeNames="small"
+                  selectionMode="MULTI">
+            <actions>
+                <action id="createAction" type="list_create"/>
+                <action id="editAction" type="list_edit"/>
+                <action id="removeAction" type="list_remove"/>
+                <action id="delimitarAction" text="Delimitar" icon="vaadin:calendar"/>
+                <action id="lancamentoAction" text="Lançamentos" type="list_itemTracking" icon="lumo:checkmark"/>
+            </actions>
+            <columns resizable="true">
+                <column property="data" flexGrow="0" filterable="true"/>
+                <column property="lancamento" flexGrow="0" filterable="true"/>
+                <column property="banco" flexGrow="1"/>
+                <column property="historicoFinanceiro" flexGrow="1"/>
+                <column property="valor" autoWidth="true" filterable="true" textAlign="END"/>
+                <column property="documento" flexGrow="1" filterable="true"/>
+                <column property="descricao" flexGrow="3" filterable="true"/>
+                <column property="entrada" flexGrow="0" textAlign="CENTER"/>
+                <column property="lancado" flexGrow="0" textAlign="CENTER"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction" themeNames="small"/>
+            <button id="discardButton" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

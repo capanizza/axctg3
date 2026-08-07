@@ -120,6 +120,10 @@ public class UtilGeralService {
         return st;
     }
 
+    public String semNull(String st) {
+        return st == null ? "" : st.trim();
+    }
+
     public java.sql.Date localDateToSqlDate(LocalDate dt) {
         if (dt == null) {
             return null;

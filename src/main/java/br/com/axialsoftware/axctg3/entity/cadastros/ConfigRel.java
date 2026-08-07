@@ -166,6 +166,21 @@ public class ConfigRel {
     @Column(name = "data_baixa_pagar_final_listagem")
     private LocalDate dataBaixaPagarFinalListagem;
 
+    @Column(name = "data_movimento_banco_inicial")
+    private LocalDate dataMovimentoBancoInicial;
+
+    @Column(name = "data_movimento_banco_final")
+    private LocalDate dataMovimentoBancoFinal;
+
+    @Column(name = "data_movimento_banco_inicial_listagem")
+    private LocalDate dataMovimentoBancoInicialListagem;
+
+    @Column(name = "data_movimento_banco_final_listagem")
+    private LocalDate dataMovimentoBancoFinalListagem;
+
+    @Column(name = "banco_movimento_banco")
+    private Integer bancoMovimentoBanco;
+
     public UUID getId() {
         return id;
     }
@@ -556,5 +571,45 @@ public class ConfigRel {
 
     public void setDataBaixaPagarFinalListagem(LocalDate dataBaixaPagarFinalListagem) {
         this.dataBaixaPagarFinalListagem = dataBaixaPagarFinalListagem;
+    }
+
+    public LocalDate getDataMovimentoBancoInicial() {
+        return dataMovimentoBancoInicial;
+    }
+
+    public void setDataMovimentoBancoInicial(LocalDate dataMovimentoBancoInicial) {
+        this.dataMovimentoBancoInicial = dataMovimentoBancoInicial;
+    }
+
+    public LocalDate getDataMovimentoBancoFinal() {
+        return dataMovimentoBancoFinal;
+    }
+
+    public void setDataMovimentoBancoFinal(LocalDate dataMovimentoBancoFinal) {
+        this.dataMovimentoBancoFinal = dataMovimentoBancoFinal;
+    }
+
+    public LocalDate getDataMovimentoBancoInicialListagem() {
+        return dataMovimentoBancoInicialListagem;
+    }
+
+    public void setDataMovimentoBancoInicialListagem(LocalDate dataMovimentoBancoInicialListagem) {
+        this.dataMovimentoBancoInicialListagem = dataMovimentoBancoInicialListagem;
+    }
+
+    public LocalDate getDataMovimentoBancoFinalListagem() {
+        return dataMovimentoBancoFinalListagem;
+    }
+
+    public void setDataMovimentoBancoFinalListagem(LocalDate dataMovimentoBancoFinalListagem) {
+        this.dataMovimentoBancoFinalListagem = dataMovimentoBancoFinalListagem;
+    }
+
+    public Integer getBancoMovimentoBanco() {
+        return bancoMovimentoBanco;
+    }
+
+    public void setBancoMovimentoBanco(Integer bancoMovimentoBanco) {
+        this.bancoMovimentoBanco = bancoMovimentoBanco;
     }
 }
