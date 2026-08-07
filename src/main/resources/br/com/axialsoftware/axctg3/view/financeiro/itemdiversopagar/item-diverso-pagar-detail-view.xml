@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://itemDiversoPagarDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="itemDiversoPagarDc"
+                  class="br.com.axialsoftware.axctg3.entity.financeiro.ItemDiversoPagar">
+            <fetchPlan extends="_base">
+                <property name="diversoPagar" fetchPlan="_base"/>
+                <property name="banco" fetchPlan="_instance_name"/>
+                <property name="valorLiquido"/>
+            </fetchPlan>
+            <loader id="itemDiversoPagarDl"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <vbox id="form">
+            <hbox width="100%">
+                <integerField id="itemField"
+                              property="item"
+                              dataContainer="itemDiversoPagarDc"
+                              width="10%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemDiversoPagar.item"/>
+                <datePicker id="dataField"
+                            property="data"
+                            dataContainer="itemDiversoPagarDc"
+                            width="20%" themeNames="small"
+                            label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemDiversoPagar.data"/>
+                <entityPicker id="historicoFinanceiroField"
+                              property="historicoFinanceiro"
+                              dataContainer="itemDiversoPagarDc"
+                              width="70%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemDiversoPagar.historicoFinanceiro">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+            </hbox>
+            <hbox width="60%">
+                <entityPicker id="bancoField"
+                              property="banco"
+                              dataContainer="itemDiversoPagarDc"
+                              width="100%" themeNames="small"
+                              required="true"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemDiversoPagar.banco">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+            </hbox>
+            <hbox width="100%">
+                <textField id="valorField"
+                           property="valor"
+                           dataContainer="itemDiversoPagarDc"
+                           width="25%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemDiversoPagar.valor"/>
+                <textField id="jurosField"
+                           property="juros"
+                           dataContainer="itemDiversoPagarDc"
+                           width="25%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemDiversoPagar.juros"/>
+                <textField id="descontoField"
+                           property="desconto"
+                           dataContainer="itemDiversoPagarDc"
+                           width="25%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemDiversoPagar.desconto"/>
+                <textField id="valorLiquidoField"
+                           property="valorLiquido"
+                           dataContainer="itemDiversoPagarDc"
+                           width="25%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemDiversoPagar.valorLiquido"/>
+            </hbox>
+        </vbox>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

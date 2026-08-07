@@ -8,8 +8,10 @@ import io.jmix.core.annotation.DeletedDate;
 import io.jmix.core.entity.annotation.JmixGeneratedValue;
 import io.jmix.core.entity.annotation.OnDelete;
 import io.jmix.core.metamodel.annotation.Composition;
+import io.jmix.core.metamodel.annotation.DependsOnProperties;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
+import io.jmix.core.metamodel.annotation.JmixProperty;
 import io.jmix.core.metamodel.annotation.NumberFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -25,9 +27,18 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Trazido do axctg-flow (módulo financeiro). Só entidade + changelog por ora — listener,
- * service (lançamentos de emissão, baixa) e telas ficam para quando o módulo fiscal
- * fornecer o restante de NotaSaida (natureza, valores) e a Empresa as contas de saída.
+ * Trazido do axctg-flow (módulo financeiro). {@code itens} carrega item 1 (emissão,
+ * criado automaticamente por {@code TituloReceberEventListener}) e item 2+ (baixa,
+ * criado pelas telas BaixaTituloReceber). Os campos abaixo de {@code observacao} são
+ * calculados em {@code TituloReceberEventListener.onTituloReceberLoading} — nunca
+ * persistidos.
+ * <p>
+ * O lançamento contábil de <b>emissão</b> ({@code lancamentosEmissao} no axctg-flow)
+ * não foi portado: depende de {@code NotaSaida.getNatureza()} e dos valores fiscais da
+ * nota (mercadoria/IPI/ST/frete/seguro), que ainda não existem em {@link
+ * br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida} — porta-los quando o módulo
+ * fiscal fornecer isso. O lançamento de <b>baixa</b> não depende disso e está portado
+ * em {@code ItemReceberService.lancamentosBaixa}.
  */
 @JmixEntity
 @Table(name = "TITULO_RECEBER", indexes = {
@@ -272,6 +283,82 @@ public class TituloReceber {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    @Transient
+    @JmixProperty
+    private BigDecimal valorBaixado = BigDecimal.ZERO;
+
+    public BigDecimal getValorBaixado() {
+        return valorBaixado;
+    }
+
+    public void setValorBaixado(BigDecimal valorBaixado) {
+        this.valorBaixado = valorBaixado;
+    }
+
+    @Transient
+    @JmixProperty
+    private BigDecimal valorAberto = BigDecimal.ZERO;
+
+    public BigDecimal getValorAberto() {
+        return valorAberto;
+    }
+
+    public void setValorAberto(BigDecimal valorAberto) {
+        this.valorAberto = valorAberto;
+    }
+
+    @Transient
+    @JmixProperty
+    private Boolean aberto;
+
+    public Boolean getAberto() {
+        return aberto;
+    }
+
+    public void setAberto(Boolean aberto) {
+        this.aberto = aberto;
+    }
+
+    @Transient
+    @JmixProperty
+    private Boolean contabilizadoEmissao;
+
+    public Boolean getContabilizadoEmissao() {
+        return contabilizadoEmissao;
+    }
+
+    public void setContabilizadoEmissao(Boolean contabilizadoEmissao) {
+        this.contabilizadoEmissao = contabilizadoEmissao;
+    }
+
+    @Transient
+    @JmixProperty
+    private Boolean contabilizadoBaixa;
+
+    public Boolean getContabilizadoBaixa() {
+        return contabilizadoBaixa;
+    }
+
+    public void setContabilizadoBaixa(Boolean contabilizadoBaixa) {
+        this.contabilizadoBaixa = contabilizadoBaixa;
+    }
+
+    @Transient
+    @JmixProperty
+    @DependsOnProperties({"dataVencimento", "numero"})
+    private String ordemBaixa;
+
+    public String getOrdemBaixa() {
+        if (dataVencimento != null) {
+            String ano = String.format("%d", dataVencimento.getYear());
+            String mes = String.format("%02d", dataVencimento.getMonthValue());
+            String dia = String.format("%02d", dataVencimento.getDayOfMonth());
+            return ano + mes + dia + numero;
+        } else {
+            return "";
+        }
     }
 
 }

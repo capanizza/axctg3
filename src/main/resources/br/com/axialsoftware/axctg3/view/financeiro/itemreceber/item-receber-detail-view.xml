@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://itemReceberDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="itemReceberDc"
+                  class="br.com.axialsoftware.axctg3.entity.financeiro.ItemReceber">
+            <fetchPlan extends="_base">
+                <property name="tituloReceber" fetchPlan="_base"/>
+                <property name="valorLiquido"/>
+            </fetchPlan>
+            <loader id="itemReceberDl"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <vbox id="form">
+            <hbox width="100%">
+                <integerField id="itemField"
+                              property="item"
+                              dataContainer="itemReceberDc"
+                              width="10%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemReceber.item"/>
+                <datePicker id="dataField"
+                            property="data"
+                            dataContainer="itemReceberDc"
+                            width="20%" themeNames="small"
+                            label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemReceber.data"/>
+                <entityPicker id="historicoFinanceiroField"
+                              property="historicoFinanceiro"
+                              dataContainer="itemReceberDc"
+                              width="70%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemReceber.historicoFinanceiro">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+            </hbox>
+            <hbox width="100%">
+                <textField id="valorField"
+                           property="valor"
+                           dataContainer="itemReceberDc"
+                           width="25%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemReceber.valor"/>
+                <textField id="jurosField"
+                           property="juros"
+                           dataContainer="itemReceberDc"
+                           width="25%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemReceber.juros"/>
+                <textField id="descontoField"
+                           property="desconto"
+                           dataContainer="itemReceberDc"
+                           width="25%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemReceber.desconto"/>
+                <textField id="valorLiquidoField"
+                           property="valorLiquido"
+                           dataContainer="itemReceberDc"
+                           width="25%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemReceber.valorLiquido"/>
+            </hbox>
+        </vbox>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

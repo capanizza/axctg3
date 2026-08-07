@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://diversoPagarListView.title"
+      focusComponent="diversoPagarsDataGrid">
+    <data>
+        <collection id="diversoPagarsDc"
+                    class="br.com.axialsoftware.axctg3.entity.financeiro.DiversoPagar">
+            <fetchPlan extends="_base">
+                <property name="parceiro" fetchPlan="_base"/>
+                <property name="contaContabil" fetchPlan="_base"/>
+                <property name="itens" fetchPlan="_base"/>
+                <property name="aberto"/>
+                <property name="contabilizadoEmissao"/>
+            </fetchPlan>
+            <loader id="diversoPagarsDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from DiversoPagar e
+                    where e.dataEmissao between :dataEmissaoInicial and :dataEmissaoFinal
+                    and e.codEmpresa = :codEmpresa
+                    order by e.numero]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <startSlot>
+                <button id="delimitarButton" action="diversoPagarsDataGrid.delimitarAction" themeNames="small"/>
+                <button id="createButton" action="diversoPagarsDataGrid.createAction" themeNames="small"/>
+                <button id="editButton" action="diversoPagarsDataGrid.editAction" themeNames="small"/>
+                <button id="removeButton" action="diversoPagarsDataGrid.removeAction" themeNames="small"/>
+                <button id="lancamentoButton" action="diversoPagarsDataGrid.lancamentoAction" themeNames="small"/>
+                <button id="listagemButton" action="diversoPagarsDataGrid.listagemAction" themeNames="small"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="diversoPagarsDl"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="diversoPagarsDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="diversoPagarsDc"
+                  columnReorderingAllowed="true"
+                  themeNames="small"
+                  selectionMode="MULTI">
+            <actions>
+                <action id="createAction" type="list_create"/>
+                <action id="editAction" type="list_edit"/>
+                <action id="removeAction" type="list_remove"/>
+                <action id="delimitarAction" text="Delimitar" icon="vaadin:calendar"/>
+                <action id="lancamentoAction" text="Lançamentos" type="list_itemTracking" icon="lumo:checkmark"/>
+                <action id="listagemAction" text="Listagem" icon="PRINT"/>
+            </actions>
+            <columns resizable="true">
+                <column property="numero" filterable="true" flexGrow="0"/>
+                <column property="documento" filterable="true" flexGrow="0"/>
+                <column property="dataEmissao" filterable="true" flexGrow="0"/>
+                <column property="dataVencimento" filterable="true" flexGrow="0"/>
+                <column property="parceiro" filterable="true" flexGrow="10"/>
+                <column property="valor" filterable="true" textAlign="END" flexGrow="0"/>
+                <column property="contaContabil" filterable="true"/>
+                <column property="aberto" flexGrow="0" textAlign="CENTER"/>
+                <column property="contabilizadoEmissao" flexGrow="0" textAlign="CENTER"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction" themeNames="small"/>
+            <button id="discardButton" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

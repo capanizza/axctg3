@@ -48,14 +48,17 @@ public class UtilGeralService {
         return user.getMesContabil();
     }
 
-    public String getMascContabil() {
+    public Empresa getEmpresa() {
         Integer codEmpresa = getCodEmpresa();
-        Empresa empresa = dataManager.load(Empresa.class)
+        return dataManager.load(Empresa.class)
                 .query("select e from Empresa e " +
                         "where e.codigo = :codEmpresa")
                 .parameter("codEmpresa", codEmpresa)
                 .one();
-        return empresa.getMascContabil();
+    }
+
+    public String getMascContabil() {
+        return getEmpresa().getMascContabil();
     }
 
     public String getApelidoEmpresa() {
@@ -73,23 +76,11 @@ public class UtilGeralService {
     }
 
     public String getNomeEmpresa() {
-        Integer codEmpresa = getCodEmpresa();
-        Empresa empresa = dataManager.load(Empresa.class)
-                .query("select e from Empresa e " +
-                        "where e.codigo = :codEmpresa")
-                .parameter("codEmpresa", codEmpresa)
-                .one();
-        return empresa.getNome();
+        return getEmpresa().getNome();
     }
 
     public String getLogoEmpresa() {
-        Integer codEmpresa = getCodEmpresa();
-        Empresa empresa = dataManager.load(Empresa.class)
-                .query("select e from Empresa e " +
-                        "where e.codigo = :codEmpresa")
-                .parameter("codEmpresa", codEmpresa)
-                .one();
-        return empresa.getLogo();
+        return getEmpresa().getLogo();
     }
 
     public ConfigRel prepararConfigRel() {
@@ -127,6 +118,10 @@ public class UtilGeralService {
             st = df.format(valor.negate()) + " C";
         }
         return st;
+    }
+
+    public String semNull(String st) {
+        return st == null ? "" : st.trim();
     }
 
     public java.sql.Date localDateToSqlDate(LocalDate dt) {

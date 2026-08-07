@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://baixaTituloReceberListView.title"
+      focusComponent="tituloRecebersDataGrid">
+    <data>
+        <collection id="tituloRecebersDc"
+                    class="br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber">
+            <fetchPlan extends="_base">
+                <property name="itens" fetchPlan="_base"/>
+                <property name="valorBaixado"/>
+                <property name="aberto"/>
+                <property name="parceiro" fetchPlan="_base"/>
+                <property name="banco" fetchPlan="_base"/>
+                <property name="contabilizadoEmissao"/>
+                <property name="contabilizadoBaixa"/>
+            </fetchPlan>
+            <loader id="tituloRecebersDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from TituloReceber e
+                    where e.dataVencimento between :dataVencimentoInicial and :dataVencimentoFinal
+                    and e.codEmpresa = :codEmpresa
+                    order by e.dataVencimento desc, e.numero]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <startSlot>
+                <button id="delimitarButton" action="tituloRecebersDataGrid.delimitarAction" themeNames="small"/>
+                <button id="baixaAutomaticaButton" action="tituloRecebersDataGrid.baixaAutomaticaAction" themeNames="small, primary"/>
+                <button id="baixaManualButton" action="tituloRecebersDataGrid.baixaManualAction" themeNames="small"/>
+                <button id="lancamentoButton" action="tituloRecebersDataGrid.lancamentoAction" themeNames="small"/>
+                <button id="listagemButton" action="tituloRecebersDataGrid.listagemAction" themeNames="small"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="tituloRecebersDl"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="tituloRecebersDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="tituloRecebersDc"
+                  columnReorderingAllowed="true"
+                  themeNames="small"
+                  selectionMode="MULTI">
+            <actions>
+                <action id="editAction" type="list_edit"/>
+                <action id="delimitarAction" text="Delimitar" icon="vaadin:calendar"/>
+                <action id="baixaAutomaticaAction" text="Baixa automática" type="list_itemTracking" icon="MONEY_WITHDRAW"/>
+                <action id="baixaManualAction" text="Baixa manual" type="list_itemTracking" icon="MONEY_EXCHANGE"/>
+                <action id="lancamentoAction" text="Lançamentos" type="list_itemTracking" icon="lumo:checkmark"/>
+                <action id="listagemAction" text="Listagem" icon="PRINT"/>
+            </actions>
+            <columns resizable="true">
+                <column property="numero" filterable="true"/>
+                <column property="dataEmissao" filterable="true"/>
+                <column property="dataVencimento" filterable="true"/>
+                <column property="parceiro" filterable="true" flexGrow="4"/>
+                <column property="banco" filterable="true" flexGrow="2"/>
+                <column property="valor" filterable="true" textAlign="END"/>
+                <column property="aberto" textAlign="CENTER" flexGrow="0"/>
+                <column property="contabilizadoEmissao" textAlign="CENTER" flexGrow="0"/>
+                <column property="contabilizadoBaixa" textAlign="CENTER" flexGrow="0"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction" themeNames="small"/>
+            <button id="discardButton" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

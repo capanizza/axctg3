@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://tituloPagarDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="tituloPagarDc"
+                  class="br.com.axialsoftware.axctg3.entity.financeiro.TituloPagar">
+            <fetchPlan extends="_base">
+                <property name="parceiro" fetchPlan="_instance_name"/>
+                <property name="itens" fetchPlan="_base">
+                    <property name="banco" fetchPlan="_instance_name"/>
+                    <property name="historicoFinanceiro" fetchPlan="_instance_name"/>
+                </property>
+                <property name="contaContabil" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="tituloPagarDl"/>
+            <collection id="itensDc" property="itens"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <vbox id="form" width="100%">
+            <hbox width="100%" expand="parceiroField">
+                <integerField id="numeroField"
+                              property="numero"
+                              dataContainer="tituloPagarDc"
+                              readOnly="true"
+                              width="10%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/TituloPagar.numero"/>
+                <textField id="documentoField"
+                           property="documento"
+                           dataContainer="tituloPagarDc"
+                           width="15%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/TituloPagar.documento"/>
+                <datePicker id="dataEmissaoField"
+                            property="dataEmissao"
+                            dataContainer="tituloPagarDc"
+                            width="15%" themeNames="small"
+                            label="msg://br.com.axialsoftware.axctg3.entity.financeiro/TituloPagar.dataEmissao"/>
+                <datePicker id="dataVencimentoField"
+                            property="dataVencimento"
+                            dataContainer="tituloPagarDc"
+                            width="15%" themeNames="small"
+                            label="msg://br.com.axialsoftware.axctg3.entity.financeiro/TituloPagar.dataVencimento"/>
+                <entityPicker id="parceiroField"
+                              property="parceiro"
+                              dataContainer="tituloPagarDc"
+                              themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/TituloPagar.parceiro">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+                <textField id="valorField"
+                           property="valor"
+                           dataContainer="tituloPagarDc"
+                           width="15%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/TituloPagar.valor"/>
+            </hbox>
+            <hbox width="100%" expand="observacaoField">
+                <entityPicker id="contaContabilField"
+                              property="contaContabil"
+                              dataContainer="tituloPagarDc"
+                              width="50%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/TituloPagar.contaContabil">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+                <textArea id="observacaoField"
+                          property="observacao"
+                          dataContainer="tituloPagarDc" themeNames="small"
+                          label="msg://br.com.axialsoftware.axctg3.entity.financeiro/TituloPagar.observacao"/>
+            </hbox>
+        </vbox>
+        <h4 text="msg://br.com.axialsoftware.axctg3.entity.financeiro/TituloPagar.itens"/>
+        <hbox id="itensButtonsPanel" classNames="buttons-panel">
+            <button id="itensRemoveButton" action="itensDataGrid.removeAction" themeNames="small"/>
+        </hbox>
+        <dataGrid id="itensDataGrid" dataContainer="itensDc" width="100%" minHeight="10em" themeNames="small">
+            <actions>
+                <action id="removeAction" type="list_remove"/>
+            </actions>
+            <columns>
+                <column property="item" flexGrow="0"/>
+                <column property="historicoFinanceiro" flexGrow="5"/>
+                <column property="banco" flexGrow="3"/>
+                <column property="data" flexGrow="0"/>
+                <column property="valor" textAlign="END" flexGrow="0"/>
+                <column property="juros" textAlign="END" flexGrow="0"/>
+                <column property="desconto" textAlign="END" flexGrow="0"/>
+                <column property="contabilizado" textAlign="CENTER" flexGrow="0"/>
+            </columns>
+        </dataGrid>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

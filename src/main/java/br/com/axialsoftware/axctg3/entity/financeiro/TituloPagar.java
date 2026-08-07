@@ -2,6 +2,7 @@ package br.com.axialsoftware.axctg3.entity.financeiro;
 
 import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
 import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
+import br.com.axialsoftware.axctg3.entity.fiscal.NotaEntrada;
 import io.jmix.core.DeletePolicy;
 import io.jmix.core.annotation.DeletedBy;
 import io.jmix.core.annotation.DeletedDate;
@@ -27,22 +28,24 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Título a pagar avulso, sem nota fiscal de origem (numero vem de Sequence, não é
- * digitado). Trazido do axctg-flow. {@code itens} carrega item 1 (emissão, criado
- * automaticamente por {@code DiversoPagarEventListener}) e item 2+ (baixa, criado pelas
- * telas BaixaDiversoPagar). Os campos abaixo de {@code observacao} são calculados em
- * {@code DiversoPagarEventListener.onDiversoPagarLoading} — nunca persistidos.
+ * Título a pagar com nota fiscal de origem opcional ({@code notaEntrada}). Mesma forma
+ * de {@link DiversoPagar}, mais a referência à {@link NotaEntrada}. {@code itens}
+ * carrega item 1 (emissão, criado automaticamente por {@code TituloPagarEventListener})
+ * e item 2+ (baixa, criado pelas telas BaixaTituloPagar). Os campos abaixo de
+ * {@code observacao} são calculados em {@code TituloPagarEventListener.onTituloPagarLoading}
+ * — nunca persistidos.
  */
 @JmixEntity
-@Table(name = "DIVERSO_PAGAR", indexes = {
-        @Index(name = "IDX_DIVERSO_PAGAR_DATA_EMISSAO", columnList = "DATA_EMISSAO"),
-        @Index(name = "IDX_DIVERSO_PAGAR_DATA_VENCIMENTO", columnList = "DATA_VENCIMENTO"),
-        @Index(name = "IDX_DIVERSO_PAGAR_PARCEIRO", columnList = "PARCEIRO_ID"),
-        @Index(name = "IDX_DIVERSO_PAGAR_CONTA_CONTABIL", columnList = "CONTA_CONTABIL_ID"),
-        @Index(name = "IDX_DIVERSO_PAGAR_UNQ_NUMERO_COD_EMPRESA", columnList = "NUMERO, COD_EMPRESA", unique = true)
+@Table(name = "TITULO_PAGAR", indexes = {
+        @Index(name = "IDX_TITULO_PAGAR_NOTA_ENTRADA", columnList = "NOTA_ENTRADA_ID"),
+        @Index(name = "IDX_TITULO_PAGAR_DATA_EMISSAO", columnList = "DATA_EMISSAO"),
+        @Index(name = "IDX_TITULO_PAGAR_DATA_VENCIMENTO", columnList = "DATA_VENCIMENTO"),
+        @Index(name = "IDX_TITULO_PAGAR_PARCEIRO", columnList = "PARCEIRO_ID"),
+        @Index(name = "IDX_TITULO_PAGAR_CONTA_CONTABIL", columnList = "CONTA_CONTABIL_ID"),
+        @Index(name = "IDX_TITULO_PAGAR_UNQ_NUMERO_COD_EMPRESA", columnList = "NUMERO, COD_EMPRESA", unique = true)
 })
 @Entity
-public class DiversoPagar {
+public class TituloPagar {
 
     @JmixGeneratedValue
     @Column(name = "ID", nullable = false)
@@ -76,6 +79,10 @@ public class DiversoPagar {
     @DeletedDate
     @Column(name = "DELETED_DATE")
     private OffsetDateTime deletedDate;
+
+    @JoinColumn(name = "NOTA_ENTRADA_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private NotaEntrada notaEntrada;
 
     @NumberFormat(pattern = "########0")
     @Column(name = "NUMERO", nullable = false)
@@ -119,14 +126,14 @@ public class DiversoPagar {
     @OnDelete(DeletePolicy.CASCADE)
     @Composition
     @OrderBy("item")
-    @OneToMany(mappedBy = "diversoPagar")
-    private List<ItemDiversoPagar> itens;
+    @OneToMany(mappedBy = "tituloPagar")
+    private List<ItemPagar> itens;
 
-    public List<ItemDiversoPagar> getItens() {
+    public List<ItemPagar> getItens() {
         return itens;
     }
 
-    public void setItens(List<ItemDiversoPagar> itens) {
+    public void setItens(List<ItemPagar> itens) {
         this.itens = itens;
     }
 
@@ -200,6 +207,14 @@ public class DiversoPagar {
 
     public void setNumero(Integer numero) {
         this.numero = numero;
+    }
+
+    public NotaEntrada getNotaEntrada() {
+        return notaEntrada;
+    }
+
+    public void setNotaEntrada(NotaEntrada notaEntrada) {
+        this.notaEntrada = notaEntrada;
     }
 
     public OffsetDateTime getDeletedDate() {
