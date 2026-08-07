@@ -5,6 +5,8 @@ import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.contabil.ContaContabilService;
 import br.com.axialsoftware.axctg3.service.contabil.LancamentoService;
+import br.com.axialsoftware.axctg3.service.financeiro.DiversoPagarService;
+import br.com.axialsoftware.axctg3.service.financeiro.ItemDiversoPagarService;
 import io.jmix.core.DataManager;
 import io.jmix.core.SaveContext;
 import io.jmix.flowui.Dialogs;
@@ -28,13 +30,17 @@ public class MenuBean {
     private final ContaContabilService contaContabilService;
     private final DataManager dataManager;
     private final LancamentoService lancamentoService;
+    private final DiversoPagarService diversoPagarService;
+    private final ItemDiversoPagarService itemDiversoPagarService;
 
-    public MenuBean(UtilGeralService utilGeralService, Dialogs dialogs, ContaContabilService contaContabilService, DataManager dataManager, LancamentoService lancamentoService) {
+    public MenuBean(UtilGeralService utilGeralService, Dialogs dialogs, ContaContabilService contaContabilService, DataManager dataManager, LancamentoService lancamentoService, DiversoPagarService diversoPagarService, ItemDiversoPagarService itemDiversoPagarService) {
         this.utilGeralService = utilGeralService;
         this.dialogs = dialogs;
         this.contaContabilService = contaContabilService;
         this.dataManager = dataManager;
         this.lancamentoService = lancamentoService;
+        this.diversoPagarService = diversoPagarService;
+        this.itemDiversoPagarService = itemDiversoPagarService;
     }
 
     public void listarLancamentos() {
@@ -196,6 +202,62 @@ public class MenuBean {
                         saveContext.saving(configRel);
                         dataManager.save(saveContext);
                         contaContabilService.listarBalancete(tipo, configRel);
+                    }
+                })
+                .open();
+    }
+
+    public void listarEntradaDiversosPagar() {
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
+        LocalDate dataInicial = Optional.ofNullable(configRel.getDataEmissaoDiversoInicialListagem()).orElse(LocalDate.now());
+        LocalDate dataFinal = Optional.ofNullable(configRel.getDataEmissaoDiversoFinalListagem()).orElse(LocalDate.now());
+        dialogs.createInputDialog(UiComponentUtils.getCurrentView())
+                .withHeader("Entrada de diversos a pagar")
+                .withParameters(
+                        localDateParameter("dataEmissaoInicial")
+                                .withLabel("Data emissão inicial")
+                                .withDefaultValue(dataInicial),
+                        localDateParameter("dataEmissaoFinal")
+                                .withLabel("Data emissão final")
+                                .withDefaultValue(dataFinal)
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withCloseListener(closeEvent -> {
+                    if (closeEvent.closedWith(DialogOutcome.OK)) {
+                        SaveContext saveContext = new SaveContext();
+                        configRel.setDataEmissaoDiversoInicialListagem(closeEvent.getValue("dataEmissaoInicial"));
+                        configRel.setDataEmissaoDiversoFinalListagem(closeEvent.getValue("dataEmissaoFinal"));
+                        saveContext.saving(configRel);
+                        dataManager.save(saveContext);
+                        diversoPagarService.listarEntradaDiversosPagar(configRel);
+                    }
+                })
+                .open();
+    }
+
+    public void listarBaixaDiversosPagar() {
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
+        LocalDate dataInicial = Optional.ofNullable(configRel.getDataBaixaDiversoInicialListagem()).orElse(LocalDate.now());
+        LocalDate dataFinal = Optional.ofNullable(configRel.getDataBaixaDiversoFinalListagem()).orElse(LocalDate.now());
+        dialogs.createInputDialog(UiComponentUtils.getCurrentView())
+                .withHeader("Baixa de diversos a pagar")
+                .withParameters(
+                        localDateParameter("dataBaixaInicial")
+                                .withLabel("Data baixa inicial")
+                                .withDefaultValue(dataInicial),
+                        localDateParameter("dataBaixaFinal")
+                                .withLabel("Data baixa final")
+                                .withDefaultValue(dataFinal)
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withCloseListener(closeEvent -> {
+                    if (closeEvent.closedWith(DialogOutcome.OK)) {
+                        SaveContext saveContext = new SaveContext();
+                        configRel.setDataBaixaDiversoInicialListagem(closeEvent.getValue("dataBaixaInicial"));
+                        configRel.setDataBaixaDiversoFinalListagem(closeEvent.getValue("dataBaixaFinal"));
+                        saveContext.saving(configRel);
+                        dataManager.save(saveContext);
+                        itemDiversoPagarService.listarBaixaDiversosPagar(configRel);
                     }
                 })
                 .open();

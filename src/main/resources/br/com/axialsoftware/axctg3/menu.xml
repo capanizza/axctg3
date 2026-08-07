@@ -23,6 +23,10 @@
                   title="msg://br.com.axialsoftware.axctg3.view.financeiro.banco/bancoListView.title"/>
             <item view="HistoricoFinanceiro.list"
                   title="msg://br.com.axialsoftware.axctg3.view.financeiro.historicofinanceiro/historicoFinanceiroListView.title"/>
+            <item view="DiversoPagar.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.financeiro.diversopagar/diversoPagarListView.title"/>
+            <item view="BaixaDiversoPagar.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.financeiro.baixadiversopagar/baixaDiversoPagarListView.title"/>
         </menu>
         <menu id="fiscal" title="msg://br.com.axialsoftware.axctg3/menu.fiscal.title">
 

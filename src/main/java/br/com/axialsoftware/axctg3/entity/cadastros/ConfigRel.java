@@ -1,6 +1,7 @@
 package br.com.axialsoftware.axctg3.entity.cadastros;
 
 import br.com.axialsoftware.axctg3.entity.User;
+import br.com.axialsoftware.axctg3.entity.financeiro.Banco;
 import io.jmix.core.entity.annotation.JmixGeneratedValue;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
@@ -67,6 +68,40 @@ public class ConfigRel {
 
     @Column(name = "data_lancamento_final")
     private LocalDate dataLancamentoFinal;
+
+    @Column(name = "data_emissao_diverso_inicial")
+    private LocalDate dataEmissaoDiversoInicial;
+
+    @Column(name = "data_emissao_diverso_final")
+    private LocalDate dataEmissaoDiversoFinal;
+
+    @Column(name = "data_vencimento_diverso_inicial")
+    private LocalDate dataVencimentoDiversoInicial;
+
+    @Column(name = "data_vencimento_diverso_final")
+    private LocalDate dataVencimentoDiversoFinal;
+
+    @Column(name = "data_emissao_diverso_inicial_listagem")
+    private LocalDate dataEmissaoDiversoInicialListagem;
+
+    @Column(name = "data_emissao_diverso_final_listagem")
+    private LocalDate dataEmissaoDiversoFinalListagem;
+
+    @Column(name = "data_baixa_diverso_inicial_listagem")
+    private LocalDate dataBaixaDiversoInicialListagem;
+
+    @Column(name = "data_baixa_diverso_final_listagem")
+    private LocalDate dataBaixaDiversoFinalListagem;
+
+    @Column(name = "data_baixa_pagar")
+    private LocalDate dataBaixaPagar;
+
+    @Column(name = "banco_inicial")
+    private Integer bancoInicial;
+
+    @JoinColumn(name = "banco_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Banco banco;
 
     public UUID getId() {
         return id;
@@ -202,5 +237,93 @@ public class ConfigRel {
 
     public void setDataLancamentoFinal(LocalDate dataLancamentoFinal) {
         this.dataLancamentoFinal = dataLancamentoFinal;
+    }
+
+    public LocalDate getDataEmissaoDiversoInicial() {
+        return dataEmissaoDiversoInicial;
+    }
+
+    public void setDataEmissaoDiversoInicial(LocalDate dataEmissaoDiversoInicial) {
+        this.dataEmissaoDiversoInicial = dataEmissaoDiversoInicial;
+    }
+
+    public LocalDate getDataEmissaoDiversoFinal() {
+        return dataEmissaoDiversoFinal;
+    }
+
+    public void setDataEmissaoDiversoFinal(LocalDate dataEmissaoDiversoFinal) {
+        this.dataEmissaoDiversoFinal = dataEmissaoDiversoFinal;
+    }
+
+    public LocalDate getDataVencimentoDiversoInicial() {
+        return dataVencimentoDiversoInicial;
+    }
+
+    public void setDataVencimentoDiversoInicial(LocalDate dataVencimentoDiversoInicial) {
+        this.dataVencimentoDiversoInicial = dataVencimentoDiversoInicial;
+    }
+
+    public LocalDate getDataVencimentoDiversoFinal() {
+        return dataVencimentoDiversoFinal;
+    }
+
+    public void setDataVencimentoDiversoFinal(LocalDate dataVencimentoDiversoFinal) {
+        this.dataVencimentoDiversoFinal = dataVencimentoDiversoFinal;
+    }
+
+    public LocalDate getDataEmissaoDiversoInicialListagem() {
+        return dataEmissaoDiversoInicialListagem;
+    }
+
+    public void setDataEmissaoDiversoInicialListagem(LocalDate dataEmissaoDiversoInicialListagem) {
+        this.dataEmissaoDiversoInicialListagem = dataEmissaoDiversoInicialListagem;
+    }
+
+    public LocalDate getDataEmissaoDiversoFinalListagem() {
+        return dataEmissaoDiversoFinalListagem;
+    }
+
+    public void setDataEmissaoDiversoFinalListagem(LocalDate dataEmissaoDiversoFinalListagem) {
+        this.dataEmissaoDiversoFinalListagem = dataEmissaoDiversoFinalListagem;
+    }
+
+    public LocalDate getDataBaixaDiversoInicialListagem() {
+        return dataBaixaDiversoInicialListagem;
+    }
+
+    public void setDataBaixaDiversoInicialListagem(LocalDate dataBaixaDiversoInicialListagem) {
+        this.dataBaixaDiversoInicialListagem = dataBaixaDiversoInicialListagem;
+    }
+
+    public LocalDate getDataBaixaDiversoFinalListagem() {
+        return dataBaixaDiversoFinalListagem;
+    }
+
+    public void setDataBaixaDiversoFinalListagem(LocalDate dataBaixaDiversoFinalListagem) {
+        this.dataBaixaDiversoFinalListagem = dataBaixaDiversoFinalListagem;
+    }
+
+    public LocalDate getDataBaixaPagar() {
+        return dataBaixaPagar;
+    }
+
+    public void setDataBaixaPagar(LocalDate dataBaixaPagar) {
+        this.dataBaixaPagar = dataBaixaPagar;
+    }
+
+    public Integer getBancoInicial() {
+        return bancoInicial;
+    }
+
+    public void setBancoInicial(Integer bancoInicial) {
+        this.bancoInicial = bancoInicial;
+    }
+
+    public Banco getBanco() {
+        return banco;
+    }
+
+    public void setBanco(Banco banco) {
+        this.banco = banco;
     }
 }
