@@ -50,7 +50,14 @@ public class MovimentoBancoEventListener {
     @EventListener
     public void onMovimentoBancoLoading(final EntityLoadingEvent<MovimentoBanco> event) {
         MovimentoBanco movimentoBanco = event.getEntity();
-        List<ItemMovimentoBanco> itensMovimentoBanco = movimentoBanco.getItens();
+        // Consulta explícita, não movimentoBanco.getItens() — o fetch plan de quem carregou
+        // (telas, testes) não necessariamente inclui "itens" nem o atributo "lancado" de cada
+        // item, e getItens() lançaria "unfetched attribute" nesse caso. Mesmo raciocínio dos
+        // outros listeners de emissão/baixa (DiversoPagar, TituloPagar, TituloReceber).
+        List<ItemMovimentoBanco> itensMovimentoBanco = dataManager.load(ItemMovimentoBanco.class)
+                .query("select e from ItemMovimentoBanco e where e.movimentoBanco = :movimentoBanco")
+                .parameter("movimentoBanco", movimentoBanco)
+                .list();
         for (ItemMovimentoBanco itemMovimentoBanco : itensMovimentoBanco) {
             movimentoBanco.setLancado(itemMovimentoBanco.getLancado());
         }

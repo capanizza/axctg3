@@ -116,7 +116,7 @@ public class DiversoPagarService {
             int dia = dataEmissao.getDayOfMonth();
             BigDecimal valor = itemDiverso.getValor();
 
-            utilFinanceiroService.gerarLancamento(itemDiverso,
+            utilFinanceiroService.gerarLancamento(diversoPagar,
                     dia,
                     contaEntrada,
                     contaParceiroEntrada,
