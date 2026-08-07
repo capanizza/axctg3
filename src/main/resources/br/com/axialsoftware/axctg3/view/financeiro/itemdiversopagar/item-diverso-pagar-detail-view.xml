@@ -12,30 +12,6 @@
             </fetchPlan>
             <loader id="itemDiversoPagarDl"/>
         </instance>
-        <collection id="historicosFinanceirosDc"
-                    class="br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro"
-                    fetchPlan="_base">
-            <loader id="historicosFinanceirosDl">
-                <query>
-                    <![CDATA[select e from HistoricoFinanceiro e
-                    where e.codEmpresa = :codEmpresa
-                    and e.emissao = false
-                    and e.baixa = true
-                    order by e.codigo]]>
-                </query>
-            </loader>
-        </collection>
-        <collection id="bancosDc"
-                    class="br.com.axialsoftware.axctg3.entity.financeiro.Banco"
-                    fetchPlan="_base">
-            <loader id="bancosDl">
-                <query>
-                    <![CDATA[select e from Banco e
-                    where e.codEmpresa = :codEmpresa
-                    order by e.codigo]]>
-                </query>
-            </loader>
-        </collection>
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
@@ -57,21 +33,29 @@
                             dataContainer="itemDiversoPagarDc"
                             width="20%" themeNames="small"
                             label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemDiversoPagar.data"/>
-                <entityComboBox id="historicoFinanceiroField"
-                                property="historicoFinanceiro"
-                                dataContainer="itemDiversoPagarDc"
-                                itemsContainer="historicosFinanceirosDc"
-                                width="70%" themeNames="small"
-                                label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemDiversoPagar.historicoFinanceiro"/>
+                <entityPicker id="historicoFinanceiroField"
+                              property="historicoFinanceiro"
+                              dataContainer="itemDiversoPagarDc"
+                              width="70%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemDiversoPagar.historicoFinanceiro">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
             </hbox>
             <hbox width="60%">
-                <entityComboBox id="bancoField"
-                                property="banco"
-                                dataContainer="itemDiversoPagarDc"
-                                itemsContainer="bancosDc"
-                                width="100%" themeNames="small"
-                                required="true"
-                                label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemDiversoPagar.banco"/>
+                <entityPicker id="bancoField"
+                              property="banco"
+                              dataContainer="itemDiversoPagarDc"
+                              width="100%" themeNames="small"
+                              required="true"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemDiversoPagar.banco">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
             </hbox>
             <hbox width="100%">
                 <textField id="valorField"

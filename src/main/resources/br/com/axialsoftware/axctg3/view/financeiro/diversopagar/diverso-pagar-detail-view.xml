@@ -16,32 +16,6 @@
             <loader id="diversoPagarDl"/>
             <collection id="itensDc" property="itens"/>
         </instance>
-        <collection id="parceirosDc"
-                    class="br.com.axialsoftware.axctg3.entity.cadastros.Parceiro"
-                    fetchPlan="_base">
-            <loader id="parceirosDl">
-                <query>
-                    <![CDATA[select e from Parceiro e
-                    where e.codEmpresa = :codEmpresa
-                    and e.fornecedor = true
-                    order by e.nome]]>
-                </query>
-            </loader>
-        </collection>
-        <collection id="contaContabilsDc"
-                    class="br.com.axialsoftware.axctg3.entity.contabil.ContaContabil"
-                    fetchPlan="_base">
-            <loader id="contaContabilsDl">
-                <query>
-                    <![CDATA[select e from ContaContabil e
-                    where e.codigo > '1'
-                    and e.codEmpresa = :codEmpresa
-                    and e.analitica = true
-                    and e.ano = :anoContabil
-                    order by e.codigo]]>
-                </query>
-            </loader>
-        </collection>
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
@@ -74,12 +48,16 @@
                             dataContainer="diversoPagarDc"
                             width="15%" themeNames="small"
                             label="msg://br.com.axialsoftware.axctg3.entity.financeiro/DiversoPagar.dataVencimento"/>
-                <entityComboBox id="parceiroField"
-                                property="parceiro"
-                                dataContainer="diversoPagarDc"
-                                itemsContainer="parceirosDc"
-                                themeNames="small"
-                                label="msg://br.com.axialsoftware.axctg3.entity.financeiro/DiversoPagar.parceiro"/>
+                <entityPicker id="parceiroField"
+                              property="parceiro"
+                              dataContainer="diversoPagarDc"
+                              themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/DiversoPagar.parceiro">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
                 <textField id="valorField"
                            property="valor"
                            dataContainer="diversoPagarDc"
@@ -87,12 +65,16 @@
                            label="msg://br.com.axialsoftware.axctg3.entity.financeiro/DiversoPagar.valor"/>
             </hbox>
             <hbox width="100%" expand="observacaoField">
-                <entityComboBox id="contaContabilField"
-                                property="contaContabil"
-                                dataContainer="diversoPagarDc"
-                                itemsContainer="contaContabilsDc"
-                                width="50%" themeNames="small"
-                                label="msg://br.com.axialsoftware.axctg3.entity.financeiro/DiversoPagar.contaContabil"/>
+                <entityPicker id="contaContabilField"
+                              property="contaContabil"
+                              dataContainer="diversoPagarDc"
+                              width="50%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/DiversoPagar.contaContabil">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
                 <textArea id="observacaoField"
                           property="observacao"
                           dataContainer="diversoPagarDc" themeNames="small"
