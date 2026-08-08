@@ -9,6 +9,10 @@
                   title="msg://br.com.axialsoftware.axctg3.view.cadastros.centrocusto/centroCustoListView.title"/>
             <item view="Parceiro.list"
                   title="msg://br.com.axialsoftware.axctg3.view.cadastros.parceiro/parceiroListView.title"/>
+            <item view="CondicaoPagamento.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.cadastros.condicaopagamento/condicaoPagamentoListView.title"/>
+            <item view="Vendedor.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.cadastros.vendedor/vendedorListView.title"/>
         </menu>
         <menu id="contabil" title="msg://br.com.axialsoftware.axctg3/menu.contabil.title">
             <item view="HistoricoContabil.list"
