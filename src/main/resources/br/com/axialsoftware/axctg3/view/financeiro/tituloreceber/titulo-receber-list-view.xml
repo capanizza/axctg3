@@ -63,7 +63,7 @@
                   minHeight="20em"
                   dataContainer="tituloRecebersDc"
                   columnReorderingAllowed="true"
-                  themeNames="small"
+                  themeNames="xsmall"
                   selectionMode="MULTI">
             <actions>
                 <action id="createAction" type="list_create"/>

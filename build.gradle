@@ -35,8 +35,9 @@ dependencies {
     implementation 'io.jmix.flowui:jmix-flowui-themes'
     implementation 'io.jmix.datatools:jmix-datatools-starter'
     implementation 'io.jmix.datatools:jmix-datatools-flowui-starter'
-    implementation 'net.sf.jasperreports:jasperreports:6.21.2'
-    implementation 'net.sf.jasperreports:jasperreports-fonts:6.21.2'
+    implementation 'net.sf.jasperreports:jasperreports'
+    implementation 'net.sf.jasperreports:jasperreports-fonts'
+    implementation 'net.sf.jasperreports:jasperreports-functions'
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'com.vaadin:vaadin-dev'
