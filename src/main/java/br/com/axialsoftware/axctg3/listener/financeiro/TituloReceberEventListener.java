@@ -90,7 +90,7 @@ public class TituloReceberEventListener {
             itemReceber.setJuros(BigDecimal.ZERO);
             itemReceber.setDesconto(BigDecimal.ZERO);
             itemReceber.setItem(1);
-            dataManager.save(itemReceber);
+            dataManager.saveWithoutReload(itemReceber);
         }
         if (event.getType() == EntityChangedEvent.Type.UPDATED) {
             ItemReceber itemReceber = dataManager.load(ItemReceber.class)
@@ -109,9 +109,8 @@ public class TituloReceberEventListener {
                 alterar = true;
             }
             if (alterar) {
-                dataManager.save(itemReceber);
+                dataManager.saveWithoutReload(itemReceber);
             }
         }
     }
-
 }

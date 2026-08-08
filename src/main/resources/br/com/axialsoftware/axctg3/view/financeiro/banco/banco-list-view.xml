@@ -48,9 +48,9 @@
                 <action id="removeAction" type="list_remove"/>
             </actions>
             <columns resizable="true">
-                <column property="codigo" width="10%"/>
-                <column property="codGeral" width="10%"/>
-                <column property="nome" width="40%"/>
+                <column property="codigo" width="10%" filterable="true"/>
+                <column property="codGeral" width="10%" filterable="true"/>
+                <column property="nome" width="40%" filterable="true"/>
                 <column property="agencia" width="10%"/>
                 <column property="digAgencia" width="10%"/>
                 <column property="conta" width="10%"/>

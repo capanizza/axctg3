@@ -35,10 +35,16 @@ public class HistoricoFinanceiroListView extends StandardListView<HistoricoFinan
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
+        Dialog dialog = UiComponentUtils.findDialog(this);
+
         historicoFinanceiroesDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+        // lançamentos de item (ItemReceber/ItemPagar/ItemDiversoPagar/MovimentoBanco) só
+        // podem usar históricos de baixa — quando esta tela abre como dialog (lookup do
+        // historicoFinanceiroField), restringe a listagem a eles. Fora do dialog (gestão
+        // dos históricos financeiros), mostra todos.
+        historicoFinanceiroesDl.setParameter("apenasBaixa", dialog != null);
         historicoFinanceiroesDl.load();
 
-        Dialog dialog = UiComponentUtils.findDialog(this);
         buttonsPanel.setVisible(dialog == null);
     }
 
