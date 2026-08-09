@@ -27,49 +27,27 @@
     <layout>
         <hbox id="buttonsPanel" wrap="true" width="100%">
             <startSlot>
-                <!--button id="createButton" action="empresasDataGrid.createAction"/>
-                <button id="editButton" action="empresasDataGrid.editAction"/>
-                <button id="removeButton" action="empresasDataGrid.removeAction"/-->
                 <button id="selecionarButton" action="empresasDataGrid.selecionarAction" themeNames="small"/>
-                <button id="periodoButton" action="empresasDataGrid.periodoAction" themeNames="small"/>
             </startSlot>
             <endSlot>
                 <simplePagination id="pagination" dataLoader="empresasDl"/>
             </endSlot>
         </hbox>
-        <sidePanelLayout id="sidePanelLayout" height="100%" width="100%">
-            <dataGrid id="empresasDataGrid"
-                      width="100%"
-                      minHeight="20em"
-                      dataContainer="empresasDc"
-                      columnReorderingAllowed="true" themeNames="small">
-                <actions>
-                    <!--action id="createAction" type="list_create"/>
-                    <action id="editAction" type="list_edit"/>
-                    <action id="removeAction" type="list_remove"/-->
-                    <action id="selecionarAction" type="list_itemTracking" text="msg://selecionarEmpresaListView.selecionarAction.text" icon="lumo:checkmark"/>
-                    <action id="periodoAction" type="list_itemTracking" text="msg://selecionarEmpresaListView.periodoAction.text" icon="lumo:calendar"/>
-                </actions>
-                <columns resizable="true">
-                    <column property="codigo" width="10%"/>
-                    <column property="nome" width="50%"/>
-                    <column property="apelido" width="20%"/>
-                    <column property="selecionada" width="20%" textAlign="CENTER"/>
-                </columns>
-            </dataGrid>
-            <vbox>
-                <vbox>
-                    <integerField id="mesContabilField" required="true" min="1" max="12"
-                                  label="msg://br.com.axialsoftware.axctg3.entity/User.mesContabil"/>
-                    <integerField id="anoContabilField" required="true"
-                                  label="msg://br.com.axialsoftware.axctg3.entity/User.anoContabil"/>
-                </vbox>
-                <hbox id="detailActions">
-                    <button id="saveAndCloseBtn" text="msg://br.com.axialsoftware.axctg3/actions.ok" themeNames="primary,small" icon="CHECK"/>
-                    <button id="closeBtn" text="msg://br.com.axialsoftware.axctg3/actions.cancelar" themeNames="small" icon="CANCEL"/>
-                </hbox>
-            </vbox>
-        </sidePanelLayout>
+        <dataGrid id="empresasDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="empresasDc"
+                  columnReorderingAllowed="true" themeNames="small">
+            <actions>
+                <action id="selecionarAction" type="list_itemTracking" text="msg://selecionarEmpresaListView.selecionarAction.text" icon="lumo:checkmark"/>
+            </actions>
+            <columns resizable="true">
+                <column property="codigo" width="10%"/>
+                <column property="nome" width="50%"/>
+                <column property="apelido" width="20%"/>
+                <column property="selecionada" width="20%" textAlign="CENTER"/>
+            </columns>
+        </dataGrid>
         <hbox id="lookupActions" visible="false">
             <button id="selectButton" action="selectAction" themeNames="small"/>
             <button id="discardButton" action="discardAction" themeNames="small"/>

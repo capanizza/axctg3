@@ -15,6 +15,8 @@
                   title="msg://br.com.axialsoftware.axctg3.view.cadastros.vendedor/vendedorListView.title"/>
         </menu>
         <menu id="contabil" title="msg://br.com.axialsoftware.axctg3/menu.contabil.title">
+            <item view="PeriodoContabil.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.contabil.periodocontabil/periodoContabilListView.title"/>
             <item view="HistoricoContabil.list"
                   title="msg://br.com.axialsoftware.axctg3.view.contabil.historicocontabil/historicoContabilListView.title"/>
             <item view="ContaContabil.list"
@@ -43,8 +45,16 @@
                   title="msg://br.com.axialsoftware.axctg3.view.financeiro.movimentobanco/movimentoBancoListView.title"/>
         </menu>
         <menu id="fiscal" title="msg://br.com.axialsoftware.axctg3/menu.fiscal.title">
+            <item view="PeriodoFiscal.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.fiscal.periodofiscal/periodoFiscalListView.title"/>
             <item view="NaturezaOperacao.list"
                   title="msg://br.com.axialsoftware.axctg3.view.fiscal.naturezaoperacao/naturezaOperacaoListView.title"/>
+            <item view="GrupoProduto.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.fiscal.grupoproduto/grupoProdutoListView.title"/>
+            <item view="Produto.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.fiscal.produto/produtoListView.title"/>
+            <item view="SaldoProduto.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.fiscal.saldoproduto/saldoProdutoListView.title"/>
         </menu>
         <menu id="compras" title="msg://br.com.axialsoftware.axctg3/menu.compras.title">
 
@@ -59,6 +69,8 @@
               title="msg://br.com.axialsoftware.axctg3.view.cadastros.empresa/empresaListView.title"/>
     </menu>
     <menu id="tabelas" title="msg://br.com.axialsoftware.axctg3/menu.tabelas.title">
+        <item view="ClassificacaoFiscal.list"
+              title="msg://br.com.axialsoftware.axctg3.view.tabelas.classificacaofiscal/classificacaoFiscalListView.title"/>
         <item view="Municipio.list"
               title="msg://br.com.axialsoftware.axctg3.view.tabelas.municipio/municipioListView.title"/>
         <item view="TipoLogradouro.list"
