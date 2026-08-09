@@ -181,6 +181,12 @@ public class ConfigRel {
     @Column(name = "banco_movimento_banco")
     private Integer bancoMovimentoBanco;
 
+    @Column(name = "data_emissao_nota_saida_inicial")
+    private LocalDate dataEmissaoNotaSaidaInicial;
+
+    @Column(name = "data_emissao_nota_saida_final")
+    private LocalDate dataEmissaoNotaSaidaFinal;
+
     public UUID getId() {
         return id;
     }
@@ -607,6 +613,22 @@ public class ConfigRel {
 
     public Integer getBancoMovimentoBanco() {
         return bancoMovimentoBanco;
+    }
+
+    public LocalDate getDataEmissaoNotaSaidaInicial() {
+        return dataEmissaoNotaSaidaInicial;
+    }
+
+    public void setDataEmissaoNotaSaidaInicial(LocalDate dataEmissaoNotaSaidaInicial) {
+        this.dataEmissaoNotaSaidaInicial = dataEmissaoNotaSaidaInicial;
+    }
+
+    public LocalDate getDataEmissaoNotaSaidaFinal() {
+        return dataEmissaoNotaSaidaFinal;
+    }
+
+    public void setDataEmissaoNotaSaidaFinal(LocalDate dataEmissaoNotaSaidaFinal) {
+        this.dataEmissaoNotaSaidaFinal = dataEmissaoNotaSaidaFinal;
     }
 
     public void setBancoMovimentoBanco(Integer bancoMovimentoBanco) {

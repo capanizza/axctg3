@@ -55,6 +55,8 @@
                   title="msg://br.com.axialsoftware.axctg3.view.fiscal.produto/produtoListView.title"/>
             <item view="SaldoProduto.list"
                   title="msg://br.com.axialsoftware.axctg3.view.fiscal.saldoproduto/saldoProdutoListView.title"/>
+            <item view="NotaSaida.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.title"/>
         </menu>
         <menu id="compras" title="msg://br.com.axialsoftware.axctg3/menu.compras.title">
 
