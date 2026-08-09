@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
+      title="msg://classTribListView.title"
+      focusComponent="classTribsDataGrid">
+    <data>
+        <collection id="classTribsDc"
+                    class="br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib">
+            <fetchPlan extends="_base"/>
+            <loader id="classTribsDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from ClassTrib e
+                        order by e.codigo asc]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <startSlot>
+                <button id="createButton" action="classTribsDataGrid.createAction" themeNames="small"/>
+                <button id="editButton" action="classTribsDataGrid.editAction" themeNames="small"/>
+                <button id="removeButton" action="classTribsDataGrid.removeAction" themeNames="small"/>
+                <fileUploadField id="importField" width="18em" themeNames="small"
+                                 acceptedFileTypes="application/json,.json"
+                                 uploadText="msg://classTribListView.import.uploadText"/>
+                <button id="importButton" text="msg://classTribListView.import.button" themeNames="small"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="classTribsDl"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="classTribsDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="classTribsDc"
+                  columnReorderingAllowed="true"
+                  themeNames="small">
+            <actions>
+                <action id="createAction" type="list_create"/>
+                <action id="editAction" type="list_edit"/>
+                <action id="removeAction" type="list_remove"/>
+            </actions>
+            <columns resizable="true">
+                <column property="codigo" width="8%" filterable="true"/>
+                <column property="cst" width="6%" filterable="true"/>
+                <column property="tipoAliquota" width="14%" filterable="true"/>
+                <column property="nomenclatura" width="10%" filterable="true"/>
+                <column property="aplicavelNfe" width="8%" textAlign="CENTER"/>
+                <column property="descricao" width="54%" filterable="true"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction" themeNames="small"/>
+            <button id="discardButton" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

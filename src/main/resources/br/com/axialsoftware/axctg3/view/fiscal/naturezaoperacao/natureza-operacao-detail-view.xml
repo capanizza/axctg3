@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://naturezaOperacaoDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="naturezaOperacaoDc"
+                  class="br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao">
+            <fetchPlan extends="_base">
+                <property name="contaContabil" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="naturezaOperacaoDl"/>
+        </instance>
+        <collection id="contaContabilsDc"
+                    class="br.com.axialsoftware.axctg3.entity.contabil.ContaContabil"
+                    fetchPlan="_base">
+            <loader id="contaContabilsDl">
+                <query>
+                    <![CDATA[select e from ContaContabil e
+                    where e.codigo > '1'
+                    and e.codEmpresa = :codEmpresa
+                    and e.analitica = true
+                    and e.ano = :ano
+                    order by e.codigo]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <vbox id="form" width="100%">
+            <hbox width="100%">
+                <integerField id="codigoField"
+                              property="codigo"
+                              dataContainer="naturezaOperacaoDc"
+                              width="15%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NaturezaOperacao.codigo"/>
+                <textField id="nomeField"
+                           property="nome"
+                           maxLength="50"
+                           dataContainer="naturezaOperacaoDc"
+                           width="45%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NaturezaOperacao.nome"/>
+                <integerField id="cfopField"
+                              property="cfop"
+                              dataContainer="naturezaOperacaoDc"
+                              width="15%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NaturezaOperacao.cfop"/>
+                <checkbox id="vendaField"
+                          property="venda"
+                          dataContainer="naturezaOperacaoDc"
+                          width="20%"
+                          alignSelf="END"
+                          label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NaturezaOperacao.venda"/>
+            </hbox>
+            <hbox width="100%">
+                <bigDecimalField id="aliqIcmsField"
+                                 property="aliqIcms"
+                                 dataContainer="naturezaOperacaoDc"
+                                 width="12%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NaturezaOperacao.aliqIcms"/>
+                <bigDecimalField id="reducaoIcmsField"
+                                 property="reducaoIcms"
+                                 dataContainer="naturezaOperacaoDc"
+                                 width="12%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NaturezaOperacao.reducaoIcms"/>
+                <bigDecimalField id="aliqPisField"
+                                 property="aliqPis"
+                                 dataContainer="naturezaOperacaoDc"
+                                 width="12%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NaturezaOperacao.aliqPis"/>
+                <bigDecimalField id="aliqCofinsField"
+                                 property="aliqCofins"
+                                 dataContainer="naturezaOperacaoDc"
+                                 width="12%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NaturezaOperacao.aliqCofins"/>
+                <entityPicker id="contaContabilField"
+                              property="contaContabil"
+                              dataContainer="naturezaOperacaoDc" themeNames="small"
+                              width="52%"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NaturezaOperacao.contaContabil">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+            </hbox>
+            <hbox width="100%">
+                <bigDecimalField id="aliqIbsUfField"
+                                 property="aliqIbsUf"
+                                 dataContainer="naturezaOperacaoDc"
+                                 width="15%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NaturezaOperacao.aliqIbsUf"/>
+                <bigDecimalField id="aliqIbsMunField"
+                                 property="aliqIbsMun"
+                                 dataContainer="naturezaOperacaoDc"
+                                 width="15%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NaturezaOperacao.aliqIbsMun"/>
+                <bigDecimalField id="aliqCbsField"
+                                 property="aliqCbs"
+                                 dataContainer="naturezaOperacaoDc"
+                                 width="15%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NaturezaOperacao.aliqCbs"/>
+                <integerField id="codClassTribField"
+                              property="codClassTrib"
+                              dataContainer="naturezaOperacaoDc"
+                              width="20%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NaturezaOperacao.codClassTrib"/>
+            </hbox>
+        </vbox>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

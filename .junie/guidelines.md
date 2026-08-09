@@ -232,6 +232,23 @@ throwing on `.one()` with no `Empresa`, or a `ConstraintViolationException` on t
 - Campos monetários: `BigDecimal`, `precision = 19, scale = 2`, com
   `@NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")`.
 
+### Layout de formulário em detail views
+
+**Não usar `formLayout`** (o componente que o Jmix Studio gera por padrão). Ele monta um
+grid de colunas *iguais* via `responsiveSteps` — cada campo ocupa uma célula inteira,
+então um `integerField` de código sai do mesmo tamanho que um `textField` de nome longo
+("campos gigantes"). Dá pra um campo ocupar mais de uma coluna (`colspan`), mas é
+discreto (colunas inteiras), não fração de largura — não dá pra reproduzir uma linha tipo
+código 10% / nome 45% / cfop 15% / venda 10%.
+
+O padrão do projeto é montar o layout na mão: um `vbox` externo com várias `hbox`
+internas (uma por linha), cada campo com `width` em `%` explícito e `themeNames="small"`.
+Mais XML, mas dá controle fino de proporção e bate com a densidade esperada de uma tela
+de sistema contábil. Ver `view/financeiro/banco/banco-detail-view.xml` ou
+`view/fiscal/naturezaoperacao/natureza-operacao-detail-view.xml` como referência antes de
+escrever uma nova detail view — **todas** as detail views do projeto seguem esse padrão,
+não misturar com `formLayout` numa tela nova.
+
 ### Changelogs Liquibase
 
 Padrão Jmix: `changelog/<ano>/<mês 2 dígitos>/dd-hhMMss<cccccccc>-<descrição>.xml`.

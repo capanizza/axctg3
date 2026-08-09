@@ -80,8 +80,10 @@ public class ContaContabil {
     @NotNull
     private Integer grau;
 
-    @Column(name = "ANALITICA", nullable = false)
-    @NotNull
+    // sem nullable=false/@NotNull: um Boolean obrigatório faz o Jmix rejeitar desmarcar o
+    // Checkbox, já que `false` é o valor "vazio" do Vaadin Checkbox (mesmo motivo do
+    // NaturezaOperacao.venda). O default abaixo já garante que nunca fica nulo na prática.
+    @Column(name = "ANALITICA")
     private Boolean analitica = false;
 
     @Column(name = "COD_NAT", nullable = false)
