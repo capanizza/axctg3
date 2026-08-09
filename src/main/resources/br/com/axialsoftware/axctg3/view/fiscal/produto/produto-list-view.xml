@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
+      title="msg://produtoListView.title"
+      focusComponent="produtosDataGrid">
+    <data>
+        <collection id="produtosDc"
+                    class="br.com.axialsoftware.axctg3.entity.fiscal.Produto">
+            <fetchPlan extends="_base">
+                <property name="grupoProduto" fetchPlan="_base"/>
+                <property name="classificacaoFiscal" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="produtosDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from Produto e
+                        where e.codEmpresa = :codEmpresa
+                        order by e.codigo]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <startSlot>
+                <button id="createButton" action="produtosDataGrid.createAction" themeNames="small"/>
+                <button id="editButton" action="produtosDataGrid.editAction" themeNames="small"/>
+                <button id="removeButton" action="produtosDataGrid.removeAction" themeNames="small"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="produtosDl"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="produtosDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="produtosDc"
+                  columnReorderingAllowed="true" themeNames="small">
+            <actions>
+                <action id="createAction" type="list_create"/>
+                <action id="editAction" type="list_edit"/>
+                <action id="removeAction" type="list_remove"/>
+            </actions>
+            <columns resizable="true">
+                <column property="codigo" width="10%" filterable="true"/>
+                <column property="apelido" width="20%" filterable="true"/>
+                <column property="descricao" width="40%" filterable="true"/>
+                <column property="tipoProduto" width="15%" filterable="true"/>
+                <column property="inativo" width="10%" textAlign="CENTER" filterable="true"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction" themeNames="small"/>
+            <button id="discardButton" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

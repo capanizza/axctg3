@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://produtoDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="produtoDc"
+                  class="br.com.axialsoftware.axctg3.entity.fiscal.Produto">
+            <fetchPlan extends="_base">
+                <property name="grupoProduto" fetchPlan="_base"/>
+                <property name="classificacaoFiscal" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="produtoDl"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <vbox id="form" width="100%">
+            <hbox width="100%" expand="apelidoField">
+                <integerField id="codigoField"
+                              property="codigo"
+                              dataContainer="produtoDc"
+                              width="10%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.codigo"/>
+                <textField id="apelidoField"
+                           property="apelido"
+                           maxLength="20"
+                           dataContainer="produtoDc" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.apelido"/>
+                <textField id="unidadeField"
+                           property="unidade"
+                           maxLength="6"
+                           dataContainer="produtoDc"
+                           width="10%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.unidade"/>
+                <textField id="embalagemField"
+                           property="embalagem"
+                           maxLength="6"
+                           dataContainer="produtoDc"
+                           width="10%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.embalagem"/>
+                <bigDecimalField id="quantEmbalagemField"
+                                 property="quantEmbalagem"
+                                 dataContainer="produtoDc"
+                                 width="12%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.quantEmbalagem"/>
+                <bigDecimalField id="pesoLiquidoField"
+                                 property="pesoLiquido"
+                                 dataContainer="produtoDc"
+                                 width="12%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.pesoLiquido"/>
+                <bigDecimalField id="pesoBrutoField"
+                                 property="pesoBruto"
+                                 dataContainer="produtoDc"
+                                 width="12%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.pesoBruto"/>
+            </hbox>
+            <textArea id="descricaoField"
+                      height="5em"
+                      property="descricao"
+                      dataContainer="produtoDc"
+                      width="100%" themeNames="small"
+                      label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.descricao"/>
+            <hbox width="100%">
+                <entityPicker id="grupoProdutoField"
+                              property="grupoProduto"
+                              dataContainer="produtoDc"
+                              width="30%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.grupoProduto">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+                <entityPicker id="classificacaoFiscalField"
+                              property="classificacaoFiscal"
+                              dataContainer="produtoDc"
+                              width="30%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.classificacaoFiscal">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+                <select id="tipoProdutoField"
+                        property="tipoProduto"
+                        dataContainer="produtoDc"
+                        width="20%" themeNames="small"
+                        label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.tipoProduto"/>
+                <textField id="ncmField"
+                           property="ncm"
+                           maxLength="20"
+                           dataContainer="produtoDc"
+                           width="15%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.ncm"/>
+                <checkbox id="inativoField"
+                          property="inativo"
+                          dataContainer="produtoDc"
+                          width="5%"
+                          alignSelf="END"
+                          label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.inativo"/>
+            </hbox>
+            <hbox width="100%">
+                <bigDecimalField id="aliqIcmsField"
+                                 property="aliqIcms"
+                                 dataContainer="produtoDc"
+                                 width="12%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.aliqIcms"/>
+                <bigDecimalField id="reducaoIcmsField"
+                                 property="reducaoIcms"
+                                 dataContainer="produtoDc"
+                                 width="12%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.reducaoIcms"/>
+                <bigDecimalField id="aliqIpiField"
+                                 property="aliqIpi"
+                                 dataContainer="produtoDc"
+                                 width="12%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.aliqIpi"/>
+                <textField id="ruaField"
+                           property="rua"
+                           maxLength="6"
+                           dataContainer="produtoDc"
+                           width="10%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.rua"/>
+                <textField id="ladoField"
+                           property="lado"
+                           maxLength="10"
+                           dataContainer="produtoDc"
+                           width="10%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.lado"/>
+                <integerField id="caixaField"
+                              property="caixa"
+                              dataContainer="produtoDc"
+                              width="10%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.caixa"/>
+            </hbox>
+        </vbox>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
+      title="msg://classificacaoFiscalListView.title"
+      focusComponent="classificacaoFiscalsDataGrid">
+    <data>
+        <collection id="classificacaoFiscalsDc"
+                    class="br.com.axialsoftware.axctg3.entity.tabelas.ClassificacaoFiscal">
+            <fetchPlan extends="_base"/>
+            <loader id="classificacaoFiscalsDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from ClassificacaoFiscal e
+                    order by e.codigo]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <startSlot>
+                <button id="createButton" action="classificacaoFiscalsDataGrid.createAction" themeNames="small"/>
+                <button id="editButton" action="classificacaoFiscalsDataGrid.editAction" themeNames="small"/>
+                <button id="removeButton" action="classificacaoFiscalsDataGrid.removeAction" themeNames="small"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="classificacaoFiscalsDl"/>
+            </endSlot>
+        </hbox>
+        <sidePanelLayout id="sidePanelLayout"
+                         width="100%"
+                         height="100%"
+                         sidePanelHorizontalSize="25em">
+
+            <!-- MASTER: grid -->
+            <dataGrid id="classificacaoFiscalsDataGrid"
+                      themeNames="small"
+                      width="100%"
+                      minHeight="20em"
+                      dataContainer="classificacaoFiscalsDc"
+                      columnReorderingAllowed="true">
+                <actions>
+                    <action id="createAction" type="list_create"/>
+                    <action id="editAction" type="list_edit"/>
+                    <action id="removeAction" type="list_remove"/>
+                </actions>
+                <columns resizable="true">
+                    <column property="codigo" width="15%"/>
+                    <column property="codNcm" width="20%"/>
+                    <column property="descricao" width="65%"/>
+                </columns>
+            </dataGrid>
+
+            <!-- DETAIL -->
+            <vbox>
+                <hbox width="100%" justifyContent="BETWEEN" alignItems="CENTER">
+                    <h4 id="header" text="msg://classificacaoFiscalListView.sidePanel.title"/>
+                    <button id="closeButton" icon="lumo:cross" themeNames="tertiary icon contrast"/>
+                </hbox>
+                <vbox>
+                    <integerField id="codigoField" width="50%"
+                                  label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassificacaoFiscal.codigo"/>
+                    <textField id="codNcmField" width="50%" maxLength="10"
+                               label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassificacaoFiscal.codNcm"/>
+                    <textField id="descricaoField" width="100%" maxLength="30"
+                               label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassificacaoFiscal.descricao"/>
+                    <hbox id="detailActions">
+                        <button id="saveAndCloseBtn" text="msg://br.com.axialsoftware.axctg3/actions.ok" themeNames="primary, small" icon="CHECK"/>
+                        <button id="closeBtn" text="msg://br.com.axialsoftware.axctg3/actions.cancelar" themeNames="small" icon="CANCEL"/>
+                    </hbox>
+                </vbox>
+            </vbox>
+        </sidePanelLayout>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction" themeNames="small"/>
+            <button id="discardButton" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

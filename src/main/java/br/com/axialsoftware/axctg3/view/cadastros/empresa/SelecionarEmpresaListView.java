@@ -1,15 +1,11 @@
 package br.com.axialsoftware.axctg3.view.cadastros.empresa;
 
 import br.com.axialsoftware.axctg3.entity.User;
-import br.com.axialsoftware.axctg3.entity.cadastros.ConfigRel;
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 
-import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
-import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
@@ -21,21 +17,15 @@ import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.action.DialogAction;
 import io.jmix.flowui.component.checkbox.JmixCheckbox;
 import io.jmix.flowui.component.grid.DataGrid;
-import io.jmix.flowui.component.sidepanellayout.SidePanelLayout;
-import io.jmix.flowui.component.textfield.JmixIntegerField;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
-import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.model.CollectionContainer;
-import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.*;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
 
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 
 @Route(value = "selecionarempresas", layout = MainView.class)
@@ -56,18 +46,8 @@ public class SelecionarEmpresaListView extends StandardListView<Empresa> {
     private DataManager dataManager;
     @Autowired
     private CurrentAuthentication currentAuthentication;
-    @ViewComponent
-    private JmixIntegerField anoContabilField;
-    @ViewComponent
-    private JmixIntegerField mesContabilField;
     @Autowired
     private UiComponents uiComponents;
-    @ViewComponent
-    private CollectionLoader<Empresa> empresasDl;
-    @ViewComponent
-    private SidePanelLayout sidePanelLayout;
-    @Autowired
-    private UtilGeralService utilGeralService;
 
     @Supply(to = "empresasDataGrid.selecionada", subject = "renderer")
     private Renderer<Empresa> empresasDataGridSelecionadaRenderer() {
@@ -124,63 +104,6 @@ public class SelecionarEmpresaListView extends StandardListView<Empresa> {
                                 })
                 )
                 .open();
-    }
-
-    @Subscribe("empresasDataGrid.periodoAction")
-    public void onEmpresasDataGridPeriodoAction(final ActionPerformedEvent event) {
-        Empresa empresa = empresasDataGrid.getSingleSelectedItem();
-        if (empresa == null) {
-            return;
-        }
-        if (!Boolean.TRUE.equals(empresa.getSelecionada())) {
-            dialogs.createMessageDialog()
-                    .withHeader(messageBundle.getMessage("selecionarEmpresaListView.periodo.header"))
-                    .withText(messageBundle.getMessage("selecionarEmpresaListView.apenasSelecionada.text"))
-                    .open();
-            return;
-        }
-        User user = (User) currentAuthentication.getUser();
-        User userSalvo = dataManager.load(User.class).id(user.getId()).one();
-        LocalDate hoje = LocalDate.now();
-        anoContabilField.setValue(userSalvo.getAnoContabil() != null
-                ? userSalvo.getAnoContabil() : hoje.getYear());
-        mesContabilField.setValue(userSalvo.getMesContabil() != null
-                ? userSalvo.getMesContabil() : hoje.getMonthValue());
-        sidePanelLayout.openSidePanel();
-    }
-
-    @Subscribe(id = "closeBtn", subject = "clickListener")
-    public void onDetailActionsClick(final ClickEvent<HorizontalLayout> event) {
-        sidePanelLayout.closeSidePanel();
-    }
-
-    @Subscribe(id = "saveAndCloseBtn", subject = "clickListener")
-    public void onSaveAndCloseBtnClick(final ClickEvent<JmixButton> event) {
-        Integer anoContabil = anoContabilField.getValue();
-        Integer mesContabil = mesContabilField.getValue();
-        if (anoContabil == null || mesContabil == null || mesContabil < 1 || mesContabil > 12) {
-            dialogs.createMessageDialog()
-                    .withHeader(messageBundle.getMessage("selecionarEmpresaListView.periodo.header"))
-                    .withText(messageBundle.getMessage("selecionarEmpresaListView.periodoInvalido.text"))
-                    .open();
-            return;
-        }
-        User user = (User) currentAuthentication.getUser();
-        User usuario = (User) dataManager.load(User.class).id(user.getId()).one();
-        user.setAnoContabil(anoContabil); // para atualizar tela
-        user.setMesContabil(mesContabil);
-        usuario.setAnoContabil(anoContabil);
-        usuario.setMesContabil(mesContabil);
-        dataManager.saveWithoutReload(usuario);
-        ConfigRel configRel = utilGeralService.prepararConfigRel();
-        Map<String, LocalDate> mapa = utilGeralService.prepararDatas(usuario.getAnoContabil(), usuario.getMesContabil());
-        LocalDate dataInicial = mapa.get("dataInicial");
-        LocalDate dataFinal = mapa.get("dataFinal");
-        configRel.setDataLancamentoInicial(dataInicial);
-        configRel.setDataLancamentoFinal(dataFinal);
-        dataManager.saveWithoutReload(configRel);
-        sidePanelLayout.closeSidePanel();
-        UI.getCurrent().getPage().reload();
     }
 
 }
