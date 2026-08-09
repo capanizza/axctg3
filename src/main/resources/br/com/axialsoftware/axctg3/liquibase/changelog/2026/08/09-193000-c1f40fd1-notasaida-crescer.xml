@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/09-193000-c1f40fd1-notasaida-crescer.xml">
+
+    <!-- NOTA_SAIDA cresce da entidade mínima (NUMERO+COD_EMPRESA) para a estrutura
+         completa portada de axctg-flow. CHAVE guarda a chave de acesso da NFe
+         correspondente (entidade separada, ainda não modelada). -->
+    <changeSet id="1" author="axctg3">
+        <addColumn tableName="NOTA_SAIDA">
+            <column name="DATA_EMISSAO" type="DATE"/>
+            <column name="DATA_SAIDA" type="DATE"/>
+            <column name="ESPECIE" type="VARCHAR(4)"/>
+            <column name="SERIE" type="VARCHAR(2)"/>
+            <column name="PARCEIRO_ID" type="UUID"/>
+            <column name="NATUREZA_ID" type="UUID"/>
+            <column name="VALOR" type="DECIMAL(19, 2)"/>
+            <column name="VALOR_MERCADORIA" type="DECIMAL(19, 2)"/>
+            <column name="BASE_ICMS" type="DECIMAL(19, 2)"/>
+            <column name="VALOR_ICMS" type="DECIMAL(19, 2)"/>
+            <column name="BASE_ST" type="DECIMAL(19, 2)"/>
+            <column name="VALOR_ST" type="DECIMAL(19, 2)"/>
+            <column name="BASE_IPI" type="DECIMAL(19, 2)"/>
+            <column name="VALOR_IPI" type="DECIMAL(19, 2)"/>
+            <column name="FRETE" type="DECIMAL(19, 2)"/>
+            <column name="SEGURO" type="DECIMAL(19, 2)"/>
+            <column name="DESPESAS" type="DECIMAL(19, 2)"/>
+            <column name="DESCONTO" type="DECIMAL(19, 2)"/>
+            <column name="CANCELADA" type="BOOLEAN" defaultValue="FALSE"/>
+            <column name="PESO_LIQUIDO" type="DECIMAL(19, 5)"/>
+            <column name="PESO_BRUTO" type="DECIMAL(19, 5)"/>
+            <column name="CHAVE" type="VARCHAR(50)"/>
+        </addColumn>
+    </changeSet>
+
+    <!-- DATA_EMISSAO/DATA_SAIDA/ESPECIE/SERIE/PARCEIRO_ID/NATUREZA_ID ficam sem NOT NULL
+         aqui de propósito: addColumn numa tabela já com linhas não pode nascer NOT NULL
+         sem valor padrão, e não existe um default sensato pra esses campos (diferente de
+         CANCELADA). A obrigatoriedade já está garantida pelo @NotNull da entidade em
+         qualquer save novo pela aplicação. -->
+
+    <changeSet id="2" author="axctg3">
+        <createIndex indexName="IDX_NOTA_SAIDA_DATA_EMISSAO" tableName="NOTA_SAIDA">
+            <column name="DATA_EMISSAO"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="3" author="axctg3">
+        <createIndex indexName="IDX_NOTA_SAIDA_PARCEIRO" tableName="NOTA_SAIDA">
+            <column name="PARCEIRO_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="PARCEIRO_ID" baseTableName="NOTA_SAIDA"
+                                 constraintName="FK_NOTA_SAIDA_ON_PARCEIRO" referencedColumnNames="ID"
+                                 referencedTableName="PARCEIRO"/>
+    </changeSet>
+
+    <changeSet id="4" author="axctg3">
+        <createIndex indexName="IDX_NOTA_SAIDA_NATUREZA" tableName="NOTA_SAIDA">
+            <column name="NATUREZA_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="NATUREZA_ID" baseTableName="NOTA_SAIDA"
+                                 constraintName="FK_NOTA_SAIDA_ON_NATUREZA" referencedColumnNames="ID"
+                                 referencedTableName="NATUREZA_OPERACAO"/>
+    </changeSet>
+
+    <!-- Substitui o índice único original (NUMERO+COD_EMPRESA, de
+         06-100612-c1f40fd1-notasaida-criar.xml) por NUMERO+COD_EMPRESA+ESPECIE+SERIE —
+         cada série tem sua própria numeração, então o mesmo NUMERO pode repetir entre
+         séries/espécies diferentes. -->
+    <changeSet id="5" author="axctg3" dbms="postgresql">
+        <dropIndex indexName="IDX_NOTA_SAIDA_UNQ_NUMERO_COD_EMPRESA" tableName="NOTA_SAIDA"/>
+    </changeSet>
+
+    <changeSet id="6" author="axctg3" dbms="hsqldb">
+        <dropIndex indexName="IDX_NOTA_SAIDA_UNQ_NUMERO_COD_EMPRESA" tableName="NOTA_SAIDA"/>
+    </changeSet>
+
+    <changeSet id="7" author="axctg3" dbms="postgresql">
+        <createIndex indexName="IDX_NOTA_SAIDA_UNQ" tableName="NOTA_SAIDA" unique="true">
+            <column name="NUMERO"/>
+            <column name="COD_EMPRESA"/>
+            <column name="ESPECIE"/>
+            <column name="SERIE"/>
+        </createIndex>
+
+        <modifySql>
+            <append value="where DELETED_DATE is null"/>
+        </modifySql>
+    </changeSet>
+
+    <changeSet id="8" author="axctg3" dbms="hsqldb">
+        <createIndex indexName="IDX_NOTA_SAIDA_UNQ" tableName="NOTA_SAIDA" unique="true">
+            <column name="NUMERO"/>
+            <column name="COD_EMPRESA"/>
+            <column name="ESPECIE"/>
+            <column name="SERIE"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
