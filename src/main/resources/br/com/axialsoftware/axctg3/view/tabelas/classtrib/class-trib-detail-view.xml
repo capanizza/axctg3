@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://classTribDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="classTribDc"
+                  class="br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib">
+            <fetchPlan extends="_base"/>
+            <loader id="classTribDl"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <vbox id="form" width="100%">
+            <hbox width="100%">
+                <integerField id="codigoField"
+                              property="codigo"
+                              dataContainer="classTribDc"
+                              width="12%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassTrib.codigo"/>
+                <integerField id="cstField"
+                              property="cst"
+                              dataContainer="classTribDc"
+                              width="12%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassTrib.cst"/>
+                <textField id="tipoAliquotaField"
+                           property="tipoAliquota"
+                           dataContainer="classTribDc"
+                           width="26%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassTrib.tipoAliquota"/>
+                <textField id="nomenclaturaField"
+                           property="nomenclatura"
+                           dataContainer="classTribDc"
+                           width="26%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassTrib.nomenclatura"/>
+                <datePicker id="dataAtualizacaoField"
+                            property="dataAtualizacao"
+                            dataContainer="classTribDc"
+                            width="24%" themeNames="small"
+                            label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassTrib.dataAtualizacao"/>
+            </hbox>
+            <textArea id="descricaoField"
+                      property="descricao"
+                      dataContainer="classTribDc"
+                      width="100%" minRows="2" maxRows="5"
+                      label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassTrib.descricao"/>
+            <textField id="descricaoTratamentoTributarioField"
+                       property="descricaoTratamentoTributario"
+                       dataContainer="classTribDc"
+                       width="100%" themeNames="small"
+                       label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassTrib.descricaoTratamentoTributario"/>
+            <hbox width="100%">
+                <checkbox id="incompativelComSuspensaoField"
+                          property="incompativelComSuspensao"
+                          dataContainer="classTribDc"
+                          width="25%"
+                          label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassTrib.incompativelComSuspensao"/>
+                <checkbox id="exigeGrupoDesoneracaoField"
+                          property="exigeGrupoDesoneracao"
+                          dataContainer="classTribDc"
+                          width="25%"
+                          label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassTrib.exigeGrupoDesoneracao"/>
+                <checkbox id="possuiPercentualReducaoField"
+                          property="possuiPercentualReducao"
+                          dataContainer="classTribDc"
+                          width="25%"
+                          label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassTrib.possuiPercentualReducao"/>
+                <checkbox id="aplicavelNfeField"
+                          property="aplicavelNfe"
+                          dataContainer="classTribDc"
+                          width="25%"
+                          label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassTrib.aplicavelNfe"/>
+            </hbox>
+            <hbox width="100%">
+                <checkbox id="indicaApropriacaoCreditoAdquirenteCbsField"
+                          property="indicaApropriacaoCreditoAdquirenteCbs"
+                          dataContainer="classTribDc"
+                          width="25%"
+                          label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassTrib.indicaApropriacaoCreditoAdquirenteCbs"/>
+                <checkbox id="indicaApropriacaoCreditoAdquirenteIbsField"
+                          property="indicaApropriacaoCreditoAdquirenteIbs"
+                          dataContainer="classTribDc"
+                          width="25%"
+                          label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassTrib.indicaApropriacaoCreditoAdquirenteIbs"/>
+                <checkbox id="indicaCreditoPresumidoFornecedorField"
+                          property="indicaCreditoPresumidoFornecedor"
+                          dataContainer="classTribDc"
+                          width="25%"
+                          label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassTrib.indicaCreditoPresumidoFornecedor"/>
+                <checkbox id="indicaCreditoPresumidoAdquirenteField"
+                          property="indicaCreditoPresumidoAdquirente"
+                          dataContainer="classTribDc"
+                          width="25%"
+                          label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassTrib.indicaCreditoPresumidoAdquirente"/>
+            </hbox>
+            <hbox width="100%">
+                <textField id="creditoOperacaoAntecedenteField"
+                           property="creditoOperacaoAntecedente"
+                           dataContainer="classTribDc"
+                           width="34%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassTrib.creditoOperacaoAntecedente"/>
+                <bigDecimalField id="percentualReducaoCbsField"
+                                 property="percentualReducaoCbs"
+                                 dataContainer="classTribDc"
+                                 width="22%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassTrib.percentualReducaoCbs"/>
+                <bigDecimalField id="percentualReducaoIbsUfField"
+                                 property="percentualReducaoIbsUf"
+                                 dataContainer="classTribDc"
+                                 width="22%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassTrib.percentualReducaoIbsUf"/>
+                <bigDecimalField id="percentualReducaoIbsMunField"
+                                 property="percentualReducaoIbsMun"
+                                 dataContainer="classTribDc"
+                                 width="22%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassTrib.percentualReducaoIbsMun"/>
+            </hbox>
+            <textField id="siglasDfeField"
+                       property="siglasDfe"
+                       dataContainer="classTribDc"
+                       width="100%" readOnly="true" themeNames="small"
+                       label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassTrib.siglasDfe"/>
+        </vbox>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/09-180000-c1f40fd1-classtrib-criar.xml">
+    <changeSet id="1" author="axctg3">
+        <createTable tableName="CLASS_TRIB">
+            <column name="ID" type="${uuid.type}">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_CLASS_TRIB"/>
+            </column>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="${offsetDateTime.type}"/>
+            <column name="LAST_MODIFIED_BY" type="VARCHAR(255)"/>
+            <column name="LAST_MODIFIED_DATE" type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY" type="VARCHAR(255)"/>
+            <column name="DELETED_DATE" type="${offsetDateTime.type}"/>
+            <column name="CODIGO" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CST" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DESCRICAO" type="CLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TIPO_ALIQUOTA" type="VARCHAR(60)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="NOMENCLATURA" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DESCRICAO_TRATAMENTO_TRIBUTARIO" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="INCOMPATIVEL_COM_SUSPENSAO" type="BOOLEAN"/>
+            <column name="EXIGE_GRUPO_DESONERACAO" type="BOOLEAN"/>
+            <column name="POSSUI_PERCENTUAL_REDUCAO" type="BOOLEAN"/>
+            <column name="IND_APROP_CREDITO_ADQUIRENTE_CBS" type="BOOLEAN"/>
+            <column name="IND_APROP_CREDITO_ADQUIRENTE_IBS" type="BOOLEAN"/>
+            <column name="IND_CREDITO_PRESUMIDO_FORNECEDOR" type="BOOLEAN"/>
+            <column name="IND_CREDITO_PRESUMIDO_ADQUIRENTE" type="BOOLEAN"/>
+            <column name="CREDITO_OPERACAO_ANTECEDENTE" type="VARCHAR(30)"/>
+            <column name="PCT_REDUCAO_CBS" type="DECIMAL(9,4)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PCT_REDUCAO_IBS_UF" type="DECIMAL(9,4)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PCT_REDUCAO_IBS_MUN" type="DECIMAL(9,4)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="APLICAVEL_NFE" type="BOOLEAN"/>
+            <column name="SIGLAS_DFE" type="VARCHAR(200)"/>
+            <column name="DATA_ATUALIZACAO" type="DATE"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="2" author="axctg3" dbms="postgresql">
+        <createIndex indexName="IDX_CLASS_TRIB_UNQ" tableName="CLASS_TRIB" unique="true">
+            <column name="CODIGO"/>
+        </createIndex>
+
+        <modifySql>
+            <append value="where DELETED_DATE is null"/>
+        </modifySql>
+    </changeSet>
+    <changeSet id="3" author="axctg3">
+        <createIndex indexName="IDX_CLASS_TRIB_APLICAVEL_NFE" tableName="CLASS_TRIB">
+            <column name="APLICAVEL_NFE"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="4" author="axctg3">
+        <!-- Seed inicial com os 161 códigos cClassTrib do arquivo oficial (formato
+             NFe.io) baixado em 2026-08-09 — atualizável depois pela tela de import do
+             ClassTrib.list, que lê o mesmo formato JSON. -->
+        <loadData tableName="CLASS_TRIB"
+                  file="/br/com/axialsoftware/axctg3/liquibase/data/class_trib_seed.csv"
+                  separator=";"
+                  encoding="UTF-8"
+                  relativeToChangelogFile="false">
+            <column name="ID" type="UUID"/>
+            <column name="VERSION" type="NUMERIC"/>
+            <column name="CODIGO" type="NUMERIC"/>
+            <column name="CST" type="NUMERIC"/>
+            <column name="DESCRICAO" type="STRING"/>
+            <column name="TIPO_ALIQUOTA" type="STRING"/>
+            <column name="NOMENCLATURA" type="STRING"/>
+            <column name="DESCRICAO_TRATAMENTO_TRIBUTARIO" type="STRING"/>
+            <column name="INCOMPATIVEL_COM_SUSPENSAO" type="BOOLEAN"/>
+            <column name="EXIGE_GRUPO_DESONERACAO" type="BOOLEAN"/>
+            <column name="POSSUI_PERCENTUAL_REDUCAO" type="BOOLEAN"/>
+            <column name="IND_APROP_CREDITO_ADQUIRENTE_CBS" type="BOOLEAN"/>
+            <column name="IND_APROP_CREDITO_ADQUIRENTE_IBS" type="BOOLEAN"/>
+            <column name="IND_CREDITO_PRESUMIDO_FORNECEDOR" type="BOOLEAN"/>
+            <column name="IND_CREDITO_PRESUMIDO_ADQUIRENTE" type="BOOLEAN"/>
+            <column name="CREDITO_OPERACAO_ANTECEDENTE" type="STRING"/>
+            <column name="PCT_REDUCAO_CBS" type="NUMERIC"/>
+            <column name="PCT_REDUCAO_IBS_UF" type="NUMERIC"/>
+            <column name="PCT_REDUCAO_IBS_MUN" type="NUMERIC"/>
+            <column name="APLICAVEL_NFE" type="BOOLEAN"/>
+            <column name="SIGLAS_DFE" type="STRING"/>
+            <column name="DATA_ATUALIZACAO" type="DATE"/>
+        </loadData>
+    </changeSet>
+</databaseChangeLog>

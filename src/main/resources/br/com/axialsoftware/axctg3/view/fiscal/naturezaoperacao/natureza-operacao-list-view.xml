@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
+      title="msg://naturezaOperacaoListView.title"
+      focusComponent="naturezaOperacaosDataGrid">
+    <data>
+        <collection id="naturezaOperacaosDc"
+                    class="br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao">
+            <fetchPlan extends="_base">
+                <property name="contaContabil" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="naturezaOperacaosDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from NaturezaOperacao e
+                    where e.codEmpresa = :codEmpresa
+                    order by e.codigo]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <startSlot>
+                <button id="createButton" action="naturezaOperacaosDataGrid.createAction" themeNames="small"/>
+                <button id="editButton" action="naturezaOperacaosDataGrid.editAction" themeNames="small"/>
+                <button id="removeButton" action="naturezaOperacaosDataGrid.removeAction" themeNames="small"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="naturezaOperacaosDl"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="naturezaOperacaosDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="naturezaOperacaosDc"
+                  columnReorderingAllowed="true" themeNames="small">
+            <actions>
+                <action id="createAction" type="list_create"/>
+                <action id="editAction" type="list_edit"/>
+                <action id="removeAction" type="list_remove"/>
+            </actions>
+            <columns resizable="true">
+                <column property="codigo" width="10%" filterable="true"/>
+                <column property="nome" width="40%" filterable="true"/>
+                <column property="cfop" width="10%" filterable="true"/>
+                <column property="contaContabil" width="30%" filterable="true"/>
+                <column property="venda" width="10%" textAlign="CENTER"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction" themeNames="small"/>
+            <button id="discardButton" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

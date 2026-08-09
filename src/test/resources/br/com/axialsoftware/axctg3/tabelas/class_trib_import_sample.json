@@ -1,0 +1,71 @@
+[
+  {
+    "codigo": "999001",
+    "descricao": "Classificação sintética de teste — aplicável à NFe.",
+    "tipoAliquota": "Padrão",
+    "nomenclatura": "NBS ou NCM",
+    "descricaoTratamentoTributario": "Tributação integral",
+    "incompativelComSuspensao": false,
+    "exigeGrupoDesoneracao": false,
+    "possuiPercentualReducao": false,
+    "indicaApropriacaoCreditoAdquirenteCbs": true,
+    "indicaApropriacaoCreditoAdquirenteIbs": true,
+    "indicaCreditoPresumidoFornecedor": false,
+    "indicaCreditoPresumidoAdquirente": false,
+    "creditoOperacaoAntecedente": "Manutenção",
+    "percentualReducaoCbs": 0,
+    "percentualReducaoIbsUf": 0,
+    "percentualReducaoIbsMun": 0,
+    "tiposDfeClassificacao": [
+      {"tipo": 55, "sigla": "NFe", "descricao": "Nota Fiscal Eletrônica"},
+      {"tipo": 65, "sigla": "NFCe", "descricao": "Nota Fiscal de Consumidor Eletrônica"}
+    ],
+    "dataAtualizacao": "2025-12-15"
+  },
+  {
+    "codigo": "999002",
+    "descricao": "Classificação sintética de teste — não aplicável à NFe, com redução.",
+    "tipoAliquota": "Sem alíquota",
+    "nomenclatura": "NBS",
+    "descricaoTratamentoTributario": "Alíquota reduzida em 60%",
+    "incompativelComSuspensao": true,
+    "exigeGrupoDesoneracao": false,
+    "possuiPercentualReducao": true,
+    "indicaApropriacaoCreditoAdquirenteCbs": false,
+    "indicaApropriacaoCreditoAdquirenteIbs": false,
+    "indicaCreditoPresumidoFornecedor": true,
+    "indicaCreditoPresumidoAdquirente": false,
+    "creditoOperacaoAntecedente": "Anulação",
+    "percentualReducaoCbs": 60,
+    "percentualReducaoIbsUf": 60,
+    "percentualReducaoIbsMun": 60,
+    "tiposDfeClassificacao": [
+      {"sigla": "NFSe", "descricao": "Nota Fiscal de Serviços Eletrônica"}
+    ],
+    "dataAtualizacao": "2026-04-15"
+  },
+  {
+    "codigo": "999003",
+    "descricao": "Classificação sintética de teste — sem crédito de operação antecedente.",
+    "tipoAliquota": "Sem alíquota",
+    "nomenclatura": "Não possui",
+    "descricaoTratamentoTributario": "Desenquadramento do Simples Nacional",
+    "incompativelComSuspensao": false,
+    "exigeGrupoDesoneracao": false,
+    "possuiPercentualReducao": false,
+    "indicaApropriacaoCreditoAdquirenteCbs": false,
+    "indicaApropriacaoCreditoAdquirenteIbs": false,
+    "indicaCreditoPresumidoFornecedor": false,
+    "indicaCreditoPresumidoAdquirente": false,
+    "creditoOperacaoAntecedente": null,
+    "percentualReducaoCbs": 0,
+    "percentualReducaoIbsUf": 0,
+    "percentualReducaoIbsMun": 0,
+    "tiposDfeClassificacao": [],
+    "dataAtualizacao": "2026-01-23"
+  },
+  {
+    "descricao": "Linha inválida — sem código, deve ser ignorada.",
+    "tipoAliquota": "Padrão"
+  }
+]

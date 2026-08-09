@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/09-150000-c1f40fd1-natureza_operacao-venda-nullable.xml">
+    <changeSet id="1" author="axctg3">
+        <!-- Boolean NOT NULL vira propriedade obrigatória pro Jmix; como o valor vazio do
+             Checkbox do Vaadin é `false`, desmarcar o campo VENDA passava a ser rejeitado
+             como campo em branco. Nenhum outro booleano editável do projeto (Parceiro.
+             cliente/fornecedor, MovimentoBanco.entrada/tipoSaldo, User.active, Empresa.
+             identMf/indEscCons) usa nullable=false por esse motivo. -->
+        <dropNotNullConstraint tableName="NATUREZA_OPERACAO" columnName="VENDA" columnDataType="BOOLEAN"/>
+    </changeSet>
+</databaseChangeLog>
