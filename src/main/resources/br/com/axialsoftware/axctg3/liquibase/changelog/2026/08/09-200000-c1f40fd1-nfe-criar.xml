@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/09-200000-c1f40fd1-nfe-criar.xml">
+    <changeSet id="1" author="axctg3">
+        <createTable tableName="NFE">
+            <column name="ID" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_NFE"/>
+            </column>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="${offsetDateTime.type}"/>
+            <column name="LAST_MODIFIED_BY" type="VARCHAR(255)"/>
+            <column name="LAST_MODIFIED_DATE" type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY" type="VARCHAR(255)"/>
+            <column name="DELETED_DATE" type="${offsetDateTime.type}"/>
+            <column name="CHAVE" type="VARCHAR(44)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="COD_EMPRESA" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="C_UF" type="INT"/>
+            <column name="C_NF" type="INT"/>
+            <column name="NAT_OP" type="VARCHAR(60)"/>
+            <column name="MOD" type="INT"/>
+            <column name="SERIE" type="INT"/>
+            <column name="N_NF" type="INT"/>
+            <column name="DH_EMI" type="${offsetDateTime.type}"/>
+            <column name="DH_SAI_ENT" type="${offsetDateTime.type}"/>
+            <column name="TP_NF" type="INT"/>
+            <column name="ID_DEST" type="INT"/>
+            <column name="C_MUN_FG" type="INT"/>
+            <column name="TP_IMP" type="INT"/>
+            <column name="TP_EMIS" type="INT"/>
+            <column name="C_DV" type="INT"/>
+            <column name="TP_AMB" type="INT"/>
+            <column name="FIN_NFE" type="INT"/>
+            <column name="IND_FINAL" type="INT"/>
+            <column name="IND_PRES" type="INT"/>
+            <column name="PROC_EMI" type="INT"/>
+            <column name="VER_PROC" type="VARCHAR(20)"/>
+            <column name="EMIT_CNPJ" type="VARCHAR(14)"/>
+            <column name="EMIT_X_NOME" type="VARCHAR(60)"/>
+            <column name="EMIT_X_FANT" type="VARCHAR(60)"/>
+            <column name="EMIT_X_LGR" type="VARCHAR(60)"/>
+            <column name="EMIT_NRO" type="VARCHAR(10)"/>
+            <column name="EMIT_X_CPL" type="VARCHAR(60)"/>
+            <column name="EMIT_X_BAIRRO" type="VARCHAR(60)"/>
+            <column name="EMIT_C_MUN" type="INT"/>
+            <column name="EMIT_X_MUN" type="VARCHAR(60)"/>
+            <column name="EMIT_UF" type="VARCHAR(2)"/>
+            <column name="EMIT_CEP" type="VARCHAR(8)"/>
+            <column name="EMIT_FONE" type="VARCHAR(15)"/>
+            <column name="EMIT_IE" type="VARCHAR(14)"/>
+            <column name="EMIT_CRT" type="INT"/>
+            <column name="DEST_CNPJ" type="VARCHAR(14)"/>
+            <column name="DEST_CPF" type="VARCHAR(11)"/>
+            <column name="DEST_X_NOME" type="VARCHAR(60)"/>
+            <column name="DEST_X_LGR" type="VARCHAR(60)"/>
+            <column name="DEST_NRO" type="VARCHAR(10)"/>
+            <column name="DEST_X_CPL" type="VARCHAR(60)"/>
+            <column name="DEST_X_BAIRRO" type="VARCHAR(60)"/>
+            <column name="DEST_C_MUN" type="INT"/>
+            <column name="DEST_X_MUN" type="VARCHAR(60)"/>
+            <column name="DEST_UF" type="VARCHAR(2)"/>
+            <column name="DEST_CEP" type="VARCHAR(8)"/>
+            <column name="DEST_FONE" type="VARCHAR(15)"/>
+            <column name="DEST_IND_IE" type="INT"/>
+            <column name="DEST_IE" type="VARCHAR(14)"/>
+            <column name="DEST_EMAIL" type="VARCHAR(60)"/>
+            <column name="V_BC" type="DECIMAL(19, 2)"/>
+            <column name="V_ICMS" type="DECIMAL(19, 2)"/>
+            <column name="V_ICMS_DESON" type="DECIMAL(19, 2)"/>
+            <column name="V_FCP_UF_DEST" type="DECIMAL(19, 2)"/>
+            <column name="V_ICMS_UF_DEST" type="DECIMAL(19, 2)"/>
+            <column name="V_ICMS_UF_REMET" type="DECIMAL(19, 2)"/>
+            <column name="V_FCP" type="DECIMAL(19, 2)"/>
+            <column name="V_BC_ST" type="DECIMAL(19, 2)"/>
+            <column name="V_ST" type="DECIMAL(19, 2)"/>
+            <column name="V_FCP_ST" type="DECIMAL(19, 2)"/>
+            <column name="V_FCP_ST_RET" type="DECIMAL(19, 2)"/>
+            <column name="V_PROD" type="DECIMAL(19, 2)"/>
+            <column name="V_FRETE" type="DECIMAL(19, 2)"/>
+            <column name="V_SEG" type="DECIMAL(19, 2)"/>
+            <column name="V_DESC" type="DECIMAL(19, 2)"/>
+            <column name="V_II" type="DECIMAL(19, 2)"/>
+            <column name="V_IPI" type="DECIMAL(19, 2)"/>
+            <column name="V_IPI_DEVOL" type="DECIMAL(19, 2)"/>
+            <column name="V_PIS" type="DECIMAL(19, 2)"/>
+            <column name="V_COFINS" type="DECIMAL(19, 2)"/>
+            <column name="V_OUTRO" type="DECIMAL(19, 2)"/>
+            <column name="V_NF" type="DECIMAL(19, 2)"/>
+            <column name="V_TOT_TRIB" type="DECIMAL(19, 2)"/>
+            <column name="MOD_FRETE" type="INT"/>
+            <column name="TRANSP_CNPJ" type="VARCHAR(14)"/>
+            <column name="TRANSP_CPF" type="VARCHAR(11)"/>
+            <column name="TRANSP_X_NOME" type="VARCHAR(60)"/>
+            <column name="TRANSP_IE" type="VARCHAR(14)"/>
+            <column name="TRANSP_X_ENDER" type="VARCHAR(60)"/>
+            <column name="TRANSP_X_MUN" type="VARCHAR(60)"/>
+            <column name="TRANSP_UF" type="VARCHAR(2)"/>
+            <column name="VEIC_PLACA" type="VARCHAR(7)"/>
+            <column name="VEIC_UF" type="VARCHAR(2)"/>
+            <column name="VEIC_RNTC" type="VARCHAR(20)"/>
+            <column name="NUM_FAT" type="VARCHAR(60)"/>
+            <column name="VALOR_ORIG_FAT" type="DECIMAL(19, 2)"/>
+            <column name="VALOR_DESC_FAT" type="DECIMAL(19, 2)"/>
+            <column name="VALOR_LIQ_FAT" type="DECIMAL(19, 2)"/>
+            <column name="V_TROCO" type="DECIMAL(19, 2)"/>
+            <column name="INF_AD_FISCO" type="CLOB"/>
+            <column name="INF_CPL" type="CLOB"/>
+            <column name="PROT_TP_AMB" type="INT"/>
+            <column name="PROT_VER_APLIC" type="VARCHAR(20)"/>
+            <column name="PROT_DH_RECBTO" type="${offsetDateTime.type}"/>
+            <column name="PROT_N_PROT" type="VARCHAR(15)"/>
+            <column name="PROT_DIG_VAL" type="VARCHAR(28)"/>
+            <column name="PROT_C_STAT" type="INT"/>
+            <column name="PROT_X_MOTIVO" type="VARCHAR(255)"/>
+            <column name="XML_ENVIO" type="CLOB"/>
+            <column name="XML_RETORNO" type="CLOB"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="2" author="axctg3" dbms="postgresql">
+        <createIndex indexName="IDX_NFE_UNQ_CHAVE" tableName="NFE" unique="true">
+            <column name="CHAVE"/>
+        </createIndex>
+
+        <modifySql>
+            <append value="where DELETED_DATE is null"/>
+        </modifySql>
+    </changeSet>
+    <changeSet id="3" author="axctg3">
+        <createIndex indexName="IDX_NFE_COD_EMPRESA" tableName="NFE">
+            <column name="COD_EMPRESA"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="4" author="axctg3">
+        <createIndex indexName="IDX_NFE_DH_EMI" tableName="NFE">
+            <column name="DH_EMI"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
+      title="msg://nfeListView.title"
+      focusComponent="nfesDataGrid">
+    <data>
+        <collection id="nfesDc"
+                    class="br.com.axialsoftware.axctg3.entity.fiscal.Nfe">
+            <fetchPlan extends="_base"/>
+            <loader id="nfesDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from Nfe e
+                    where e.codEmpresa = :codEmpresa
+                    order by e.dhEmi desc]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <startSlot>
+                <button id="createButton" action="nfesDataGrid.createAction" themeNames="small"/>
+                <button id="editButton" action="nfesDataGrid.editAction" themeNames="small"/>
+                <button id="removeButton" action="nfesDataGrid.removeAction" themeNames="small"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="nfesDl"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="nfesDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="nfesDc"
+                  columnReorderingAllowed="true" themeNames="small">
+            <actions>
+                <action id="createAction" type="list_create"/>
+                <action id="editAction" type="list_edit"/>
+                <action id="removeAction" type="list_remove"/>
+            </actions>
+            <columns resizable="true">
+                <column property="numeroNf" filterable="true" width="8%"/>
+                <column property="serie" filterable="true" width="6%"/>
+                <column property="dhEmi" filterable="true" width="12%"/>
+                <column property="destXNome" filterable="true" width="26%"/>
+                <column property="chave" filterable="true" width="22%"/>
+                <column property="protCStat" filterable="true" width="8%"/>
+                <column property="protXMotivo" filterable="true" width="10%"/>
+                <column property="valorNf" filterable="true" textAlign="END" width="8%"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction" themeNames="small"/>
+            <button id="discardButton" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>
