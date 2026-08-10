@@ -172,6 +172,29 @@
                     </hbox>
                 </vbox>
             </tab>
+            <tab id="ibsCbsIsTab" label="IBS/CBS/IS">
+                <vbox width="100%">
+                    <hbox width="100%">
+                        <bigDecimalField id="valorBcIbsCbsField" property="valorBcIbsCbs" dataContainer="nfeDc" width="19%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorBcIbsCbs"/>
+                        <bigDecimalField id="valorDifIbsUfField" property="valorDifIbsUf" dataContainer="nfeDc" width="19%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorDifIbsUf"/>
+                        <bigDecimalField id="valorDevTribIbsUfField" property="valorDevTribIbsUf" dataContainer="nfeDc" width="19%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorDevTribIbsUf"/>
+                        <bigDecimalField id="valorIbsUfField" property="valorIbsUf" dataContainer="nfeDc" width="19%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorIbsUf"/>
+                        <bigDecimalField id="valorDifIbsMunField" property="valorDifIbsMun" dataContainer="nfeDc" width="19%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorDifIbsMun"/>
+                    </hbox>
+                    <hbox width="100%">
+                        <bigDecimalField id="valorDevTribIbsMunField" property="valorDevTribIbsMun" dataContainer="nfeDc" width="19%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorDevTribIbsMun"/>
+                        <bigDecimalField id="valorIbsMunField" property="valorIbsMun" dataContainer="nfeDc" width="19%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorIbsMun"/>
+                        <bigDecimalField id="valorIbsField" property="valorIbs" dataContainer="nfeDc" width="19%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorIbs"/>
+                        <bigDecimalField id="valorDifCbsField" property="valorDifCbs" dataContainer="nfeDc" width="19%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorDifCbs"/>
+                        <bigDecimalField id="valorDevTribCbsField" property="valorDevTribCbs" dataContainer="nfeDc" width="19%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorDevTribCbs"/>
+                    </hbox>
+                    <hbox width="100%">
+                        <bigDecimalField id="valorCbsField" property="valorCbs" dataContainer="nfeDc" width="19%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorCbs"/>
+                        <bigDecimalField id="valorIsField" property="valorIs" dataContainer="nfeDc" width="19%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorIs"/>
+                        <bigDecimalField id="valorNfTotField" property="valorNfTot" dataContainer="nfeDc" width="19%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorNfTot"/>
+                    </hbox>
+                </vbox>
+            </tab>
             <tab id="transporteTab" label="Transporte">
                 <vbox width="100%">
                     <hbox width="100%" expand="transpXNomeField">

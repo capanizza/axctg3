@@ -47,6 +47,14 @@ import java.util.UUID;
  * igual a {@link br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib}), diferente do
  * padrão de 2 casas usado em {@link NotaSaida}/{@link Produto} — aqui a fidelidade ao
  * schema oficial pesa mais que a consistência com o resto do projeto.
+ *
+ * <p><b>Reforma Tributária (IBS/CBS/Imposto Seletivo — LC 214/2025, NT 2025.002-RTC)</b>: o
+ * total da nota (grupo {@code W03}/{@code IBSCBSTot}/{@code ISTot}) está coberto — soma de
+ * {@code vIBSUF}/{@code vIBSMun}/{@code vIBS}/{@code vCBS}/{@code vIS} e {@code vNFTot}. O
+ * detalhamento por tributo (alíquota, base, diferimento etc.) fica em {@link NfeItem} (grupo
+ * {@code UB}). <b>Fora de escopo</b> dentro da reforma, mesmo critério acima: totais de
+ * crédito presumido, tributação monofásica de combustíveis ({@code gMono}) e estorno de
+ * crédito ({@code gEstornoCred}) — ver o Javadoc de {@link NfeItem} para a lista completa.
  */
 @JmixEntity
 @Table(name = "NFE", indexes = {
@@ -360,6 +368,76 @@ public class Nfe {
     @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
     @Column(name = "V_TOT_TRIB", precision = 19, scale = 2)
     private BigDecimal valorTotTrib = BigDecimal.ZERO;
+
+    // ---- IBSCBSTot / ISTot (Grupo W03 — Total da NF-e com IBS/CBS/IS) — Reforma Tributária,
+    // LC 214/2025, NT 2025.002-RTC. Núcleo: somatório dos campos do grupo UB de NfeItem. Fora de
+    // escopo (mesmo critério do restante da entidade — ver NfeItem): totais de crédito presumido,
+    // tributação monofásica de combustíveis (gMono) e estorno de crédito (gEstornoCred).
+
+    // vBCIBSCBS
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "V_BC_IBS_CBS", precision = 19, scale = 2)
+    private BigDecimal valorBcIbsCbs = BigDecimal.ZERO;
+
+    // gIBSUF/vDif (total)
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "V_DIF_IBS_UF", precision = 19, scale = 2)
+    private BigDecimal valorDifIbsUf = BigDecimal.ZERO;
+
+    // gIBSUF/vDevTrib (total)
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "V_DEV_TRIB_IBS_UF", precision = 19, scale = 2)
+    private BigDecimal valorDevTribIbsUf = BigDecimal.ZERO;
+
+    // vIBSUF (total)
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "V_IBS_UF", precision = 19, scale = 2)
+    private BigDecimal valorIbsUf = BigDecimal.ZERO;
+
+    // gIBSMun/vDif (total)
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "V_DIF_IBS_MUN", precision = 19, scale = 2)
+    private BigDecimal valorDifIbsMun = BigDecimal.ZERO;
+
+    // gIBSMun/vDevTrib (total)
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "V_DEV_TRIB_IBS_MUN", precision = 19, scale = 2)
+    private BigDecimal valorDevTribIbsMun = BigDecimal.ZERO;
+
+    // vIBSMun (total)
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "V_IBS_MUN", precision = 19, scale = 2)
+    private BigDecimal valorIbsMun = BigDecimal.ZERO;
+
+    // vIBS (total geral — soma de vIBSUF e vIBSMun)
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "V_IBS", precision = 19, scale = 2)
+    private BigDecimal valorIbs = BigDecimal.ZERO;
+
+    // gCBS/vDif (total)
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "V_DIF_CBS", precision = 19, scale = 2)
+    private BigDecimal valorDifCbs = BigDecimal.ZERO;
+
+    // gCBS/vDevTrib (total)
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "V_DEV_TRIB_CBS", precision = 19, scale = 2)
+    private BigDecimal valorDevTribCbs = BigDecimal.ZERO;
+
+    // vCBS (total)
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "V_CBS", precision = 19, scale = 2)
+    private BigDecimal valorCbs = BigDecimal.ZERO;
+
+    // vIS (total do Imposto Seletivo)
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "V_IS", precision = 19, scale = 2)
+    private BigDecimal valorIs = BigDecimal.ZERO;
+
+    // vNFTot — valor total da NF-e já somando IBS/CBS/IS (tributos "por fora")
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "V_NF_TOT", precision = 19, scale = 2)
+    private BigDecimal valorNfTot = BigDecimal.ZERO;
 
     // ---- transp (Transporte) — só transportadora/veículo únicos (sem reboque/vagão/balsa) ----
 
@@ -739,6 +817,110 @@ public class Nfe {
 
     public void setValorTotTrib(BigDecimal valorTotTrib) {
         this.valorTotTrib = valorTotTrib;
+    }
+
+    public BigDecimal getValorBcIbsCbs() {
+        return valorBcIbsCbs;
+    }
+
+    public void setValorBcIbsCbs(BigDecimal valorBcIbsCbs) {
+        this.valorBcIbsCbs = valorBcIbsCbs;
+    }
+
+    public BigDecimal getValorDifIbsUf() {
+        return valorDifIbsUf;
+    }
+
+    public void setValorDifIbsUf(BigDecimal valorDifIbsUf) {
+        this.valorDifIbsUf = valorDifIbsUf;
+    }
+
+    public BigDecimal getValorDevTribIbsUf() {
+        return valorDevTribIbsUf;
+    }
+
+    public void setValorDevTribIbsUf(BigDecimal valorDevTribIbsUf) {
+        this.valorDevTribIbsUf = valorDevTribIbsUf;
+    }
+
+    public BigDecimal getValorIbsUf() {
+        return valorIbsUf;
+    }
+
+    public void setValorIbsUf(BigDecimal valorIbsUf) {
+        this.valorIbsUf = valorIbsUf;
+    }
+
+    public BigDecimal getValorDifIbsMun() {
+        return valorDifIbsMun;
+    }
+
+    public void setValorDifIbsMun(BigDecimal valorDifIbsMun) {
+        this.valorDifIbsMun = valorDifIbsMun;
+    }
+
+    public BigDecimal getValorDevTribIbsMun() {
+        return valorDevTribIbsMun;
+    }
+
+    public void setValorDevTribIbsMun(BigDecimal valorDevTribIbsMun) {
+        this.valorDevTribIbsMun = valorDevTribIbsMun;
+    }
+
+    public BigDecimal getValorIbsMun() {
+        return valorIbsMun;
+    }
+
+    public void setValorIbsMun(BigDecimal valorIbsMun) {
+        this.valorIbsMun = valorIbsMun;
+    }
+
+    public BigDecimal getValorIbs() {
+        return valorIbs;
+    }
+
+    public void setValorIbs(BigDecimal valorIbs) {
+        this.valorIbs = valorIbs;
+    }
+
+    public BigDecimal getValorDifCbs() {
+        return valorDifCbs;
+    }
+
+    public void setValorDifCbs(BigDecimal valorDifCbs) {
+        this.valorDifCbs = valorDifCbs;
+    }
+
+    public BigDecimal getValorDevTribCbs() {
+        return valorDevTribCbs;
+    }
+
+    public void setValorDevTribCbs(BigDecimal valorDevTribCbs) {
+        this.valorDevTribCbs = valorDevTribCbs;
+    }
+
+    public BigDecimal getValorCbs() {
+        return valorCbs;
+    }
+
+    public void setValorCbs(BigDecimal valorCbs) {
+        this.valorCbs = valorCbs;
+    }
+
+    public BigDecimal getValorIs() {
+        return valorIs;
+    }
+
+    public void setValorIs(BigDecimal valorIs) {
+        this.valorIs = valorIs;
+    }
+
+    public BigDecimal getValorNfTot() {
+        return valorNfTot;
+    }
+
+    public void setValorNfTot(BigDecimal valorNfTot) {
+        this.valorNfTot = valorNfTot;
     }
 
     public BigDecimal getValorNf() {
