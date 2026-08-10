@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://nfeDetailView.title"
+      focusComponent="formTabs">
+    <data>
+        <instance id="nfeDc"
+                  class="br.com.axialsoftware.axctg3.entity.fiscal.Nfe">
+            <fetchPlan extends="_base">
+                <property name="itens" fetchPlan="_base"/>
+                <property name="duplicatas" fetchPlan="_base"/>
+                <property name="pagamentos" fetchPlan="_base"/>
+                <property name="volumes" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="nfeDl"/>
+            <collection id="itensDc" property="itens"/>
+            <collection id="duplicatasDc" property="duplicatas"/>
+            <collection id="pagamentosDc" property="pagamentos"/>
+            <collection id="volumesDc" property="volumes"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <tabSheet id="formTabs" width="100%" height="100%">
+            <tab id="identificacaoTab" label="Identificação">
+                <vbox width="100%">
+                    <hbox width="100%">
+                        <textField id="chaveField" property="chave" dataContainer="nfeDc" width="22%" themeNames="small" maxLength="44" readOnly="true" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.chave"/>
+                        <integerField id="codUfField" property="codUf" dataContainer="nfeDc" width="6%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.codUf"/>
+                        <integerField id="codNfField" property="codNf" dataContainer="nfeDc" width="8%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.codNf"/>
+                        <integerField id="modField" property="mod" dataContainer="nfeDc" width="6%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.mod"/>
+                        <integerField id="serieField" property="serie" dataContainer="nfeDc" width="6%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.serie"/>
+                        <integerField id="numeroNfField" property="numeroNf" dataContainer="nfeDc" width="8%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.numeroNf"/>
+                        <integerField id="codDvField" property="codDv" dataContainer="nfeDc" width="6%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.codDv"/>
+                    </hbox>
+                    <hbox width="100%">
+                        <textField id="natOpField" property="natOp" dataContainer="nfeDc" width="24%" themeNames="small" maxLength="60" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.natOp"/>
+                        <dateTimePicker id="dhEmiField" property="dhEmi" dataContainer="nfeDc" width="16%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.dhEmi"/>
+                        <dateTimePicker id="dhSaiEntField" property="dhSaiEnt" dataContainer="nfeDc" width="16%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.dhSaiEnt"/>
+                        <integerField id="tpNfField" property="tpNf" dataContainer="nfeDc" width="8%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.tpNf"/>
+                        <integerField id="idDestField" property="idDest" dataContainer="nfeDc" width="8%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.idDest"/>
+                        <integerField id="codMunFgField" property="codMunFg" dataContainer="nfeDc" width="10%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.codMunFg"/>
+                    </hbox>
+                    <hbox width="100%">
+                        <integerField id="tpImpField" property="tpImp" dataContainer="nfeDc" width="8%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.tpImp"/>
+                        <integerField id="tpEmisField" property="tpEmis" dataContainer="nfeDc" width="8%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.tpEmis"/>
+                        <integerField id="tpAmbField" property="tpAmb" dataContainer="nfeDc" width="8%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.tpAmb"/>
+                        <integerField id="finNfeField" property="finNfe" dataContainer="nfeDc" width="8%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.finNfe"/>
+                        <integerField id="indFinalField" property="indFinal" dataContainer="nfeDc" width="8%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.indFinal"/>
+                        <integerField id="indPresField" property="indPres" dataContainer="nfeDc" width="8%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.indPres"/>
+                        <integerField id="procEmiField" property="procEmi" dataContainer="nfeDc" width="8%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.procEmi"/>
+                        <textField id="verProcField" property="verProc" dataContainer="nfeDc" width="16%" themeNames="small" maxLength="20" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.verProc"/>
+                    </hbox>
+                </vbox>
+            </tab>
+            <tab id="emitenteTab" label="Emitente">
+                <vbox width="100%">
+                    <hbox width="100%" expand="emitXNomeField">
+                        <textField id="emitCnpjField" property="emitCnpj" dataContainer="nfeDc" width="14%" themeNames="small" maxLength="14" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.emitCnpj"/>
+                        <textField id="emitXNomeField" property="emitXNome" dataContainer="nfeDc" width="26%" themeNames="small" maxLength="60" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.emitXNome"/>
+                        <textField id="emitXFantField" property="emitXFant" dataContainer="nfeDc" width="26%" themeNames="small" maxLength="60" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.emitXFant"/>
+                        <textField id="emitIeField" property="emitIe" dataContainer="nfeDc" width="14%" themeNames="small" maxLength="14" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.emitIe"/>
+                        <integerField id="emitCrtField" property="emitCrt" dataContainer="nfeDc" width="10%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.emitCrt"/>
+                    </hbox>
+                    <hbox width="100%" expand="emitXBairroField">
+                        <textField id="emitXLgrField" property="emitXLgr" dataContainer="nfeDc" width="26%" themeNames="small" maxLength="60" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.emitXLgr"/>
+                        <textField id="emitNroField" property="emitNro" dataContainer="nfeDc" width="10%" themeNames="small" maxLength="10" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.emitNro"/>
+                        <textField id="emitXCplField" property="emitXCpl" dataContainer="nfeDc" width="16%" themeNames="small" maxLength="60" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.emitXCpl"/>
+                        <textField id="emitXBairroField" property="emitXBairro" dataContainer="nfeDc" width="20%" themeNames="small" maxLength="60" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.emitXBairro"/>
+                        <integerField id="emitCMunField" property="emitCMun" dataContainer="nfeDc" width="10%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.emitCMun"/>
+                        <textField id="emitXMunField" property="emitXMun" dataContainer="nfeDc" width="18%" themeNames="small" maxLength="60" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.emitXMun"/>
+                    </hbox>
+                    <hbox width="100%">
+                        <textField id="emitUfField" property="emitUf" dataContainer="nfeDc" width="8%" themeNames="small" maxLength="2" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.emitUf"/>
+                        <textField id="emitCepField" property="emitCep" dataContainer="nfeDc" width="12%" themeNames="small" maxLength="8" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.emitCep"/>
+                        <textField id="emitFoneField" property="emitFone" dataContainer="nfeDc" width="14%" themeNames="small" maxLength="15" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.emitFone"/>
+                    </hbox>
+                </vbox>
+            </tab>
+            <tab id="destinatarioTab" label="Destinatário">
+                <vbox width="100%">
+                    <hbox width="100%" expand="destXNomeField">
+                        <textField id="destCnpjField" property="destCnpj" dataContainer="nfeDc" width="14%" themeNames="small" maxLength="14" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.destCnpj"/>
+                        <textField id="destCpfField" property="destCpf" dataContainer="nfeDc" width="12%" themeNames="small" maxLength="11" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.destCpf"/>
+                        <textField id="destXNomeField" property="destXNome" dataContainer="nfeDc" width="30%" themeNames="small" maxLength="60" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.destXNome"/>
+                        <integerField id="destIndIeField" property="destIndIe" dataContainer="nfeDc" width="10%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.destIndIe"/>
+                        <textField id="destIeField" property="destIe" dataContainer="nfeDc" width="14%" themeNames="small" maxLength="14" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.destIe"/>
+                    </hbox>
+                    <hbox width="100%" expand="destXBairroField">
+                        <textField id="destXLgrField" property="destXLgr" dataContainer="nfeDc" width="24%" themeNames="small" maxLength="60" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.destXLgr"/>
+                        <textField id="destNroField" property="destNro" dataContainer="nfeDc" width="10%" themeNames="small" maxLength="10" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.destNro"/>
+                        <textField id="destXCplField" property="destXCpl" dataContainer="nfeDc" width="16%" themeNames="small" maxLength="60" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.destXCpl"/>
+                        <textField id="destXBairroField" property="destXBairro" dataContainer="nfeDc" width="18%" themeNames="small" maxLength="60" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.destXBairro"/>
+                        <integerField id="destCMunField" property="destCMun" dataContainer="nfeDc" width="10%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.destCMun"/>
+                        <textField id="destXMunField" property="destXMun" dataContainer="nfeDc" width="18%" themeNames="small" maxLength="60" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.destXMun"/>
+                    </hbox>
+                    <hbox width="100%">
+                        <textField id="destUfField" property="destUf" dataContainer="nfeDc" width="6%" themeNames="small" maxLength="2" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.destUf"/>
+                        <textField id="destCepField" property="destCep" dataContainer="nfeDc" width="10%" themeNames="small" maxLength="8" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.destCep"/>
+                        <textField id="destFoneField" property="destFone" dataContainer="nfeDc" width="12%" themeNames="small" maxLength="15" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.destFone"/>
+                        <textField id="destEmailField" property="destEmail" dataContainer="nfeDc" width="20%" themeNames="small" maxLength="60" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.destEmail"/>
+                    </hbox>
+                </vbox>
+            </tab>
+            <tab id="itensTab" label="Itens">
+                <vbox width="100%">
+                    <hbox id="itensButtonsPanel" classNames="buttons-panel">
+                        <button id="itemCreateButton" action="nfeItensDataGrid.create" themeNames="small"/>
+                        <button id="itemEditButton" action="nfeItensDataGrid.edit" themeNames="small"/>
+                        <button id="itemRemoveButton" action="nfeItensDataGrid.remove" themeNames="small"/>
+                    </hbox>
+                    <dataGrid id="nfeItensDataGrid" dataContainer="itensDc" width="100%" minHeight="20em" themeNames="small">
+                        <actions>
+                            <action id="create" type="list_create">
+                                <properties>
+                                    <property name="openMode" value="DIALOG"/>
+                                </properties>
+                            </action>
+                            <action id="edit" type="list_edit">
+                                <properties>
+                                    <property name="openMode" value="DIALOG"/>
+                                </properties>
+                            </action>
+                            <action id="remove" type="list_remove"/>
+                        </actions>
+                        <columns resizable="true">
+                            <column property="item" width="8%" textAlign="CENTER"/>
+                            <column property="codProd" width="12%"/>
+                            <column property="descProd" width="34%"/>
+                            <column property="quantCom" width="12%" textAlign="END"/>
+                            <column property="valorUnCom" width="17%" textAlign="END"/>
+                            <column property="valorProd" width="17%" textAlign="END"/>
+                        </columns>
+                    </dataGrid>
+                </vbox>
+            </tab>
+            <tab id="totaisTab" label="Totais">
+                <vbox width="100%">
+                    <hbox width="100%">
+                        <bigDecimalField id="valorBcField" property="valorBc" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorBc"/>
+                        <bigDecimalField id="valorIcmsField" property="valorIcms" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorIcms"/>
+                        <bigDecimalField id="valorIcmsDesonField" property="valorIcmsDeson" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorIcmsDeson"/>
+                        <bigDecimalField id="valorFcpUfDestField" property="valorFcpUfDest" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorFcpUfDest"/>
+                        <bigDecimalField id="valorIcmsUfDestField" property="valorIcmsUfDest" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorIcmsUfDest"/>
+                        <bigDecimalField id="valorIcmsUfRemetField" property="valorIcmsUfRemet" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorIcmsUfRemet"/>
+                        <bigDecimalField id="valorFcpField" property="valorFcp" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorFcp"/>
+                        <bigDecimalField id="valorBcStField" property="valorBcSt" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorBcSt"/>
+                    </hbox>
+                    <hbox width="100%">
+                        <bigDecimalField id="valorStField" property="valorSt" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorSt"/>
+                        <bigDecimalField id="valorFcpStField" property="valorFcpSt" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorFcpSt"/>
+                        <bigDecimalField id="valorFcpStRetField" property="valorFcpStRet" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorFcpStRet"/>
+                        <bigDecimalField id="valorProdField" property="valorProd" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorProd"/>
+                        <bigDecimalField id="valorFreteField" property="valorFrete" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorFrete"/>
+                        <bigDecimalField id="valorSegField" property="valorSeg" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorSeg"/>
+                        <bigDecimalField id="valorDescField" property="valorDesc" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorDesc"/>
+                        <bigDecimalField id="valorIiField" property="valorIi" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorIi"/>
+                    </hbox>
+                    <hbox width="100%">
+                        <bigDecimalField id="valorIpiField" property="valorIpi" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorIpi"/>
+                        <bigDecimalField id="valorIpiDevolField" property="valorIpiDevol" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorIpiDevol"/>
+                        <bigDecimalField id="valorPisField" property="valorPis" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorPis"/>
+                        <bigDecimalField id="valorCofinsField" property="valorCofins" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorCofins"/>
+                        <bigDecimalField id="valorOutroField" property="valorOutro" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorOutro"/>
+                        <bigDecimalField id="valorNfField" property="valorNf" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorNf"/>
+                        <bigDecimalField id="valorTotTribField" property="valorTotTrib" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorTotTrib"/>
+                    </hbox>
+                </vbox>
+            </tab>
+            <tab id="transporteTab" label="Transporte">
+                <vbox width="100%">
+                    <hbox width="100%" expand="transpXNomeField">
+                        <integerField id="modFreteField" property="modFrete" dataContainer="nfeDc" width="8%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.modFrete"/>
+                        <textField id="transpCnpjField" property="transpCnpj" dataContainer="nfeDc" width="12%" themeNames="small" maxLength="14" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.transpCnpj"/>
+                        <textField id="transpCpfField" property="transpCpf" dataContainer="nfeDc" width="12%" themeNames="small" maxLength="11" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.transpCpf"/>
+                        <textField id="transpXNomeField" property="transpXNome" dataContainer="nfeDc" width="24%" themeNames="small" maxLength="60" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.transpXNome"/>
+                        <textField id="transpIeField" property="transpIe" dataContainer="nfeDc" width="12%" themeNames="small" maxLength="14" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.transpIe"/>
+                    </hbox>
+                    <hbox width="100%" expand="transpXEnderField">
+                        <textField id="transpXEnderField" property="transpXEnder" dataContainer="nfeDc" width="26%" themeNames="small" maxLength="60" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.transpXEnder"/>
+                        <textField id="transpXMunField" property="transpXMun" dataContainer="nfeDc" width="22%" themeNames="small" maxLength="60" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.transpXMun"/>
+                        <textField id="transpUfField" property="transpUf" dataContainer="nfeDc" width="6%" themeNames="small" maxLength="2" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.transpUf"/>
+                        <textField id="veicPlacaField" property="veicPlaca" dataContainer="nfeDc" width="10%" themeNames="small" maxLength="7" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.veicPlaca"/>
+                        <textField id="veicUfField" property="veicUf" dataContainer="nfeDc" width="6%" themeNames="small" maxLength="2" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.veicUf"/>
+                        <textField id="veicRntcField" property="veicRntc" dataContainer="nfeDc" width="14%" themeNames="small" maxLength="20" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.veicRntc"/>
+                    </hbox>
+                </vbox>
+            </tab>
+            <tab id="volumesTab" label="Volumes">
+                <vbox width="100%">
+                    <hbox id="volumesButtonsPanel" classNames="buttons-panel">
+                        <button id="volumeCreateButton" action="nfeVolumesDataGrid.create" themeNames="small"/>
+                        <button id="volumeEditButton" action="nfeVolumesDataGrid.edit" themeNames="small"/>
+                        <button id="volumeRemoveButton" action="nfeVolumesDataGrid.remove" themeNames="small"/>
+                    </hbox>
+                    <dataGrid id="nfeVolumesDataGrid" dataContainer="volumesDc" width="100%" minHeight="20em" themeNames="small">
+                        <actions>
+                            <action id="create" type="list_create">
+                                <properties>
+                                    <property name="openMode" value="DIALOG"/>
+                                </properties>
+                            </action>
+                            <action id="edit" type="list_edit">
+                                <properties>
+                                    <property name="openMode" value="DIALOG"/>
+                                </properties>
+                            </action>
+                            <action id="remove" type="list_remove"/>
+                        </actions>
+                        <columns resizable="true">
+                            <column property="quantVol" width="12%" textAlign="CENTER"/>
+                            <column property="especie" width="22%"/>
+                            <column property="marca" width="22%"/>
+                            <column property="numeracao" width="22%"/>
+                            <column property="pesoLiquido" width="11%" textAlign="END"/>
+                            <column property="pesoBruto" width="11%" textAlign="END"/>
+                        </columns>
+                    </dataGrid>
+                </vbox>
+            </tab>
+            <tab id="cobrancaTab" label="Cobrança">
+                <vbox width="100%">
+                    <hbox width="100%">
+                        <textField id="numFatField" property="numFat" dataContainer="nfeDc" width="26%" themeNames="small" maxLength="60" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.numFat"/>
+                        <bigDecimalField id="valorOrigFatField" property="valorOrigFat" dataContainer="nfeDc" width="18%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorOrigFat"/>
+                        <bigDecimalField id="valorDescFatField" property="valorDescFat" dataContainer="nfeDc" width="18%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorDescFat"/>
+                        <bigDecimalField id="valorLiqFatField" property="valorLiqFat" dataContainer="nfeDc" width="18%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorLiqFat"/>
+                    </hbox>
+                </vbox>
+            </tab>
+            <tab id="duplicatasTab" label="Duplicatas">
+                <vbox width="100%">
+                    <hbox id="duplicatasButtonsPanel" classNames="buttons-panel">
+                        <button id="duplicataCreateButton" action="nfeDuplicatasDataGrid.create" themeNames="small"/>
+                        <button id="duplicataEditButton" action="nfeDuplicatasDataGrid.edit" themeNames="small"/>
+                        <button id="duplicataRemoveButton" action="nfeDuplicatasDataGrid.remove" themeNames="small"/>
+                    </hbox>
+                    <dataGrid id="nfeDuplicatasDataGrid" dataContainer="duplicatasDc" width="100%" minHeight="20em" themeNames="small">
+                        <actions>
+                            <action id="create" type="list_create">
+                                <properties>
+                                    <property name="openMode" value="DIALOG"/>
+                                </properties>
+                            </action>
+                            <action id="edit" type="list_edit">
+                                <properties>
+                                    <property name="openMode" value="DIALOG"/>
+                                </properties>
+                            </action>
+                            <action id="remove" type="list_remove"/>
+                        </actions>
+                        <columns resizable="true">
+                            <column property="numDup" width="34%"/>
+                            <column property="dataVenc" width="33%"/>
+                            <column property="valorDup" width="33%" textAlign="END"/>
+                        </columns>
+                    </dataGrid>
+                </vbox>
+            </tab>
+            <tab id="pagamentoTab" label="Pagamento">
+                <vbox width="100%">
+                    <hbox width="100%">
+                        <bigDecimalField id="valorTrocoField" property="valorTroco" dataContainer="nfeDc" width="16%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.valorTroco"/>
+                    </hbox>
+                </vbox>
+            </tab>
+            <tab id="pagamentosTab" label="Pagamentos">
+                <vbox width="100%">
+                    <hbox id="pagamentosButtonsPanel" classNames="buttons-panel">
+                        <button id="pagamentoCreateButton" action="nfePagamentosDataGrid.create" themeNames="small"/>
+                        <button id="pagamentoEditButton" action="nfePagamentosDataGrid.edit" themeNames="small"/>
+                        <button id="pagamentoRemoveButton" action="nfePagamentosDataGrid.remove" themeNames="small"/>
+                    </hbox>
+                    <dataGrid id="nfePagamentosDataGrid" dataContainer="pagamentosDc" width="100%" minHeight="20em" themeNames="small">
+                        <actions>
+                            <action id="create" type="list_create">
+                                <properties>
+                                    <property name="openMode" value="DIALOG"/>
+                                </properties>
+                            </action>
+                            <action id="edit" type="list_edit">
+                                <properties>
+                                    <property name="openMode" value="DIALOG"/>
+                                </properties>
+                            </action>
+                            <action id="remove" type="list_remove"/>
+                        </actions>
+                        <columns resizable="true">
+                            <column property="indPag" width="15%"/>
+                            <column property="tipoPag" width="15%"/>
+                            <column property="descricaoPag" width="35%"/>
+                            <column property="valorPag" width="35%" textAlign="END"/>
+                        </columns>
+                    </dataGrid>
+                </vbox>
+            </tab>
+            <tab id="infoAdicionalTab" label="Informações adicionais">
+                <vbox width="100%">
+                    <hbox width="100%">
+                        <textArea id="infAdFiscoField" property="infAdFisco" dataContainer="nfeDc" width="50%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.infAdFisco"/>
+                        <textArea id="infCplField" property="infCpl" dataContainer="nfeDc" width="50%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.infCpl"/>
+                    </hbox>
+                </vbox>
+            </tab>
+            <tab id="protocoloTab" label="Protocolo de autorização">
+                <vbox width="100%">
+                    <hbox width="100%">
+                        <integerField id="protTpAmbField" property="protTpAmb" dataContainer="nfeDc" width="8%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.protTpAmb"/>
+                        <textField id="protVerAplicField" property="protVerAplic" dataContainer="nfeDc" width="14%" themeNames="small" maxLength="20" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.protVerAplic"/>
+                        <dateTimePicker id="protDhRecbtoField" property="protDhRecbto" dataContainer="nfeDc" width="16%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.protDhRecbto"/>
+                        <textField id="protNProtField" property="protNProt" dataContainer="nfeDc" width="14%" themeNames="small" maxLength="15" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.protNProt"/>
+                        <textField id="protDigValField" property="protDigVal" dataContainer="nfeDc" width="20%" themeNames="small" maxLength="28" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.protDigVal"/>
+                        <integerField id="protCStatField" property="protCStat" dataContainer="nfeDc" width="8%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.protCStat"/>
+                    </hbox>
+                    <hbox width="100%">
+                        <textField id="protXMotivoField" property="protXMotivo" dataContainer="nfeDc" width="100%" themeNames="small" maxLength="255" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.protXMotivo"/>
+                    </hbox>
+                </vbox>
+            </tab>
+            <tab id="xmlTab" label="XML">
+                <vbox width="100%">
+                    <hbox width="100%">
+                        <textArea id="xmlEnvioField" property="xmlEnvio" dataContainer="nfeDc" width="50%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.xmlEnvio"/>
+                        <textArea id="xmlRetornoField" property="xmlRetorno" dataContainer="nfeDc" width="50%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.xmlRetorno"/>
+                    </hbox>
+                </vbox>
+            </tab>
+        </tabSheet>
+
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

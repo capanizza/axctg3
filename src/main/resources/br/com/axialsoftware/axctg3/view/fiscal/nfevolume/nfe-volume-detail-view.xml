@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://nfeVolumeDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="nfeVolumeDc"
+                  class="br.com.axialsoftware.axctg3.entity.fiscal.NfeVolume">
+            <fetchPlan extends="_base"/>
+            <loader id="nfeVolumeDl"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <vbox id="form" width="100%">
+            <hbox width="100%">
+                <integerField id="quantVolField"
+                              property="quantVol"
+                              dataContainer="nfeVolumeDc"
+                              width="12%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeVolume.quantVol"/>
+                <textField id="especieField"
+                           property="especie"
+                           maxLength="60"
+                           dataContainer="nfeVolumeDc"
+                           width="22%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeVolume.especie"/>
+                <textField id="marcaField"
+                           property="marca"
+                           maxLength="60"
+                           dataContainer="nfeVolumeDc"
+                           width="22%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeVolume.marca"/>
+                <textField id="numeracaoField"
+                           property="numeracao"
+                           maxLength="60"
+                           dataContainer="nfeVolumeDc"
+                           width="22%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeVolume.numeracao"/>
+                <bigDecimalField id="pesoLiquidoField"
+                                 property="pesoLiquido"
+                                 dataContainer="nfeVolumeDc"
+                                 width="10%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeVolume.pesoLiquido"/>
+                <bigDecimalField id="pesoBrutoField"
+                                 property="pesoBruto"
+                                 dataContainer="nfeVolumeDc"
+                                 width="10%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeVolume.pesoBruto"/>
+            </hbox>
+        </vbox>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>
