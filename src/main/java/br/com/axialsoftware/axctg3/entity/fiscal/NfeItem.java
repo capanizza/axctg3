@@ -28,6 +28,22 @@ import java.util.UUID;
  * ({@code vBCSTRet}/{@code pST}/{@code vICMSSTRet} — revenda de mercadoria já tributada
  * por ST) e sem o detalhamento item a item de ICMSUFDest/DIFAL (fica só o agregado em
  * {@link Nfe}) — ambos casos de uso mais estreitos que uma revenda/indústria genérica.
+ *
+ * <p><b>Reforma Tributária (IBS/CBS/Imposto Seletivo — LC 214/2025, NT 2025.002-RTC)</b>:
+ * cobre o grupo {@code IS} (Imposto Seletivo) e o núcleo do grupo {@code UB}/{@code IBSCBS} —
+ * {@code CST}/{@code cClassTrib}/base comum, e os três sub-tributos {@code gIBSUF}/
+ * {@code gIBSMun}/{@code gCBS}, cada um com alíquota/diferimento/devolução de tributos/redução
+ * de alíquota/valor. <b>Fora de escopo</b> dentro da reforma (mesmo critério do parágrafo
+ * acima — casos de uso mais estreitos que uma revenda/indústria genérica): crédito presumido
+ * ({@code gCredPresOper}/{@code gCredPresIBSZFM}), compras governamentais
+ * ({@code gTribCompraGov} — mesma família do {@code compra} já excluído em {@link Nfe}),
+ * tributação regular hipotética ({@code gTribRegular}), Zona Franca de Manaus/Suframa
+ * ({@code gALCZFMCBS}/{@code ISUFEmit}/{@code tpCredPresIBSZFM}), tributação monofásica de
+ * combustíveis ({@code gIBSCBSMono} — mesma família do {@code comb} já excluído),
+ * transferência de crédito em fusão/cisão/incorporação ({@code gTransfCred}),
+ * {@code gAjusteCompet}, {@code gEstornoCred}, antecipação de pagamento ({@code gPagAntecipado})
+ * e os campos {@code tpNFDebito}/{@code tpNFCredito} de {@code finNfe}=5/6 (Nota de
+ * Crédito/Débito) no cabeçalho da NF-e.
  */
 @JmixEntity
 @Table(name = "NFE_ITEM", indexes = {
@@ -304,6 +320,206 @@ public class NfeItem {
     @Column(name = "VALOR_TOT_TRIBUTOS", precision = 19, scale = 2)
     private BigDecimal valorTotTributos = BigDecimal.ZERO;
 
+    // ---- imposto / IS (Imposto Seletivo) — Reforma Tributária, LC 214/2025, NT 2025.002-RTC ----
+
+    // CSTIS — Código de Situação Tributária do Imposto Seletivo
+    @Column(name = "CST_IS", length = 3)
+    private String cstIs;
+
+    // cClassTribIS — Código de Classificação Tributária do Imposto Seletivo (Anexo II da NT)
+    @Column(name = "COD_CLASS_TRIB_IS", length = 6)
+    private String codClassTribIs;
+
+    // vBCIS
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "BASE_IS", precision = 19, scale = 2)
+    private BigDecimal baseIs = BigDecimal.ZERO;
+
+    // pIS
+    @NumberFormat(pattern = "##0.0000")
+    @Column(name = "ALIQ_IS", precision = 9, scale = 4)
+    private BigDecimal aliqIs = BigDecimal.ZERO;
+
+    // adRemIS — alíquota específica por unidade de medida (tributação "ad rem", alternativa a pIS)
+    @NumberFormat(pattern = "##0.0000")
+    @Column(name = "AD_REM_IS", precision = 9, scale = 4)
+    private BigDecimal adRemIs = BigDecimal.ZERO;
+
+    // uTrib (dentro do grupo do IS — unidade tributável usada com adRemIS)
+    @Column(name = "UN_TRIB_IS", length = 6)
+    private String unTribIs;
+
+    // qTrib (dentro do grupo do IS — quantidade tributável usada com adRemIS)
+    @NumberFormat(pattern = "###,###,##0.0000", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "QUANT_TRIB_IS", precision = 19, scale = 4)
+    private BigDecimal quantTribIs = BigDecimal.ZERO;
+
+    // vIS
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "VALOR_IS", precision = 19, scale = 2)
+    private BigDecimal valorIs = BigDecimal.ZERO;
+
+    // ---- imposto / IBS e CBS — Reforma Tributária, LC 214/2025, NT 2025.002-RTC ----
+    //
+    // Núcleo do grupo UB (Informações dos tributos IBS/CBS e Imposto Seletivo) da NT: CST +
+    // cClassTrib + base de cálculo comum, e os três sub-tributos (IBS-UF, IBS-Município, CBS),
+    // cada um com alíquota/diferimento/devolução de tributos/redução de alíquota/valor. Deixados
+    // de fora deliberadamente (casos de uso mais estreitos que uma revenda/indústria genérica,
+    // mesmo critério do restante da entidade): gCredPresOper/gCredPresIBSZFM (crédito presumido),
+    // gTribCompraGov (compras governamentais — já fora de escopo junto com "compra"),
+    // gTribRegular (cenário hipotético sem benefício fiscal), gALCZFMCBS/ISUFEmit (Zona Franca de
+    // Manaus/Suframa), gIBSCBSMono (tributação monofásica de combustíveis — já fora de escopo
+    // junto com "comb"), gTransfCred (fusão/cisão/incorporação), gAjusteCompet, gEstornoCred, e os
+    // campos tpNFDebito/tpNFCredito de finNfe=5/6 (Nota de Crédito/Débito) no cabeçalho da NF-e.
+
+    // CST — Código de Situação Tributária do IBS e CBS
+    @Column(name = "CST_IBS_CBS", length = 3)
+    private String cstIbsCbs;
+
+    // cClassTrib — Código de Classificação Tributária do IBS e CBS (Anexo III da NT)
+    @Column(name = "COD_CLASS_TRIB", length = 6)
+    private String codClassTrib;
+
+    // indDoacao — natureza da operação de doação (orienta apuração/estorno)
+    @Column(name = "IND_DOACAO")
+    private Integer indDoacao;
+
+    // vBC — base de cálculo comum ao IBS e à CBS
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "BASE_IBS_CBS", precision = 19, scale = 2)
+    private BigDecimal baseIbsCbs = BigDecimal.ZERO;
+
+    // ---- gIBSUF (IBS de competência do Estado) ----
+
+    // pIBSUF
+    @NumberFormat(pattern = "##0.0000")
+    @Column(name = "ALIQ_IBS_UF", precision = 9, scale = 4)
+    private BigDecimal aliqIbsUf = BigDecimal.ZERO;
+
+    // gDif/pDif
+    @NumberFormat(pattern = "##0.0000")
+    @Column(name = "PERC_DIF_IBS_UF", precision = 9, scale = 4)
+    private BigDecimal percDifIbsUf = BigDecimal.ZERO;
+
+    // gDif/vDif
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "VALOR_DIF_IBS_UF", precision = 19, scale = 2)
+    private BigDecimal valorDifIbsUf = BigDecimal.ZERO;
+
+    // gDevTrib/pDevTrib
+    @NumberFormat(pattern = "##0.0000")
+    @Column(name = "PERC_DEV_TRIB_IBS_UF", precision = 9, scale = 4)
+    private BigDecimal percDevTribIbsUf = BigDecimal.ZERO;
+
+    // gDevTrib/vDevTrib
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "VALOR_DEV_TRIB_IBS_UF", precision = 19, scale = 2)
+    private BigDecimal valorDevTribIbsUf = BigDecimal.ZERO;
+
+    // gRed/pRedAliq
+    @NumberFormat(pattern = "##0.0000")
+    @Column(name = "PERC_RED_ALIQ_IBS_UF", precision = 9, scale = 4)
+    private BigDecimal percRedAliqIbsUf = BigDecimal.ZERO;
+
+    // gRed/pAliqEfet
+    @NumberFormat(pattern = "##0.0000")
+    @Column(name = "ALIQ_EFET_IBS_UF", precision = 9, scale = 4)
+    private BigDecimal aliqEfetIbsUf = BigDecimal.ZERO;
+
+    // vIBSUF
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "VALOR_IBS_UF", precision = 19, scale = 2)
+    private BigDecimal valorIbsUf = BigDecimal.ZERO;
+
+    // ---- gIBSMun (IBS de competência do Município) ----
+
+    // pIBSMun
+    @NumberFormat(pattern = "##0.0000")
+    @Column(name = "ALIQ_IBS_MUN", precision = 9, scale = 4)
+    private BigDecimal aliqIbsMun = BigDecimal.ZERO;
+
+    // gDif/pDif
+    @NumberFormat(pattern = "##0.0000")
+    @Column(name = "PERC_DIF_IBS_MUN", precision = 9, scale = 4)
+    private BigDecimal percDifIbsMun = BigDecimal.ZERO;
+
+    // gDif/vDif
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "VALOR_DIF_IBS_MUN", precision = 19, scale = 2)
+    private BigDecimal valorDifIbsMun = BigDecimal.ZERO;
+
+    // gDevTrib/pDevTrib
+    @NumberFormat(pattern = "##0.0000")
+    @Column(name = "PERC_DEV_TRIB_IBS_MUN", precision = 9, scale = 4)
+    private BigDecimal percDevTribIbsMun = BigDecimal.ZERO;
+
+    // gDevTrib/vDevTrib
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "VALOR_DEV_TRIB_IBS_MUN", precision = 19, scale = 2)
+    private BigDecimal valorDevTribIbsMun = BigDecimal.ZERO;
+
+    // gRed/pRedAliq
+    @NumberFormat(pattern = "##0.0000")
+    @Column(name = "PERC_RED_ALIQ_IBS_MUN", precision = 9, scale = 4)
+    private BigDecimal percRedAliqIbsMun = BigDecimal.ZERO;
+
+    // gRed/pAliqEfet
+    @NumberFormat(pattern = "##0.0000")
+    @Column(name = "ALIQ_EFET_IBS_MUN", precision = 9, scale = 4)
+    private BigDecimal aliqEfetIbsMun = BigDecimal.ZERO;
+
+    // vIBSMun
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "VALOR_IBS_MUN", precision = 19, scale = 2)
+    private BigDecimal valorIbsMun = BigDecimal.ZERO;
+
+    // vIBS — soma de vIBSUF e vIBSMun
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "VALOR_IBS", precision = 19, scale = 2)
+    private BigDecimal valorIbs = BigDecimal.ZERO;
+
+    // ---- gCBS (Contribuição sobre Bens e Serviços) ----
+
+    // pCBS
+    @NumberFormat(pattern = "##0.0000")
+    @Column(name = "ALIQ_CBS", precision = 9, scale = 4)
+    private BigDecimal aliqCbs = BigDecimal.ZERO;
+
+    // gDif/pDif
+    @NumberFormat(pattern = "##0.0000")
+    @Column(name = "PERC_DIF_CBS", precision = 9, scale = 4)
+    private BigDecimal percDifCbs = BigDecimal.ZERO;
+
+    // gDif/vDif
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "VALOR_DIF_CBS", precision = 19, scale = 2)
+    private BigDecimal valorDifCbs = BigDecimal.ZERO;
+
+    // gDevTrib/pDevTrib
+    @NumberFormat(pattern = "##0.0000")
+    @Column(name = "PERC_DEV_TRIB_CBS", precision = 9, scale = 4)
+    private BigDecimal percDevTribCbs = BigDecimal.ZERO;
+
+    // gDevTrib/vDevTrib
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "VALOR_DEV_TRIB_CBS", precision = 19, scale = 2)
+    private BigDecimal valorDevTribCbs = BigDecimal.ZERO;
+
+    // gRed/pRedAliq
+    @NumberFormat(pattern = "##0.0000")
+    @Column(name = "PERC_RED_ALIQ_CBS", precision = 9, scale = 4)
+    private BigDecimal percRedAliqCbs = BigDecimal.ZERO;
+
+    // gRed/pAliqEfet
+    @NumberFormat(pattern = "##0.0000")
+    @Column(name = "ALIQ_EFET_CBS", precision = 9, scale = 4)
+    private BigDecimal aliqEfetCbs = BigDecimal.ZERO;
+
+    // vCBS
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "VALOR_CBS", precision = 19, scale = 2)
+    private BigDecimal valorCbs = BigDecimal.ZERO;
+
     // infAdProd
     @Column(name = "INFO_ADICIONAL_PRODUTO")
     @Lob
@@ -315,6 +531,302 @@ public class NfeItem {
 
     public void setInfoAdicionalProduto(String infoAdicionalProduto) {
         this.infoAdicionalProduto = infoAdicionalProduto;
+    }
+
+    public String getCstIs() {
+        return cstIs;
+    }
+
+    public void setCstIs(String cstIs) {
+        this.cstIs = cstIs;
+    }
+
+    public String getCodClassTribIs() {
+        return codClassTribIs;
+    }
+
+    public void setCodClassTribIs(String codClassTribIs) {
+        this.codClassTribIs = codClassTribIs;
+    }
+
+    public BigDecimal getBaseIs() {
+        return baseIs;
+    }
+
+    public void setBaseIs(BigDecimal baseIs) {
+        this.baseIs = baseIs;
+    }
+
+    public BigDecimal getAliqIs() {
+        return aliqIs;
+    }
+
+    public void setAliqIs(BigDecimal aliqIs) {
+        this.aliqIs = aliqIs;
+    }
+
+    public BigDecimal getAdRemIs() {
+        return adRemIs;
+    }
+
+    public void setAdRemIs(BigDecimal adRemIs) {
+        this.adRemIs = adRemIs;
+    }
+
+    public String getUnTribIs() {
+        return unTribIs;
+    }
+
+    public void setUnTribIs(String unTribIs) {
+        this.unTribIs = unTribIs;
+    }
+
+    public BigDecimal getQuantTribIs() {
+        return quantTribIs;
+    }
+
+    public void setQuantTribIs(BigDecimal quantTribIs) {
+        this.quantTribIs = quantTribIs;
+    }
+
+    public BigDecimal getValorIs() {
+        return valorIs;
+    }
+
+    public void setValorIs(BigDecimal valorIs) {
+        this.valorIs = valorIs;
+    }
+
+    public String getCstIbsCbs() {
+        return cstIbsCbs;
+    }
+
+    public void setCstIbsCbs(String cstIbsCbs) {
+        this.cstIbsCbs = cstIbsCbs;
+    }
+
+    public String getCodClassTrib() {
+        return codClassTrib;
+    }
+
+    public void setCodClassTrib(String codClassTrib) {
+        this.codClassTrib = codClassTrib;
+    }
+
+    public Integer getIndDoacao() {
+        return indDoacao;
+    }
+
+    public void setIndDoacao(Integer indDoacao) {
+        this.indDoacao = indDoacao;
+    }
+
+    public BigDecimal getBaseIbsCbs() {
+        return baseIbsCbs;
+    }
+
+    public void setBaseIbsCbs(BigDecimal baseIbsCbs) {
+        this.baseIbsCbs = baseIbsCbs;
+    }
+
+    public BigDecimal getAliqIbsUf() {
+        return aliqIbsUf;
+    }
+
+    public void setAliqIbsUf(BigDecimal aliqIbsUf) {
+        this.aliqIbsUf = aliqIbsUf;
+    }
+
+    public BigDecimal getPercDifIbsUf() {
+        return percDifIbsUf;
+    }
+
+    public void setPercDifIbsUf(BigDecimal percDifIbsUf) {
+        this.percDifIbsUf = percDifIbsUf;
+    }
+
+    public BigDecimal getValorDifIbsUf() {
+        return valorDifIbsUf;
+    }
+
+    public void setValorDifIbsUf(BigDecimal valorDifIbsUf) {
+        this.valorDifIbsUf = valorDifIbsUf;
+    }
+
+    public BigDecimal getPercDevTribIbsUf() {
+        return percDevTribIbsUf;
+    }
+
+    public void setPercDevTribIbsUf(BigDecimal percDevTribIbsUf) {
+        this.percDevTribIbsUf = percDevTribIbsUf;
+    }
+
+    public BigDecimal getValorDevTribIbsUf() {
+        return valorDevTribIbsUf;
+    }
+
+    public void setValorDevTribIbsUf(BigDecimal valorDevTribIbsUf) {
+        this.valorDevTribIbsUf = valorDevTribIbsUf;
+    }
+
+    public BigDecimal getPercRedAliqIbsUf() {
+        return percRedAliqIbsUf;
+    }
+
+    public void setPercRedAliqIbsUf(BigDecimal percRedAliqIbsUf) {
+        this.percRedAliqIbsUf = percRedAliqIbsUf;
+    }
+
+    public BigDecimal getAliqEfetIbsUf() {
+        return aliqEfetIbsUf;
+    }
+
+    public void setAliqEfetIbsUf(BigDecimal aliqEfetIbsUf) {
+        this.aliqEfetIbsUf = aliqEfetIbsUf;
+    }
+
+    public BigDecimal getValorIbsUf() {
+        return valorIbsUf;
+    }
+
+    public void setValorIbsUf(BigDecimal valorIbsUf) {
+        this.valorIbsUf = valorIbsUf;
+    }
+
+    public BigDecimal getAliqIbsMun() {
+        return aliqIbsMun;
+    }
+
+    public void setAliqIbsMun(BigDecimal aliqIbsMun) {
+        this.aliqIbsMun = aliqIbsMun;
+    }
+
+    public BigDecimal getPercDifIbsMun() {
+        return percDifIbsMun;
+    }
+
+    public void setPercDifIbsMun(BigDecimal percDifIbsMun) {
+        this.percDifIbsMun = percDifIbsMun;
+    }
+
+    public BigDecimal getValorDifIbsMun() {
+        return valorDifIbsMun;
+    }
+
+    public void setValorDifIbsMun(BigDecimal valorDifIbsMun) {
+        this.valorDifIbsMun = valorDifIbsMun;
+    }
+
+    public BigDecimal getPercDevTribIbsMun() {
+        return percDevTribIbsMun;
+    }
+
+    public void setPercDevTribIbsMun(BigDecimal percDevTribIbsMun) {
+        this.percDevTribIbsMun = percDevTribIbsMun;
+    }
+
+    public BigDecimal getValorDevTribIbsMun() {
+        return valorDevTribIbsMun;
+    }
+
+    public void setValorDevTribIbsMun(BigDecimal valorDevTribIbsMun) {
+        this.valorDevTribIbsMun = valorDevTribIbsMun;
+    }
+
+    public BigDecimal getPercRedAliqIbsMun() {
+        return percRedAliqIbsMun;
+    }
+
+    public void setPercRedAliqIbsMun(BigDecimal percRedAliqIbsMun) {
+        this.percRedAliqIbsMun = percRedAliqIbsMun;
+    }
+
+    public BigDecimal getAliqEfetIbsMun() {
+        return aliqEfetIbsMun;
+    }
+
+    public void setAliqEfetIbsMun(BigDecimal aliqEfetIbsMun) {
+        this.aliqEfetIbsMun = aliqEfetIbsMun;
+    }
+
+    public BigDecimal getValorIbsMun() {
+        return valorIbsMun;
+    }
+
+    public void setValorIbsMun(BigDecimal valorIbsMun) {
+        this.valorIbsMun = valorIbsMun;
+    }
+
+    public BigDecimal getValorIbs() {
+        return valorIbs;
+    }
+
+    public void setValorIbs(BigDecimal valorIbs) {
+        this.valorIbs = valorIbs;
+    }
+
+    public BigDecimal getAliqCbs() {
+        return aliqCbs;
+    }
+
+    public void setAliqCbs(BigDecimal aliqCbs) {
+        this.aliqCbs = aliqCbs;
+    }
+
+    public BigDecimal getPercDifCbs() {
+        return percDifCbs;
+    }
+
+    public void setPercDifCbs(BigDecimal percDifCbs) {
+        this.percDifCbs = percDifCbs;
+    }
+
+    public BigDecimal getValorDifCbs() {
+        return valorDifCbs;
+    }
+
+    public void setValorDifCbs(BigDecimal valorDifCbs) {
+        this.valorDifCbs = valorDifCbs;
+    }
+
+    public BigDecimal getPercDevTribCbs() {
+        return percDevTribCbs;
+    }
+
+    public void setPercDevTribCbs(BigDecimal percDevTribCbs) {
+        this.percDevTribCbs = percDevTribCbs;
+    }
+
+    public BigDecimal getValorDevTribCbs() {
+        return valorDevTribCbs;
+    }
+
+    public void setValorDevTribCbs(BigDecimal valorDevTribCbs) {
+        this.valorDevTribCbs = valorDevTribCbs;
+    }
+
+    public BigDecimal getPercRedAliqCbs() {
+        return percRedAliqCbs;
+    }
+
+    public void setPercRedAliqCbs(BigDecimal percRedAliqCbs) {
+        this.percRedAliqCbs = percRedAliqCbs;
+    }
+
+    public BigDecimal getAliqEfetCbs() {
+        return aliqEfetCbs;
+    }
+
+    public void setAliqEfetCbs(BigDecimal aliqEfetCbs) {
+        this.aliqEfetCbs = aliqEfetCbs;
+    }
+
+    public BigDecimal getValorCbs() {
+        return valorCbs;
+    }
+
+    public void setValorCbs(BigDecimal valorCbs) {
+        this.valorCbs = valorCbs;
     }
 
     public BigDecimal getValorTotTributos() {

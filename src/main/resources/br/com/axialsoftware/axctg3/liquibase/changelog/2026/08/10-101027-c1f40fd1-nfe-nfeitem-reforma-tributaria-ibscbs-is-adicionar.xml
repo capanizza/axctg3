@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/10-101027-c1f40fd1-nfe-nfeitem-reforma-tributaria-ibscbs-is-adicionar.xml">
+    <!-- Reforma Tributária (IBS/CBS/Imposto Seletivo — LC 214/2025, NT 2025.002-RTC): campos do
+         grupo UB (IS/IBSCBS) por item, e do grupo W03 (IBSCBSTot/ISTot) no total da nota. -->
+    <changeSet id="1" author="axctg3">
+        <addColumn tableName="NFE_ITEM">
+            <column name="CST_IS" type="VARCHAR(3)"/>
+            <column name="COD_CLASS_TRIB_IS" type="VARCHAR(6)"/>
+            <column name="BASE_IS" type="DECIMAL(19, 2)"/>
+            <column name="ALIQ_IS" type="DECIMAL(9, 4)"/>
+            <column name="AD_REM_IS" type="DECIMAL(9, 4)"/>
+            <column name="UN_TRIB_IS" type="VARCHAR(6)"/>
+            <column name="QUANT_TRIB_IS" type="DECIMAL(19, 4)"/>
+            <column name="VALOR_IS" type="DECIMAL(19, 2)"/>
+            <column name="CST_IBS_CBS" type="VARCHAR(3)"/>
+            <column name="COD_CLASS_TRIB" type="VARCHAR(6)"/>
+            <column name="IND_DOACAO" type="INT"/>
+            <column name="BASE_IBS_CBS" type="DECIMAL(19, 2)"/>
+            <column name="ALIQ_IBS_UF" type="DECIMAL(9, 4)"/>
+            <column name="PERC_DIF_IBS_UF" type="DECIMAL(9, 4)"/>
+            <column name="VALOR_DIF_IBS_UF" type="DECIMAL(19, 2)"/>
+            <column name="PERC_DEV_TRIB_IBS_UF" type="DECIMAL(9, 4)"/>
+            <column name="VALOR_DEV_TRIB_IBS_UF" type="DECIMAL(19, 2)"/>
+            <column name="PERC_RED_ALIQ_IBS_UF" type="DECIMAL(9, 4)"/>
+            <column name="ALIQ_EFET_IBS_UF" type="DECIMAL(9, 4)"/>
+            <column name="VALOR_IBS_UF" type="DECIMAL(19, 2)"/>
+            <column name="ALIQ_IBS_MUN" type="DECIMAL(9, 4)"/>
+            <column name="PERC_DIF_IBS_MUN" type="DECIMAL(9, 4)"/>
+            <column name="VALOR_DIF_IBS_MUN" type="DECIMAL(19, 2)"/>
+            <column name="PERC_DEV_TRIB_IBS_MUN" type="DECIMAL(9, 4)"/>
+            <column name="VALOR_DEV_TRIB_IBS_MUN" type="DECIMAL(19, 2)"/>
+            <column name="PERC_RED_ALIQ_IBS_MUN" type="DECIMAL(9, 4)"/>
+            <column name="ALIQ_EFET_IBS_MUN" type="DECIMAL(9, 4)"/>
+            <column name="VALOR_IBS_MUN" type="DECIMAL(19, 2)"/>
+            <column name="VALOR_IBS" type="DECIMAL(19, 2)"/>
+            <column name="ALIQ_CBS" type="DECIMAL(9, 4)"/>
+            <column name="PERC_DIF_CBS" type="DECIMAL(9, 4)"/>
+            <column name="VALOR_DIF_CBS" type="DECIMAL(19, 2)"/>
+            <column name="PERC_DEV_TRIB_CBS" type="DECIMAL(9, 4)"/>
+            <column name="VALOR_DEV_TRIB_CBS" type="DECIMAL(19, 2)"/>
+            <column name="PERC_RED_ALIQ_CBS" type="DECIMAL(9, 4)"/>
+            <column name="ALIQ_EFET_CBS" type="DECIMAL(9, 4)"/>
+            <column name="VALOR_CBS" type="DECIMAL(19, 2)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet id="2" author="axctg3">
+        <addColumn tableName="NFE">
+            <column name="V_BC_IBS_CBS" type="DECIMAL(19, 2)"/>
+            <column name="V_DIF_IBS_UF" type="DECIMAL(19, 2)"/>
+            <column name="V_DEV_TRIB_IBS_UF" type="DECIMAL(19, 2)"/>
+            <column name="V_IBS_UF" type="DECIMAL(19, 2)"/>
+            <column name="V_DIF_IBS_MUN" type="DECIMAL(19, 2)"/>
+            <column name="V_DEV_TRIB_IBS_MUN" type="DECIMAL(19, 2)"/>
+            <column name="V_IBS_MUN" type="DECIMAL(19, 2)"/>
+            <column name="V_IBS" type="DECIMAL(19, 2)"/>
+            <column name="V_DIF_CBS" type="DECIMAL(19, 2)"/>
+            <column name="V_DEV_TRIB_CBS" type="DECIMAL(19, 2)"/>
+            <column name="V_CBS" type="DECIMAL(19, 2)"/>
+            <column name="V_IS" type="DECIMAL(19, 2)"/>
+            <column name="V_NF_TOT" type="DECIMAL(19, 2)"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>
