@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://nfeImportView.title">
+    <layout>
+        <upload id="xmlUpload"
+                width="100%"
+                uploadHandlerType="IN_MEMORY"
+                acceptedFileTypes=".xml,text/xml,application/xml"
+                dropLabel="msg://nfeImportView.upload.dropLabel"
+                uploadText="msg://nfeImportView.upload.uploadText"/>
+        <hbox id="importActions" width="100%" justifyContent="END" themeNames="spacing">
+            <button id="cancelarButton" text="msg://nfeImportView.cancelarButton.text" themeNames="small"/>
+            <button id="importarButton" text="msg://nfeImportView.importarButton.text" themeNames="small primary"/>
+        </hbox>
+    </layout>
+</view>

@@ -32,6 +32,7 @@
                 <button id="createButton" action="nfesDataGrid.createAction" themeNames="small"/>
                 <button id="editButton" action="nfesDataGrid.editAction" themeNames="small"/>
                 <button id="removeButton" action="nfesDataGrid.removeAction" themeNames="small"/>
+                <button id="importXmlButton" text="msg://nfeListView.importXmlButton.text" themeNames="small"/>
             </startSlot>
             <endSlot>
                 <simplePagination id="pagination" dataLoader="nfesDl"/>
