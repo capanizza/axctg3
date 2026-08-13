@@ -41,13 +41,19 @@ auditoria funcional.
       único em vez de unique constraint), `BemEventListener`, changelog, list view +
       detail view com depreciações inline por composição. Coberto por `BemUiTest`
       (listener, listagem, detail com composição).
-- [ ] Fluxos de cálculo/lançamento (`DepreciacaoService.calcularDepreciacoes` /
-      `lancarDepreciacoes` / `listarDepreciacoes` + `MenuBean` com InputDialogs) —
-      deliberadamente adiados desta leva; os `.jasper` (`Depreciacao`, reaproveita
-      `Lancamento.jasper`) já existem em `relatorios/`, então não há trabalho de
-      template pendente, só a integração service/MenuBean/UI.
-- [ ] `BemDto` — usado só pelos fluxos de cálculo acima (JRBeanCollectionDataSource);
-      portar junto quando essa parte entrar.
+- [x] Fluxos de cálculo/lançamento — portado em 2026-08-13: `DepreciacaoService`
+      (`calcularDepreciacoes`/`lancarDepreciacoes`/`listarDepreciacoes`) novo em
+      `service/contabil/`, 3 métodos com `InputDialog` no `MenuBean`, dropdown
+      "Depreciação" (Cálculo/Lançamentos/Listagem) na `BemListView`. Diferenças reais
+      em relação ao axctg-flow (não é cópia 1:1): `codEmpresa`/`ano`/`mes`/`numero`/
+      `dataLancamento` do `Lancamento` gerado NÃO são setados manualmente — o
+      `LancamentoEventListener` já carimba isso a partir do período contábil corrente
+      (só `dia` é setado, senão o listener assume dia 1); fetch plan explícito
+      (`contaContabilDepr`, `bem.contaContabilDespDepr`, coleção `depreciacaos`) porque o
+      default do `DataManager` não carrega isso. Coberto por `DepreciacaoServiceTest`
+      (cálculo + idempotência de não duplicar depreciação/lançamento ao rodar 2x,
+      listagem sem exceção).
+- [x] `BemDto` — portado junto (idêntico ao axctg-flow, sem mudança de campos).
 - [ ] `VerificacaoDto` — **não é do módulo de bens**: pertence a
       `ContaContabilService.verificarContasContabeis()` (correção de item registrado por
       engano nesta lista). Conferir se esse método já foi portado antes de tratá-lo aqui.

@@ -40,6 +40,24 @@
             <button id="createButton" action="bemsDataGrid.createAction" themeNames="small"/>
             <button id="editButton" action="bemsDataGrid.editAction" themeNames="small"/>
             <button id="removeButton" action="bemsDataGrid.removeAction" themeNames="small"/>
+            <dropdownButton id="depreciacaoSwitcher"
+                            text="Depreciação" icon="BOOK_PERCENT" themeNames="small"
+                            dropdownIndicatorVisible="true">
+                <items>
+                    <actionItem id="calcularItem">
+                        <action id="calcularAction"
+                                text="Cálculo" icon="CALC_BOOK"/>
+                    </actionItem>
+                    <actionItem id="lancarItem">
+                        <action id="lancarAction"
+                                text="Lançamentos" icon="CALC"/>
+                    </actionItem>
+                    <actionItem id="listarItem">
+                        <action id="listarAction"
+                                text="Listagem das depreciações" icon="PRINT"/>
+                    </actionItem>
+                </items>
+            </dropdownButton>
             <simplePagination id="pagination" dataLoader="bemsDl"/>
         </hbox>
         <dataGrid id="bemsDataGrid"
