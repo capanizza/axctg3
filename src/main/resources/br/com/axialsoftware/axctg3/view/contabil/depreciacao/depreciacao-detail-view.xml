@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://depreciacaoDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="depreciacaoDc"
+                  class="br.com.axialsoftware.axctg3.entity.contabil.Depreciacao">
+            <fetchPlan extends="_base"/>
+            <loader id="depreciacaoDl"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <vbox id="form">
+            <hbox width="100%">
+                <datePicker id="dataDeprField"
+                            property="dataDepr"
+                            dataContainer="depreciacaoDc"
+                            width="33%" themeNames="small"
+                            label="msg://br.com.axialsoftware.axctg3.entity.contabil/Depreciacao.dataDepr"/>
+                <textField id="valorDeprField"
+                           property="valorDepr"
+                           dataContainer="depreciacaoDc"
+                           width="33%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.contabil/Depreciacao.valorDepr"/>
+                <textField id="lancamentoField"
+                           property="lancamento"
+                           dataContainer="depreciacaoDc"
+                           width="33%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.contabil/Depreciacao.lancamento"/>
+            </hbox>
+        </vbox>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

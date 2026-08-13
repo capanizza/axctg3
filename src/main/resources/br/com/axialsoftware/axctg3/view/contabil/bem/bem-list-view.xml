@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
+      title="msg://bemListView.title"
+      focusComponent="bemsDataGrid">
+    <data>
+        <collection id="bemsDc"
+                    class="br.com.axialsoftware.axctg3.entity.contabil.Bem">
+            <fetchPlan extends="_base">
+                <property name="parceiro" fetchPlan="_base"/>
+                <property name="contaContabil" fetchPlan="_base"/>
+                <property name="contaContabilDepr" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="bemsDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from Bem e
+                    where e.codEmpresa = :codEmpresa
+                    order by e.contaContabil.codigo, e.codigo]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <genericFilter component="genericFilter"/>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <genericFilter id="genericFilter" opened="false" visible="false"
+                       dataLoader="bemsDl">
+            <properties include=".*"/>
+        </genericFilter>
+        <hbox id="buttonsPanel" classNames="buttons-panel">
+            <button id="createButton" action="bemsDataGrid.createAction" themeNames="small"/>
+            <button id="editButton" action="bemsDataGrid.editAction" themeNames="small"/>
+            <button id="removeButton" action="bemsDataGrid.removeAction" themeNames="small"/>
+            <simplePagination id="pagination" dataLoader="bemsDl"/>
+        </hbox>
+        <dataGrid id="bemsDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="bemsDc" themeNames="compact"
+                  columnReorderingAllowed="true">
+            <actions>
+                <action id="createAction" type="list_create"/>
+                <action id="editAction" type="list_edit"/>
+                <action id="removeAction" type="list_remove"/>
+            </actions>
+            <columns resizable="true">
+                <column property="contaContabil" header="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.contaContabil" flexGrow="3"/>
+                <column property="codigo" autoWidth="true" filterable="true"/>
+                <column property="descricao" flexGrow="10"/>
+                <column property="resumida" flexGrow="2"/>
+                <column property="dataCompra"/>
+                <column property="valorCompra" textAlign="END"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction" themeNames="small"/>
+            <button id="discardButton" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>
