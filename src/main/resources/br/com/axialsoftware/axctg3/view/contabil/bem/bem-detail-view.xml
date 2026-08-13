@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://bemDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="bemDc"
+                  class="br.com.axialsoftware.axctg3.entity.contabil.Bem">
+            <fetchPlan extends="_base">
+                <property name="depreciacaos" fetchPlan="_base"/>
+                <property name="parceiro" fetchPlan="_instance_name"/>
+                <property name="contaContabil" fetchPlan="_instance_name"/>
+                <property name="contaContabilDepr" fetchPlan="_instance_name"/>
+                <property name="contaContabilDespDepr" fetchPlan="_instance_name"/>
+            </fetchPlan>
+            <loader id="bemDl"/>
+            <collection id="depreciacaosDc" property="depreciacaos"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <vbox id="form" width="100%">
+            <hbox width="100%" expand="descricaoField">
+                <entityPicker id="contaContabilField"
+                              property="contaContabil"
+                              dataContainer="bemDc"
+                              width="30%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.contaContabil">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+                <textField id="codigoField"
+                           property="codigo"
+                           dataContainer="bemDc"
+                           width="10%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.codigo"/>
+                <textArea id="descricaoField"
+                          property="descricao"
+                          dataContainer="bemDc"
+                          maxLength="80" themeNames="small"
+                          label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.descricao"/>
+                <textField id="resumidaField"
+                           property="resumida"
+                           dataContainer="bemDc"
+                           width="15%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.resumida"/>
+            </hbox>
+            <hbox width="100%" expand="parceiroField">
+                <textField id="chapaField"
+                           property="chapa"
+                           dataContainer="bemDc"
+                           width="10%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.chapa"/>
+                <textField id="localField"
+                           property="local"
+                           dataContainer="bemDc"
+                           width="10%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.local"/>
+                <datePicker id="dataCompraField"
+                            property="dataCompra"
+                            dataContainer="bemDc"
+                            width="12%" themeNames="small"
+                            label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.dataCompra"/>
+                <textField id="valorCompraField"
+                           property="valorCompra"
+                           dataContainer="bemDc"
+                           width="12%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.valorCompra"/>
+                <entityPicker id="parceiroField"
+                              property="parceiro"
+                              dataContainer="bemDc" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.parceiro">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+                <textField id="documentoField"
+                           property="documento"
+                           dataContainer="bemDc"
+                           width="10%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.documento"/>
+            </hbox>
+            <hbox width="100%">
+                <entityPicker id="contaContabilDeprField"
+                              property="contaContabilDepr"
+                              dataContainer="bemDc"
+                              width="30%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.contaContabilDepr">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+                <entityPicker id="contaContabilDespDeprField"
+                              property="contaContabilDespDepr"
+                              dataContainer="bemDc"
+                              width="30%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.contaContabilDespDepr">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+                <textField id="taxaDeprField"
+                           property="taxaDepr"
+                           dataContainer="bemDc"
+                           width="12%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.taxaDepr"/>
+                <datePicker id="dataIniDeprField"
+                            property="dataIniDepr"
+                            dataContainer="bemDc"
+                            width="14%" themeNames="small"
+                            label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.dataIniDepr"/>
+                <textField id="valorIniDeprField"
+                           property="valorIniDepr"
+                           dataContainer="bemDc"
+                           width="14%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.valorIniDepr"/>
+            </hbox>
+            <hbox width="100%">
+                <textField id="deprAcumField"
+                           property="deprAcum"
+                           dataContainer="bemDc"
+                           width="16%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.deprAcum"/>
+                <textField id="valorAtualField"
+                           property="valorAtual"
+                           dataContainer="bemDc"
+                           width="16%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.valorAtual"/>
+                <textField id="valorFinalField"
+                           property="valorFinal"
+                           dataContainer="bemDc"
+                           width="16%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.valorFinal"/>
+                <datePicker id="dataBaixaField"
+                            property="dataBaixa"
+                            dataContainer="bemDc"
+                            width="16%" themeNames="small"
+                            label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.dataBaixa"/>
+                <textField id="valorBaixaField"
+                           property="valorBaixa"
+                           dataContainer="bemDc"
+                           width="16%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.valorBaixa"/>
+            </hbox>
+        </vbox>
+        <h5 text="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.depreciacaos"/>
+        <hbox id="depreciacaoButtonsPanel" classNames="buttons-panel">
+            <button id="createDepreciacaoButton" action="depreciacaosDataGrid.createAction" themeNames="small"/>
+            <button id="editDepreciacaoButton" action="depreciacaosDataGrid.editAction" themeNames="small"/>
+            <button id="removeDepreciacaoButton" action="depreciacaosDataGrid.removeAction" themeNames="small"/>
+        </hbox>
+        <dataGrid id="depreciacaosDataGrid" dataContainer="depreciacaosDc" width="50%" minHeight="10em" themeNames="compact">
+            <actions>
+                <action id="createAction" type="list_create">
+                    <properties>
+                        <property name="openMode" value="DIALOG"/>
+                    </properties>
+                </action>
+                <action id="editAction" type="list_edit">
+                    <properties>
+                        <property name="openMode" value="DIALOG"/>
+                    </properties>
+                </action>
+                <action id="removeAction" type="list_remove"/>
+            </actions>
+            <columns>
+                <column property="dataDepr"/>
+                <column property="valorDepr"/>
+                <column property="lancamento"/>
+            </columns>
+        </dataGrid>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

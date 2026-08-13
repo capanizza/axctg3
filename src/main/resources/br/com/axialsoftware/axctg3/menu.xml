@@ -23,6 +23,8 @@
                   title="msg://br.com.axialsoftware.axctg3.view.contabil.contacontabil/contaContabilListView.title"/>
             <item view="Lancamento.list"
                   title="msg://br.com.axialsoftware.axctg3.view.contabil.lancamento/lancamentoListView.title"/>
+            <item view="Bem.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.contabil.bem/bemListView.title"/>
         </menu>
         <menu id="financeiro" title="msg://br.com.axialsoftware.axctg3/menu.financeiro.title">
             <item view="Banco.list"

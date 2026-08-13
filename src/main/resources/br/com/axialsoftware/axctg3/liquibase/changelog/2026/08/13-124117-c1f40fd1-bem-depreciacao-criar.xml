@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/13-124117-c1f40fd1-bem-depreciacao-criar.xml">
+    <changeSet id="1" author="axctg3">
+        <createTable tableName="BEM">
+            <column name="ID" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_BEM"/>
+            </column>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="${offsetDateTime.type}"/>
+            <column name="LAST_MODIFIED_BY" type="VARCHAR(255)"/>
+            <column name="LAST_MODIFIED_DATE" type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY" type="VARCHAR(255)"/>
+            <column name="DELETED_DATE" type="${offsetDateTime.type}"/>
+            <column name="CODIGO" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="COD_EMPRESA" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DESCRICAO" type="VARCHAR(80)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="RESUMIDA" type="VARCHAR(20)"/>
+            <column name="CHAPA" type="VARCHAR(25)"/>
+            <column name="LOCAL" type="VARCHAR(25)"/>
+            <column name="PARCEIRO_ID" type="UUID"/>
+            <column name="DOCUMENTO" type="VARCHAR(10)"/>
+            <column name="DATA_COMPRA" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="VALOR_COMPRA" type="DECIMAL(19, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TAXA_DEPR" type="DECIMAL(19, 2)"/>
+            <column name="DATA_BAIXA" type="DATE"/>
+            <column name="VALOR_BAIXA" type="DECIMAL(19, 2)"/>
+            <column name="VALOR_ATUAL" type="DECIMAL(19, 2)"/>
+            <column name="VALOR_FINAL" type="DECIMAL(19, 2)"/>
+            <column name="DEPR_ACUM" type="DECIMAL(19, 2)"/>
+            <column name="DEPR_MES" type="DECIMAL(19, 2)"/>
+            <column name="DATA_INI_DEPR" type="DATE"/>
+            <column name="VALOR_INI_DEPR" type="DECIMAL(19, 2)"/>
+            <column name="DATA_DEPR" type="DATE"/>
+            <column name="CONTA_CONTABIL_ID" type="UUID"/>
+            <column name="CONTA_CONTABIL_DEPR_ID" type="UUID"/>
+            <column name="CONTA_CONTABIL_DESP_DEPR_ID" type="UUID"/>
+            <column name="COD_CONTABIL" type="VARCHAR(25)"/>
+            <column name="COD_CONTABIL_DEPR" type="VARCHAR(28)"/>
+            <column name="COD_CONTABIL_DESP_DEPR" type="VARCHAR(25)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2" author="axctg3">
+        <createTable tableName="DEPRECIACAO">
+            <column name="ID" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_DEPRECIACAO"/>
+            </column>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="${offsetDateTime.type}"/>
+            <column name="LAST_MODIFIED_BY" type="VARCHAR(255)"/>
+            <column name="LAST_MODIFIED_DATE" type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY" type="VARCHAR(255)"/>
+            <column name="DELETED_DATE" type="${offsetDateTime.type}"/>
+            <column name="BEM_ID" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DATA_DEPR" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="VALOR_DEPR" type="DECIMAL(19, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="LANCAMENTO" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3" author="axctg3" dbms="postgresql">
+        <createIndex indexName="IDX_BEM_UNQ" tableName="BEM" unique="true">
+            <column name="CODIGO"/>
+            <column name="COD_EMPRESA"/>
+        </createIndex>
+
+        <modifySql>
+            <append value="where DELETED_DATE is null"/>
+        </modifySql>
+    </changeSet>
+
+    <changeSet id="4" author="axctg3">
+        <createIndex indexName="IDX_BEM_PARCEIRO" tableName="BEM">
+            <column name="PARCEIRO_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="PARCEIRO_ID" baseTableName="BEM"
+                                 constraintName="FK_BEM_ON_PARCEIRO" referencedColumnNames="ID"
+                                 referencedTableName="PARCEIRO"/>
+    </changeSet>
+
+    <changeSet id="5" author="axctg3">
+        <createIndex indexName="IDX_BEM_CONTA_CONTABIL" tableName="BEM">
+            <column name="CONTA_CONTABIL_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="CONTA_CONTABIL_ID" baseTableName="BEM"
+                                 constraintName="FK_BEM_ON_CONTA_CONTABIL" referencedColumnNames="ID"
+                                 referencedTableName="CONTA_CONTABIL"/>
+    </changeSet>
+
+    <changeSet id="6" author="axctg3">
+        <createIndex indexName="IDX_BEM_CONTA_CONTABIL_DEPR" tableName="BEM">
+            <column name="CONTA_CONTABIL_DEPR_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="CONTA_CONTABIL_DEPR_ID" baseTableName="BEM"
+                                 constraintName="FK_BEM_ON_CONTA_CONTABIL_DEPR" referencedColumnNames="ID"
+                                 referencedTableName="CONTA_CONTABIL"/>
+    </changeSet>
+
+    <changeSet id="7" author="axctg3">
+        <createIndex indexName="IDX_BEM_CONTA_CONTABIL_DESP_DEPR" tableName="BEM">
+            <column name="CONTA_CONTABIL_DESP_DEPR_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="CONTA_CONTABIL_DESP_DEPR_ID" baseTableName="BEM"
+                                 constraintName="FK_BEM_ON_CONTA_CONTABIL_DESP_DEPR" referencedColumnNames="ID"
+                                 referencedTableName="CONTA_CONTABIL"/>
+    </changeSet>
+
+    <changeSet id="8" author="axctg3">
+        <createIndex indexName="IDX_DEPRECIACAO_BEM" tableName="DEPRECIACAO">
+            <column name="BEM_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="BEM_ID" baseTableName="DEPRECIACAO"
+                                 constraintName="FK_DEPRECIACAO_ON_BEM" referencedColumnNames="ID"
+                                 referencedTableName="BEM"/>
+    </changeSet>
+
+    <changeSet id="9" author="axctg3">
+        <createIndex indexName="IDX_DEPRECIACAO_DATA_DEPR" tableName="DEPRECIACAO">
+            <column name="DATA_DEPR"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

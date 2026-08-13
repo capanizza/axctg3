@@ -37,10 +37,25 @@ auditoria funcional.
 ## ⏳ Pendente da fase 1 (existe no axctg-flow, falta portar)
 
 ### Contábil — patrimônio/depreciação e correção monetária
-- [ ] `Bem`, `BemDto` — cadastro de bens
-- [ ] `Depreciacao` — cálculo/lançamento de depreciação
-- [ ] `ResumoCorrecaoDto`, `VerificacaoDto` — checar se ainda tem lógica de correção
-      monetária associada no axctg-flow antes de portar (eram só DTOs de relatório lá)
+- [x] `Bem`, `Depreciacao` — CRUD portado em 2026-08-13: entidades (soft delete, índice
+      único em vez de unique constraint), `BemEventListener`, changelog, list view +
+      detail view com depreciações inline por composição. Coberto por `BemUiTest`
+      (listener, listagem, detail com composição).
+- [ ] Fluxos de cálculo/lançamento (`DepreciacaoService.calcularDepreciacoes` /
+      `lancarDepreciacoes` / `listarDepreciacoes` + `MenuBean` com InputDialogs) —
+      deliberadamente adiados desta leva; os `.jasper` (`Depreciacao`, reaproveita
+      `Lancamento.jasper`) já existem em `relatorios/`, então não há trabalho de
+      template pendente, só a integração service/MenuBean/UI.
+- [ ] `BemDto` — usado só pelos fluxos de cálculo acima (JRBeanCollectionDataSource);
+      portar junto quando essa parte entrar.
+- [ ] `VerificacaoDto` — **não é do módulo de bens**: pertence a
+      `ContaContabilService.verificarContasContabeis()` (correção de item registrado por
+      engano nesta lista). Conferir se esse método já foi portado antes de tratá-lo aqui.
+- [ ] `ResumoCorrecaoDto` — usado por `DepreciacaoService.resumoCorrecaoMonetaria[2]`;
+      no axctg-flow só a variante `resumoCorrecaoMonetaria()` (via `emitirRelatorio2`,
+      o caminho JDBC legado pro `axialdb`) estava de fato ligada no `MenuBean` — a
+      variante 2, com bean datasource, existia no serviço mas ficava comentada/morta.
+      Ao portar, preferir a variante 2 (`emitirRelatorio()`), não `emitirRelatorio2`.
 
 ### Fiscal — nota de entrada
 - [ ] `NotaEntrada` — **entidade já existe no axctg3, falta a view** (dá pra salvar via
