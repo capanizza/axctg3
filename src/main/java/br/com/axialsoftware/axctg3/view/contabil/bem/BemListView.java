@@ -1,9 +1,11 @@
 package br.com.axialsoftware.axctg3.view.contabil.bem;
 
+import br.com.axialsoftware.axctg3.bean.MenuBean;
 import br.com.axialsoftware.axctg3.entity.contabil.Bem;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 import com.vaadin.flow.router.Route;
+import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +21,27 @@ public class BemListView extends StandardListView<Bem> {
     private CollectionLoader<Bem> bemsDl;
     @Autowired
     private UtilGeralService utilGeralService;
+    @Autowired
+    private MenuBean menuBean;
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
         bemsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
         bemsDl.load();
+    }
+
+    @Subscribe("depreciacaoSwitcher.calcularItem.calcularAction")
+    public void onDepreciacaoSwitcherCalcularItemCalcularAction(final ActionPerformedEvent event) {
+        menuBean.calcularDepreciacoes();
+    }
+
+    @Subscribe("depreciacaoSwitcher.lancarItem.lancarAction")
+    public void onDepreciacaoSwitcherLancarItemLancarAction(final ActionPerformedEvent event) {
+        menuBean.lancarDepreciacoes();
+    }
+
+    @Subscribe("depreciacaoSwitcher.listarItem.listarAction")
+    public void onDepreciacaoSwitcherListarItemListarAction(final ActionPerformedEvent event) {
+        menuBean.listarDepreciacoes();
     }
 }

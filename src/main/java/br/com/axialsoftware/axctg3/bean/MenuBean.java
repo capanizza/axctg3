@@ -5,6 +5,7 @@ import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
 import br.com.axialsoftware.axctg3.entity.financeiro.Banco;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.contabil.ContaContabilService;
+import br.com.axialsoftware.axctg3.service.contabil.DepreciacaoService;
 import br.com.axialsoftware.axctg3.service.contabil.LancamentoService;
 import br.com.axialsoftware.axctg3.service.financeiro.DiversoPagarService;
 import br.com.axialsoftware.axctg3.service.financeiro.ItemDiversoPagarService;
@@ -23,6 +24,7 @@ import io.jmix.flowui.component.UiComponentUtils;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Map;
 import java.util.Optional;
 
@@ -36,6 +38,7 @@ public class MenuBean {
     private final ContaContabilService contaContabilService;
     private final DataManager dataManager;
     private final LancamentoService lancamentoService;
+    private final DepreciacaoService depreciacaoService;
     private final DiversoPagarService diversoPagarService;
     private final ItemDiversoPagarService itemDiversoPagarService;
     private final TituloReceberService tituloReceberService;
@@ -44,12 +47,13 @@ public class MenuBean {
     private final ItemPagarService itemPagarService;
     private final MovimentoBancoService movimentoBancoService;
 
-    public MenuBean(UtilGeralService utilGeralService, Dialogs dialogs, ContaContabilService contaContabilService, DataManager dataManager, LancamentoService lancamentoService, DiversoPagarService diversoPagarService, ItemDiversoPagarService itemDiversoPagarService, TituloReceberService tituloReceberService, ItemReceberService itemReceberService, TituloPagarService tituloPagarService, ItemPagarService itemPagarService, MovimentoBancoService movimentoBancoService) {
+    public MenuBean(UtilGeralService utilGeralService, Dialogs dialogs, ContaContabilService contaContabilService, DataManager dataManager, LancamentoService lancamentoService, DepreciacaoService depreciacaoService, DiversoPagarService diversoPagarService, ItemDiversoPagarService itemDiversoPagarService, TituloReceberService tituloReceberService, ItemReceberService itemReceberService, TituloPagarService tituloPagarService, ItemPagarService itemPagarService, MovimentoBancoService movimentoBancoService) {
         this.utilGeralService = utilGeralService;
         this.dialogs = dialogs;
         this.contaContabilService = contaContabilService;
         this.dataManager = dataManager;
         this.lancamentoService = lancamentoService;
+        this.depreciacaoService = depreciacaoService;
         this.diversoPagarService = diversoPagarService;
         this.itemDiversoPagarService = itemDiversoPagarService;
         this.tituloReceberService = tituloReceberService;
@@ -218,6 +222,94 @@ public class MenuBean {
                         saveContext.saving(configRel);
                         dataManager.save(saveContext);
                         contaContabilService.listarBalancete(tipo, configRel);
+                    }
+                })
+                .open();
+    }
+
+    public void calcularDepreciacoes() {
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
+        Integer ano = utilGeralService.getAnoContabil();
+        Integer mes = utilGeralService.getMesContabil();
+        LocalDate ultimoDiaMes = LocalDate.of(ano, mes, 1).with(TemporalAdjusters.lastDayOfMonth());
+        LocalDate dataDepreciacao = Optional.ofNullable(configRel.getDataDepreciacao()).orElse(ultimoDiaMes);
+        dialogs.createInputDialog(UiComponentUtils.getCurrentView())
+                .withHeader("Calcular depreciações")
+                .withParameters(
+                        localDateParameter("dataDepreciacao")
+                                .withLabel("Data depreciação")
+                                .withDefaultValue(dataDepreciacao)
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withCloseListener(closeEvent -> {
+                    if (closeEvent.closedWith(DialogOutcome.OK)) {
+                        SaveContext saveContext = new SaveContext();
+                        configRel.setDataDepreciacao(closeEvent.getValue("dataDepreciacao"));
+                        saveContext.saving(configRel);
+                        dataManager.save(saveContext);
+                        depreciacaoService.calcularDepreciacoes(configRel);
+                    }
+                })
+                .open();
+    }
+
+    public void lancarDepreciacoes() {
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
+        Integer ano = utilGeralService.getAnoContabil();
+        Integer mes = utilGeralService.getMesContabil();
+        LocalDate ultimoDiaMes = LocalDate.of(ano, mes, 1).with(TemporalAdjusters.lastDayOfMonth());
+        LocalDate dataDepreciacao = Optional.ofNullable(configRel.getDataDepreciacao()).orElse(ultimoDiaMes);
+        Integer historicoDepreciacao = Optional.ofNullable(configRel.getHistoricoDepreciacao()).orElse(0);
+        dialogs.createInputDialog(UiComponentUtils.getCurrentView())
+                .withHeader("Lançar depreciações")
+                .withParameters(
+                        intParameter("historicoDepreciacao")
+                                .withLabel("Histórico depreciação")
+                                .withDefaultValue(historicoDepreciacao),
+                        localDateParameter("dataDepreciacao")
+                                .withLabel("Data depreciação")
+                                .withDefaultValue(dataDepreciacao)
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withCloseListener(closeEvent -> {
+                    if (closeEvent.closedWith(DialogOutcome.OK)) {
+                        SaveContext saveContext = new SaveContext();
+                        configRel.setHistoricoDepreciacao(closeEvent.getValue("historicoDepreciacao"));
+                        configRel.setDataDepreciacao(closeEvent.getValue("dataDepreciacao"));
+                        saveContext.saving(configRel);
+                        dataManager.save(saveContext);
+                        depreciacaoService.lancarDepreciacoes(configRel);
+                    }
+                })
+                .open();
+    }
+
+    public void listarDepreciacoes() {
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
+        Integer ano = utilGeralService.getAnoContabil();
+        Integer mes = utilGeralService.getMesContabil();
+        LocalDate ultimoDiaMes = LocalDate.of(ano, mes, 1).with(TemporalAdjusters.lastDayOfMonth());
+        LocalDate dataDepreciacao = Optional.ofNullable(configRel.getDataDepreciacao()).orElse(ultimoDiaMes);
+        dialogs.createInputDialog(UiComponentUtils.getCurrentView())
+                .withHeader("Listar depreciações")
+                .withParameters(
+                        localDateParameter("dataDepreciacao")
+                                .withLabel("Data depreciação")
+                                .withDefaultValue(dataDepreciacao),
+                        booleanParameter("listagemCompleta")
+                                .withLabel("Listagem completa")
+                                .withDefaultValue(false)
+                )
+                .withWidth("AUTO")
+                .withActions(DialogActions.OK_CANCEL)
+                .withCloseListener(closeEvent -> {
+                    if (closeEvent.closedWith(DialogOutcome.OK)) {
+                        SaveContext saveContext = new SaveContext();
+                        configRel.setDataDepreciacao(closeEvent.getValue("dataDepreciacao"));
+                        saveContext.saving(configRel);
+                        dataManager.save(saveContext);
+                        Boolean listagemCompleta = closeEvent.getValue("listagemCompleta");
+                        depreciacaoService.listarDepreciacoes(configRel, listagemCompleta);
                     }
                 })
                 .open();
