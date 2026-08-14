@@ -86,6 +86,7 @@ public class TituloPagarService {
         parametros.put("TITULO_RELATORIO", tituloRelatorio);
         parametros.put("NOME_EMPRESA", nomeEmpresa);
         parametros.put("PERIODO_RELATORIO", periodoRelatorio);
+        parametros.put("LOGO", utilGeralService.getLogoEmpresa());
 
         List<TituloPagarDto> tituloPagarsDto = prepararEmissaoDto(codEmpresa, configRel);
 
@@ -166,6 +167,7 @@ public class TituloPagarService {
         parametros.put("NOME_EMPRESA", nomeEmpresa);
         parametros.put("PERIODO_EMISSAO", periodoEmissao);
         parametros.put("PERIODO_VENCIMENTO", periodoVencimento);
+        parametros.put("LOGO", utilGeralService.getLogoEmpresa());
 
         List<TituloPagarDto> tituloPagarsDto = prepararVencimentoDto(codEmpresa, configRel);
 

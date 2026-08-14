@@ -5,6 +5,7 @@
 	<parameter name="TITULO_RELATORIO" class="java.lang.String"/>
 	<parameter name="NOME_EMPRESA" class="java.lang.String"/>
 	<parameter name="PERIODO_RELATORIO" class="java.lang.String"/>
+	<parameter name="LOGO" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[]]>
 	</queryString>
@@ -134,7 +135,7 @@
 		<band height="74" splitType="Stretch">
 			<image scaleImage="FillFrame">
 				<reportElement x="0" y="0" width="50" height="40" uuid="070c8382-89c5-45ed-879d-0bb590d312a8"/>
-				<imageExpression><![CDATA[System.getProperty("user.dir").replace('\\','/') + "/logo.bmp"]]></imageExpression>
+				<imageExpression><![CDATA[$P{LOGO}]]></imageExpression>
 			</image>
 			<textField>
 				<reportElement x="50" y="0" width="420" height="15" uuid="8d587f60-1ab6-4736-b226-b8ef1353124b"/>

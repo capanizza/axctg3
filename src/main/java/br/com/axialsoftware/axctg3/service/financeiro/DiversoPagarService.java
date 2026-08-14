@@ -68,6 +68,7 @@ public class DiversoPagarService {
         parametros.put("TITULO_RELATORIO", tituloRelatorio);
         parametros.put("NOME_EMPRESA", nomeEmpresa);
         parametros.put("PERIODO_RELATORIO", periodoRelatorio);
+        parametros.put("LOGO", utilGeralService.getLogoEmpresa());
 
         List<DiversoPagarDto> diversoPagarsDto = prepararEmissaoDto(codEmpresa, configRel);
 

@@ -106,6 +106,7 @@ public class ItemReceberService {
         parametros.put("TITULO_RELATORIO", tituloRelatorio);
         parametros.put("NOME_EMPRESA", nomeEmpresa);
         parametros.put("PERIODO_RELATORIO", periodoRelatorio);
+        parametros.put("LOGO", utilGeralService.getLogoEmpresa());
 
         List<ItemReceberDto> itemRecebersDto = prepararBaixaDto(codEmpresa, configRel);
 

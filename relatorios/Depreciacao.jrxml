@@ -16,6 +16,7 @@
 	<parameter name="TITULO_RELATORIO" class="java.lang.String"/>
 	<parameter name="NOME_EMPRESA" class="java.lang.String"/>
 	<parameter name="DATA_DEPRECIACAO" class="java.sql.Date"/>
+	<parameter name="LOGO" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[]]>
 	</queryString>
@@ -246,7 +247,7 @@
 			</staticText>
 			<image scaleImage="FillFrame">
 				<reportElement x="1" y="0" width="88" height="45" uuid="6685c85a-6460-4247-9615-6c3ef4a62a2f"/>
-				<imageExpression><![CDATA[System.getProperty("user.dir").replace('\\','/') + "/logo.bmp"]]></imageExpression>
+				<imageExpression><![CDATA[$P{LOGO}]]></imageExpression>
 			</image>
 			<staticText>
 				<reportElement x="310" y="70" width="110" height="14" uuid="5a95dce5-0f85-4ef0-88cf-666a7bfa36cb">

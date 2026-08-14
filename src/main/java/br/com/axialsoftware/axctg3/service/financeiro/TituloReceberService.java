@@ -85,6 +85,7 @@ public class TituloReceberService {
         parametros.put("TITULO_RELATORIO", tituloRelatorio);
         parametros.put("NOME_EMPRESA", nomeEmpresa);
         parametros.put("PERIODO_RELATORIO", periodoRelatorio);
+        parametros.put("LOGO", utilGeralService.getLogoEmpresa());
 
         List<TituloReceberDto> tituloRecebersDto = prepararEmissaoDto(codEmpresa, configRel);
 
@@ -144,6 +145,7 @@ public class TituloReceberService {
         parametros.put("NOME_EMPRESA", nomeEmpresa);
         parametros.put("PERIODO_EMISSAO", periodoEmissao);
         parametros.put("PERIODO_VENCIMENTO", periodoVencimento);
+        parametros.put("LOGO", utilGeralService.getLogoEmpresa());
 
         List<TituloReceberDto> tituloRecebersDto = prepararVencimentoDto(codEmpresa, configRel);
 

@@ -49,6 +49,7 @@ public class MovimentoBancoService {
         parametros.put("TITULO_RELATORIO", tituloRelatorio);
         parametros.put("NOME_EMPRESA", nomeEmpresa);
         parametros.put("PERIODO_RELATORIO", periodoRelatorio);
+        parametros.put("LOGO", utilGeralService.getLogoEmpresa());
 
         List<MovimentoBancoDto> movimentoBancoDto = prepararMovimentoBancoDto(codEmpresa, configRel);
 
@@ -74,6 +75,7 @@ public class MovimentoBancoService {
         parametros.put("NOME_EMPRESA", nomeEmpresa);
         parametros.put("PERIODO_RELATORIO", periodoRelatorio);
         parametros.put("BANCO", "Banco: " + utilFinanceiroService.getNomeBanco(banco));
+        parametros.put("LOGO", utilGeralService.getLogoEmpresa());
 
         List<MovimentoBancoDto> movimentoBancoDto = prepararMovimentoBancoDto(codEmpresa, configRel);
 

@@ -50,6 +50,7 @@ public class DepreciacaoService {
         parametros.put("TITULO_RELATORIO", tituloRelatorio);
         parametros.put("NOME_EMPRESA", nomeEmpresa);
         parametros.put("DATA_DEPRECIACAO", utilGeralService.localDateToSqlDate(dataDepreciacao));
+        parametros.put("LOGO", utilGeralService.getLogoEmpresa());
 
         List<Bem> bens = dataManager.load(Bem.class)
                 .query("select b from Bem b " +
@@ -217,6 +218,7 @@ public class DepreciacaoService {
         parametros.put("TITULO_RELATORIO", tituloRelatorio);
         parametros.put("NOME_EMPRESA", nomeEmpresa);
         parametros.put("DATA_DEPRECIACAO", utilGeralService.localDateToSqlDate(dataDepr));
+        parametros.put("LOGO", utilGeralService.getLogoEmpresa());
 
         List<Bem> bens = dataManager.load(Bem.class)
                 .query("select b from Bem b " +
