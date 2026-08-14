@@ -185,6 +185,20 @@ public class MenuBean {
                 .open();
     }
 
+    public void verificarContas() {
+        dialogs.createOptionDialog()
+                .withHeader("Confirmação")
+                .withText("Confirma verificação das contas contábeis?")
+                .withActions(
+                        new DialogAction(DialogAction.Type.YES)
+                                .withHandler(e -> {
+                                    contaContabilService.verificarContas();
+                                }),
+                        new DialogAction(DialogAction.Type.NO)
+                )
+                .open();
+    }
+
     public void listarBalancete(Map<String, Object> parameters) {
         int tipo = Integer.parseInt((String) parameters.get("tipo"));
 
@@ -312,6 +326,20 @@ public class MenuBean {
                         depreciacaoService.listarDepreciacoes(configRel, listagemCompleta);
                     }
                 })
+                .open();
+    }
+
+    public void resumoCorrecaoMonetaria() {
+        dialogs.createOptionDialog()
+                .withHeader("Confirmação")
+                .withText("Confirma emissão do resumo de correção monetária?")
+                .withActions(
+                        new DialogAction(DialogAction.Type.YES)
+                                .withHandler(e -> {
+                                    depreciacaoService.resumoCorrecaoMonetaria();
+                                }),
+                        new DialogAction(DialogAction.Type.NO)
+                )
                 .open();
     }
 

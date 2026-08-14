@@ -7,6 +7,7 @@ import br.com.axialsoftware.axctg3.entity.contabil.Depreciacao;
 import br.com.axialsoftware.axctg3.entity.contabil.HistoricoContabil;
 import br.com.axialsoftware.axctg3.entity.contabil.Lancamento;
 import br.com.axialsoftware.axctg3.entity.contabil.LancamentoDto;
+import br.com.axialsoftware.axctg3.entity.contabil.ResumoCorrecaoDto;
 import br.com.axialsoftware.axctg3.service.RelatorioService;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import io.jmix.core.DataManager;
@@ -280,6 +281,56 @@ public class DepreciacaoService {
 
         JRDataSource dataSource = new JRBeanCollectionDataSource(bensDto);
         relatorioService.emitirRelatorio(nomeRelatorio, dataSource, parametros, nomeSaida);
+    }
+
+    /**
+     * Porta apenas a variante 2 do legado (bean datasource via emitirRelatorio()), não a
+     * variante 1 (resumoCorrecaoMonetaria original, que abria JDBC direto pro axialdb via
+     * emitirRelatorio2 — caminho legado marcado para não seguir, ver docs/MIGRACAO.md).
+     */
+    public void resumoCorrecaoMonetaria() {
+        String tituloRelatorio = "Resumo correção monetária";
+        String nomeRelatorio = "ResumoCorrecao2.jasper";
+        String nomeEmpresa = utilGeralService.getNomeEmpresa();
+        String nomeSaida = "ResumoCorrecao.pdf";
+        String periodoRelatorio = utilGeralService.extensoPeriodoContabil();
+
+        var parametros = new HashMap<String, Object>();
+        parametros.put("TITULO_RELATORIO", tituloRelatorio);
+        parametros.put("NOME_EMPRESA", nomeEmpresa);
+        parametros.put("PERIODO_RELATORIO", periodoRelatorio);
+        parametros.put("LOGO", utilGeralService.getLogoEmpresa());
+
+        List<ResumoCorrecaoDto> resumoDto = prepararResumoCorrecaoDto();
+
+        JRDataSource dataSource = new JRBeanCollectionDataSource(resumoDto);
+        relatorioService.emitirRelatorio(nomeRelatorio, dataSource, parametros, nomeSaida);
+    }
+
+    private List<ResumoCorrecaoDto> prepararResumoCorrecaoDto() {
+        Integer codEmpresa = utilGeralService.getCodEmpresa();
+        List<ResumoCorrecaoDto> resumoDto = new ArrayList<>();
+        List<Bem> bens = dataManager.load(Bem.class)
+                .query("select b from Bem b " +
+                        "where b.codEmpresa = :codEmpresa " +
+                        "and b.taxaDepr > 0 " +
+                        // valorBaixa só é preenchido quando o bem é baixado (sem default no
+                        // BemEventListener) — o legado comparava direto contra valorCompra,
+                        // o que excluiria todo bem ainda ativo (valorBaixa null).
+                        "and (b.valorBaixa is null or b.valorCompra > b.valorBaixa) " +
+                        "order by b.contaContabilDepr.codigo, b.codigo")
+                .parameter("codEmpresa", codEmpresa)
+                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE)
+                        .add("contaContabilDepr", FetchPlan.BASE))
+                .list();
+        for (Bem bem : bens) {
+            ResumoCorrecaoDto resumoCorrecaoDto = dataManager.create(ResumoCorrecaoDto.class);
+            resumoCorrecaoDto.setCodConta(bem.getContaContabilDepr().getCodigo());
+            resumoCorrecaoDto.setNmConta(bem.getContaContabilDepr().getNome());
+            resumoCorrecaoDto.setValorAtual(bem.getDeprAcum());
+            resumoDto.add(resumoCorrecaoDto);
+        }
+        return resumoDto;
     }
 
     private static BigDecimal getDeprPeriodo(Bem bem) {

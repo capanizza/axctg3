@@ -44,4 +44,9 @@ public class BemListView extends StandardListView<Bem> {
     public void onDepreciacaoSwitcherListarItemListarAction(final ActionPerformedEvent event) {
         menuBean.listarDepreciacoes();
     }
+
+    @Subscribe("depreciacaoSwitcher.resumoCorrecaoItem.resumoCorrecaoAction")
+    public void onDepreciacaoSwitcherResumoCorrecaoItemResumoCorrecaoAction(final ActionPerformedEvent event) {
+        menuBean.resumoCorrecaoMonetaria();
+    }
 }

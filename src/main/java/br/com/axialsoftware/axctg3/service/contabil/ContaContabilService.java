@@ -5,17 +5,23 @@ import br.com.axialsoftware.axctg3.entity.contabil.BalanceteDto;
 import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
 import br.com.axialsoftware.axctg3.entity.contabil.ContaContabilDto;
 import br.com.axialsoftware.axctg3.entity.contabil.SaldoConta;
+import br.com.axialsoftware.axctg3.entity.contabil.VerificacaoDto;
 import br.com.axialsoftware.axctg3.service.RelatorioService;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import io.jmix.core.DataManager;
+import io.jmix.core.FetchPlan;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ContaContabilService {
@@ -325,6 +331,113 @@ public class ContaContabilService {
             }
         }
         return balanceteDtoBusca;
+    }
+
+    public void verificarContas() {
+        String tituloRelatorio = "Verificação das contas contábeis";
+        String nomeRelatorio = "VerificacaoContas.jasper";
+        String nomeEmpresa = utilGeralService.getNomeEmpresa();
+        String nomeSaida = "VerificacaoContas.pdf";
+
+        var parametros = new HashMap<String, Object>();
+        parametros.put("TITULO_RELATORIO", tituloRelatorio);
+        parametros.put("NOME_EMPRESA", nomeEmpresa);
+        parametros.put("LOGO", utilGeralService.getLogoEmpresa());
+
+        List<VerificacaoDto> contasDto = verificarContasContabeis();
+
+        JRDataSource dataSource = new JRBeanCollectionDataSource(contasDto);
+
+        relatorioService.emitirRelatorio(nomeRelatorio, dataSource, parametros, nomeSaida);
+    }
+
+    private List<VerificacaoDto> verificarContasContabeis() {
+        Integer codEmpresa = utilGeralService.getCodEmpresa();
+        Integer anoContabil = utilGeralService.getAnoContabil();
+        List<ContaContabil> contas = dataManager.load(ContaContabil.class)
+                .query("select e from ContaContabil e " +
+                        "where e.codigo > '1' " +
+                        "and e.ano = :ano " +
+                        "and e.codEmpresa = :codEmpresa " +
+                        "order by e.codigo")
+                .parameter("ano", anoContabil)
+                .parameter("codEmpresa", codEmpresa)
+                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE).add("saldosConta", FetchPlan.BASE))
+                .list();
+        List<VerificacaoDto> verificacaoDtos = new ArrayList<>();
+
+        for (ContaContabil contaContabil : contas) { // se há 12 saldos
+            if (contaContabil.getSaldosConta().size() != 12) {
+                VerificacaoDto verificacaoDto = dataManager.create(VerificacaoDto.class);
+                verificacaoDto.setTipo(0);
+                verificacaoDto.setTexto("Verificação das colunas dos saldos");
+                verificacaoDto.setCodigo(contaContabil.getCodigo());
+                verificacaoDto.setNome(contaContabil.getNome());
+                verificacaoDtos.add(verificacaoDto);
+            }
+        }
+
+        for (ContaContabil contaContabil : contas) {
+            if (!Boolean.TRUE.equals(contaContabil.getAnalitica())) {
+                continue;
+            }
+            List<SaldoConta> saldoContas = new ArrayList<>(contaContabil.getSaldosConta());
+            saldoContas.sort(Comparator.comparing(SaldoConta::getMes)); // ordena pelo mês
+            for (SaldoConta saldoConta : saldoContas) {
+                int mes = saldoConta.getMes();
+                LocalDate dataInicial = LocalDate.of(anoContabil, mes, 1);
+                LocalDate dataFinal = dataInicial.with(TemporalAdjusters.lastDayOfMonth());
+                BigDecimal saldoDevedor = Optional.ofNullable(saldoConta.getDebitoMes()).orElse(BigDecimal.ZERO);
+                BigDecimal movimentoDevedor = valorMovDevedor(contaContabil, dataInicial, dataFinal);
+                BigDecimal saldoCredor = Optional.ofNullable(saldoConta.getCreditoMes()).orElse(BigDecimal.ZERO);
+                BigDecimal movimentoCredor = valorMovCredor(contaContabil, dataInicial, dataFinal);
+                if (saldoDevedor.compareTo(movimentoDevedor) != 0 || saldoCredor.compareTo(movimentoCredor) != 0) {
+                    VerificacaoDto verificacaoDto = dataManager.create(VerificacaoDto.class);
+                    verificacaoDto.setTipo(1);
+                    verificacaoDto.setTexto("Verificação dos saldos e lançamentos");
+                    verificacaoDto.setCodigo(contaContabil.getCodigo());
+                    verificacaoDto.setNome(contaContabil.getNome());
+                    verificacaoDto.setMes(mes);
+                    verificacaoDto.setSaldoDevedor(saldoDevedor);
+                    verificacaoDto.setMovimentoDevedor(movimentoDevedor);
+                    verificacaoDto.setSaldoCredor(saldoCredor);
+                    verificacaoDto.setMovimentoCredor(movimentoCredor);
+                    verificacaoDtos.add(verificacaoDto);
+                }
+            }
+        }
+
+        return verificacaoDtos;
+    }
+
+    private BigDecimal valorMovCredor(ContaContabil conta, LocalDate dataInicial, LocalDate dataFinal) {
+        return dataManager.loadValue(
+                        "select sum(e.valor) from Lancamento e " +
+                                "where e.dataLancamento between :dataInicial and :dataFinal " +
+                                "and e.contaCredora = :conta " +
+                                "and e.codEmpresa = :codEmpresa",
+                        BigDecimal.class)
+                .parameter("dataInicial", dataInicial)
+                .parameter("dataFinal", dataFinal)
+                .parameter("conta", conta)
+                .parameter("codEmpresa", utilGeralService.getCodEmpresa())
+                .optional()
+                .orElse(BigDecimal.ZERO);
+    }
+
+    private BigDecimal valorMovDevedor(ContaContabil conta, LocalDate dataInicial, LocalDate dataFinal) {
+        return dataManager.loadValue(
+                        "select sum(e.valor) from Lancamento e " +
+                                "where e.dataLancamento between :dataInicial and :dataFinal " +
+                                "and e.contaDevedora = :conta " +
+                                "and e.codEmpresa = :codEmpresa",
+                        BigDecimal.class)
+                .parameter("dataInicial", dataInicial)
+                .parameter("dataFinal", dataFinal)
+                .parameter("conta", conta)
+                .parameter("codEmpresa", utilGeralService.getCodEmpresa())
+                .optional()
+                .orElse(BigDecimal.ZERO);
     }
 
 }

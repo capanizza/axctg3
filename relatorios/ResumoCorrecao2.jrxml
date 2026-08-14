@@ -17,41 +17,30 @@
 	<parameter name="TITULO_RELATORIO" class="java.lang.String"/>
 	<parameter name="NOME_EMPRESA" class="java.lang.String"/>
 	<parameter name="PERIODO_RELATORIO" class="java.lang.String"/>
+	<parameter name="LOGO" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[SELECT bem.depr_acum,
-	conta_contabil.codigo,
-	conta_contabil.nome
-FROM bem
-	LEFT OUTER JOIN conta_contabil ON 
-	 conta_contabil.id = bem.conta_contabil_depr_id 
-WHERE bem.cod_empresa = 1
-and bem.taxa_depr > 0
-and bem.valor_compra > bem.valor_baixa
-ORDER BY conta_contabil.codigo ASC]]>
+		<![CDATA[]]>
 	</queryString>
-	<field name="depr_acum" class="java.math.BigDecimal">
-		<property name="com.jaspersoft.studio.field.name" value="depr_acum"/>
-		<property name="com.jaspersoft.studio.field.label" value="depr_acum"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="bem"/>
+	<field name="valorAtual" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.name" value="valorAtual"/>
+		<property name="com.jaspersoft.studio.field.label" value="valorAtual"/>
 	</field>
-	<field name="codigo" class="java.lang.String">
-		<property name="com.jaspersoft.studio.field.name" value="codigo"/>
-		<property name="com.jaspersoft.studio.field.label" value="codigo"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="conta_contabil"/>
+	<field name="codConta" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.name" value="codConta"/>
+		<property name="com.jaspersoft.studio.field.label" value="codConta"/>
 	</field>
-	<field name="nome" class="java.lang.String">
-		<property name="com.jaspersoft.studio.field.name" value="nome"/>
-		<property name="com.jaspersoft.studio.field.label" value="nome"/>
-		<property name="com.jaspersoft.studio.field.tree.path" value="conta_contabil"/>
+	<field name="nmConta" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.name" value="nmConta"/>
+		<property name="com.jaspersoft.studio.field.label" value="nmConta"/>
 	</field>
 	<variable name="depr_acum" class="java.math.BigDecimal" resetType="Group" resetGroup="Codigo" calculation="Sum">
-		<variableExpression><![CDATA[$F{depr_acum}]]></variableExpression>
+		<variableExpression><![CDATA[$F{valorAtual}]]></variableExpression>
 	</variable>
 	<variable name="depr_acum_total" class="java.math.BigDecimal" calculation="Sum">
-		<variableExpression><![CDATA[$F{depr_acum}]]></variableExpression>
+		<variableExpression><![CDATA[$F{valorAtual}]]></variableExpression>
 	</variable>
 	<group name="Codigo" keepTogether="true">
-		<groupExpression><![CDATA[$F{codigo}]]></groupExpression>
+		<groupExpression><![CDATA[$F{codConta}]]></groupExpression>
 		<groupFooter>
 			<band height="14">
 				<property name="com.jaspersoft.studio.unit.height" value="px"/>
@@ -86,7 +75,7 @@ ORDER BY conta_contabil.codigo ASC]]>
 					<textElement textAlignment="Left" verticalAlignment="Middle">
 						<font fontName="DejaVu Sans Mono" size="10"/>
 					</textElement>
-					<textFieldExpression><![CDATA[$F{codigo} + " " + $F{nome}]]></textFieldExpression>
+					<textFieldExpression><![CDATA[$F{codConta} + " " + $F{nmConta}]]></textFieldExpression>
 				</textField>
 			</band>
 		</groupFooter>
@@ -94,6 +83,57 @@ ORDER BY conta_contabil.codigo ASC]]>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
+	<pageHeader>
+		<band height="55" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<image scaleImage="FillFrame">
+				<reportElement x="0" y="0" width="88" height="40" uuid="9c6f6e4f-0f3e-4a6a-9f8e-2f8f6e6e5f5c"/>
+				<imageExpression><![CDATA[$P{LOGO}]]></imageExpression>
+			</image>
+			<textField>
+				<reportElement x="88" y="0" width="398" height="15" uuid="3e2e7e5a-6b3c-4f0a-9e6a-1a2b3c4d5e6f"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{TITULO_RELATORIO}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="88" y="15" width="398" height="15" uuid="7c8d9e0f-1a2b-4c3d-8e4f-5a6b7c8d9e0f"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{NOME_EMPRESA}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="88" y="30" width="398" height="15" uuid="1b2c3d4e-5f6a-4b7c-8d9e-0f1a2b3c4d5e"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{PERIODO_RELATORIO}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="486" y="-1" width="69" height="15" uuid="2c3d4e5f-6a7b-4c8d-9e0f-1a2b3c4d5e6f"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Folha: " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="486" y="15" width="69" height="15" uuid="3d4e5f6a-7b8c-4d9e-0f1a-2b3c4d5e6f7a"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new SimpleDateFormat("dd/MM/yyyy").format(new Date())]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="486" y="30" width="69" height="15" uuid="4e5f6a7b-8c9d-4e0f-1a2b-3c4d5e6f7a8b"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="DejaVu Sans Mono"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new SimpleDateFormat("HH:mm").format(new Date())]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
 	<columnHeader>
 		<band height="14">
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
@@ -149,7 +189,7 @@ ORDER BY conta_contabil.codigo ASC]]>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="DejaVu Sans Mono" size="10"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{codigo} + " " + $F{nome}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{codConta} + " " + $F{nmConta}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" pattern="###,###,##0.00">
 				<reportElement stretchType="ContainerHeight" x="450" y="0" width="105" height="14" uuid="5c0c20c0-5dd9-4a14-bfa2-382c4572162a">
@@ -165,7 +205,7 @@ ORDER BY conta_contabil.codigo ASC]]>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="DejaVu Sans Mono" size="10"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{depr_acum}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{valorAtual}]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>

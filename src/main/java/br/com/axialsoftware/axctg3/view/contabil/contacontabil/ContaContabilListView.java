@@ -113,4 +113,9 @@ public class ContaContabilListView extends StandardListView<ContaContabil> {
         parameters.put("tipo", "2");
         menuBean.listarBalancete(parameters);
     }
+
+    @Subscribe("contaContabilsDataGrid.verificarAction")
+    public void onContaContabilsDataGridVerificarAction(final ActionPerformedEvent event) {
+        menuBean.verificarContas();
+    }
 }
