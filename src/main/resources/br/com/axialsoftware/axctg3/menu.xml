@@ -25,6 +25,10 @@
                   title="msg://br.com.axialsoftware.axctg3.view.contabil.lancamento/lancamentoListView.title"/>
             <item view="Bem.list"
                   title="msg://br.com.axialsoftware.axctg3.view.contabil.bem/bemListView.title"/>
+            <menu id="spedEcd" title="msg://br.com.axialsoftware.axctg3/menu.spedEcd.title">
+                <item view="ContaReferencial.list"
+                      title="msg://br.com.axialsoftware.axctg3.view.tabelas.contareferencial/contaReferencialListView.title"/>
+            </menu>
         </menu>
         <menu id="financeiro" title="msg://br.com.axialsoftware.axctg3/menu.financeiro.title">
             <item view="Banco.list"
@@ -83,8 +87,6 @@
               title="msg://br.com.axialsoftware.axctg3.view.tabelas.tipologradouro/tipoLogradouroListView.title"/>
         <item view="ClassTrib.list"
               title="msg://br.com.axialsoftware.axctg3.view.tabelas.classtrib/classTribListView.title"/>
-        <item view="ContaReferencial.list"
-              title="msg://br.com.axialsoftware.axctg3.view.tabelas.contareferencial/contaReferencialListView.title"/>
     </menu>
 
 </menu-config>
