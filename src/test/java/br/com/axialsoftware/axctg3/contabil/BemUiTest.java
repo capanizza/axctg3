@@ -36,7 +36,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Cobre o CRUD de Bem/Depreciacao: BemEventListener preenchendo os padrões na criação
  * (codEmpresa, valorAtual, deprAcum, valorIniDepr, taxaDepr), a listagem, e o detail view
- * com a composição de depreciações editada inline (dataGrid property-bound, sem loader).
+ * exibindo as depreciações em duas colunas somente-leitura (BemDetailView.onBeforeShow
+ * divide depreciacaosDc entre depreciacaos1Dc/depreciacaos2Dc — sem CRUD inline, as
+ * depreciações são geradas pelo fluxo de cálculo/lançamento em DepreciacaoService).
  */
 @UiTest
 @SpringBootTest(classes = {Axctg3Application.class, FlowuiTestAssistConfiguration.class})
@@ -105,6 +107,15 @@ class BemUiTest {
 
     @Test
     void detailAbreComOsCamposEComADepreciacaoInline() {
+        // segunda depreciação para exercitar de fato o split em duas colunas do
+        // BemDetailView.onBeforeShow — com um único registro a primeira coluna ficaria
+        // sempre vazia (splitIndex = size / 2)
+        Depreciacao depreciacaoAnterior = dataManager.create(Depreciacao.class);
+        depreciacaoAnterior.setBem(bem);
+        depreciacaoAnterior.setDataDepr(LocalDate.of(ANO, 1, 31));
+        depreciacaoAnterior.setValorDepr(new BigDecimal("10.00"));
+        dataManager.save(depreciacaoAnterior);
+
         viewNavigators.detailView(UiTestUtils.getCurrentView(), Bem.class)
                 .editEntity(bem)
                 .withViewClass(BemDetailView.class)
@@ -117,8 +128,17 @@ class BemUiTest {
         EntityPicker<Parceiro> parceiroField = UiTestUtils.getComponent(view, "parceiroField");
         assertThat(parceiroField.getValue()).isEqualTo(parceiro);
 
-        DataGrid<Depreciacao> depreciacoesGrid = UiTestUtils.getComponent(view, "depreciacaosDataGrid");
-        assertThat(depreciacoesGrid.getItems().getItems()).hasSize(1);
+        // @OrderBy("dataDepr DESC") em Bem.depreciacaos: a mais recente (28/02) cai na
+        // primeira coluna, a mais antiga (31/01) na segunda.
+        DataGrid<Depreciacao> depreciacoes1Grid = UiTestUtils.getComponent(view, "depreciacaos1DataGrid");
+        assertThat(depreciacoes1Grid.getItems().getItems())
+                .extracting(Depreciacao::getDataDepr)
+                .containsExactly(LocalDate.of(ANO, 2, 28));
+
+        DataGrid<Depreciacao> depreciacoes2Grid = UiTestUtils.getComponent(view, "depreciacaos2DataGrid");
+        assertThat(depreciacoes2Grid.getItems().getItems())
+                .extracting(Depreciacao::getDataDepr)
+                .containsExactly(LocalDate.of(ANO, 1, 31));
     }
 
     private ContaContabil criarConta(String codigo, String nome, boolean analitica) {

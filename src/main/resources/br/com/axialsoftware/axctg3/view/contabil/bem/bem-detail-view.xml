@@ -15,6 +15,8 @@
             <loader id="bemDl"/>
             <collection id="depreciacaosDc" property="depreciacaos"/>
         </instance>
+        <collection id="depreciacaos1Dc" class="br.com.axialsoftware.axctg3.entity.contabil.Depreciacao"/>
+        <collection id="depreciacaos2Dc" class="br.com.axialsoftware.axctg3.entity.contabil.Depreciacao"/>
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
@@ -154,31 +156,22 @@
             </hbox>
         </vbox>
         <h5 text="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.depreciacaos"/>
-        <hbox id="depreciacaoButtonsPanel" classNames="buttons-panel">
-            <button id="createDepreciacaoButton" action="depreciacaosDataGrid.createAction" themeNames="small"/>
-            <button id="editDepreciacaoButton" action="depreciacaosDataGrid.editAction" themeNames="small"/>
-            <button id="removeDepreciacaoButton" action="depreciacaosDataGrid.removeAction" themeNames="small"/>
+        <hbox width="100%">
+            <dataGrid id="depreciacaos1DataGrid" dataContainer="depreciacaos1Dc" width="50%" minHeight="10em" themeNames="compact">
+                <columns>
+                    <column property="dataDepr"/>
+                    <column property="valorDepr"/>
+                    <column property="lancamento"/>
+                </columns>
+            </dataGrid>
+            <dataGrid id="depreciacaos2DataGrid" dataContainer="depreciacaos2Dc" width="50%" minHeight="10em" themeNames="compact">
+                <columns>
+                    <column property="dataDepr"/>
+                    <column property="valorDepr"/>
+                    <column property="lancamento"/>
+                </columns>
+            </dataGrid>
         </hbox>
-        <dataGrid id="depreciacaosDataGrid" dataContainer="depreciacaosDc" width="50%" minHeight="10em" themeNames="compact">
-            <actions>
-                <action id="createAction" type="list_create">
-                    <properties>
-                        <property name="openMode" value="DIALOG"/>
-                    </properties>
-                </action>
-                <action id="editAction" type="list_edit">
-                    <properties>
-                        <property name="openMode" value="DIALOG"/>
-                    </properties>
-                </action>
-                <action id="removeAction" type="list_remove"/>
-            </actions>
-            <columns>
-                <column property="dataDepr"/>
-                <column property="valorDepr"/>
-                <column property="lancamento"/>
-            </columns>
-        </dataGrid>
         <hbox id="detailActions">
             <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
             <button id="closeButton" action="closeAction" themeNames="small"/>

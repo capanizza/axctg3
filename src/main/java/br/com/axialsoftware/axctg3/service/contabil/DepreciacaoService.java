@@ -108,7 +108,7 @@ public class DepreciacaoService {
             bem.setDeprAcum(deprAtual);
             bem.setDataDepr(dataDepreciacao);
 
-            dataManager.save(depreciacao, bem);
+            dataManager.saveWithoutReload(depreciacao, bem);
 
             BemDto bemDto = dataManager.create(BemDto.class);
             bemDto.setCodigoConta(bem.getContaContabilDepr().getCodigo());
@@ -182,7 +182,7 @@ public class DepreciacaoService {
                 lancamento.setOrigem("depr");
                 Lancamento lanc = dataManager.save(lancamento);
                 depreciacao.setLancamento(lanc.getNumero().longValue());
-                dataManager.save(depreciacao);
+                dataManager.saveWithoutReload(depreciacao);
             }
 
             LancamentoDto lancamentoDto = dataManager.create(LancamentoDto.class);
