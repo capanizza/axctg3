@@ -54,14 +54,36 @@ auditoria funcional.
       (cálculo + idempotência de não duplicar depreciação/lançamento ao rodar 2x,
       listagem sem exceção).
 - [x] `BemDto` — portado junto (idêntico ao axctg-flow, sem mudança de campos).
-- [ ] `VerificacaoDto` — **não é do módulo de bens**: pertence a
-      `ContaContabilService.verificarContasContabeis()` (correção de item registrado por
-      engano nesta lista). Conferir se esse método já foi portado antes de tratá-lo aqui.
-- [ ] `ResumoCorrecaoDto` — usado por `DepreciacaoService.resumoCorrecaoMonetaria[2]`;
-      no axctg-flow só a variante `resumoCorrecaoMonetaria()` (via `emitirRelatorio2`,
-      o caminho JDBC legado pro `axialdb`) estava de fato ligada no `MenuBean` — a
-      variante 2, com bean datasource, existia no serviço mas ficava comentada/morta.
-      Ao portar, preferir a variante 2 (`emitirRelatorio()`), não `emitirRelatorio2`.
+- [x] `VerificacaoDto` + `ContaContabilService.verificarContas()` — portado em
+      2026-08-14: método público `verificarContas()` chama a privada
+      `verificarContasContabeis()` (2 passadas: contas com != 12 `SaldoConta`, depois
+      divergência saldo x movimento por conta analítica/mês, agregando
+      `Lancamento.contaDevedora`/`contaCredora` por `dataLancamento` — nomes de campo já
+      batiam com o axctg3, sem adaptação de query além disso). Ligado ao botão
+      "Verificar" (`contaContabilsDataGrid.verificarAction`) que já existia órfão em
+      `ContaContabilListView` — só faltava o handler. Recompilado
+      `VerificacaoContas.jasper` com parâmetro `LOGO` (padrão do commit `ce4a2d0`, o
+      template ainda usava caminho fixo pro `logo.bmp`). Coberto por
+      `ContaContabilServiceTest` (não lança exceção; a lista de `VerificacaoDto` é
+      privada ao serviço, não dá pra inspecionar por fora — mesma limitação já aceita em
+      `DepreciacaoServiceTest.test_listarDepreciacoesNaoLancaExcecao`).
+- [x] `ResumoCorrecaoDto` + `DepreciacaoService.resumoCorrecaoMonetaria()` — portado em
+      2026-08-14, só a variante 2 do legado (bean datasource via `emitirRelatorio()`),
+      não a variante 1 (JDBC direto pro `axialdb` via `emitirRelatorio2`, propositalmente
+      não seguida). Diferença real em relação ao legado: a query de elegibilidade
+      (`taxaDepr > 0 and valorCompra > valorBaixa`) foi ajustada pra
+      `(valorBaixa is null or valorCompra > valorBaixa)` — `Bem.valorBaixa` não tem
+      default no `BemEventListener`, fica `null` até o bem ser baixado, então a
+      comparação direta do legado excluiria todo bem ainda ativo. `ResumoCorrecao2.jrxml`
+      recompilado com os `field name` renomeados pra bater com os getters do DTO
+      (`codConta`/`nmConta`/`valorAtual`, antes `codigo`/`nome`/`depr_acum` — só faziam
+      sentido pro `queryString` SQL direto que o bean datasource ignora) e com título/logo
+      adicionados (o template não tinha `pageHeader` nenhum, os parâmetros
+      `TITULO_RELATORIO`/`NOME_EMPRESA`/`PERIODO_RELATORIO` existiam mas não eram usados
+      em lugar nenhum). Ligado ao dropdown "Depreciação" de `BemListView` (novo item
+      "Resumo correção monetária"). Coberto por
+      `DepreciacaoServiceTest.test_resumoCorrecaoMonetariaNaoLancaExcecao` (mesma
+      limitação de não inspecionar a lista privada).
 
 ### Fiscal — nota de entrada
 - [ ] `NotaEntrada` — **entidade já existe no axctg3, falta a view** (dá pra salvar via

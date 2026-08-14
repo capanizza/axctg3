@@ -190,6 +190,17 @@ class DepreciacaoServiceTest {
         depreciacaoService.listarDepreciacoes(configRel, false);
     }
 
+    @Test
+    void test_resumoCorrecaoMonetariaNaoLancaExcecao() {
+        // bem.valorBaixa fica null até o bem ser baixado (sem default no
+        // BemEventListener) — cobre exatamente o ajuste feito na query de
+        // prepararResumoCorrecaoDto() em relação ao legado (que comparava
+        // valorCompra > valorBaixa direto, excluindo todo bem ainda ativo).
+        depreciacaoService.calcularDepreciacoes(configRel);
+
+        depreciacaoService.resumoCorrecaoMonetaria();
+    }
+
     @AfterEach
     void tearDown() {
         limparDadosDaEmpresa();

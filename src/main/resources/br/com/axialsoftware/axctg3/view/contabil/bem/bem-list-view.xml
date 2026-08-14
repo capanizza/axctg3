@@ -56,6 +56,10 @@
                         <action id="listarAction"
                                 text="Listagem das depreciações" icon="PRINT"/>
                     </actionItem>
+                    <actionItem id="resumoCorrecaoItem">
+                        <action id="resumoCorrecaoAction"
+                                text="Resumo correção monetária" icon="PRINT"/>
+                    </actionItem>
                 </items>
             </dropdownButton>
             <simplePagination id="pagination" dataLoader="bemsDl"/>
