@@ -10,6 +10,7 @@
                 <query>
                     <![CDATA[select e from ContaReferencial e
                         where e.codPlanRef = :codPlanRef
+                        and (:apenasAnaliticas = false or e.analitica = true)
                         order by e.codigo asc]]>
                 </query>
             </loader>

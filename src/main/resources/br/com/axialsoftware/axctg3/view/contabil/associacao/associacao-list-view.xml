@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
+      title="msg://associacaoListView.title"
+      focusComponent="contaContabilsDataGrid">
+    <data>
+        <collection id="contaContabilsDc"
+                    class="br.com.axialsoftware.axctg3.entity.contabil.ContaContabil">
+            <fetchPlan extends="_base">
+                <property name="contaReferencial" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="contaContabilsDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from ContaContabil e
+                    where e.codEmpresa = :codEmpresa
+                    and e.ano = :ano
+                    and e.analitica = true
+                    order by e.codigo]]>
+                </query>
+            </loader>
+        </collection>
+        <instance id="editedContaContabilDc"
+                  class="br.com.axialsoftware.axctg3.entity.contabil.ContaContabil">
+            <fetchPlan extends="_base">
+                <property name="contaReferencial" fetchPlan="_base"/>
+            </fetchPlan>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <startSlot>
+                <button id="associarButton" action="contaContabilsDataGrid.associarAction" themeNames="small"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="contaContabilsDl"/>
+            </endSlot>
+        </hbox>
+        <sidePanelLayout id="sidePanelLayout"
+                         width="100%"
+                         height="100%"
+                         sidePanelHorizontalSize="25em">
+            <dataGrid id="contaContabilsDataGrid"
+                      width="100%"
+                      minHeight="20em"
+                      dataContainer="contaContabilsDc"
+                      columnReorderingAllowed="true" themeNames="small">
+                <actions>
+                    <action id="associarAction" text="msg://associacaoListView.associar" icon="LINK"/>
+                </actions>
+                <columns resizable="true">
+                    <column property="codigo" autoWidth="true" filterable="true"/>
+                    <column property="nome" autoWidth="true" filterable="true"/>
+                    <column property="contaReferencial.codigo" autoWidth="true" filterable="true"/>
+                    <column property="contaReferencial.descricao" autoWidth="true" filterable="true"/>
+                </columns>
+            </dataGrid>
+            <vbox>
+                <hbox width="100%" justifyContent="BETWEEN" alignItems="CENTER">
+                    <h4 id="header" text="msg://associacaoListView.sidePanel.title"/>
+                    <button id="closeButton" icon="lumo:cross" themeNames="tertiary icon contrast"/>
+                </hbox>
+                <vbox>
+                    <textField id="codigoField" width="30%" readOnly="true" themeNames="small"
+                               label="msg://br.com.axialsoftware.axctg3.entity.contabil/ContaContabil.codigo"/>
+                    <textField id="nomeField" width="100%" readOnly="true" themeNames="small"
+                               label="msg://br.com.axialsoftware.axctg3.entity.contabil/ContaContabil.nome"/>
+                    <entityPicker id="contaReferencialField"
+                                  property="contaReferencial"
+                                  dataContainer="editedContaContabilDc"
+                                  width="100%" themeNames="small"
+                                  label="msg://br.com.axialsoftware.axctg3.entity.contabil/ContaContabil.contaReferencial">
+                        <actions>
+                            <action id="entityLookupAction" type="entity_lookup"/>
+                            <action id="entityClearAction" type="entity_clear"/>
+                        </actions>
+                    </entityPicker>
+                    <hbox id="detailActions">
+                        <button id="saveAndCloseBtn" text="msg://br.com.axialsoftware.axctg3/actions.ok" themeNames="primary, small" icon="CHECK"/>
+                        <button id="closeBtn" text="msg://br.com.axialsoftware.axctg3/actions.cancelar" themeNames="small" icon="CANCEL"/>
+                    </hbox>
+                </vbox>
+            </vbox>
+        </sidePanelLayout>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction" themeNames="small"/>
+            <button id="discardButton" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

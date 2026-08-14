@@ -28,6 +28,8 @@
             <menu id="spedEcd" title="msg://br.com.axialsoftware.axctg3/menu.spedEcd.title">
                 <item view="ContaReferencial.list"
                       title="msg://br.com.axialsoftware.axctg3.view.tabelas.contareferencial/contaReferencialListView.title"/>
+                <item view="Associacao.list"
+                      title="msg://br.com.axialsoftware.axctg3.view.contabil.associacao/associacaoListView.title"/>
             </menu>
         </menu>
         <menu id="financeiro" title="msg://br.com.axialsoftware.axctg3/menu.financeiro.title">

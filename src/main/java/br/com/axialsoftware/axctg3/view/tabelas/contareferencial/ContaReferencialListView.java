@@ -61,10 +61,14 @@ public class ContaReferencialListView extends StandardListView<ContaReferencial>
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
+        Dialog dialog = UiComponentUtils.findDialog(this);
+
         contaReferencialsDl.setParameter("codPlanRef", utilGeralService.getEmpresa().getCodPlanRef().getId());
+        // aberta como dialog (lookup de um entityPicker, ex.: ContaContabil.contaReferencial),
+        // só contas analíticas fazem sentido pra associar — fora do dialog, mostra tudo
+        contaReferencialsDl.setParameter("apenasAnaliticas", dialog != null);
         contaReferencialsDl.load();
 
-        Dialog dialog = UiComponentUtils.findDialog(this);
         buttonsPanel.setVisible(dialog == null);
     }
 
