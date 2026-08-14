@@ -7,6 +7,7 @@
                   class="br.com.axialsoftware.axctg3.entity.contabil.ContaContabil">
             <fetchPlan extends="_base">
                 <property name="saldosConta" fetchPlan="_base"/>
+                <property name="contaReferencial" fetchPlan="_base"/>
             </fetchPlan>
             <loader id="contaContabilDl"/>
             <collection id="saldosContaDc" property="saldosConta"/>
@@ -63,11 +64,16 @@
                            dataContainer="contaContabilDc"
                            width="15%" themeNames="small"
                            label="msg://br.com.axialsoftware.axctg3.entity.contabil/ContaContabil.codContaEnc"/>
-                <textField id="codContaRefField"
-                           property="codContaRef"
-                           dataContainer="contaContabilDc"
-                           width="15%" themeNames="small"
-                           label="msg://br.com.axialsoftware.axctg3.entity.contabil/ContaContabil.codContaRef"/>
+                <entityPicker id="contaReferencialField"
+                              property="contaReferencial"
+                              dataContainer="contaContabilDc" themeNames="small"
+                              width="15%"
+                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/ContaContabil.contaReferencial">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
                 <textField id="codContaSupField"
                            property="codContaSup"
                            dataContainer="contaContabilDc"

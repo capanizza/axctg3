@@ -1,6 +1,7 @@
 package br.com.axialsoftware.axctg3.entity.contabil;
 
 import br.com.axialsoftware.axctg3.entity.enums.CodNat;
+import br.com.axialsoftware.axctg3.entity.tabelas.ContaReferencial;
 import io.jmix.core.DeletePolicy;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.annotation.DeletedBy;
@@ -93,8 +94,11 @@ public class ContaContabil {
     @Column(name = "COD_CONTA_ENC", length = 25)
     private String codContaEnc;
 
-    @Column(name = "COD_CONTA_REF", length = 25)
-    private String codContaRef;
+    // referência real (não mais texto livre) pra linha do plano de contas oficial da RFB —
+    // nullable: nem toda conta analítica tem mapeamento desde já
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "CONTA_REFERENCIAL_ID")
+    private ContaReferencial contaReferencial;
 
     @NotNull
     @Column(name = "COD_CONTA_SUP", nullable = false, length = 25)
@@ -134,12 +138,12 @@ public class ContaContabil {
         this.codContaSup = codContaSup;
     }
 
-    public String getCodContaRef() {
-        return codContaRef;
+    public ContaReferencial getContaReferencial() {
+        return contaReferencial;
     }
 
-    public void setCodContaRef(String codContaRef) {
-        this.codContaRef = codContaRef;
+    public void setContaReferencial(ContaReferencial contaReferencial) {
+        this.contaReferencial = contaReferencial;
     }
 
     public String getCodContaEnc() {
