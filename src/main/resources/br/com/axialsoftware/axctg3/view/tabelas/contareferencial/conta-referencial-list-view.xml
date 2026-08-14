@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://contaReferencialListView.title"
+      focusComponent="contaReferencialsDataGrid">
+    <data>
+        <collection id="contaReferencialsDc"
+                    class="br.com.axialsoftware.axctg3.entity.tabelas.ContaReferencial">
+            <fetchPlan extends="_base"/>
+            <loader id="contaReferencialsDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from ContaReferencial e
+                        where e.codPlanRef = :codPlanRef
+                        order by e.codigo asc]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <startSlot>
+                <button id="createButton" action="contaReferencialsDataGrid.createAction" themeNames="small"/>
+                <button id="editButton" action="contaReferencialsDataGrid.editAction" themeNames="small"/>
+                <button id="removeButton" action="contaReferencialsDataGrid.removeAction" themeNames="small"/>
+                <fileUploadField id="importField" width="18em" themeNames="small"
+                                 acceptedFileTypes="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx"
+                                 uploadText="msg://contaReferencialListView.import.uploadText"/>
+                <button id="importButton" text="msg://contaReferencialListView.import.button" themeNames="small"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="contaReferencialsDl"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="contaReferencialsDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="contaReferencialsDc"
+                  columnReorderingAllowed="true"
+                  themeNames="small">
+            <actions>
+                <action id="createAction" type="list_create"/>
+                <action id="editAction" type="list_edit"/>
+                <action id="removeAction" type="list_remove"/>
+            </actions>
+            <columns resizable="true">
+                <column property="codigo" width="12%" filterable="true"/>
+                <column property="grau" width="6%" filterable="true"/>
+                <column property="analitica" width="8%" textAlign="CENTER"/>
+                <column property="codNat" width="12%" filterable="true"/>
+                <column property="codContaSup" width="12%" filterable="true"/>
+                <column property="descricao" width="50%" filterable="true"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction" themeNames="small"/>
+            <button id="discardButton" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

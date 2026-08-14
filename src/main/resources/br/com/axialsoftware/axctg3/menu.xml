@@ -83,6 +83,8 @@
               title="msg://br.com.axialsoftware.axctg3.view.tabelas.tipologradouro/tipoLogradouroListView.title"/>
         <item view="ClassTrib.list"
               title="msg://br.com.axialsoftware.axctg3.view.tabelas.classtrib/classTribListView.title"/>
+        <item view="ContaReferencial.list"
+              title="msg://br.com.axialsoftware.axctg3.view.tabelas.contareferencial/contaReferencialListView.title"/>
     </menu>
 
 </menu-config>
