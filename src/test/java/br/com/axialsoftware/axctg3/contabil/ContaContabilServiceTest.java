@@ -5,6 +5,8 @@ import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
 import br.com.axialsoftware.axctg3.entity.contabil.Lancamento;
 import br.com.axialsoftware.axctg3.entity.enums.CodNat;
+import br.com.axialsoftware.axctg3.entity.enums.CodPlanRef;
+import br.com.axialsoftware.axctg3.entity.tabelas.ContaReferencial;
 import br.com.axialsoftware.axctg3.service.contabil.ContaContabilService;
 import br.com.axialsoftware.axctg3.test_support.AuthenticatedAsAdmin;
 import io.jmix.core.DataManager;
@@ -19,7 +21,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.time.LocalDate;
 import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Cobre {@code ContaContabilService.verificarContas()} — relatório de verificação
@@ -75,6 +80,54 @@ class ContaContabilServiceTest {
         contaContabilService.verificarContas();
     }
 
+    @Test
+    void test_associarContaReferencialEmGrupoAtualizaSoAsContasAnaliticasNoIntervalo() {
+        criarConta("9500", "Grupo caixa e bancos", false);
+        ContaContabil dentro1 = criarConta("9501", "Caixa", true);
+        ContaContabil dentro2 = criarConta("9502", "Bancos", true);
+        ContaContabil fora = criarConta("9503", "Aplicações", true);
+
+        ContaReferencial contaReferencial = dataManager.create(ContaReferencial.class);
+        contaReferencial.setCodigo("1.01.01");
+        contaReferencial.setDescricao("Caixa e equivalentes");
+        contaReferencial.setDtIni(LocalDate.of(2015, 1, 1));
+        contaReferencial.setGrau(3);
+        contaReferencial.setAnalitica(true);
+        contaReferencial.setCodNat(CodNat.CONTAS_DE_ATIVO);
+        contaReferencial.setCodPlanRef(CodPlanRef.PJ_em_geral_lucro_real);
+        contaReferencial = dataManager.save(contaReferencial);
+
+        int atualizadas = contaContabilService.associarContaReferencialEmGrupo("9501", "9502", contaReferencial);
+
+        assertThat(atualizadas).isEqualTo(2);
+        assertThat(recarregar(dentro1).getContaReferencial()).isEqualTo(contaReferencial);
+        assertThat(recarregar(dentro2).getContaReferencial()).isEqualTo(contaReferencial);
+        assertThat(recarregar(fora).getContaReferencial()).isNull();
+    }
+
+    @Test
+    void test_associarContaReferencialEmGrupoSemContasNoIntervaloRetornaZero() {
+        criarConta("9501", "Caixa", true);
+
+        ContaReferencial contaReferencial = dataManager.create(ContaReferencial.class);
+        contaReferencial.setCodigo("1.01.01");
+        contaReferencial.setDescricao("Caixa e equivalentes");
+        contaReferencial.setDtIni(LocalDate.of(2015, 1, 1));
+        contaReferencial.setGrau(3);
+        contaReferencial.setAnalitica(true);
+        contaReferencial.setCodNat(CodNat.CONTAS_DE_ATIVO);
+        contaReferencial.setCodPlanRef(CodPlanRef.PJ_em_geral_lucro_real);
+        contaReferencial = dataManager.save(contaReferencial);
+
+        int atualizadas = contaContabilService.associarContaReferencialEmGrupo("9601", "9602", contaReferencial);
+
+        assertThat(atualizadas).isEqualTo(0);
+    }
+
+    private ContaContabil recarregar(ContaContabil conta) {
+        return dataManager.load(ContaContabil.class).id(conta.getId()).one();
+    }
+
     private ContaContabil criarConta(String codigo, String nome, boolean analitica) {
         ContaContabil conta = dataManager.create(ContaContabil.class);
         conta.setCodigo(codigo);
@@ -95,17 +148,19 @@ class ContaContabilServiceTest {
 
     private void limparDadosDaEmpresa() {
         apagar(carregar(Lancamento.class,
-                "select e from Lancamento e where e.codEmpresa = :codEmpresa"));
+                "select e from Lancamento e where e.codEmpresa = :codEmpresa", "codEmpresa", COD_EMPRESA));
         apagar(carregar(ContaContabil.class,
-                "select e from ContaContabil e where e.codEmpresa = :codEmpresa"));
+                "select e from ContaContabil e where e.codEmpresa = :codEmpresa", "codEmpresa", COD_EMPRESA));
         apagar(carregar(Empresa.class,
-                "select e from Empresa e where e.codigo = :codEmpresa"));
+                "select e from Empresa e where e.codigo = :codEmpresa", "codEmpresa", COD_EMPRESA));
+        apagar(carregar(ContaReferencial.class,
+                "select e from ContaReferencial e where e.codigo = :codigo", "codigo", "1.01.01"));
     }
 
-    private <E> List<E> carregar(Class<E> entityClass, String query) {
+    private <E> List<E> carregar(Class<E> entityClass, String query, String paramName, Object paramValue) {
         return dataManager.load(entityClass)
                 .query(query)
-                .parameter("codEmpresa", COD_EMPRESA)
+                .parameter(paramName, paramValue)
                 .hint(PersistenceHints.SOFT_DELETION, false)
                 .list();
     }

@@ -40,6 +40,7 @@
         <hbox id="buttonsPanel" wrap="true" width="100%">
             <startSlot>
                 <button id="associarButton" action="contaContabilsDataGrid.associarAction" themeNames="small"/>
+                <button id="associarGrupoButton" text="msg://associacaoListView.associarGrupo" icon="LINK" themeNames="small"/>
             </startSlot>
             <endSlot>
                 <simplePagination id="pagination" dataLoader="contaContabilsDl"/>

@@ -6,12 +6,16 @@ import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
 import br.com.axialsoftware.axctg3.entity.contabil.ContaContabilDto;
 import br.com.axialsoftware.axctg3.entity.contabil.SaldoConta;
 import br.com.axialsoftware.axctg3.entity.contabil.VerificacaoDto;
+import br.com.axialsoftware.axctg3.entity.tabelas.ContaReferencial;
 import br.com.axialsoftware.axctg3.service.RelatorioService;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import io.jmix.core.DataManager;
 import io.jmix.core.FetchPlan;
+import io.jmix.core.SaveContext;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -25,6 +29,8 @@ import java.util.Optional;
 
 @Service
 public class ContaContabilService {
+
+    private static final Logger log = LoggerFactory.getLogger(ContaContabilService.class);
 
     private final DataManager dataManager;
     private final UtilGeralService utilGeralService;
@@ -50,6 +56,45 @@ public class ContaContabilService {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * Associa {@code contaReferencial} a todas as contas contábeis analíticas da
+     * empresa/ano da sessão cujo código esteja entre {@code codigoInicial} e
+     * {@code codigoFinal} (inclusive), mesma comparação por string de
+     * {@link #prepararBalancetesDto} (contaInicial/contaFinal). Retorna a quantidade de
+     * contas atualizadas.
+     */
+    public int associarContaReferencialEmGrupo(String codigoInicial, String codigoFinal, ContaReferencial contaReferencial) {
+        Integer codEmpresa = utilGeralService.getCodEmpresa();
+        Integer ano = utilGeralService.getAnoContabil();
+        log.info("associarContaReferencialEmGrupo codEmpresa={} ano={} codigoInicial={} codigoFinal={} contaReferencial={}",
+                codEmpresa, ano, codigoInicial, codigoFinal,
+                contaReferencial == null ? null : contaReferencial.getCodigo());
+        List<ContaContabil> contas = dataManager.load(ContaContabil.class)
+                .query("select e from ContaContabil e " +
+                        "where e.codEmpresa = :codEmpresa " +
+                        "and e.ano = :ano " +
+                        "and e.analitica = true " +
+                        "and e.codigo >= :codigoInicial " +
+                        "and e.codigo <= :codigoFinal " +
+                        "order by e.codigo")
+                .parameter("codEmpresa", codEmpresa)
+                .parameter("ano", ano)
+                .parameter("codigoInicial", codigoInicial)
+                .parameter("codigoFinal", codigoFinal)
+                .list();
+        log.info("associarContaReferencialEmGrupo encontrou {} conta(s)", contas.size());
+        if (contas.isEmpty()) {
+            return 0;
+        }
+        SaveContext saveContext = new SaveContext();
+        for (ContaContabil conta : contas) {
+            conta.setContaReferencial(contaReferencial);
+            saveContext.saving(conta);
+        }
+        dataManager.save(saveContext);
+        return contas.size();
     }
 
     public void listarContasContabeis () {

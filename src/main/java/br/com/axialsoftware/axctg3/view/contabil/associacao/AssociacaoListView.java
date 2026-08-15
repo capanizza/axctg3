@@ -1,9 +1,11 @@
 package br.com.axialsoftware.axctg3.view.contabil.associacao;
 
 import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
+import br.com.axialsoftware.axctg3.entity.tabelas.ContaReferencial;
 
 import br.com.axialsoftware.axctg3.service.FormatacaoService;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
+import br.com.axialsoftware.axctg3.service.contabil.ContaContabilService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
 import com.vaadin.flow.component.ClickEvent;
@@ -14,6 +16,8 @@ import com.vaadin.flow.data.renderer.TextRenderer;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.DataManager;
 import io.jmix.flowui.Dialogs;
+import io.jmix.flowui.app.inputdialog.DialogActions;
+import io.jmix.flowui.app.inputdialog.DialogOutcome;
 import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.sidepanellayout.SidePanelLayout;
@@ -25,6 +29,9 @@ import io.jmix.flowui.model.InstanceContainer;
 import io.jmix.flowui.view.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
+
+import static io.jmix.flowui.app.inputdialog.InputParameter.entityParameter;
+import static io.jmix.flowui.app.inputdialog.InputParameter.stringParameter;
 
 @Route(value = "associacao-contas-referenciais", layout = MainView.class)
 @ViewController(id = "Associacao.list")
@@ -57,6 +64,8 @@ public class AssociacaoListView extends StandardListView<ContaContabil> {
     private Dialogs dialogs;
     @Autowired
     private DataManager dataManager;
+    @Autowired
+    private ContaContabilService contaContabilService;
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
@@ -131,5 +140,46 @@ public class AssociacaoListView extends StandardListView<ContaContabil> {
         dataManager.saveWithoutReload(contaContabil);
         contaContabilsDl.load();
         sidePanelLayout.closeSidePanel();
+    }
+
+    @Subscribe(id = "associarGrupoButton", subject = "clickListener")
+    public void onAssociarGrupoButtonClick(final ClickEvent<JmixButton> event) {
+        // associa uma contaReferencial a todas as contas contábeis analíticas cujo código
+        // esteja entre codigoInicial e codigoFinal (inclusive)
+        if (!empresaSelecionada()) {
+            return;
+        }
+        dialogs.createInputDialog(this)
+                .withHeader(messageBundle.getMessage("associacaoListView.grupoDialog.header"))
+                .withParameters(
+                        stringParameter("codigoInicial")
+                                .withLabel(messageBundle.getMessage("associacaoListView.grupoDialog.codigoInicial"))
+                                .withRequired(true),
+                        stringParameter("codigoFinal")
+                                .withLabel(messageBundle.getMessage("associacaoListView.grupoDialog.codigoFinal"))
+                                .withRequired(true),
+                        entityParameter("contaReferencial", ContaReferencial.class)
+                                .withLabel(messageBundle.getMessage("associacaoListView.grupoDialog.contaReferencial"))
+                                .withRequired(true)
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withCloseListener(closeEvent -> {
+                    if (!closeEvent.closedWith(DialogOutcome.OK)) {
+                        return;
+                    }
+                    String codigoInicial = closeEvent.getValue("codigoInicial");
+                    String codigoFinal = closeEvent.getValue("codigoFinal");
+                    ContaReferencial contaReferencial = closeEvent.getValue("contaReferencial");
+                    int atualizadas = contaContabilService.associarContaReferencialEmGrupo(
+                            codigoInicial, codigoFinal, contaReferencial);
+                    contaContabilsDl.load();
+                    dialogs.createMessageDialog()
+                            .withHeader(messageBundle.getMessage("associacaoListView.grupoDialog.header"))
+                            .withText(atualizadas == 0
+                                    ? messageBundle.getMessage("associacaoListView.grupoDialog.nenhumaConta")
+                                    : messageBundle.formatMessage("associacaoListView.grupoDialog.resultado", atualizadas))
+                            .open();
+                })
+                .open();
     }
 }
