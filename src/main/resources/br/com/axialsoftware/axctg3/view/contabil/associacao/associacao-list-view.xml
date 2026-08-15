@@ -41,6 +41,7 @@
             <startSlot>
                 <button id="associarButton" action="contaContabilsDataGrid.associarAction" themeNames="small"/>
                 <button id="associarGrupoButton" text="msg://associacaoListView.associarGrupo" icon="LINK" themeNames="small"/>
+                <button id="copiarAnoAnteriorButton" text="msg://associacaoListView.copiarAnoAnterior" icon="COPY" themeNames="small"/>
             </startSlot>
             <endSlot>
                 <simplePagination id="pagination" dataLoader="contaContabilsDl"/>
