@@ -16,8 +16,11 @@ import com.vaadin.flow.data.renderer.TextRenderer;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.DataManager;
 import io.jmix.flowui.Dialogs;
+import io.jmix.flowui.action.DialogAction;
 import io.jmix.flowui.app.inputdialog.DialogActions;
 import io.jmix.flowui.app.inputdialog.DialogOutcome;
+import io.jmix.flowui.backgroundtask.BackgroundTask;
+import io.jmix.flowui.backgroundtask.TaskLifeCycle;
 import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.sidepanellayout.SidePanelLayout;
@@ -30,6 +33,10 @@ import io.jmix.flowui.view.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static io.jmix.flowui.app.inputdialog.InputParameter.entityParameter;
 import static io.jmix.flowui.app.inputdialog.InputParameter.stringParameter;
 
@@ -39,6 +46,9 @@ import static io.jmix.flowui.app.inputdialog.InputParameter.stringParameter;
 @LookupComponent("contaContabilsDataGrid")
 @DialogMode(width = "64em")
 public class AssociacaoListView extends StandardListView<ContaContabil> {
+
+    /** Uma empresa raramente passa de algumas centenas de contas — folga generosa mesmo assim. */
+    private static final long TIMEOUT_COPIA_MINUTOS = 10;
 
     @ViewComponent
     private MessageBundle messageBundle;
@@ -181,5 +191,90 @@ public class AssociacaoListView extends StandardListView<ContaContabil> {
                             .open();
                 })
                 .open();
+    }
+
+    @Subscribe(id = "copiarAnoAnteriorButton", subject = "clickListener")
+    public void onCopiarAnoAnteriorButtonClick(final ClickEvent<JmixButton> event) {
+        // copia, conta a conta (mesmo código), a contaReferencial do ano anterior pras contas
+        // do ano atual que ainda não têm associação
+        if (!empresaSelecionada()) {
+            return;
+        }
+        Integer codEmpresa = utilGeralService.getCodEmpresa();
+        Integer ano = utilGeralService.getAnoContabil();
+        List<ContaContabilService.CopiaAssociacao> copias =
+                contaContabilService.prepararCopiaAssociacaoAnoAnterior(codEmpresa, ano);
+        if (copias.isEmpty()) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("associacaoListView.copiarAnoAnterior"))
+                    .withText(messageBundle.getMessage("associacaoListView.copiarAnoAnterior.nenhumaConta"))
+                    .open();
+            return;
+        }
+
+        dialogs.createOptionDialog()
+                .withHeader(messageBundle.getMessage("associacaoListView.copiarAnoAnterior"))
+                .withText(messageBundle.formatMessage("associacaoListView.copiarAnoAnterior.confirmar", copias.size()))
+                .withActions(
+                        new DialogAction(DialogAction.Type.YES)
+                                .withHandler(e -> dialogs
+                                        .createBackgroundTaskDialog(new CopiarAnoAnteriorTask(copias))
+                                        .withHeader(messageBundle.getMessage("associacaoListView.copiarAnoAnterior"))
+                                        .withText(messageBundle.getMessage("associacaoListView.copiarAnoAnterior.copiando"))
+                                        .withTotal(copias.size())
+                                        .withShowProgressInPercentage(true)
+                                        .withCancelAllowed(true)
+                                        .open()),
+                        new DialogAction(DialogAction.Type.NO)
+                )
+                .open();
+    }
+
+    /**
+     * Grava uma {@link br.com.axialsoftware.axctg3.service.contabil.ContaContabilService.CopiaAssociacao}
+     * por vez — mesmo raciocínio da {@code ImportarTask} de {@code ContaReferencialListView}: nada
+     * de UI dentro de {@link #run}, só em {@link #done}/{@link #canceled}.
+     */
+    protected class CopiarAnoAnteriorTask extends BackgroundTask<Integer, Integer> {
+
+        private final List<ContaContabilService.CopiaAssociacao> copias;
+        private final AtomicInteger processadas = new AtomicInteger();
+
+        protected CopiarAnoAnteriorTask(List<ContaContabilService.CopiaAssociacao> copias) {
+            super(TIMEOUT_COPIA_MINUTOS, TimeUnit.MINUTES, AssociacaoListView.this);
+            this.copias = copias;
+        }
+
+        @Override
+        public Integer run(TaskLifeCycle<Integer> taskLifeCycle) throws Exception {
+            for (ContaContabilService.CopiaAssociacao copia : copias) {
+                if (taskLifeCycle.isCancelled() || taskLifeCycle.isInterrupted()) {
+                    break;
+                }
+                contaContabilService.salvarCopiaAssociacao(copia);
+                taskLifeCycle.publish(processadas.incrementAndGet());
+            }
+            return processadas.get();
+        }
+
+        @Override
+        public void done(Integer total) {
+            contaContabilsDl.load();
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("associacaoListView.copiarAnoAnterior"))
+                    .withText(messageBundle.formatMessage(
+                            "associacaoListView.copiarAnoAnterior.resultado", processadas.get()))
+                    .open();
+        }
+
+        @Override
+        public void canceled() {
+            contaContabilsDl.load();
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("associacaoListView.copiarAnoAnterior"))
+                    .withText(messageBundle.formatMessage(
+                            "associacaoListView.copiarAnoAnterior.cancelada", processadas.get()))
+                    .open();
+        }
     }
 }

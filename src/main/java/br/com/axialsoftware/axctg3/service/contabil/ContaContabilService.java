@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -95,6 +96,65 @@ public class ContaContabilService {
         }
         dataManager.save(saveContext);
         return contas.size();
+    }
+
+    /**
+     * Par conta contábil (ano atual, sem contaReferencial) / contaReferencial que ela herdaria
+     * do ano anterior, calculado por {@link #prepararCopiaAssociacaoAnoAnterior}.
+     */
+    public record CopiaAssociacao(ContaContabil contaContabil, ContaReferencial contaReferencial) {
+    }
+
+    /**
+     * Localiza, pelo mesmo código, as contas contábeis analíticas do ano atual ainda sem
+     * {@code contaReferencial} cujo correspondente do ano anterior já tem uma associação —
+     * candidatas ao "Copiar do ano anterior". Não grava nada; {@link #salvarCopiaAssociacao}
+     * é chamado item a item pela BackgroundTask que mostra o progresso na tela.
+     */
+    public List<CopiaAssociacao> prepararCopiaAssociacaoAnoAnterior(Integer codEmpresa, Integer ano) {
+        Map<String, ContaReferencial> referenciasAnoAnterior = dataManager.load(ContaContabil.class)
+                .query("select e from ContaContabil e " +
+                        "where e.codEmpresa = :codEmpresa " +
+                        "and e.ano = :anoAnterior " +
+                        "and e.analitica = true " +
+                        "and e.contaReferencial is not null")
+                .parameter("codEmpresa", codEmpresa)
+                .parameter("anoAnterior", ano - 1)
+                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE).add("contaReferencial", FetchPlan.BASE))
+                .list()
+                .stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        ContaContabil::getCodigo, ContaContabil::getContaReferencial, (a, b) -> a));
+        if (referenciasAnoAnterior.isEmpty()) {
+            return List.of();
+        }
+
+        List<ContaContabil> contasSemReferencial = dataManager.load(ContaContabil.class)
+                .query("select e from ContaContabil e " +
+                        "where e.codEmpresa = :codEmpresa " +
+                        "and e.ano = :ano " +
+                        "and e.analitica = true " +
+                        "and e.contaReferencial is null " +
+                        "order by e.codigo")
+                .parameter("codEmpresa", codEmpresa)
+                .parameter("ano", ano)
+                .list();
+
+        List<CopiaAssociacao> copias = new ArrayList<>();
+        for (ContaContabil conta : contasSemReferencial) {
+            ContaReferencial contaReferencial = referenciasAnoAnterior.get(conta.getCodigo());
+            if (contaReferencial != null) {
+                copias.add(new CopiaAssociacao(conta, contaReferencial));
+            }
+        }
+        return copias;
+    }
+
+    /** Grava uma {@link CopiaAssociacao} — chamado item a item pela BackgroundTask da tela. */
+    public void salvarCopiaAssociacao(CopiaAssociacao copia) {
+        ContaContabil contaContabil = copia.contaContabil();
+        contaContabil.setContaReferencial(copia.contaReferencial());
+        dataManager.save(contaContabil);
     }
 
     public void listarContasContabeis () {
