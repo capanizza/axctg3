@@ -59,15 +59,10 @@
                         themeNames="small"
                         width="30%"
                         label="msg://br.com.axialsoftware.axctg3.entity.contabil/ContaContabil.codNat"/>
-                <textField id="codContaEncField"
-                           property="codContaEnc"
-                           dataContainer="contaContabilDc"
-                           width="15%" themeNames="small"
-                           label="msg://br.com.axialsoftware.axctg3.entity.contabil/ContaContabil.codContaEnc"/>
                 <entityPicker id="contaReferencialField"
                               property="contaReferencial"
                               dataContainer="contaContabilDc" themeNames="small"
-                              width="15%"
+                              width="20%"
                               label="msg://br.com.axialsoftware.axctg3.entity.contabil/ContaContabil.contaReferencial">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
@@ -77,12 +72,12 @@
                 <textField id="codContaSupField"
                            property="codContaSup"
                            dataContainer="contaContabilDc"
-                           width="25%" themeNames="small"
+                           width="30%" themeNames="small"
                            label="msg://br.com.axialsoftware.axctg3.entity.contabil/ContaContabil.codContaSup"/>
                 <textField id="saldoTransfField"
                            property="saldoTransf"
                            dataContainer="contaContabilDc"
-                           width="15%" themeNames="small"
+                           width="20%" themeNames="small"
                            label="msg://br.com.axialsoftware.axctg3.entity.contabil/ContaContabil.saldoTransf"/>
             </hbox>
         </vbox>
@@ -95,10 +90,10 @@
                       themeNames="small">
                 <columns>
                     <column property="mes" width="8%"/>
-                    <column property="saldoAnterior" width="23%" textAlign="END"/>
+                    <column property="saldoAnteriorComLetra" width="23%" textAlign="END"/>
                     <column property="debitoMes" width="23%" textAlign="END"/>
                     <column property="creditoMes" width="23%" textAlign="END"/>
-                    <column property="saldoAtual" width="23%" textAlign="END"/>
+                    <column property="saldoAtualComLetra" width="23%" textAlign="END"/>
                 </columns>
             </dataGrid>
 
@@ -109,10 +104,10 @@
                       themeNames="small">
                 <columns>
                     <column property="mes" width="8%"/>
-                    <column property="saldoAnterior" width="23%" textAlign="END"/>
+                    <column property="saldoAnteriorComLetra" width="23%" textAlign="END"/>
                     <column property="debitoMes" width="23%" textAlign="END"/>
                     <column property="creditoMes" width="23%" textAlign="END"/>
-                    <column property="saldoAtual" width="23%" textAlign="END"/>
+                    <column property="saldoAtualComLetra" width="23%" textAlign="END"/>
                 </columns>
             </dataGrid>
         </hbox>
