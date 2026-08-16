@@ -31,6 +31,20 @@
                 <item view="Associacao.list"
                       title="msg://br.com.axialsoftware.axctg3.view.contabil.associacao/associacaoListView.title"/>
             </menu>
+            <menu id="encerramento" title="msg://br.com.axialsoftware.axctg3/menu.encerramento.title">
+                <item id="lancarEncerramento"
+                      title="msg://br.com.axialsoftware.axctg3/menu.encerramento.lancarEncerramento"
+                      bean="MenuBean"
+                      beanMethod="lancarEncerramento"/>
+                <item id="criarProximoExercicio"
+                      title="msg://br.com.axialsoftware.axctg3/menu.encerramento.criarProximoExercicio"
+                      bean="MenuBean"
+                      beanMethod="criarProximoExercicio"/>
+                <item id="transferirSaldosProximoExercicio"
+                      title="msg://br.com.axialsoftware.axctg3/menu.encerramento.transferirSaldos"
+                      bean="MenuBean"
+                      beanMethod="transferirSaldosProximoExercicio"/>
+            </menu>
         </menu>
         <menu id="financeiro" title="msg://br.com.axialsoftware.axctg3/menu.financeiro.title">
             <item view="Banco.list"

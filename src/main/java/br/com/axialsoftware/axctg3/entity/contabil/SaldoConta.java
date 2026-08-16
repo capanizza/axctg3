@@ -16,6 +16,7 @@ import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -87,6 +88,29 @@ public class SaldoConta {
     @JmixProperty
     public BigDecimal getSaldoAtual() {
         return saldoAnterior.add(debitoMes).subtract(creditoMes);
+    }
+
+    @DependsOnProperties({"saldoAnterior"})
+    @JmixProperty
+    public String getSaldoAnteriorComLetra() {
+        return formatarComLetra(saldoAnterior);
+    }
+
+    @DependsOnProperties({"saldoAnterior", "debitoMes", "creditoMes"})
+    @JmixProperty
+    public String getSaldoAtualComLetra() {
+        return formatarComLetra(getSaldoAtual());
+    }
+
+    private String formatarComLetra(BigDecimal valor) {
+        DecimalFormat df = new DecimalFormat("###,###,##0.00");
+        if (valor == null || valor.compareTo(BigDecimal.ZERO) == 0) {
+            return df.format(BigDecimal.ZERO);
+        }
+        if (valor.compareTo(BigDecimal.ZERO) > 0) {
+            return df.format(valor) + " D";
+        }
+        return df.format(valor.negate()) + " C";
     }
 
     public ContaContabil getContaContabil() {

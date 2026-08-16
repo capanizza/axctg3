@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/16-110300-c1f40fd1-empresa-conta-encerramento-mover.xml">
+    <!-- ContaContabil.codContaEnc era repetido em toda conta de resultado (mesma conta de
+         encerramento pra todas), mas o campo não é ligado a nenhuma lógica de apuração ainda —
+         então não há dado funcional a migrar, só move a coluna pra um único valor por empresa. -->
+    <changeSet id="1" author="axctg3">
+        <dropColumn tableName="CONTA_CONTABIL" columnName="COD_CONTA_ENC"/>
+    </changeSet>
+    <changeSet id="2" author="axctg3">
+        <addColumn tableName="EMPRESA">
+            <column name="COD_CONTA_ENC" type="VARCHAR(25)"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

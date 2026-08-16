@@ -124,38 +124,44 @@
                     </tab>
                     <tab id="dadosContabeisTab" label="Dados contábeis">
                         <vbox>
-                            <hbox width="100%" expand="indSitIniPerField">
+                            <hbox width="100%">
                                 <textField id="mascContabilField"
                                            property="mascContabil"
                                            dataContainer="empresaDc"
-                                           width="15%" themeNames="small"
+                                           width="20%" themeNames="small"
                                            label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.mascContabil"/>
+                                <textField id="codContaEncField"
+                                           property="codContaEnc"
+                                           dataContainer="empresaDc"
+                                           width="20%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.codContaEnc"/>
                                 <textField id="inscEstField"
                                            property="inscEst"
                                            dataContainer="empresaDc"
-                                           width="15%" themeNames="small"
+                                           width="20%" themeNames="small"
                                            label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.inscEst"/>
                                 <textField id="inscMunField"
                                            property="inscMun"
                                            dataContainer="empresaDc"
-                                           width="15%" themeNames="small"
+                                           width="20%" themeNames="small"
                                            label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.inscMun"/>
                                 <textField id="nireField"
                                            property="nire"
                                            dataContainer="empresaDc"
-                                           width="15%" themeNames="small"
+                                           width="20%" themeNames="small"
                                            label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.nire"/>
+                            </hbox>
+                            <hbox width="100%">
                                 <select id="indSitEspField"
                                         property="indSitEsp"
                                         dataContainer="empresaDc"
-                                        width="15%" themeNames="small"
+                                        width="20%" themeNames="small"
                                         label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.indSitEsp"/>
                                 <select id="indSitIniPerField"
                                         property="indSitIniPer"
-                                        dataContainer="empresaDc" themeNames="small"
+                                        dataContainer="empresaDc"
+                                        width="20%" themeNames="small"
                                         label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.indSitIniPer"/>
-                            </hbox>
-                            <hbox width="100%">
                                 <select id="indFinEscField"
                                         property="indFinEsc"
                                         dataContainer="empresaDc"
@@ -163,25 +169,25 @@
                                         label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.indFinEsc"/>
                                 <select id="indGrandePorteField"
                                         property="indGrandePorte"
-                                        width="30%" themeNames="small"
+                                        width="20%" themeNames="small"
                                         dataContainer="empresaDc"
                                         label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.indGrandePorte"/>
                                 <select id="tipEcdField"
                                         property="tipEcd"
                                         dataContainer="empresaDc"
-                                        width="30%" themeNames="small"
+                                        width="20%" themeNames="small"
                                         label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.tipEcd"/>
+                            </hbox>
+                            <hbox width="100%">
                                 <textField id="codScpField"
                                            property="codScp"
                                            dataContainer="empresaDc"
                                            width="20%" themeNames="small"
                                            label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.codScp"/>
-                            </hbox>
-                            <hbox width="100%">
                                 <checkbox id="identMfField"
                                           property="identMf"
                                           dataContainer="empresaDc"
-                                          width="10%"
+                                          width="15%"
                                           alignSelf="END"
                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.identMf"/>
                                 <checkbox id="indEscConsField"
@@ -198,8 +204,10 @@
                                 <select id="indMudancaPcField"
                                         property="indMudancaPc"
                                         dataContainer="empresaDc"
-                                        width="20%"
+                                        width="25%"
                                         label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.indMudancaPc"/>
+                            </hbox>
+                            <hbox width="100%">
                                 <select id="codPlanRefField"
                                         property="codPlanRef"
                                         dataContainer="empresaDc"
