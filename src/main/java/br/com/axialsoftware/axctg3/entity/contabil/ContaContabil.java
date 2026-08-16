@@ -91,9 +91,6 @@ public class ContaContabil {
     @NotNull
     private Integer codNat;
 
-    @Column(name = "COD_CONTA_ENC", length = 25)
-    private String codContaEnc;
-
     // referência real (não mais texto livre) pra linha do plano de contas oficial da RFB —
     // nullable: nem toda conta analítica tem mapeamento desde já
     @ManyToOne(fetch = FetchType.LAZY)
@@ -144,14 +141,6 @@ public class ContaContabil {
 
     public void setContaReferencial(ContaReferencial contaReferencial) {
         this.contaReferencial = contaReferencial;
-    }
-
-    public String getCodContaEnc() {
-        return codContaEnc;
-    }
-
-    public void setCodContaEnc(String codContaEnc) {
-        this.codContaEnc = codContaEnc;
     }
 
     public CodNat getCodNat() {

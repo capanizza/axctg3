@@ -195,6 +195,13 @@ public class Empresa {
     @Column(name = "MASC_CONTABIL", length = 25)
     private String mascContabil;
 
+    // código da conta contábil de encerramento (não FK: o plano de contas é versionado por
+    // ano — ContaContabil tem chave única CODIGO+COD_EMPRESA+ANO — então a conta de destino
+    // é resolvida em tempo de uso por este código junto com o ano contábil corrente, não
+    // fixada num ID de uma linha de um ano específico)
+    @Column(name = "COD_CONTA_ENC", length = 25)
+    private String codContaEnc;
+
     @JoinColumn(name = "CONTA_PARCEIRO_SAIDA_ID")
     @ManyToOne(fetch = FetchType.LAZY)
     private ContaContabil contaParceiroSaida;
@@ -631,6 +638,14 @@ public class Empresa {
 
     public void setMascContabil(String mascContabil) {
         this.mascContabil = mascContabil;
+    }
+
+    public String getCodContaEnc() {
+        return codContaEnc;
+    }
+
+    public void setCodContaEnc(String codContaEnc) {
+        this.codContaEnc = codContaEnc;
     }
 
     public ContaContabil getContaParceiroSaida() {

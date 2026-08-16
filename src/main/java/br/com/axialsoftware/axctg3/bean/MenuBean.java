@@ -2,10 +2,12 @@ package br.com.axialsoftware.axctg3.bean;
 
 import br.com.axialsoftware.axctg3.entity.cadastros.ConfigRel;
 import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
+import br.com.axialsoftware.axctg3.entity.contabil.HistoricoContabil;
 import br.com.axialsoftware.axctg3.entity.financeiro.Banco;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.contabil.ContaContabilService;
 import br.com.axialsoftware.axctg3.service.contabil.DepreciacaoService;
+import br.com.axialsoftware.axctg3.service.contabil.EncerramentoService;
 import br.com.axialsoftware.axctg3.service.contabil.LancamentoService;
 import br.com.axialsoftware.axctg3.service.financeiro.DiversoPagarService;
 import br.com.axialsoftware.axctg3.service.financeiro.ItemDiversoPagarService;
@@ -20,18 +22,27 @@ import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.action.DialogAction;
 import io.jmix.flowui.app.inputdialog.DialogActions;
 import io.jmix.flowui.app.inputdialog.DialogOutcome;
+import io.jmix.flowui.backgroundtask.BackgroundTask;
+import io.jmix.flowui.backgroundtask.TaskLifeCycle;
 import io.jmix.flowui.component.UiComponentUtils;
+import io.jmix.flowui.view.View;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.jmix.flowui.app.inputdialog.InputParameter.*;
 
 @Component("MenuBean")
 public class MenuBean {
+
+    /** Uma empresa raramente passa de algumas centenas de contas — folga generosa mesmo assim. */
+    private static final long TIMEOUT_ENCERRAMENTO_MINUTOS = 10;
 
     private final UtilGeralService utilGeralService;
     private final Dialogs dialogs;
@@ -39,6 +50,7 @@ public class MenuBean {
     private final DataManager dataManager;
     private final LancamentoService lancamentoService;
     private final DepreciacaoService depreciacaoService;
+    private final EncerramentoService encerramentoService;
     private final DiversoPagarService diversoPagarService;
     private final ItemDiversoPagarService itemDiversoPagarService;
     private final TituloReceberService tituloReceberService;
@@ -47,13 +59,14 @@ public class MenuBean {
     private final ItemPagarService itemPagarService;
     private final MovimentoBancoService movimentoBancoService;
 
-    public MenuBean(UtilGeralService utilGeralService, Dialogs dialogs, ContaContabilService contaContabilService, DataManager dataManager, LancamentoService lancamentoService, DepreciacaoService depreciacaoService, DiversoPagarService diversoPagarService, ItemDiversoPagarService itemDiversoPagarService, TituloReceberService tituloReceberService, ItemReceberService itemReceberService, TituloPagarService tituloPagarService, ItemPagarService itemPagarService, MovimentoBancoService movimentoBancoService) {
+    public MenuBean(UtilGeralService utilGeralService, Dialogs dialogs, ContaContabilService contaContabilService, DataManager dataManager, LancamentoService lancamentoService, DepreciacaoService depreciacaoService, EncerramentoService encerramentoService, DiversoPagarService diversoPagarService, ItemDiversoPagarService itemDiversoPagarService, TituloReceberService tituloReceberService, ItemReceberService itemReceberService, TituloPagarService tituloPagarService, ItemPagarService itemPagarService, MovimentoBancoService movimentoBancoService) {
         this.utilGeralService = utilGeralService;
         this.dialogs = dialogs;
         this.contaContabilService = contaContabilService;
         this.dataManager = dataManager;
         this.lancamentoService = lancamentoService;
         this.depreciacaoService = depreciacaoService;
+        this.encerramentoService = encerramentoService;
         this.diversoPagarService = diversoPagarService;
         this.itemDiversoPagarService = itemDiversoPagarService;
         this.tituloReceberService = tituloReceberService;
@@ -656,5 +669,285 @@ public class MenuBean {
                     }
                 })
                 .open();
+    }
+
+    // ===================== Encerramento de exercício =====================
+
+    private String resumirCodigos(List<String> codigos) {
+        int limite = 20;
+        if (codigos.size() <= limite) {
+            return String.join(", ", codigos);
+        }
+        return String.join(", ", codigos.subList(0, limite)) + " (+" + (codigos.size() - limite) + ")";
+    }
+
+    public void lancarEncerramento() {
+        if (utilGeralService.getMesContabil() != 12) {
+            dialogs.createMessageDialog()
+                    .withHeader("Lançamentos de encerramento")
+                    .withText("Só é possível lançar o encerramento com o período contábil em dezembro.")
+                    .open();
+            return;
+        }
+        ContaContabil contaEncerramento = encerramentoService.resolverContaEncerramento();
+        if (contaEncerramento == null) {
+            dialogs.createMessageDialog()
+                    .withHeader("Lançamentos de encerramento")
+                    .withText("Configure a conta de encerramento no cadastro da empresa antes de continuar.")
+                    .open();
+            return;
+        }
+        List<EncerramentoService.ContaEncerramento> itens = encerramentoService.prepararLancamentoEncerramento();
+        if (itens.isEmpty()) {
+            dialogs.createMessageDialog()
+                    .withHeader("Lançamentos de encerramento")
+                    .withText("Nenhuma conta de resultado com saldo a encerrar.")
+                    .open();
+            return;
+        }
+
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
+        Integer historicoAtual = configRel.getHistoricoEncerramento();
+        View<?> ownerView = UiComponentUtils.getCurrentView();
+        dialogs.createInputDialog(ownerView)
+                .withHeader("Lançamentos de encerramento")
+                .withParameters(
+                        intParameter("historicoEncerramento")
+                                .withLabel("Histórico")
+                                .withDefaultValue(historicoAtual)
+                                .withRequired(true)
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withCloseListener(closeEvent -> {
+                    if (!closeEvent.closedWith(DialogOutcome.OK)) {
+                        return;
+                    }
+                    Integer codHistorico = closeEvent.getValue("historicoEncerramento");
+                    HistoricoContabil historico;
+                    try {
+                        historico = dataManager.load(HistoricoContabil.class)
+                                .query("select e from HistoricoContabil e " +
+                                        "where e.codigo = :codigo " +
+                                        "and e.codEmpresa = :codEmpresa")
+                                .parameter("codigo", codHistorico)
+                                .parameter("codEmpresa", utilGeralService.getCodEmpresa())
+                                .one();
+                    } catch (Exception e) {
+                        dialogs.createMessageDialog()
+                                .withHeader("Lançamentos de encerramento")
+                                .withText("Histórico contábil não encontrado.")
+                                .open();
+                        return;
+                    }
+                    SaveContext saveContext = new SaveContext();
+                    configRel.setHistoricoEncerramento(codHistorico);
+                    saveContext.saving(configRel);
+                    dataManager.save(saveContext);
+
+                    dialogs.createBackgroundTaskDialog(
+                                    new LancarEncerramentoTask(ownerView, itens, historico, contaEncerramento))
+                            .withHeader("Lançamentos de encerramento")
+                            .withText("Lançando encerramento...")
+                            .withTotal(itens.size())
+                            .withShowProgressInPercentage(true)
+                            .withCancelAllowed(true)
+                            .open();
+                })
+                .open();
+    }
+
+    public void criarProximoExercicio() {
+        List<ContaContabil> contas = encerramentoService.prepararCriarProximoExercicio();
+        if (contas.isEmpty()) {
+            dialogs.createMessageDialog()
+                    .withHeader("Criar próximo exercício")
+                    .withText("Todas as contas do próximo exercício já foram criadas.")
+                    .open();
+            return;
+        }
+        Integer anoSeguinte = utilGeralService.getAnoContabil() + 1;
+        View<?> ownerView = UiComponentUtils.getCurrentView();
+        dialogs.createOptionDialog()
+                .withHeader("Criar próximo exercício")
+                .withText("Confirma criar " + contas.size() + " conta(s) no exercício " + anoSeguinte + "?")
+                .withActions(
+                        new DialogAction(DialogAction.Type.YES)
+                                .withHandler(e -> dialogs
+                                        .createBackgroundTaskDialog(new CriarProximoExercicioTask(ownerView, contas))
+                                        .withHeader("Criar próximo exercício")
+                                        .withText("Criando contas...")
+                                        .withTotal(contas.size())
+                                        .withShowProgressInPercentage(true)
+                                        .withCancelAllowed(true)
+                                        .open()),
+                        new DialogAction(DialogAction.Type.NO)
+                )
+                .open();
+    }
+
+    public void transferirSaldosProximoExercicio() {
+        EncerramentoService.PreparoTransferenciaSaldos preparo = encerramentoService.prepararTransferenciaSaldos();
+        if (!preparo.contasFaltantes().isEmpty()) {
+            dialogs.createMessageDialog()
+                    .withHeader("Saldos para o próximo exercício")
+                    .withText("Rode \"Criar próximo exercício\" antes — faltam as contas: "
+                            + resumirCodigos(preparo.contasFaltantes()))
+                    .open();
+            return;
+        }
+        if (preparo.pendentes().isEmpty()) {
+            dialogs.createMessageDialog()
+                    .withHeader("Saldos para o próximo exercício")
+                    .withText("Nenhuma conta para transferir.")
+                    .open();
+            return;
+        }
+        View<?> ownerView = UiComponentUtils.getCurrentView();
+        dialogs.createOptionDialog()
+                .withHeader("Saldos para o próximo exercício")
+                .withText("Confirma transferir os saldos de " + preparo.pendentes().size() + " conta(s)?")
+                .withActions(
+                        new DialogAction(DialogAction.Type.YES)
+                                .withHandler(e -> dialogs
+                                        .createBackgroundTaskDialog(
+                                                new TransferirSaldosTask(ownerView, preparo.pendentes()))
+                                        .withHeader("Saldos para o próximo exercício")
+                                        .withText("Transferindo saldos...")
+                                        .withTotal(preparo.pendentes().size())
+                                        .withShowProgressInPercentage(true)
+                                        .withCancelAllowed(true)
+                                        .open()),
+                        new DialogAction(DialogAction.Type.NO)
+                )
+                .open();
+    }
+
+    /**
+     * Lança o encerramento item a item — mesmo raciocínio das outras BackgroundTask do
+     * projeto (ex.: {@code AssociacaoListView.CopiarAnoAnteriorTask}): nada de UI dentro de
+     * {@link #run}, só em {@link #done}/{@link #canceled}. Classe interna (não estática) só
+     * pra reaproveitar os serviços/dialogs do {@code MenuBean} — o dono da task pro Jmix
+     * continua sendo a view corrente, passada explicitamente pelo construtor.
+     */
+    protected class LancarEncerramentoTask extends BackgroundTask<Integer, Integer> {
+
+        private final List<EncerramentoService.ContaEncerramento> itens;
+        private final HistoricoContabil historico;
+        private final ContaContabil contaEncerramento;
+        private final AtomicInteger processadas = new AtomicInteger();
+
+        protected LancarEncerramentoTask(View<?> ownerView, List<EncerramentoService.ContaEncerramento> itens,
+                                          HistoricoContabil historico, ContaContabil contaEncerramento) {
+            super(TIMEOUT_ENCERRAMENTO_MINUTOS, TimeUnit.MINUTES, ownerView);
+            this.itens = itens;
+            this.historico = historico;
+            this.contaEncerramento = contaEncerramento;
+        }
+
+        @Override
+        public Integer run(TaskLifeCycle<Integer> taskLifeCycle) throws Exception {
+            for (EncerramentoService.ContaEncerramento item : itens) {
+                if (taskLifeCycle.isCancelled() || taskLifeCycle.isInterrupted()) {
+                    break;
+                }
+                encerramentoService.lancarEncerramentoConta(item, historico, contaEncerramento);
+                taskLifeCycle.publish(processadas.incrementAndGet());
+            }
+            return processadas.get();
+        }
+
+        @Override
+        public void done(Integer total) {
+            dialogs.createMessageDialog()
+                    .withHeader("Lançamentos de encerramento")
+                    .withText(processadas.get() + " lançamento(s) de encerramento gravado(s).")
+                    .open();
+        }
+
+        @Override
+        public void canceled() {
+            dialogs.createMessageDialog()
+                    .withHeader("Lançamentos de encerramento")
+                    .withText("Cancelado após " + processadas.get() + " lançamento(s).")
+                    .open();
+        }
+    }
+
+    protected class CriarProximoExercicioTask extends BackgroundTask<Integer, Integer> {
+
+        private final List<ContaContabil> contas;
+        private final AtomicInteger processadas = new AtomicInteger();
+
+        protected CriarProximoExercicioTask(View<?> ownerView, List<ContaContabil> contas) {
+            super(TIMEOUT_ENCERRAMENTO_MINUTOS, TimeUnit.MINUTES, ownerView);
+            this.contas = contas;
+        }
+
+        @Override
+        public Integer run(TaskLifeCycle<Integer> taskLifeCycle) throws Exception {
+            for (ContaContabil conta : contas) {
+                if (taskLifeCycle.isCancelled() || taskLifeCycle.isInterrupted()) {
+                    break;
+                }
+                encerramentoService.criarContaProximoExercicio(conta);
+                taskLifeCycle.publish(processadas.incrementAndGet());
+            }
+            return processadas.get();
+        }
+
+        @Override
+        public void done(Integer total) {
+            dialogs.createMessageDialog()
+                    .withHeader("Criar próximo exercício")
+                    .withText(processadas.get() + " conta(s) criada(s) no próximo exercício.")
+                    .open();
+        }
+
+        @Override
+        public void canceled() {
+            dialogs.createMessageDialog()
+                    .withHeader("Criar próximo exercício")
+                    .withText("Cancelado após " + processadas.get() + " conta(s) criada(s).")
+                    .open();
+        }
+    }
+
+    protected class TransferirSaldosTask extends BackgroundTask<Integer, Integer> {
+
+        private final List<EncerramentoService.TransferenciaSaldo> pendentes;
+        private final AtomicInteger processadas = new AtomicInteger();
+
+        protected TransferirSaldosTask(View<?> ownerView, List<EncerramentoService.TransferenciaSaldo> pendentes) {
+            super(TIMEOUT_ENCERRAMENTO_MINUTOS, TimeUnit.MINUTES, ownerView);
+            this.pendentes = pendentes;
+        }
+
+        @Override
+        public Integer run(TaskLifeCycle<Integer> taskLifeCycle) throws Exception {
+            for (EncerramentoService.TransferenciaSaldo pendente : pendentes) {
+                if (taskLifeCycle.isCancelled() || taskLifeCycle.isInterrupted()) {
+                    break;
+                }
+                encerramentoService.transferirSaldoConta(pendente);
+                taskLifeCycle.publish(processadas.incrementAndGet());
+            }
+            return processadas.get();
+        }
+
+        @Override
+        public void done(Integer total) {
+            dialogs.createMessageDialog()
+                    .withHeader("Saldos para o próximo exercício")
+                    .withText(processadas.get() + " conta(s) com saldo transferido.")
+                    .open();
+        }
+
+        @Override
+        public void canceled() {
+            dialogs.createMessageDialog()
+                    .withHeader("Saldos para o próximo exercício")
+                    .withText("Cancelado após " + processadas.get() + " conta(s).")
+                    .open();
+        }
     }
 }

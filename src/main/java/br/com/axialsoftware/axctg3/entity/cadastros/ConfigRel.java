@@ -60,6 +60,9 @@ public class ConfigRel {
     @Column(name = "historico_depreciacao")
     private Integer historicoDepreciacao = 0;
 
+    @Column(name = "historico_encerramento")
+    private Integer historicoEncerramento;
+
     @Column(name = "origem")
     private String origem;
 
@@ -297,6 +300,14 @@ public class ConfigRel {
 
     public void setHistoricoDepreciacao(Integer historicoDepreciacao) {
         this.historicoDepreciacao = historicoDepreciacao;
+    }
+
+    public Integer getHistoricoEncerramento() {
+        return historicoEncerramento;
+    }
+
+    public void setHistoricoEncerramento(Integer historicoEncerramento) {
+        this.historicoEncerramento = historicoEncerramento;
     }
 
     public String getOrigem() {
