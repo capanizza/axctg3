@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/17-094409-c1f40fd1-aliquotaibscbs-criar.xml">
+    <changeSet id="1" author="axctg3">
+        <createTable tableName="ALIQUOTA_IBS_CBS">
+            <column name="ID" type="${uuid.type}">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_ALIQUOTA_IBS_CBS"/>
+            </column>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="${offsetDateTime.type}"/>
+            <column name="LAST_MODIFIED_BY" type="VARCHAR(255)"/>
+            <column name="LAST_MODIFIED_DATE" type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY" type="VARCHAR(255)"/>
+            <column name="DELETED_DATE" type="${offsetDateTime.type}"/>
+            <column name="ANO" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ALIQ_IBS_UF" type="DECIMAL(7,2)" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ALIQ_IBS_MUN" type="DECIMAL(7,2)" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ALIQ_CBS" type="DECIMAL(7,2)" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="2" author="axctg3" dbms="postgresql">
+        <createIndex indexName="IDX_ALIQUOTA_IBS_CBS_UNQ" tableName="ALIQUOTA_IBS_CBS" unique="true">
+            <column name="ANO"/>
+        </createIndex>
+
+        <modifySql>
+            <append value="where DELETED_DATE is null"/>
+        </modifySql>
+    </changeSet>
+    <changeSet id="3" author="axctg3" dbms="!postgresql">
+        <createIndex indexName="IDX_ALIQUOTA_IBS_CBS_UNQ" tableName="ALIQUOTA_IBS_CBS" unique="true">
+            <column name="ANO"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="4" author="axctg3">
+        <!-- Alíquota-teste nacional de 2026 (LC 214/2025): 0,1% IBS (0,05% UF + 0,05%
+             Município) + 0,9% CBS — mesmo valor já documentado no comentário de
+             NaturezaOperacao.aliqIbsUf/aliqIbsMun/aliqCbs. -->
+        <insert tableName="ALIQUOTA_IBS_CBS">
+            <column name="ID" value="b00a32e2-4f62-4115-9a0d-c3be56a73f78"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="ANO" valueNumeric="2026"/>
+            <column name="ALIQ_IBS_UF" valueNumeric="0.05"/>
+            <column name="ALIQ_IBS_MUN" valueNumeric="0.05"/>
+            <column name="ALIQ_CBS" valueNumeric="0.90"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

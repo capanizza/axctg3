@@ -1,6 +1,7 @@
 package br.com.axialsoftware.axctg3.entity.fiscal;
 
 import br.com.axialsoftware.axctg3.entity.enums.TipoProduto;
+import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassificacaoFiscal;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.annotation.DeletedBy;
@@ -137,6 +138,25 @@ public class Produto {
 
     @Column(name = "NCM", length = 20)
     private String ncm;
+
+    // Código de Classificação Tributária (cClassTrib no leiaute NFe/NFCe, grupo gIBSCBS)
+    // — referência real pra ClassTrib (mesmo padrão de ContaContabil.contaReferencial),
+    // obrigatória por decisão de projeto (ver docs/REFORMA-TRIBUTARIA-IBS-CBS.md): ao
+    // contrário de NaturezaOperacao.classTrib, aqui não há fallback silencioso pra "sem
+    // classificação". É consultado na resolução de precedência feita por
+    // ItemNotaSaidaEventListener quando a natureza da nota é "rasa" (CST 000).
+    @JoinColumn(name = "CLASS_TRIB_ID", nullable = false)
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    private ClassTrib classTrib;
+
+    public @NotNull ClassTrib getClassTrib() {
+        return classTrib;
+    }
+
+    public void setClassTrib(@NotNull ClassTrib classTrib) {
+        this.classTrib = classTrib;
+    }
 
     public String getNcm() {
         return ncm;

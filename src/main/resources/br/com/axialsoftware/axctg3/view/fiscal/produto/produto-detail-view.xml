@@ -8,6 +8,7 @@
             <fetchPlan extends="_base">
                 <property name="grupoProduto" fetchPlan="_base"/>
                 <property name="classificacaoFiscal" fetchPlan="_base"/>
+                <property name="classTrib" fetchPlan="_base"/>
             </fetchPlan>
             <loader id="produtoDl"/>
         </instance>
@@ -70,7 +71,7 @@
                 <entityPicker id="grupoProdutoField"
                               property="grupoProduto"
                               dataContainer="produtoDc"
-                              width="30%" themeNames="small"
+                              width="25%" themeNames="small"
                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.grupoProduto">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
@@ -80,7 +81,7 @@
                 <entityPicker id="classificacaoFiscalField"
                               property="classificacaoFiscal"
                               dataContainer="produtoDc"
-                              width="30%" themeNames="small"
+                              width="25%" themeNames="small"
                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.classificacaoFiscal">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
@@ -90,14 +91,24 @@
                 <select id="tipoProdutoField"
                         property="tipoProduto"
                         dataContainer="produtoDc"
-                        width="20%" themeNames="small"
+                        width="15%" themeNames="small"
                         label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.tipoProduto"/>
                 <textField id="ncmField"
                            property="ncm"
                            maxLength="20"
                            dataContainer="produtoDc"
-                           width="15%" themeNames="small"
+                           width="12%" themeNames="small"
                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.ncm"/>
+                <entityPicker id="classTribField"
+                              property="classTrib"
+                              dataContainer="produtoDc"
+                              width="18%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.classTrib">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
                 <checkbox id="inativoField"
                           property="inativo"
                           dataContainer="produtoDc"

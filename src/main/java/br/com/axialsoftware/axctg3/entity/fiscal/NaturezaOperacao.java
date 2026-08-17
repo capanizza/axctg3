@@ -1,6 +1,7 @@
 package br.com.axialsoftware.axctg3.entity.fiscal;
 
 import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
+import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.annotation.DeletedBy;
 import io.jmix.core.annotation.DeletedDate;
@@ -122,16 +123,19 @@ public class NaturezaOperacao {
     @NotNull
     private BigDecimal aliqCbs = BigDecimal.ZERO;
 
-    // Código de Classificação Tributária (cClassTrib no leiaute NFe/NFCe,
-    // grupo gIBSCBS) — 6 dígitos, define se a operação está sujeita à
-    // alíquota-teste ou é isenta/diferida/imune (ex.: bonificação,
-    // devolução, transferência entre estabelecimentos). Sem valor
-    // preenchido a NFe não é autorizada desde 03/08/2026; nullable aqui
-    // porque o cadastro de naturezas existentes precisa ser migrado aos
-    // poucos e o código correto depende de análise contábil caso a caso.
-    @Column(name = "COD_CLASS_TRIB")
-    @NumberFormat(pattern = "000000")
-    private Integer codClassTrib;
+    // Código de Classificação Tributária (cClassTrib no leiaute NFe/NFCe, grupo
+    // gIBSCBS) — referência real pra ClassTrib, mesmo padrão de
+    // ContaContabil.contaReferencial (tabela de referência grande importada em bulk,
+    // usuário escolhe na tela — não é código SPED/ECD próprio da empresa, que aí sim
+    // seria Integer + EnumClass). Define se a operação está sujeita à alíquota-teste
+    // ou é isenta/diferida/imune (ex.: bonificação, devolução, transferência entre
+    // estabelecimentos). Sem valor preenchido a NFe não é autorizada desde
+    // 03/08/2026; nullable aqui porque o cadastro de naturezas existentes precisa
+    // ser migrado aos poucos e o código correto depende de análise contábil caso a
+    // caso.
+    @JoinColumn(name = "CLASS_TRIB_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private ClassTrib classTrib;
 
     // sem nullable=false: um Boolean NOT NULL vira propriedade "obrigatória" pro Jmix, e
     // como o valor vazio do Checkbox do Vaadin é justamente `false`, desmarcá-lo passa a
@@ -217,12 +221,12 @@ public class NaturezaOperacao {
         this.aliqCbs = aliqCbs;
     }
 
-    public Integer getCodClassTrib() {
-        return codClassTrib;
+    public ClassTrib getClassTrib() {
+        return classTrib;
     }
 
-    public void setCodClassTrib(Integer codClassTrib) {
-        this.codClassTrib = codClassTrib;
+    public void setClassTrib(ClassTrib classTrib) {
+        this.classTrib = classTrib;
     }
 
     public Integer getCfop() {

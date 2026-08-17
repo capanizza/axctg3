@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/17-085140-c1f40fd1-produto-itemnotasaida-codclasstrib-adicionar.xml">
+    <!--
+        Reforma tributária IBS/CBS — regra de precedência decidida em
+        docs/REFORMA-TRIBUTARIA-IBS-CBS.md.
+
+        PRODUTO.COD_CLASS_TRIB é NOT NULL sem defaultValue: decisão de projeto é não ter
+        fallback silencioso pra "sem classificação" (ao contrário de
+        NATUREZA_OPERACAO.COD_CLASS_TRIB, que ficou nullable). Um ambiente com linhas
+        existentes em PRODUTO precisa fazer o backfill de COD_CLASS_TRIB *antes* de rodar
+        este changeset — sem isso o addColumn falha no banco, de propósito (falha rápida
+        em vez de gravar um valor arbitrário).
+    -->
+    <changeSet id="1" author="axctg3">
+        <addColumn tableName="PRODUTO">
+            <column name="COD_CLASS_TRIB" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet id="2" author="axctg3">
+        <addColumn tableName="ITEM_NOTA_SAIDA">
+            <column name="COD_CLASS_TRIB" type="INT"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

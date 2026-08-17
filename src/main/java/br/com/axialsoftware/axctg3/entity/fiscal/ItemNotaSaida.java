@@ -143,6 +143,25 @@ public class ItemNotaSaida {
     @Column(name = "CST", length = 4)
     private String cst;
 
+    // Código de Classificação Tributária (cClassTrib IBS/CBS) resolvido pra este item.
+    // Sem valor padrão: o ItemNotaSaidaEventListener preenche na primeira gravação
+    // aplicando a regra de precedência (docs/REFORMA-TRIBUTARIA-IBS-CBS.md) — CST 000 da
+    // NaturezaOperacao usa o valor do Produto, senão usa o da própria NaturezaOperacao.
+    // É um snapshot congelado no momento da gravação, não recalculado depois: uma
+    // mudança posterior no cadastro do produto ou da natureza não deve reescrever
+    // retroativamente o que já foi declarado num item existente.
+    @Column(name = "COD_CLASS_TRIB")
+    @NumberFormat(pattern = "000000")
+    private Integer codClassTrib;
+
+    public Integer getCodClassTrib() {
+        return codClassTrib;
+    }
+
+    public void setCodClassTrib(Integer codClassTrib) {
+        this.codClassTrib = codClassTrib;
+    }
+
     @NumberFormat(pattern = "###,###,##0.00000", decimalSeparator = ",", groupingSeparator = ".")
     @Column(name = "PESO_LIQUIDO", precision = 19, scale = 5)
     private BigDecimal pesoLiquido = BigDecimal.ZERO;
