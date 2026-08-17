@@ -24,7 +24,11 @@ import java.util.UUID;
  * Código de Classificação Tributária do IBS/CBS (cClassTrib no leiaute NFe/NFCe, grupo
  * gIBSCBS — Informe Técnico RT 2025.002/LC 214/2025). Tabela global, sem codEmpresa
  * (como Municipio/TipoLogradouro) — não é reforma tributária "por empresa". Referenciada
- * por NaturezaOperacao.codClassTrib (Integer solto, sem FK — padrão do projeto).
+ * por {@code NaturezaOperacao.classTrib} e {@code Produto.classTrib} — referência real
+ * (@ManyToOne), mesmo padrão de {@code ContaContabil.contaReferencial} pra outra tabela
+ * de referência grande importada em bulk. {@code ItemNotaSaida.codClassTrib} é a exceção:
+ * guarda só o código numérico resolvido (snapshot congelado no momento da gravação, não
+ * uma referência viva — ver comentário em ItemNotaSaidaEventListener).
  *
  * <p>Populada por seed inicial (changelog) e atualizável pela tela via import do JSON
  * oficial (formato NFe.io — mesma estrutura que a fonte distribui a cada nova versão do

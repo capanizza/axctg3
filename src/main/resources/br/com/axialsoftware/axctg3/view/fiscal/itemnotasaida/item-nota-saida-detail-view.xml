@@ -120,23 +120,28 @@
                 <bigDecimalField id="despesasField"
                                  property="despesas"
                                  dataContainer="itemNotaSaidaDc"
-                                 width="16%" themeNames="small"
+                                 width="14%" themeNames="small"
                                  label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.despesas"/>
                 <integerField id="cfopField"
                               property="cfop"
                               dataContainer="itemNotaSaidaDc"
-                              width="16%" themeNames="small"
+                              width="14%" themeNames="small"
                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.cfop"/>
                 <textField id="cstField"
                            property="cst"
                            maxLength="4"
                            dataContainer="itemNotaSaidaDc"
-                           width="16%" themeNames="small"
+                           width="14%" themeNames="small"
                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.cst"/>
+                <integerField id="codClassTribField"
+                              property="codClassTrib"
+                              dataContainer="itemNotaSaidaDc"
+                              width="16%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.codClassTrib"/>
                 <bigDecimalField id="pesoLiquidoField"
                                  property="pesoLiquido"
                                  dataContainer="itemNotaSaidaDc"
-                                 width="16%" themeNames="small"
+                                 width="14%" themeNames="small"
                                  label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.pesoLiquido"/>
                 <bigDecimalField id="pesoBrutoField"
                                  property="pesoBruto"

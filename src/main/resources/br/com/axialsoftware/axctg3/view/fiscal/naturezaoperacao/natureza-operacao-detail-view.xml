@@ -7,6 +7,7 @@
                   class="br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao">
             <fetchPlan extends="_base">
                 <property name="contaContabil" fetchPlan="_base"/>
+                <property name="classTrib" fetchPlan="_base"/>
             </fetchPlan>
             <loader id="naturezaOperacaoDl"/>
         </instance>
@@ -106,11 +107,16 @@
                                  dataContainer="naturezaOperacaoDc"
                                  width="15%" themeNames="small"
                                  label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NaturezaOperacao.aliqCbs"/>
-                <integerField id="codClassTribField"
-                              property="codClassTrib"
+                <entityPicker id="classTribField"
+                              property="classTrib"
                               dataContainer="naturezaOperacaoDc"
                               width="20%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NaturezaOperacao.codClassTrib"/>
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NaturezaOperacao.classTrib">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
             </hbox>
         </vbox>
         <hbox id="detailActions">

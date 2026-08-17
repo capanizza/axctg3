@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://aliquotaIbsCbsDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="aliquotaIbsCbsDc"
+                  class="br.com.axialsoftware.axctg3.entity.tabelas.AliquotaIbsCbs">
+            <fetchPlan extends="_base"/>
+            <loader id="aliquotaIbsCbsDl"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <vbox id="form" width="100%">
+            <hbox width="100%">
+                <integerField id="anoField"
+                              property="ano"
+                              dataContainer="aliquotaIbsCbsDc"
+                              width="20%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.tabelas/AliquotaIbsCbs.ano"/>
+                <bigDecimalField id="aliqIbsUfField"
+                                 property="aliqIbsUf"
+                                 dataContainer="aliquotaIbsCbsDc"
+                                 width="20%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.tabelas/AliquotaIbsCbs.aliqIbsUf"/>
+                <bigDecimalField id="aliqIbsMunField"
+                                 property="aliqIbsMun"
+                                 dataContainer="aliquotaIbsCbsDc"
+                                 width="20%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.tabelas/AliquotaIbsCbs.aliqIbsMun"/>
+                <bigDecimalField id="aliqCbsField"
+                                 property="aliqCbs"
+                                 dataContainer="aliquotaIbsCbsDc"
+                                 width="20%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.tabelas/AliquotaIbsCbs.aliqCbs"/>
+            </hbox>
+        </vbox>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

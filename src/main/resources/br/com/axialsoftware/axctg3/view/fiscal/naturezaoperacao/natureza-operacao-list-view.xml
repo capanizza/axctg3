@@ -8,6 +8,7 @@
                     class="br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao">
             <fetchPlan extends="_base">
                 <property name="contaContabil" fetchPlan="_base"/>
+                <property name="classTrib" fetchPlan="_base"/>
             </fetchPlan>
             <loader id="naturezaOperacaosDl" readOnly="true">
                 <query>
@@ -51,9 +52,10 @@
             </actions>
             <columns resizable="true">
                 <column property="codigo" width="10%" filterable="true"/>
-                <column property="nome" width="40%" filterable="true"/>
+                <column property="nome" width="35%" filterable="true"/>
                 <column property="cfop" width="10%" filterable="true"/>
-                <column property="contaContabil" width="30%" filterable="true"/>
+                <column property="classTrib" width="15%" filterable="true"/>
+                <column property="contaContabil" width="20%" filterable="true"/>
                 <column property="venda" width="10%" textAlign="CENTER"/>
             </columns>
         </dataGrid>
