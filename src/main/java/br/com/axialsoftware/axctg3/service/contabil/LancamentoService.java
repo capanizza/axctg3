@@ -333,7 +333,9 @@ public class LancamentoService {
                 st = lancamento.getHistoricoContabil().getCodigo().toString() + " ";
                 st = st + lancamento.getHistoricoContabil().getDescricao() + " ";
             }
-            st = st + lancamento.getComplementoHistorico();
+            if (lancamento.getComplementoHistorico() != null) {
+                st = st + lancamento.getComplementoHistorico();
+            }
             razaoDto.setHistorico(st);
             razaoDto.setSaldoAnterior(saldoAnterior);
             razaoDto.setSaldoAnteriorComLetra(utilGeralService.valorComLetra(saldoAnterior));
@@ -380,7 +382,9 @@ public class LancamentoService {
                 st = lancamento.getHistoricoContabil().getCodigo().toString() + " ";
                 st = st + lancamento.getHistoricoContabil().getDescricao() + " ";
             }
-            st = st + lancamento.getComplementoHistorico();
+            if (lancamento.getComplementoHistorico() != null) {
+                st = st + lancamento.getComplementoHistorico();
+            }
             razaoDto.setHistorico(st);
             razaoDto.setSaldoAnterior(saldoAnterior);
             razaoDto.setSaldoAnteriorComLetra(utilGeralService.valorComLetra(saldoAnterior));

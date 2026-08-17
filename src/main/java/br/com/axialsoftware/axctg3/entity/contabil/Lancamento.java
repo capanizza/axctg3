@@ -111,7 +111,7 @@ public class Lancamento {
 
     @Column(name = "COMPLEMENTO_HISTORICO")
     @Lob
-    private String complementoHistorico;
+    private String complementoHistorico = "";
 
     @Column(name = "ORIGEM", length = 25)
     private String origem;
