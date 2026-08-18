@@ -40,8 +40,13 @@ import java.util.UUID;
  * {@code veicProd}/{@code comb} (rastreabilidade e produtos regulados específicos),
  * {@code ISSQNtot}/{@code infIntermed} (prestação de serviço/intermediador),
  * {@code infRespTec}, {@code reboque}/{@code vagao}/{@code balsa} (multimodal), NVE/DI.
- * Também não há integração com webservice da SEFAZ neste projeto — esta entidade é só
- * para registro/consulta do que já foi emitido (por outro sistema, ou manualmente).
+ * Até 2026-08-17 esta entidade era só de registro/consulta, sem integração com a SEFAZ
+ * — decisão revertida nessa data (docs/EMISSAO-NFE.md): a emissão própria de NFe
+ * ({@code NfeEmissaoService}) gera, assina e transmite a partir de {@code NotaSaida}, e
+ * populada aqui com o mesmo {@code NfeXmlParser} que já lia XML importado — uma NFe
+ * emitida pelo próprio axctg3 vira uma linha igual a uma importada, sem mapeador
+ * duplicado. A ligação com {@code NotaSaida} continua só pela chave, sem FK, pelo mesmo
+ * motivo de antes.
  *
  * <p>Campos percentuais ({@code p*}) usam 4 casas decimais (padrão do leiaute SEFAZ,
  * igual a {@link br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib}), diferente do

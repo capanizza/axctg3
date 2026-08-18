@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/18-023146-c1f40fd1-aliquotaibscbs-corrigir-split-2026.xml">
+    <changeSet id="1" author="axctg3">
+        <!-- O changeset original (17-094409) assumiu 0,05% UF + 0,05% Município pra
+             alíquota-teste de 2026 — a SEFAZ-SP rejeitou (cStat=1026 "Alíquota do IBS da UF
+             inválida", confirmado 2026-08-18) exigindo os 0,1% inteiros em IBSUF e 0% em
+             IBSMun. Corrige o valor da linha já inserida em vez de editar o changeset
+             aplicado (nunca editar changelog já rodado). -->
+        <update tableName="ALIQUOTA_IBS_CBS">
+            <column name="ALIQ_IBS_UF" valueNumeric="0.10"/>
+            <column name="ALIQ_IBS_MUN" valueNumeric="0.00"/>
+            <where>ANO = 2026</where>
+        </update>
+    </changeSet>
+</databaseChangeLog>

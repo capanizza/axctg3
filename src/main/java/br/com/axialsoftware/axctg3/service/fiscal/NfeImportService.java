@@ -21,6 +21,12 @@ import org.springframework.stereotype.Service;
  * Dedup por {@code chave} (índice único em {@code Nfe}): um XML cuja chave já foi
  * importada é reportado como {@link Resultado#DUPLICADA} e não grava nada — a mesma
  * política do import de lançamentos contábeis (pula o que já existe, não sobrescreve).
+ * <p>
+ * {@link #salvarEmitida(byte[])} reusa o mesmo bloco de parse+save pra NFe emitida pelo
+ * próprio axctg3 (docs/EMISSAO-NFE.md) — depois de assinada e autorizada pela SEFAZ, a
+ * NFe emitida vira só mais um XML "autorizado" igual a um importado; quem atualiza
+ * {@code NotaSaida.chave} é {@code NfeEmissaoService}, não esta classe (mesmo motivo de
+ * {@code Nfe}/{@code NotaSaida} serem ligadas só pela chave, sem FK).
  */
 @Service
 public class NfeImportService {
@@ -51,17 +57,36 @@ public class NfeImportService {
             return new ImportResult(Resultado.ERRO,
                     nomeArquivo + ": chave de acesso não encontrada no XML");
         }
-
-        boolean jaImportada = dataManager.load(Nfe.class)
-                .query("select e from Nfe e where e.chave = :chave")
-                .parameter("chave", nfe.getChave())
-                .optional()
-                .isPresent();
-        if (jaImportada) {
+        if (jaExiste(nfe.getChave())) {
             return new ImportResult(Resultado.DUPLICADA,
                     nomeArquivo + ": NFe " + nfe.getChave() + " já importada");
         }
+        salvar(nfe);
+        return new ImportResult(Resultado.CRIADA, null);
+    }
 
+    /** @throws IllegalStateException se a chave já existir (emissão duplicada é bug, não fluxo normal) */
+    public Nfe salvarEmitida(byte[] nfeProcXml) {
+        Nfe nfe = parser.parse(nfeProcXml);
+        if (nfe.getChave() == null || nfe.getChave().isBlank()) {
+            throw new IllegalStateException("Chave de acesso não encontrada no XML emitido");
+        }
+        if (jaExiste(nfe.getChave())) {
+            throw new IllegalStateException("NFe " + nfe.getChave() + " já existe — emissão duplicada");
+        }
+        salvar(nfe);
+        return nfe;
+    }
+
+    private boolean jaExiste(String chave) {
+        return dataManager.load(Nfe.class)
+                .query("select e from Nfe e where e.chave = :chave")
+                .parameter("chave", chave)
+                .optional()
+                .isPresent();
+    }
+
+    private void salvar(Nfe nfe) {
         // @Composition não implica cascade automático de DataManager.save(nfe) sozinho — os
         // @OneToMany aqui não declaram CascadeType (só o @OnDelete cuida do cascade na exclusão).
         // Cada filho entra explícito no mesmo SaveContext, igual ao que o DataContext da UI faz
@@ -81,7 +106,5 @@ public class NfeImportService {
             saveContext.saving(volume);
         }
         dataManager.save(saveContext);
-
-        return new ImportResult(Resultado.CRIADA, null);
     }
 }

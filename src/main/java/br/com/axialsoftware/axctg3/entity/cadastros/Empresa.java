@@ -6,6 +6,7 @@ import br.com.axialsoftware.axctg3.entity.enums.*;
 import br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro;
 import br.com.axialsoftware.axctg3.entity.tabelas.Municipio;
 import br.com.axialsoftware.axctg3.entity.tabelas.TipoLogradouro;
+import io.jmix.core.FileRef;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.annotation.DeletedBy;
 import io.jmix.core.annotation.DeletedDate;
@@ -287,6 +288,62 @@ public class Empresa {
 
     @Column(name = "LOGO", length = 255)
     private String logo;
+
+    // Código de Regime Tributário (CRT do leiaute NFe) — decide se a emissão própria usa
+    // CST (regime normal) ou CSOSN (Simples) no bloco de ICMS de cada item. Nullable:
+    // empresa existente precisa configurar antes de emitir. Ver docs/EMISSAO-NFE.md.
+    @Column(name = "CRT")
+    private Integer crt;
+
+    // Ambiente de emissão (tpAmb do leiaute) — decide qual endpoint SEFAZ é chamado.
+    // Sem valor padrão fixado no código de propósito: a tela sugere Homologação, mas o
+    // campo em si fica nullable igual aos outros dessa seção, pra não emitir em produção
+    // por acidente antes de configurar.
+    @Column(name = "AMBIENTE_NFE")
+    private Integer ambienteNfe;
+
+    // Certificado A1 (.pfx/.p12) usado pra assinar e autenticar (mTLS) a emissão própria
+    // de NFe — arquivo de verdade via FileRef/jmix-localfs (primeiro uso de FileRef no
+    // projeto; Empresa.logo acima é só um caminho em texto, padrão diferente e mais
+    // antigo). Sem criptografia na senha nesta rodada — mesmo nível de risco já aceito
+    // em application.properties (ver "Known rough edges" do CLAUDE.md).
+    @Column(name = "CERTIFICADO_ARQUIVO")
+    private FileRef certificadoArquivo;
+
+    @Column(name = "CERTIFICADO_SENHA", length = 100)
+    private String certificadoSenha;
+
+    public String getCertificadoSenha() {
+        return certificadoSenha;
+    }
+
+    public void setCertificadoSenha(String certificadoSenha) {
+        this.certificadoSenha = certificadoSenha;
+    }
+
+    public FileRef getCertificadoArquivo() {
+        return certificadoArquivo;
+    }
+
+    public void setCertificadoArquivo(FileRef certificadoArquivo) {
+        this.certificadoArquivo = certificadoArquivo;
+    }
+
+    public AmbienteNfe getAmbienteNfe() {
+        return ambienteNfe == null ? null : AmbienteNfe.fromId(ambienteNfe);
+    }
+
+    public void setAmbienteNfe(AmbienteNfe ambienteNfe) {
+        this.ambienteNfe = ambienteNfe == null ? null : ambienteNfe.getId();
+    }
+
+    public CodRegimeTributario getCrt() {
+        return crt == null ? null : CodRegimeTributario.fromId(crt);
+    }
+
+    public void setCrt(CodRegimeTributario crt) {
+        this.crt = crt == null ? null : crt.getId();
+    }
 
     public String getLogo() {
         return logo;

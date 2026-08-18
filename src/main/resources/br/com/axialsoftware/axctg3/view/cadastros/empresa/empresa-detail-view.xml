@@ -394,6 +394,37 @@
                             </hbox>
                         </vbox>
                     </tab>
+                    <tab id="emissaoNfeTab" label="Emissão NFe">
+                        <vbox width="100%">
+                            <hbox width="100%">
+                                <select id="crtField"
+                                        property="crt"
+                                        dataContainer="empresaDc"
+                                        width="25%" themeNames="small"
+                                        label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.crt"/>
+                                <select id="ambienteNfeField"
+                                        property="ambienteNfe"
+                                        dataContainer="empresaDc"
+                                        width="25%" themeNames="small"
+                                        label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.ambienteNfe"/>
+                                <fileStorageUploadField id="certificadoArquivoField"
+                                                         property="certificadoArquivo"
+                                                         dataContainer="empresaDc"
+                                                         width="25%" themeNames="small"
+                                                         label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.certificadoArquivo"/>
+                                <passwordField id="certificadoSenhaField"
+                                               property="certificadoSenha"
+                                               dataContainer="empresaDc"
+                                               width="25%" themeNames="small"
+                                               label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.certificadoSenha"/>
+                            </hbox>
+                            <hbox width="100%">
+                                <button id="testarConexaoSefazButton"
+                                        text="msg://br.com.axialsoftware.axctg3.view.cadastros.empresa/empresaDetailView.testarConexaoSefaz.button"
+                                        icon="vaadin:connect" themeNames="small"/>
+                            </hbox>
+                        </vbox>
+                    </tab>
                     <tab id="configuracaoFinanceiraTab" label="Configuração financeira">
                         <vbox>
                             <hbox width="100%">

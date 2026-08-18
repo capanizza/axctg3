@@ -37,6 +37,7 @@
                 <button id="createButton" action="notaSaidasDataGrid.createAction" themeNames="small"/>
                 <button id="editButton" action="notaSaidasDataGrid.editAction" themeNames="small"/>
                 <button id="removeButton" action="notaSaidasDataGrid.removeAction" themeNames="small"/>
+                <button id="emitirNfeButton" action="notaSaidasDataGrid.emitirNfeAction" themeNames="small"/>
             </startSlot>
             <endSlot>
                 <simplePagination id="pagination" dataLoader="notaSaidasDl"/>
@@ -52,15 +53,17 @@
                 <action id="createAction" type="list_create"/>
                 <action id="editAction" type="list_edit"/>
                 <action id="removeAction" type="list_remove"/>
+                <action id="emitirNfeAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.emitirNfeAction.text" icon="vaadin:paperplane"/>
             </actions>
             <columns resizable="true">
-                <column property="numero" filterable="true" width="10%"/>
-                <column property="dataEmissao" filterable="true" width="12%"/>
-                <column property="especie" filterable="true" width="8%"/>
-                <column property="serie" filterable="true" width="8%"/>
-                <column property="parceiro" filterable="true" width="26%"/>
-                <column property="natureza" filterable="true" width="22%"/>
-                <column property="valor" filterable="true" textAlign="END" width="14%"/>
+                <column property="numero" filterable="true" width="9%"/>
+                <column property="dataEmissao" filterable="true" width="11%"/>
+                <column property="especie" filterable="true" width="7%"/>
+                <column property="serie" filterable="true" width="7%"/>
+                <column property="parceiro" filterable="true" width="22%"/>
+                <column property="natureza" filterable="true" width="19%"/>
+                <column property="valor" filterable="true" textAlign="END" width="12%"/>
+                <column property="chave" filterable="true" width="13%"/>
             </columns>
         </dataGrid>
         <hbox id="lookupActions" visible="false">

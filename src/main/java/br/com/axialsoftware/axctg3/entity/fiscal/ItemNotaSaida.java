@@ -198,7 +198,7 @@ public class ItemNotaSaida {
     }
 
     public void setCst(String cst) {
-        this.cst = cst;
+        this.cst = cst == null ? null : cst.trim();
     }
 
     public Integer getCfop() {

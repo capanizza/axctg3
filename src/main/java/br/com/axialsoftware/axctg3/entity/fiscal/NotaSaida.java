@@ -11,6 +11,7 @@ import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
 import io.jmix.core.metamodel.annotation.NumberFormat;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
@@ -97,7 +98,7 @@ public class NotaSaida {
     private String especie;
 
     @Column(name = "SERIE", nullable = false, length = 2)
-    @NotNull
+    @NotBlank
     private String serie;
 
     @JoinColumn(name = "PARCEIRO_ID", nullable = false)
@@ -339,7 +340,7 @@ public class NotaSaida {
     }
 
     public void setSerie(@NotNull String serie) {
-        this.serie = serie;
+        this.serie = serie == null ? null : serie.trim();
     }
 
     public @NotNull String getEspecie() {
