@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/17-104423-c1f40fd1-empresa-emissao-nfe-campos.xml">
+    <!--
+        Campos pra emissão própria de NFe (docs/EMISSAO-NFE.md). Todos nullable: empresa
+        existente precisa configurar antes de emitir. CRT/AMBIENTE_NFE são Integer solto
+        (mesmo padrão de outros códigos SEPD/NFe do projeto, convertidos via enum no
+        getter/setter). CERTIFICADO_ARQUIVO é FileRef (io.jmix.core.FileRef, serializado
+        como String pelo próprio Jmix) — primeiro uso de FileRef no projeto.
+    -->
+    <changeSet id="1" author="axctg3">
+        <addColumn tableName="EMPRESA">
+            <column name="CRT" type="INT"/>
+            <column name="AMBIENTE_NFE" type="INT"/>
+            <column name="CERTIFICADO_ARQUIVO" type="VARCHAR(1000)"/>
+            <column name="CERTIFICADO_SENHA" type="VARCHAR(100)"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

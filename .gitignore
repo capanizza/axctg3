@@ -29,3 +29,7 @@ vite.generated.ts
 webpack.generated.js
 
 .DS_Store
+/.metadata/
+
+# Workspace local do Jaspersoft Studio (link solto pro relatorios/*.jrxml, sem conteúdo próprio)
+/MyReports/

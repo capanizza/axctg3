@@ -3,6 +3,7 @@ package br.com.axialsoftware.axctg3.view.fiscal.notasaida;
 import br.com.axialsoftware.axctg3.entity.cadastros.ConfigRel;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
+import br.com.axialsoftware.axctg3.service.fiscal.NfeEmissaoService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
 import com.vaadin.flow.router.Route;
@@ -13,6 +14,7 @@ import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.app.inputdialog.DialogActions;
 import io.jmix.flowui.app.inputdialog.DialogOutcome;
 import io.jmix.flowui.component.UiComponentUtils;
+import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.*;
@@ -35,6 +37,10 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
 
     @ViewComponent
     private CollectionLoader<NotaSaida> notaSaidasDl;
+    @ViewComponent
+    private DataGrid<NotaSaida> notaSaidasDataGrid;
+    @ViewComponent
+    private MessageBundle messageBundle;
     @Autowired
     private UtilGeralService utilGeralService;
     @Autowired
@@ -43,6 +49,8 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
     private ViewNavigators viewNavigators;
     @Autowired
     private DataManager dataManager;
+    @Autowired
+    private NfeEmissaoService nfeEmissaoService;
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
@@ -114,5 +122,30 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
                     }
                 })
                 .open();
+    }
+
+    @Subscribe("notaSaidasDataGrid.emitirNfeAction")
+    public void onNotaSaidasDataGridEmitirNfeAction(final ActionPerformedEvent event) {
+        NotaSaida selecionada = notaSaidasDataGrid.getSingleSelectedItem();
+        if (selecionada == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.emitirNfeAction.text"))
+                    .withText(messageBundle.getMessage("notaSaidaListView.emitirNfe.naoSelecionado"))
+                    .open();
+            return;
+        }
+        NfeEmissaoService.ResultadoEmissao resultado = nfeEmissaoService.emitir(selecionada.getId());
+        if (resultado.sucesso()) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.emitirNfe.sucesso.header"))
+                    .withText(messageBundle.formatMessage("notaSaidaListView.emitirNfe.sucesso.text", resultado.chave()))
+                    .open();
+            notaSaidasDl.load();
+        } else {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.emitirNfe.erro.header"))
+                    .withText(messageBundle.formatMessage("notaSaidaListView.emitirNfe.erro.text", resultado.motivo()))
+                    .open();
+        }
     }
 }
