@@ -1,6 +1,7 @@
 package br.com.axialsoftware.axctg3.entity.cadastros;
 
 import br.com.axialsoftware.axctg3.entity.User;
+import br.com.axialsoftware.axctg3.entity.enums.TipoProduto;
 import br.com.axialsoftware.axctg3.entity.financeiro.Banco;
 import io.jmix.core.entity.annotation.JmixGeneratedValue;
 import io.jmix.core.metamodel.annotation.InstanceName;
@@ -189,6 +190,9 @@ public class ConfigRel {
 
     @Column(name = "data_emissao_nota_saida_final")
     private LocalDate dataEmissaoNotaSaidaFinal;
+
+    @Column(name = "tipo_produto")
+    private Integer tipoProduto;
 
     public UUID getId() {
         return id;
@@ -644,5 +648,13 @@ public class ConfigRel {
 
     public void setBancoMovimentoBanco(Integer bancoMovimentoBanco) {
         this.bancoMovimentoBanco = bancoMovimentoBanco;
+    }
+
+    public TipoProduto getTipoProduto() {
+        return tipoProduto == null ? null : TipoProduto.fromId(tipoProduto);
+    }
+
+    public void setTipoProduto(TipoProduto tipoProduto) {
+        this.tipoProduto = tipoProduto == null ? null : tipoProduto.getId();
     }
 }

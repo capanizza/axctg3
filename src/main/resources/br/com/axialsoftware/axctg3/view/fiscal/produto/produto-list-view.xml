@@ -14,6 +14,7 @@
                 <query>
                     <![CDATA[select e from Produto e
                         where e.codEmpresa = :codEmpresa
+                        and (:listarTodos = 'sim' or e.tipoProduto = :tipoProduto)
                         order by e.codigo]]>
                 </query>
             </loader>
@@ -32,6 +33,7 @@
     <layout>
         <hbox id="buttonsPanel" wrap="true" width="100%">
             <startSlot>
+                <button id="selecionarButton" action="produtosDataGrid.selecionarAction" themeNames="small"/>
                 <button id="createButton" action="produtosDataGrid.createAction" themeNames="small"/>
                 <button id="editButton" action="produtosDataGrid.editAction" themeNames="small"/>
                 <button id="removeButton" action="produtosDataGrid.removeAction" themeNames="small"/>
@@ -46,6 +48,7 @@
                   dataContainer="produtosDc"
                   columnReorderingAllowed="true" themeNames="small">
             <actions>
+                <action id="selecionarAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.produto/produtoListView.selecionarAction.text" icon="vaadin:filter"/>
                 <action id="createAction" type="list_create"/>
                 <action id="editAction" type="list_edit"/>
                 <action id="removeAction" type="list_remove"/>
