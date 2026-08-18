@@ -161,7 +161,7 @@
                 <checkbox id="canceladaField"
                           property="cancelada"
                           dataContainer="notaSaidaDc"
-                          width="10%"
+                          width="15%"
                           alignSelf="END"
                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.cancelada"/>
             </hbox>

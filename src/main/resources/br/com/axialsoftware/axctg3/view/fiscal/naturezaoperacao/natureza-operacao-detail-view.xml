@@ -110,7 +110,7 @@
                 <entityPicker id="classTribField"
                               property="classTrib"
                               dataContainer="naturezaOperacaoDc"
-                              width="20%" themeNames="small"
+                              width="55%" themeNames="small"
                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NaturezaOperacao.classTrib">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
