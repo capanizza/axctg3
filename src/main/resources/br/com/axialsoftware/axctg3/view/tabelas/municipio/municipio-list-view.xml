@@ -49,9 +49,9 @@
                     <action id="removeAction" type="list_remove"/>
                 </actions>
                 <columns resizable="true">
-                    <column property="codigo" width="10%"/>
-                    <column property="nome" width="80%"/>
-                    <column property="uf" width="10%"/>
+                    <column property="codigo" width="10%" filterable="true"/>
+                    <column property="nome" width="80%" filterable="true"/>
+                    <column property="uf" width="10%" filterable="true"/>
                 </columns>
             </dataGrid>
             <vbox>
