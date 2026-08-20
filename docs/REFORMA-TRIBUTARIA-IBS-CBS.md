@@ -153,6 +153,107 @@ nem `Produto`; continuam com `aliqIbsUf`/`aliqIbsMun`/`aliqCbs` preenchidos à m
 natureza. Auto-preencher a partir desta tabela ao criar uma nova `NaturezaOperacao` é
 uma decisão em aberto, não implementada.
 
+## Cronograma da transição (levantado em 2026-08-20 via busca externa)
+
+Os percentuais/datas abaixo são os vigentes em agosto/2026 (fontes: Receita Federal,
+CGIBS, imprensa especializada). A lei prevê recalibração anual por resolução do
+Senado — reconferir antes de travar qualquer um desses valores como constante fixa no
+código.
+
+### Alíquotas por ano
+
+| Ano | CBS | IBS estadual | IBS municipal | Observação |
+|---|---|---|---|---|
+| 2026 | 0,9% (teste, compensável) | 0,10% | **0,00%** (Rejeição 321 barra nota com IBS-Mun ≠ 0) | Sem efeito líquido se cumprida a obrigação acessória |
+| 2027-2028 | ~8,8-9% (alíquota cheia/referência) | 0,05% | 0,05% | CBS já com arrecadação real; IBS ainda pequeno mas real |
+| 2029-2032 | referência (~8,8%) | rampa +10%/ano | rampa +10%/ano | ICMS/ISS caem na mesma proporção (90% em 2029, 80% em 2030...) |
+| 2033 | referência | referência (~17,7% total IBS) | — | ICMS e ISS extintos |
+
+### Marcos de obrigatoriedade documental (NFe/NFCe e afins)
+
+- **03/08/2026** ✅ já em vigor — 1º lote: obrigatório destacar IBS/CBS no XML pra
+  regime regular (Lucro Real/Presumido). SEFAZ rejeita a nota se o campo vier vazio —
+  é a mesma data que já está registrada no comentário de `NaturezaOperacao.codClassTrib`.
+- **01/10/2026** — 2º lote: NFCom, DIR.
+- **01/12/2026 e 01/01/2027** — 3º lote: demais casos.
+- **01/01/2027** — obrigatório também pra **todo optante do Simples Nacional**,
+  híbrido ou não (a diferença entre os dois não é "quem informa", é o que o destaque
+  significa em termos de crédito — ver seção do Simples abaixo).
+- **Layout visual do DANFE**: ainda não publicado (situação em ago/2026). O XML já
+  carrega os campos desde 03/08, mas a representação impressa não teve o leiaute final
+  divulgado — só o DANFSe (NFS-e) já foi atualizado, via NT 008/2026.
+
+### Recolhimento (pagamento)
+
+- 2026: sem recolhimento de fato (se cumprida a obrigação acessória) — apuração
+  informativa, sem efeito tributário.
+- Primeira apuração real: **janeiro/2027**, saldo a pagar até o último dia útil do mês
+  seguinte — **primeiro vencimento em 26/02/2027**. Modelo: apuração mensal + guia
+  (DAR), igual ao que já existe hoje — não é debitado automaticamente do caixa.
+- **Split Payment**: não é o mecanismo geral de recolhimento a partir de 2027. Rollout
+  gradual, calibrado por setor/meio de pagamento; na etapa inicial (2027) é
+  **facultativo**, voltado a operações B2B. Convive com o modelo de guia, não o
+  substitui — sem urgência em modelar liquidação automática via split payment no
+  axctg3 por enquanto.
+
+### Simples Nacional — janela de decisão iminente
+
+- Entre **01 e 30/09/2026**, empresas do Simples decidem se recolhem IBS/CBS
+  **dentro do DAS** (sem apuração própria, sem repasse de crédito — regime "normal")
+  ou **fora do DAS** (regime regular/"híbrido", apuração própria com débito/crédito
+  pleno, vale de jan a jun/2027).
+- Os dois regimes **informam** IBS/CBS na nota a partir de 01/01/2027 — isso não muda
+  entre eles. A diferença é o que o destaque significa: no híbrido, crédito pleno pro
+  comprador; no regime normal (DAS), o comprador só aproveita um **crédito presumido**
+  (mecânica própria, ainda não sedimentada — Resolução CGSN 190/2026), não o valor
+  cheio do campo destacado.
+
+### IPI
+
+Sem mudança em 2026. Zera a partir de **01/01/2027** (junto com a extinção de
+PIS/Cofins), exceto produtos que competem com a produção da Zona Franca de Manaus
+(critério: IPI < 6,5% e já produzido na ZFM em 2024, ou projeto técnico-econômico
+aprovado pela SUFRAMA entre jan/2022 e a publicação da lei) — esses mantêm IPI
+integralmente. Nenhuma mudança de comportamento esperada em `aliqIpi`/`valorIpi`
+antes da virada pra 2027.
+
+### Substituição Tributária (ICMS-ST)
+
+Atrelada ao próprio ICMS — **não existe uma "ST" genérica no sistema novo** (a
+não-cumulatividade plena em cada elo dispensa a lógica de concentrar a cobrança num
+ponto só). Cronograma: plena até 2028, cai na mesma rampa de 10%/ano do ICMS entre
+2029-2032, extinta em 2033. Durante 2029-2032 uma mesma nota carrega ICMS-ST
+(minguando) e IBS/CBS (crescendo) ao mesmo tempo — os campos de ST em
+`NfeItem`/`ItemNotaSaida` (`baseIcmsSt`, `aliqIcmsSt`, `valorIcmsSt`,
+`percMvaIcmsSt`, `baseSt`, `valorSt`) **não podem ser aposentados antes de 2033**.
+
+**Exceção**: combustíveis mantêm um mecanismo parecido em espírito — tributação
+monofásica (retenção concentrada em refinarias/formuladores/importadores), já
+identificado como fora de escopo do `NfeItem` atual (`gIBSCBSMono`).
+
+## Base de cálculo do IBS/CBS
+
+Não é o valor "raso" do produto — é o **valor da operação** (total cobrado do
+adquirente):
+
+- **Entra**: valor do bem/serviço, frete, seguro, juros/encargos cobrados do cliente,
+  outras despesas acessórias (`vOutro` no XML / `NfeItem.valorOutro` /
+  `ItemNotaSaida.despesas` — embalagens especiais, montagem/instalação vendida junto,
+  taxas de manuseio, comissões repassadas, encargos financeiros já embutidos no
+  preço; em importação: taxa SISCOMEX, AFRMM, diferença de peso/classificação
+  fiscal, multas aduaneiras).
+- **Reduz a base**: desconto **incondicional** (concedido de cara, sem depender de
+  evento futuro).
+- **Não reduz a base**: desconto **condicional** (depende de evento futuro, ex.:
+  pagamento antecipado) — tratado como despesa/receita financeira, tributado
+  normalmente. Mesma distinção que já vale hoje pra ICMS/PIS/Cofins — **conferir se
+  `ItemNotaSaida.valorDesconto`/`porcDesconto` já diferenciam os dois casos**, porque
+  só o incondicional pode abater a base; se for um campo genérico sem essa distinção,
+  é um gap a fechar antes de montar `baseIbsCbs`.
+- **Não entra**: o próprio IBS, a própria CBS (são "por fora" — não compõem a própria
+  base, diferente do ICMS que é "por dentro"), IPI, e — durante a transição — os
+  valores destacados de ICMS/PIS/Cofins.
+
 ## Fora de escopo desta decisão
 
 - Imposto Seletivo (IS) — tratado à parte, não entrou nesta discussão.
