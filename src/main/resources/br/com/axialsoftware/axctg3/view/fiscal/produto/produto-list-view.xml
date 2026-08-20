@@ -37,6 +37,8 @@
                 <button id="createButton" action="produtosDataGrid.createAction" themeNames="small"/>
                 <button id="editButton" action="produtosDataGrid.editAction" themeNames="small"/>
                 <button id="removeButton" action="produtosDataGrid.removeAction" themeNames="small"/>
+                <button id="ativarInativarButton" themeNames="small"
+                        text="msg://br.com.axialsoftware.axctg3.view.fiscal.produto/produtoListView.ativarInativarButton.text"/>
             </startSlot>
             <endSlot>
                 <simplePagination id="pagination" dataLoader="produtosDl"/>

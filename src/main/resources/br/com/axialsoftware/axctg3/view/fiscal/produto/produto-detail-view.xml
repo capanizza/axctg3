@@ -71,18 +71,8 @@
                 <entityPicker id="grupoProdutoField"
                               property="grupoProduto"
                               dataContainer="produtoDc"
-                              width="25%" themeNames="small"
+                              width="35%" themeNames="small"
                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.grupoProduto">
-                    <actions>
-                        <action id="entityLookupAction" type="entity_lookup"/>
-                        <action id="entityClearAction" type="entity_clear"/>
-                    </actions>
-                </entityPicker>
-                <entityPicker id="classificacaoFiscalField"
-                              property="classificacaoFiscal"
-                              dataContainer="produtoDc"
-                              width="25%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.classificacaoFiscal">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
@@ -93,28 +83,34 @@
                         dataContainer="produtoDc"
                         width="15%" themeNames="small"
                         label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.tipoProduto"/>
+                <entityPicker id="classificacaoFiscalField"
+                              property="classificacaoFiscal"
+                              dataContainer="produtoDc"
+                              width="35%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.classificacaoFiscal">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
                 <textField id="ncmField"
                            property="ncm"
                            maxLength="20"
                            dataContainer="produtoDc"
-                           width="12%" themeNames="small"
+                           width="15%" themeNames="small"
                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.ncm"/>
+            </hbox>
+            <hbox width="100%">
                 <entityPicker id="classTribField"
                               property="classTrib"
                               dataContainer="produtoDc"
-                              width="18%" themeNames="small"
+                              width="50%" themeNames="small"
                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.classTrib">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
                 </entityPicker>
-                <checkbox id="inativoField"
-                          property="inativo"
-                          dataContainer="produtoDc"
-                          width="5%"
-                          alignSelf="END"
-                          label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.inativo"/>
             </hbox>
             <hbox width="100%">
                 <bigDecimalField id="aliqIcmsField"
@@ -149,6 +145,12 @@
                               dataContainer="produtoDc"
                               width="10%" themeNames="small"
                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.caixa"/>
+                <checkbox id="inativoField"
+                          property="inativo"
+                          dataContainer="produtoDc"
+                          width="20%"
+                          alignSelf="END"
+                          label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.inativo"/>
             </hbox>
         </vbox>
         <hbox id="detailActions">
