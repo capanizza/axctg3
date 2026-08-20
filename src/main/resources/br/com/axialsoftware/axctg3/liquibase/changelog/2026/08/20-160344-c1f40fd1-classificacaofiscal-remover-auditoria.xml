@@ -19,10 +19,16 @@
          eram legais desde que só um estivesse "vivo" (removido + recriado com o mesmo
          código); sem o filtro de DELETED_DATE, o índice único simples do changeSet 3 rejeita
          esse duplicado e derruba a subida da aplicação. Remove essas linhas mortas antes de
-         dropar a coluna que as distingue. -->
+         dropar a coluna que as distingue.
+         Exclui as ainda referenciadas por PRODUTO.CLASSIFICACAO_FISCAL_ID (FK sem ON DELETE,
+         é RESTRICT por padrão no Postgres) — um produto pode apontar pra uma classificação
+         que foi soft-deletada sem que ninguém tenha limpado essa referência; apagar a linha
+         mesmo assim quebraria a FK e travaria a subida. Se sobrar duplicata nesse caso raro,
+         o changeSet 3 falha alto e localizado, sinalizando pra reconciliar manualmente. -->
     <changeSet id="1b" author="axctg3" dbms="postgresql">
         <delete tableName="CLASSIFICACAO_FISCAL">
-            <where>DELETED_DATE IS NOT NULL</where>
+            <where>DELETED_DATE IS NOT NULL
+                AND ID NOT IN (SELECT CLASSIFICACAO_FISCAL_ID FROM PRODUTO WHERE CLASSIFICACAO_FISCAL_ID IS NOT NULL)</where>
         </delete>
     </changeSet>
 

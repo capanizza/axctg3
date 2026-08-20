@@ -30,7 +30,6 @@ import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -87,8 +86,7 @@ public class TituloPagarListView extends StandardListView<TituloPagar> {
 
     @Override
     public String getPageTitle() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        return super.getPageTitle() + " emissão: " + dataEmissaoInicial.format(formatter) + " a " + dataEmissaoFinal.format(formatter);
+        return super.getPageTitle() + utilGeralService.formatIntervaloTitulo("emissão", dataEmissaoInicial, dataEmissaoFinal);
     }
 
     @Supply(to = "tituloPagarsDataGrid.aberto", subject = "renderer")
@@ -132,8 +130,8 @@ public class TituloPagarListView extends StandardListView<TituloPagar> {
                         configRel.setDataEmissaoPagarFinal(closeEvent.getValue("dataEmissaoFinal"));
                         saveContext.saving(configRel);
                         dataManager.save(saveContext);
-                        dataEmissaoInicial = configRel.getDataEmissaoPagarInicial();
-                        dataEmissaoFinal = configRel.getDataEmissaoPagarFinal();
+                        dataEmissaoInicial = Optional.ofNullable(configRel.getDataEmissaoPagarInicial()).orElse(LocalDate.now());
+                        dataEmissaoFinal = Optional.ofNullable(configRel.getDataEmissaoPagarFinal()).orElse(LocalDate.now());
                         tituloPagarsDl.setParameter("dataEmissaoInicial", dataEmissaoInicial);
                         tituloPagarsDl.setParameter("dataEmissaoFinal", dataEmissaoFinal);
                         tituloPagarsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());

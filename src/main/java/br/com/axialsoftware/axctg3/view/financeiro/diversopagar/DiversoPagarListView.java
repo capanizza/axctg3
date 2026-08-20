@@ -30,7 +30,6 @@ import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -87,8 +86,7 @@ public class DiversoPagarListView extends StandardListView<DiversoPagar> {
 
     @Override
     public String getPageTitle() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        return super.getPageTitle() + " emissão: " + dataEmissaoInicial.format(formatter) + " a " + dataEmissaoFinal.format(formatter);
+        return super.getPageTitle() + utilGeralService.formatIntervaloTitulo("emissão", dataEmissaoInicial, dataEmissaoFinal);
     }
 
     @Supply(to = "diversoPagarsDataGrid.aberto", subject = "renderer")
@@ -132,8 +130,8 @@ public class DiversoPagarListView extends StandardListView<DiversoPagar> {
                         configRel.setDataEmissaoDiversoFinal(closeEvent.getValue("dataEmissaoFinal"));
                         saveContext.saving(configRel);
                         dataManager.save(saveContext);
-                        dataEmissaoInicial = configRel.getDataEmissaoDiversoInicial();
-                        dataEmissaoFinal = configRel.getDataEmissaoDiversoFinal();
+                        dataEmissaoInicial = Optional.ofNullable(configRel.getDataEmissaoDiversoInicial()).orElse(LocalDate.now());
+                        dataEmissaoFinal = Optional.ofNullable(configRel.getDataEmissaoDiversoFinal()).orElse(LocalDate.now());
                         diversoPagarsDl.setParameter("dataEmissaoInicial", dataEmissaoInicial);
                         diversoPagarsDl.setParameter("dataEmissaoFinal", dataEmissaoFinal);
                         diversoPagarsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());

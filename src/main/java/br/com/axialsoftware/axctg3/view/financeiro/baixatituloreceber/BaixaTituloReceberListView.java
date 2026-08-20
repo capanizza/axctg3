@@ -35,7 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -96,8 +95,7 @@ public class BaixaTituloReceberListView extends StandardListView<TituloReceber> 
 
     @Override
     public String getPageTitle() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        return super.getPageTitle() + " vencimento: " + dataVencimentoInicial.format(formatter) + " a " + dataVencimentoFinal.format(formatter);
+        return super.getPageTitle() + utilGeralService.formatIntervaloTitulo("vencimento", dataVencimentoInicial, dataVencimentoFinal);
     }
 
     @Supply(to = "tituloRecebersDataGrid.aberto", subject = "renderer")
@@ -146,8 +144,8 @@ public class BaixaTituloReceberListView extends StandardListView<TituloReceber> 
                         configRel.setDataVencimentoReceberFinal(closeEvent.getValue("dataVencimentoFinal"));
                         saveContext.saving(configRel);
                         dataManager.save(saveContext);
-                        dataVencimentoInicial = configRel.getDataVencimentoReceberInicial();
-                        dataVencimentoFinal = configRel.getDataVencimentoReceberFinal();
+                        dataVencimentoInicial = Optional.ofNullable(configRel.getDataVencimentoReceberInicial()).orElse(LocalDate.now());
+                        dataVencimentoFinal = Optional.ofNullable(configRel.getDataVencimentoReceberFinal()).orElse(LocalDate.now());
                         tituloRecebersDl.setParameter("dataVencimentoInicial", dataVencimentoInicial);
                         tituloRecebersDl.setParameter("dataVencimentoFinal", dataVencimentoFinal);
                         tituloRecebersDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());

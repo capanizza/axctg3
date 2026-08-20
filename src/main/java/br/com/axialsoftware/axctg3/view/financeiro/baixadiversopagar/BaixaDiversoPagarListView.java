@@ -36,7 +36,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -98,8 +97,7 @@ public class BaixaDiversoPagarListView extends StandardListView<DiversoPagar> {
 
     @Override
     public String getPageTitle() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        return super.getPageTitle() + " vencimento: " + dataVencimentoInicial.format(formatter) + " a " + dataVencimentoFinal.format(formatter);
+        return super.getPageTitle() + utilGeralService.formatIntervaloTitulo("vencimento", dataVencimentoInicial, dataVencimentoFinal);
     }
 
     @Supply(to = "diversoPagarsDataGrid.aberto", subject = "renderer")
@@ -148,8 +146,8 @@ public class BaixaDiversoPagarListView extends StandardListView<DiversoPagar> {
                         configRel.setDataVencimentoDiversoFinal(closeEvent.getValue("dataVencimentoFinal"));
                         saveContext.saving(configRel);
                         dataManager.save(saveContext);
-                        dataVencimentoInicial = configRel.getDataVencimentoDiversoInicial();
-                        dataVencimentoFinal = configRel.getDataVencimentoDiversoFinal();
+                        dataVencimentoInicial = Optional.ofNullable(configRel.getDataVencimentoDiversoInicial()).orElse(LocalDate.now());
+                        dataVencimentoFinal = Optional.ofNullable(configRel.getDataVencimentoDiversoFinal()).orElse(LocalDate.now());
                         diversoPagarsDl.setParameter("dataVencimentoInicial", dataVencimentoInicial);
                         diversoPagarsDl.setParameter("dataVencimentoFinal", dataVencimentoFinal);
                         diversoPagarsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
