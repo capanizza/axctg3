@@ -9,6 +9,7 @@ import br.com.axialsoftware.axctg3.entity.financeiro.TituloPagar;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.financeiro.ItemPagarService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -149,11 +150,11 @@ public class BaixaTituloPagarListView extends StandardListView<TituloPagar> {
                         tituloPagarsDl.setParameter("dataVencimentoFinal", configRel.getDataVencimentoPagarFinal());
                         tituloPagarsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
                         tituloPagarsDl.load();
-                        // getPageTitle() só é reconsultado pelo Vaadin em navegação — força
-                        // a atualização do título com o novo intervalo de datas.
-                        viewNavigators.listView(this, TituloPagar.class)
-                                .withViewClass(BaixaTituloPagarListView.class)
-                                .navigate();
+                        // getPageTitle() não é reconsultado automaticamente pelo Vaadin fora
+                        // de navegação — atualiza o título da aba in-place, sem navigate()
+                        // (que reinstancia a view e perderia seleção múltipla/filtro/ordenação
+                        // da grid, usados pelas actions de baixa em lote logo abaixo).
+                        UI.getCurrent().getPage().setTitle(getPageTitle());
                     }
                 })
                 .open();

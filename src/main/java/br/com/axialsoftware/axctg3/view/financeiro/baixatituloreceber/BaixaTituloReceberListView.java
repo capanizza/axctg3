@@ -8,6 +8,7 @@ import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.financeiro.ItemReceberService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -147,11 +148,11 @@ public class BaixaTituloReceberListView extends StandardListView<TituloReceber> 
                         tituloRecebersDl.setParameter("dataVencimentoFinal", configRel.getDataVencimentoReceberFinal());
                         tituloRecebersDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
                         tituloRecebersDl.load();
-                        // getPageTitle() só é reconsultado pelo Vaadin em navegação — força
-                        // a atualização do título com o novo intervalo de datas.
-                        viewNavigators.listView(this, TituloReceber.class)
-                                .withViewClass(BaixaTituloReceberListView.class)
-                                .navigate();
+                        // getPageTitle() não é reconsultado automaticamente pelo Vaadin fora
+                        // de navegação — atualiza o título da aba in-place, sem navigate()
+                        // (que reinstancia a view e perderia seleção múltipla/filtro/ordenação
+                        // da grid, usados pelas actions de baixa em lote logo abaixo).
+                        UI.getCurrent().getPage().setTitle(getPageTitle());
                     }
                 })
                 .open();

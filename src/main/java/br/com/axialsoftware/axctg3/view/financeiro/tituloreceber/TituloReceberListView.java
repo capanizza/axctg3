@@ -5,6 +5,7 @@ import br.com.axialsoftware.axctg3.entity.cadastros.ConfigRel;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -14,7 +15,6 @@ import io.jmix.core.DataManager;
 import io.jmix.core.SaveContext;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.UiComponents;
-import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.app.inputdialog.DialogActions;
 import io.jmix.flowui.app.inputdialog.DialogOutcome;
 import io.jmix.flowui.component.UiComponentUtils;
@@ -55,8 +55,6 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
     private DataManager dataManager;
     @Autowired
     private MenuBean menuBean;
-    @Autowired
-    private ViewNavigators viewNavigators;
     @ViewComponent
     private HorizontalLayout buttonsPanel;
 
@@ -128,11 +126,10 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
                         tituloRecebersDl.setParameter("dataEmissaoFinal", configRel.getDataEmissaoReceberFinal());
                         tituloRecebersDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
                         tituloRecebersDl.load();
-                        // getPageTitle() só é reconsultado pelo Vaadin em navegação — força
-                        // a atualização do título com o novo intervalo de datas.
-                        viewNavigators.listView(this, TituloReceber.class)
-                                .withViewClass(TituloReceberListView.class)
-                                .navigate();
+                        // getPageTitle() não é reconsultado automaticamente pelo Vaadin fora
+                        // de navegação — atualiza o título da aba in-place, sem navigate()
+                        // (que reinstancia a view e perderia seleção/filtro/ordenação da grid).
+                        UI.getCurrent().getPage().setTitle(getPageTitle());
                     }
                 })
                 .open();

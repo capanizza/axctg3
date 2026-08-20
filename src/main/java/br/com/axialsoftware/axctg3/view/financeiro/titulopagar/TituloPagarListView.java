@@ -6,6 +6,7 @@ import br.com.axialsoftware.axctg3.entity.financeiro.TituloPagar;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.financeiro.TituloPagarService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -15,7 +16,6 @@ import io.jmix.core.DataManager;
 import io.jmix.core.SaveContext;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.UiComponents;
-import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.action.DialogAction;
 import io.jmix.flowui.app.inputdialog.DialogActions;
 import io.jmix.flowui.app.inputdialog.DialogOutcome;
@@ -61,8 +61,6 @@ public class TituloPagarListView extends StandardListView<TituloPagar> {
     private MenuBean menuBean;
     @Autowired
     private TituloPagarService tituloPagarService;
-    @Autowired
-    private ViewNavigators viewNavigators;
     @ViewComponent
     private DataGrid<TituloPagar> tituloPagarsDataGrid;
     @ViewComponent
@@ -136,11 +134,10 @@ public class TituloPagarListView extends StandardListView<TituloPagar> {
                         tituloPagarsDl.setParameter("dataEmissaoFinal", configRel.getDataEmissaoPagarFinal());
                         tituloPagarsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
                         tituloPagarsDl.load();
-                        // getPageTitle() só é reconsultado pelo Vaadin em navegação — força
-                        // a atualização do título com o novo intervalo de datas.
-                        viewNavigators.listView(this, TituloPagar.class)
-                                .withViewClass(TituloPagarListView.class)
-                                .navigate();
+                        // getPageTitle() não é reconsultado automaticamente pelo Vaadin fora
+                        // de navegação — atualiza o título da aba in-place, sem navigate()
+                        // (que reinstancia a view e perderia seleção/filtro/ordenação da grid).
+                        UI.getCurrent().getPage().setTitle(getPageTitle());
                     }
                 })
                 .open();

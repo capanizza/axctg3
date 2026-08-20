@@ -11,8 +11,9 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
 
-// Tabela global de classificação fiscal (NCM), sem codEmpresa, mesmo padrão de
-// Municipio/TipoLogradouro/ClassTrib.
+// Tabela global de classificação fiscal (NCM), sem codEmpresa — mesmo padrão de
+// Municipio/TipoLogradouro/ClassTrib nisso, MAS ao contrário deles, sem trilha de
+// auditoria/soft delete (pedido explícito: tabela pequena, importada em bulk).
 @JmixEntity
 @Table(name = "CLASSIFICACAO_FISCAL", indexes = {
         @Index(name = "IDX_CLASSIFICACAO_FISCAL_UNQ", columnList = "CODIGO", unique = true)
