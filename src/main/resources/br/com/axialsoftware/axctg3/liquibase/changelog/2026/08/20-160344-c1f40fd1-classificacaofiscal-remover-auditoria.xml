@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/20-160344-c1f40fd1-classificacaofiscal-remover-auditoria.xml">
+
+    <!-- ClassificacaoFiscal deixa de ter version/auditoria/soft delete, a pedido.
+         O índice único parcial (where DELETED_DATE is null) depende da coluna
+         DELETED_DATE, então precisa ser derrubado antes de dropar as colunas. -->
+    <changeSet id="1" author="axctg3" dbms="postgresql">
+        <dropIndex indexName="IDX_CLASSIFICACAO_FISCAL_UNQ" tableName="CLASSIFICACAO_FISCAL"/>
+    </changeSet>
+
+    <changeSet id="2" author="axctg3">
+        <dropColumn tableName="CLASSIFICACAO_FISCAL">
+            <column name="VERSION"/>
+            <column name="CREATED_BY"/>
+            <column name="CREATED_DATE"/>
+            <column name="LAST_MODIFIED_BY"/>
+            <column name="LAST_MODIFIED_DATE"/>
+            <column name="DELETED_BY"/>
+            <column name="DELETED_DATE"/>
+        </dropColumn>
+    </changeSet>
+
+    <!-- Recria o índice único, agora sem o filtro de soft delete (a tabela não tem mais
+         DELETED_DATE). No HSQLDB de teste esse índice nunca existiu (o changeset original
+         de criação era postgresql-only), então não há equivalente a recriar lá. -->
+    <changeSet id="3" author="axctg3" dbms="postgresql">
+        <createIndex indexName="IDX_CLASSIFICACAO_FISCAL_UNQ" tableName="CLASSIFICACAO_FISCAL" unique="true">
+            <column name="CODIGO"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
