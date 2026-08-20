@@ -75,13 +75,18 @@ public class BaixaTituloReceberListView extends StandardListView<TituloReceber> 
     @ViewComponent
     private HorizontalLayout buttonsPanel;
 
+    // Cache do intervalo em uso, pra getPageTitle() não precisar reconsultar o
+    // ConfigRel (prepararConfigRel() não é memoizado) a cada chamada do Vaadin.
+    private LocalDate dataVencimentoInicial = LocalDate.now();
+    private LocalDate dataVencimentoFinal = LocalDate.now();
+
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
         ConfigRel configRel = utilGeralService.prepararConfigRel();
-        LocalDate dataInicial = Optional.ofNullable(configRel.getDataVencimentoReceberInicial()).orElse(LocalDate.now());
-        LocalDate dataFinal = Optional.ofNullable(configRel.getDataVencimentoReceberFinal()).orElse(LocalDate.now());
-        tituloRecebersDl.setParameter("dataVencimentoInicial", dataInicial);
-        tituloRecebersDl.setParameter("dataVencimentoFinal", dataFinal);
+        dataVencimentoInicial = Optional.ofNullable(configRel.getDataVencimentoReceberInicial()).orElse(LocalDate.now());
+        dataVencimentoFinal = Optional.ofNullable(configRel.getDataVencimentoReceberFinal()).orElse(LocalDate.now());
+        tituloRecebersDl.setParameter("dataVencimentoInicial", dataVencimentoInicial);
+        tituloRecebersDl.setParameter("dataVencimentoFinal", dataVencimentoFinal);
         tituloRecebersDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
         tituloRecebersDl.load();
 
@@ -91,11 +96,8 @@ public class BaixaTituloReceberListView extends StandardListView<TituloReceber> 
 
     @Override
     public String getPageTitle() {
-        ConfigRel configRel = utilGeralService.prepararConfigRel();
-        LocalDate dataInicial = Optional.ofNullable(configRel.getDataVencimentoReceberInicial()).orElse(LocalDate.now());
-        LocalDate dataFinal = Optional.ofNullable(configRel.getDataVencimentoReceberFinal()).orElse(LocalDate.now());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        return super.getPageTitle() + " vencimento: " + dataInicial.format(formatter) + " a " + dataFinal.format(formatter);
+        return super.getPageTitle() + " vencimento: " + dataVencimentoInicial.format(formatter) + " a " + dataVencimentoFinal.format(formatter);
     }
 
     @Supply(to = "tituloRecebersDataGrid.aberto", subject = "renderer")
@@ -144,8 +146,10 @@ public class BaixaTituloReceberListView extends StandardListView<TituloReceber> 
                         configRel.setDataVencimentoReceberFinal(closeEvent.getValue("dataVencimentoFinal"));
                         saveContext.saving(configRel);
                         dataManager.save(saveContext);
-                        tituloRecebersDl.setParameter("dataVencimentoInicial", configRel.getDataVencimentoReceberInicial());
-                        tituloRecebersDl.setParameter("dataVencimentoFinal", configRel.getDataVencimentoReceberFinal());
+                        dataVencimentoInicial = configRel.getDataVencimentoReceberInicial();
+                        dataVencimentoFinal = configRel.getDataVencimentoReceberFinal();
+                        tituloRecebersDl.setParameter("dataVencimentoInicial", dataVencimentoInicial);
+                        tituloRecebersDl.setParameter("dataVencimentoFinal", dataVencimentoFinal);
                         tituloRecebersDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
                         tituloRecebersDl.load();
                         // getPageTitle() não é reconsultado automaticamente pelo Vaadin fora

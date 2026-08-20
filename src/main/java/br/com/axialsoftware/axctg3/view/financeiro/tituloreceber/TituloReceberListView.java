@@ -58,13 +58,18 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
     @ViewComponent
     private HorizontalLayout buttonsPanel;
 
+    // Cache do intervalo em uso, pra getPageTitle() não precisar reconsultar o
+    // ConfigRel (prepararConfigRel() não é memoizado) a cada chamada do Vaadin.
+    private LocalDate dataEmissaoInicial = LocalDate.now();
+    private LocalDate dataEmissaoFinal = LocalDate.now();
+
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
         ConfigRel configRel = utilGeralService.prepararConfigRel();
-        LocalDate dataInicial = Optional.ofNullable(configRel.getDataEmissaoReceberInicial()).orElse(LocalDate.now());
-        LocalDate dataFinal = Optional.ofNullable(configRel.getDataEmissaoReceberFinal()).orElse(LocalDate.now());
-        tituloRecebersDl.setParameter("dataEmissaoInicial", dataInicial);
-        tituloRecebersDl.setParameter("dataEmissaoFinal", dataFinal);
+        dataEmissaoInicial = Optional.ofNullable(configRel.getDataEmissaoReceberInicial()).orElse(LocalDate.now());
+        dataEmissaoFinal = Optional.ofNullable(configRel.getDataEmissaoReceberFinal()).orElse(LocalDate.now());
+        tituloRecebersDl.setParameter("dataEmissaoInicial", dataEmissaoInicial);
+        tituloRecebersDl.setParameter("dataEmissaoFinal", dataEmissaoFinal);
         tituloRecebersDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
         tituloRecebersDl.load();
 
@@ -74,11 +79,8 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
 
     @Override
     public String getPageTitle() {
-        ConfigRel configRel = utilGeralService.prepararConfigRel();
-        LocalDate dataInicial = Optional.ofNullable(configRel.getDataEmissaoReceberInicial()).orElse(LocalDate.now());
-        LocalDate dataFinal = Optional.ofNullable(configRel.getDataEmissaoReceberFinal()).orElse(LocalDate.now());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        return super.getPageTitle() + " emissão: " + dataInicial.format(formatter) + " a " + dataFinal.format(formatter);
+        return super.getPageTitle() + " emissão: " + dataEmissaoInicial.format(formatter) + " a " + dataEmissaoFinal.format(formatter);
     }
 
     @Supply(to = "tituloRecebersDataGrid.aberto", subject = "renderer")
@@ -122,8 +124,10 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
                         configRel.setDataEmissaoReceberFinal(closeEvent.getValue("dataEmissaoFinal"));
                         saveContext.saving(configRel);
                         dataManager.save(saveContext);
-                        tituloRecebersDl.setParameter("dataEmissaoInicial", configRel.getDataEmissaoReceberInicial());
-                        tituloRecebersDl.setParameter("dataEmissaoFinal", configRel.getDataEmissaoReceberFinal());
+                        dataEmissaoInicial = configRel.getDataEmissaoReceberInicial();
+                        dataEmissaoFinal = configRel.getDataEmissaoReceberFinal();
+                        tituloRecebersDl.setParameter("dataEmissaoInicial", dataEmissaoInicial);
+                        tituloRecebersDl.setParameter("dataEmissaoFinal", dataEmissaoFinal);
                         tituloRecebersDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
                         tituloRecebersDl.load();
                         // getPageTitle() não é reconsultado automaticamente pelo Vaadin fora

@@ -222,8 +222,10 @@ throwing on `.one()` with no `Empresa`, or a `ConstraintViolationException` on t
 
 ### Entidades
 
-- **Soft delete em todas as entidades.** Campos `deletedBy` (`@DeletedBy`) e
-  `deletedDate` (`@DeletedDate`) mais o quarteto de auditoria
+- **Soft delete em todas as entidades**, exceto tabelas de referência pequenas
+  importadas em bulk (hoje só `ClassificacaoFiscal`) — nessas, sem pedido explícito,
+  não tire o quarteto abaixo. Campos `deletedBy` (`@DeletedBy`) e `deletedDate`
+  (`@DeletedDate`) mais o quarteto de auditoria
   `createdBy`/`createdDate`/`lastModifiedBy`/`lastModifiedDate`.
 - Por causa do soft delete, chave única **nunca** por `@UniqueConstraint` — sempre
   `@Index(name = "IDX_<TABELA>_UNQ", columnList = "...", unique = true)`.

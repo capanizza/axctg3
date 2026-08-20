@@ -77,13 +77,18 @@ public class BaixaDiversoPagarListView extends StandardListView<DiversoPagar> {
     @ViewComponent
     private HorizontalLayout buttonsPanel;
 
+    // Cache do intervalo em uso, pra getPageTitle() não precisar reconsultar o
+    // ConfigRel (prepararConfigRel() não é memoizado) a cada chamada do Vaadin.
+    private LocalDate dataVencimentoInicial = LocalDate.now();
+    private LocalDate dataVencimentoFinal = LocalDate.now();
+
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
         ConfigRel configRel = utilGeralService.prepararConfigRel();
-        LocalDate dataInicial = Optional.ofNullable(configRel.getDataVencimentoDiversoInicial()).orElse(LocalDate.now());
-        LocalDate dataFinal = Optional.ofNullable(configRel.getDataVencimentoDiversoFinal()).orElse(LocalDate.now());
-        diversoPagarsDl.setParameter("dataVencimentoInicial", dataInicial);
-        diversoPagarsDl.setParameter("dataVencimentoFinal", dataFinal);
+        dataVencimentoInicial = Optional.ofNullable(configRel.getDataVencimentoDiversoInicial()).orElse(LocalDate.now());
+        dataVencimentoFinal = Optional.ofNullable(configRel.getDataVencimentoDiversoFinal()).orElse(LocalDate.now());
+        diversoPagarsDl.setParameter("dataVencimentoInicial", dataVencimentoInicial);
+        diversoPagarsDl.setParameter("dataVencimentoFinal", dataVencimentoFinal);
         diversoPagarsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
         diversoPagarsDl.load();
 
@@ -93,11 +98,8 @@ public class BaixaDiversoPagarListView extends StandardListView<DiversoPagar> {
 
     @Override
     public String getPageTitle() {
-        ConfigRel configRel = utilGeralService.prepararConfigRel();
-        LocalDate dataInicial = Optional.ofNullable(configRel.getDataVencimentoDiversoInicial()).orElse(LocalDate.now());
-        LocalDate dataFinal = Optional.ofNullable(configRel.getDataVencimentoDiversoFinal()).orElse(LocalDate.now());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        return super.getPageTitle() + " vencimento: " + dataInicial.format(formatter) + " a " + dataFinal.format(formatter);
+        return super.getPageTitle() + " vencimento: " + dataVencimentoInicial.format(formatter) + " a " + dataVencimentoFinal.format(formatter);
     }
 
     @Supply(to = "diversoPagarsDataGrid.aberto", subject = "renderer")
@@ -146,8 +148,10 @@ public class BaixaDiversoPagarListView extends StandardListView<DiversoPagar> {
                         configRel.setDataVencimentoDiversoFinal(closeEvent.getValue("dataVencimentoFinal"));
                         saveContext.saving(configRel);
                         dataManager.save(saveContext);
-                        diversoPagarsDl.setParameter("dataVencimentoInicial", configRel.getDataVencimentoDiversoInicial());
-                        diversoPagarsDl.setParameter("dataVencimentoFinal", configRel.getDataVencimentoDiversoFinal());
+                        dataVencimentoInicial = configRel.getDataVencimentoDiversoInicial();
+                        dataVencimentoFinal = configRel.getDataVencimentoDiversoFinal();
+                        diversoPagarsDl.setParameter("dataVencimentoInicial", dataVencimentoInicial);
+                        diversoPagarsDl.setParameter("dataVencimentoFinal", dataVencimentoFinal);
                         diversoPagarsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
                         diversoPagarsDl.load();
                         // getPageTitle() não é reconsultado automaticamente pelo Vaadin fora

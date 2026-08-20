@@ -14,6 +14,18 @@
         <dropIndex indexName="IDX_CLASSIFICACAO_FISCAL_UNQ" tableName="CLASSIFICACAO_FISCAL"/>
     </changeSet>
 
+    <!-- Sem soft delete daqui pra frente, uma linha já soft-deletada some de vista mas
+         continua na tabela. Sob o índice parcial antigo, dois registros com o mesmo CODIGO
+         eram legais desde que só um estivesse "vivo" (removido + recriado com o mesmo
+         código); sem o filtro de DELETED_DATE, o índice único simples do changeSet 3 rejeita
+         esse duplicado e derruba a subida da aplicação. Remove essas linhas mortas antes de
+         dropar a coluna que as distingue. -->
+    <changeSet id="1b" author="axctg3" dbms="postgresql">
+        <delete tableName="CLASSIFICACAO_FISCAL">
+            <where>DELETED_DATE IS NOT NULL</where>
+        </delete>
+    </changeSet>
+
     <changeSet id="2" author="axctg3">
         <dropColumn tableName="CLASSIFICACAO_FISCAL">
             <column name="VERSION"/>

@@ -66,13 +66,18 @@ public class TituloPagarListView extends StandardListView<TituloPagar> {
     @ViewComponent
     private HorizontalLayout buttonsPanel;
 
+    // Cache do intervalo em uso, pra getPageTitle() não precisar reconsultar o
+    // ConfigRel (prepararConfigRel() não é memoizado) a cada chamada do Vaadin.
+    private LocalDate dataEmissaoInicial = LocalDate.now();
+    private LocalDate dataEmissaoFinal = LocalDate.now();
+
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
         ConfigRel configRel = utilGeralService.prepararConfigRel();
-        LocalDate dataInicial = Optional.ofNullable(configRel.getDataEmissaoPagarInicial()).orElse(LocalDate.now());
-        LocalDate dataFinal = Optional.ofNullable(configRel.getDataEmissaoPagarFinal()).orElse(LocalDate.now());
-        tituloPagarsDl.setParameter("dataEmissaoInicial", dataInicial);
-        tituloPagarsDl.setParameter("dataEmissaoFinal", dataFinal);
+        dataEmissaoInicial = Optional.ofNullable(configRel.getDataEmissaoPagarInicial()).orElse(LocalDate.now());
+        dataEmissaoFinal = Optional.ofNullable(configRel.getDataEmissaoPagarFinal()).orElse(LocalDate.now());
+        tituloPagarsDl.setParameter("dataEmissaoInicial", dataEmissaoInicial);
+        tituloPagarsDl.setParameter("dataEmissaoFinal", dataEmissaoFinal);
         tituloPagarsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
         tituloPagarsDl.load();
 
@@ -82,11 +87,8 @@ public class TituloPagarListView extends StandardListView<TituloPagar> {
 
     @Override
     public String getPageTitle() {
-        ConfigRel configRel = utilGeralService.prepararConfigRel();
-        LocalDate dataInicial = Optional.ofNullable(configRel.getDataEmissaoPagarInicial()).orElse(LocalDate.now());
-        LocalDate dataFinal = Optional.ofNullable(configRel.getDataEmissaoPagarFinal()).orElse(LocalDate.now());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        return super.getPageTitle() + " emissão: " + dataInicial.format(formatter) + " a " + dataFinal.format(formatter);
+        return super.getPageTitle() + " emissão: " + dataEmissaoInicial.format(formatter) + " a " + dataEmissaoFinal.format(formatter);
     }
 
     @Supply(to = "tituloPagarsDataGrid.aberto", subject = "renderer")
@@ -130,8 +132,10 @@ public class TituloPagarListView extends StandardListView<TituloPagar> {
                         configRel.setDataEmissaoPagarFinal(closeEvent.getValue("dataEmissaoFinal"));
                         saveContext.saving(configRel);
                         dataManager.save(saveContext);
-                        tituloPagarsDl.setParameter("dataEmissaoInicial", configRel.getDataEmissaoPagarInicial());
-                        tituloPagarsDl.setParameter("dataEmissaoFinal", configRel.getDataEmissaoPagarFinal());
+                        dataEmissaoInicial = configRel.getDataEmissaoPagarInicial();
+                        dataEmissaoFinal = configRel.getDataEmissaoPagarFinal();
+                        tituloPagarsDl.setParameter("dataEmissaoInicial", dataEmissaoInicial);
+                        tituloPagarsDl.setParameter("dataEmissaoFinal", dataEmissaoFinal);
                         tituloPagarsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
                         tituloPagarsDl.load();
                         // getPageTitle() não é reconsultado automaticamente pelo Vaadin fora

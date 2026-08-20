@@ -77,13 +77,18 @@ public class BaixaTituloPagarListView extends StandardListView<TituloPagar> {
     @ViewComponent
     private HorizontalLayout buttonsPanel;
 
+    // Cache do intervalo em uso, pra getPageTitle() não precisar reconsultar o
+    // ConfigRel (prepararConfigRel() não é memoizado) a cada chamada do Vaadin.
+    private LocalDate dataVencimentoInicial = LocalDate.now();
+    private LocalDate dataVencimentoFinal = LocalDate.now();
+
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
         ConfigRel configRel = utilGeralService.prepararConfigRel();
-        LocalDate dataInicial = Optional.ofNullable(configRel.getDataVencimentoPagarInicial()).orElse(LocalDate.now());
-        LocalDate dataFinal = Optional.ofNullable(configRel.getDataVencimentoPagarFinal()).orElse(LocalDate.now());
-        tituloPagarsDl.setParameter("dataVencimentoInicial", dataInicial);
-        tituloPagarsDl.setParameter("dataVencimentoFinal", dataFinal);
+        dataVencimentoInicial = Optional.ofNullable(configRel.getDataVencimentoPagarInicial()).orElse(LocalDate.now());
+        dataVencimentoFinal = Optional.ofNullable(configRel.getDataVencimentoPagarFinal()).orElse(LocalDate.now());
+        tituloPagarsDl.setParameter("dataVencimentoInicial", dataVencimentoInicial);
+        tituloPagarsDl.setParameter("dataVencimentoFinal", dataVencimentoFinal);
         tituloPagarsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
         tituloPagarsDl.load();
 
@@ -93,11 +98,8 @@ public class BaixaTituloPagarListView extends StandardListView<TituloPagar> {
 
     @Override
     public String getPageTitle() {
-        ConfigRel configRel = utilGeralService.prepararConfigRel();
-        LocalDate dataInicial = Optional.ofNullable(configRel.getDataVencimentoPagarInicial()).orElse(LocalDate.now());
-        LocalDate dataFinal = Optional.ofNullable(configRel.getDataVencimentoPagarFinal()).orElse(LocalDate.now());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        return super.getPageTitle() + " vencimento: " + dataInicial.format(formatter) + " a " + dataFinal.format(formatter);
+        return super.getPageTitle() + " vencimento: " + dataVencimentoInicial.format(formatter) + " a " + dataVencimentoFinal.format(formatter);
     }
 
     @Supply(to = "tituloPagarsDataGrid.aberto", subject = "renderer")
@@ -146,8 +148,10 @@ public class BaixaTituloPagarListView extends StandardListView<TituloPagar> {
                         configRel.setDataVencimentoPagarFinal(closeEvent.getValue("dataVencimentoFinal"));
                         saveContext.saving(configRel);
                         dataManager.save(saveContext);
-                        tituloPagarsDl.setParameter("dataVencimentoInicial", configRel.getDataVencimentoPagarInicial());
-                        tituloPagarsDl.setParameter("dataVencimentoFinal", configRel.getDataVencimentoPagarFinal());
+                        dataVencimentoInicial = configRel.getDataVencimentoPagarInicial();
+                        dataVencimentoFinal = configRel.getDataVencimentoPagarFinal();
+                        tituloPagarsDl.setParameter("dataVencimentoInicial", dataVencimentoInicial);
+                        tituloPagarsDl.setParameter("dataVencimentoFinal", dataVencimentoFinal);
                         tituloPagarsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
                         tituloPagarsDl.load();
                         // getPageTitle() não é reconsultado automaticamente pelo Vaadin fora

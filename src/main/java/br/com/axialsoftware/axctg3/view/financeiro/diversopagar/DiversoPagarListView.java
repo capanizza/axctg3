@@ -66,13 +66,18 @@ public class DiversoPagarListView extends StandardListView<DiversoPagar> {
     @ViewComponent
     private HorizontalLayout buttonsPanel;
 
+    // Cache do intervalo em uso, pra getPageTitle() não precisar reconsultar o
+    // ConfigRel (prepararConfigRel() não é memoizado) a cada chamada do Vaadin.
+    private LocalDate dataEmissaoInicial = LocalDate.now();
+    private LocalDate dataEmissaoFinal = LocalDate.now();
+
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
         ConfigRel configRel = utilGeralService.prepararConfigRel();
-        LocalDate dataInicial = Optional.ofNullable(configRel.getDataEmissaoDiversoInicial()).orElse(LocalDate.now());
-        LocalDate dataFinal = Optional.ofNullable(configRel.getDataEmissaoDiversoFinal()).orElse(LocalDate.now());
-        diversoPagarsDl.setParameter("dataEmissaoInicial", dataInicial);
-        diversoPagarsDl.setParameter("dataEmissaoFinal", dataFinal);
+        dataEmissaoInicial = Optional.ofNullable(configRel.getDataEmissaoDiversoInicial()).orElse(LocalDate.now());
+        dataEmissaoFinal = Optional.ofNullable(configRel.getDataEmissaoDiversoFinal()).orElse(LocalDate.now());
+        diversoPagarsDl.setParameter("dataEmissaoInicial", dataEmissaoInicial);
+        diversoPagarsDl.setParameter("dataEmissaoFinal", dataEmissaoFinal);
         diversoPagarsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
         diversoPagarsDl.load();
 
@@ -82,11 +87,8 @@ public class DiversoPagarListView extends StandardListView<DiversoPagar> {
 
     @Override
     public String getPageTitle() {
-        ConfigRel configRel = utilGeralService.prepararConfigRel();
-        LocalDate dataInicial = Optional.ofNullable(configRel.getDataEmissaoDiversoInicial()).orElse(LocalDate.now());
-        LocalDate dataFinal = Optional.ofNullable(configRel.getDataEmissaoDiversoFinal()).orElse(LocalDate.now());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        return super.getPageTitle() + " emissão: " + dataInicial.format(formatter) + " a " + dataFinal.format(formatter);
+        return super.getPageTitle() + " emissão: " + dataEmissaoInicial.format(formatter) + " a " + dataEmissaoFinal.format(formatter);
     }
 
     @Supply(to = "diversoPagarsDataGrid.aberto", subject = "renderer")
@@ -130,8 +132,10 @@ public class DiversoPagarListView extends StandardListView<DiversoPagar> {
                         configRel.setDataEmissaoDiversoFinal(closeEvent.getValue("dataEmissaoFinal"));
                         saveContext.saving(configRel);
                         dataManager.save(saveContext);
-                        diversoPagarsDl.setParameter("dataEmissaoInicial", configRel.getDataEmissaoDiversoInicial());
-                        diversoPagarsDl.setParameter("dataEmissaoFinal", configRel.getDataEmissaoDiversoFinal());
+                        dataEmissaoInicial = configRel.getDataEmissaoDiversoInicial();
+                        dataEmissaoFinal = configRel.getDataEmissaoDiversoFinal();
+                        diversoPagarsDl.setParameter("dataEmissaoInicial", dataEmissaoInicial);
+                        diversoPagarsDl.setParameter("dataEmissaoFinal", dataEmissaoFinal);
                         diversoPagarsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
                         diversoPagarsDl.load();
                         // getPageTitle() não é reconsultado automaticamente pelo Vaadin fora
