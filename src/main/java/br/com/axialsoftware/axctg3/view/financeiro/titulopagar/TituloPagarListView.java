@@ -15,6 +15,7 @@ import io.jmix.core.DataManager;
 import io.jmix.core.SaveContext;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.UiComponents;
+import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.action.DialogAction;
 import io.jmix.flowui.app.inputdialog.DialogActions;
 import io.jmix.flowui.app.inputdialog.DialogOutcome;
@@ -29,6 +30,7 @@ import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -59,6 +61,8 @@ public class TituloPagarListView extends StandardListView<TituloPagar> {
     private MenuBean menuBean;
     @Autowired
     private TituloPagarService tituloPagarService;
+    @Autowired
+    private ViewNavigators viewNavigators;
     @ViewComponent
     private DataGrid<TituloPagar> tituloPagarsDataGrid;
     @ViewComponent
@@ -76,6 +80,15 @@ public class TituloPagarListView extends StandardListView<TituloPagar> {
 
         Dialog dialog = UiComponentUtils.findDialog(this);
         buttonsPanel.setVisible(dialog == null);
+    }
+
+    @Override
+    public String getPageTitle() {
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
+        LocalDate dataInicial = Optional.ofNullable(configRel.getDataEmissaoPagarInicial()).orElse(LocalDate.now());
+        LocalDate dataFinal = Optional.ofNullable(configRel.getDataEmissaoPagarFinal()).orElse(LocalDate.now());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return super.getPageTitle() + " emissão: " + dataInicial.format(formatter) + " a " + dataFinal.format(formatter);
     }
 
     @Supply(to = "tituloPagarsDataGrid.aberto", subject = "renderer")
@@ -123,6 +136,11 @@ public class TituloPagarListView extends StandardListView<TituloPagar> {
                         tituloPagarsDl.setParameter("dataEmissaoFinal", configRel.getDataEmissaoPagarFinal());
                         tituloPagarsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
                         tituloPagarsDl.load();
+                        // getPageTitle() só é reconsultado pelo Vaadin em navegação — força
+                        // a atualização do título com o novo intervalo de datas.
+                        viewNavigators.listView(this, TituloPagar.class)
+                                .withViewClass(TituloPagarListView.class)
+                                .navigate();
                     }
                 })
                 .open();

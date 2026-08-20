@@ -34,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -87,6 +88,15 @@ public class BaixaTituloReceberListView extends StandardListView<TituloReceber> 
         buttonsPanel.setVisible(dialog == null);
     }
 
+    @Override
+    public String getPageTitle() {
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
+        LocalDate dataInicial = Optional.ofNullable(configRel.getDataVencimentoReceberInicial()).orElse(LocalDate.now());
+        LocalDate dataFinal = Optional.ofNullable(configRel.getDataVencimentoReceberFinal()).orElse(LocalDate.now());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return super.getPageTitle() + " vencimento: " + dataInicial.format(formatter) + " a " + dataFinal.format(formatter);
+    }
+
     @Supply(to = "tituloRecebersDataGrid.aberto", subject = "renderer")
     private Renderer<TituloReceber> tituloRecebersDataGridAbertoRenderer() {
         return checkboxRenderer(TituloReceber::getAberto);
@@ -137,6 +147,11 @@ public class BaixaTituloReceberListView extends StandardListView<TituloReceber> 
                         tituloRecebersDl.setParameter("dataVencimentoFinal", configRel.getDataVencimentoReceberFinal());
                         tituloRecebersDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
                         tituloRecebersDl.load();
+                        // getPageTitle() só é reconsultado pelo Vaadin em navegação — força
+                        // a atualização do título com o novo intervalo de datas.
+                        viewNavigators.listView(this, TituloReceber.class)
+                                .withViewClass(BaixaTituloReceberListView.class)
+                                .navigate();
                     }
                 })
                 .open();

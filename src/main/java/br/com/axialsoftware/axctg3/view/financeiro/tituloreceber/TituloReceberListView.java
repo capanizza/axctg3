@@ -14,6 +14,7 @@ import io.jmix.core.DataManager;
 import io.jmix.core.SaveContext;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.UiComponents;
+import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.app.inputdialog.DialogActions;
 import io.jmix.flowui.app.inputdialog.DialogOutcome;
 import io.jmix.flowui.component.UiComponentUtils;
@@ -24,6 +25,7 @@ import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -53,6 +55,8 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
     private DataManager dataManager;
     @Autowired
     private MenuBean menuBean;
+    @Autowired
+    private ViewNavigators viewNavigators;
     @ViewComponent
     private HorizontalLayout buttonsPanel;
 
@@ -68,6 +72,15 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
 
         Dialog dialog = UiComponentUtils.findDialog(this);
         buttonsPanel.setVisible(dialog == null);
+    }
+
+    @Override
+    public String getPageTitle() {
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
+        LocalDate dataInicial = Optional.ofNullable(configRel.getDataEmissaoReceberInicial()).orElse(LocalDate.now());
+        LocalDate dataFinal = Optional.ofNullable(configRel.getDataEmissaoReceberFinal()).orElse(LocalDate.now());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return super.getPageTitle() + " emissão: " + dataInicial.format(formatter) + " a " + dataFinal.format(formatter);
     }
 
     @Supply(to = "tituloRecebersDataGrid.aberto", subject = "renderer")
@@ -115,6 +128,11 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
                         tituloRecebersDl.setParameter("dataEmissaoFinal", configRel.getDataEmissaoReceberFinal());
                         tituloRecebersDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
                         tituloRecebersDl.load();
+                        // getPageTitle() só é reconsultado pelo Vaadin em navegação — força
+                        // a atualização do título com o novo intervalo de datas.
+                        viewNavigators.listView(this, TituloReceber.class)
+                                .withViewClass(TituloReceberListView.class)
+                                .navigate();
                     }
                 })
                 .open();

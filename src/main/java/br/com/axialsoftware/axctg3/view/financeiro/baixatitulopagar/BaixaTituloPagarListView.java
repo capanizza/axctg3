@@ -35,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -89,6 +90,15 @@ public class BaixaTituloPagarListView extends StandardListView<TituloPagar> {
         buttonsPanel.setVisible(dialog == null);
     }
 
+    @Override
+    public String getPageTitle() {
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
+        LocalDate dataInicial = Optional.ofNullable(configRel.getDataVencimentoPagarInicial()).orElse(LocalDate.now());
+        LocalDate dataFinal = Optional.ofNullable(configRel.getDataVencimentoPagarFinal()).orElse(LocalDate.now());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return super.getPageTitle() + " vencimento: " + dataInicial.format(formatter) + " a " + dataFinal.format(formatter);
+    }
+
     @Supply(to = "tituloPagarsDataGrid.aberto", subject = "renderer")
     private Renderer<TituloPagar> tituloPagarsDataGridAbertoRenderer() {
         return checkboxRenderer(TituloPagar::getAberto);
@@ -139,6 +149,11 @@ public class BaixaTituloPagarListView extends StandardListView<TituloPagar> {
                         tituloPagarsDl.setParameter("dataVencimentoFinal", configRel.getDataVencimentoPagarFinal());
                         tituloPagarsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
                         tituloPagarsDl.load();
+                        // getPageTitle() só é reconsultado pelo Vaadin em navegação — força
+                        // a atualização do título com o novo intervalo de datas.
+                        viewNavigators.listView(this, TituloPagar.class)
+                                .withViewClass(BaixaTituloPagarListView.class)
+                                .navigate();
                     }
                 })
                 .open();
