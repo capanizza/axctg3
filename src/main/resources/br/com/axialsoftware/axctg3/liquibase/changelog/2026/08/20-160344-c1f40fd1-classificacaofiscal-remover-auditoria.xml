@@ -14,24 +14,6 @@
         <dropIndex indexName="IDX_CLASSIFICACAO_FISCAL_UNQ" tableName="CLASSIFICACAO_FISCAL"/>
     </changeSet>
 
-    <!-- Sem soft delete daqui pra frente, uma linha já soft-deletada some de vista mas
-         continua na tabela. Sob o índice parcial antigo, dois registros com o mesmo CODIGO
-         eram legais desde que só um estivesse "vivo" (removido + recriado com o mesmo
-         código); sem o filtro de DELETED_DATE, o índice único simples do changeSet 3 rejeita
-         esse duplicado e derruba a subida da aplicação. Remove essas linhas mortas antes de
-         dropar a coluna que as distingue.
-         Exclui as ainda referenciadas por PRODUTO.CLASSIFICACAO_FISCAL_ID (FK sem ON DELETE,
-         é RESTRICT por padrão no Postgres) — um produto pode apontar pra uma classificação
-         que foi soft-deletada sem que ninguém tenha limpado essa referência; apagar a linha
-         mesmo assim quebraria a FK e travaria a subida. Se sobrar duplicata nesse caso raro,
-         o changeSet 3 falha alto e localizado, sinalizando pra reconciliar manualmente. -->
-    <changeSet id="1b" author="axctg3" dbms="postgresql">
-        <delete tableName="CLASSIFICACAO_FISCAL">
-            <where>DELETED_DATE IS NOT NULL
-                AND ID NOT IN (SELECT CLASSIFICACAO_FISCAL_ID FROM PRODUTO WHERE CLASSIFICACAO_FISCAL_ID IS NOT NULL)</where>
-        </delete>
-    </changeSet>
-
     <changeSet id="2" author="axctg3">
         <dropColumn tableName="CLASSIFICACAO_FISCAL">
             <column name="VERSION"/>
@@ -46,7 +28,14 @@
 
     <!-- Recria o índice único, agora sem o filtro de soft delete (a tabela não tem mais
          DELETED_DATE). No HSQLDB de teste esse índice nunca existiu (o changeset original
-         de criação era postgresql-only), então não há equivalente a recriar lá. -->
+         de criação era postgresql-only), então não há equivalente a recriar lá.
+         Sem soft delete, um CODIGO removido e recriado (legal sob o índice parcial antigo,
+         desde que só uma cópia estivesse "viva") vira duplicata e este CREATE UNIQUE INDEX
+         falha. Avaliado e aceito conscientemente: tabela pequena, importada de outro
+         sistema, sem esse padrão de uso na prática — não vale a complexidade de uma limpeza
+         automática (chegou a existir um changeSet pra isso, removido por ter tentado rodar
+         contra uma coluna DELETED_DATE que um deploy anterior já tinha dropado). Se um dia
+         aparecer duplicata real, o erro do Postgres aponta a linha pra reconciliar na mão. -->
     <changeSet id="3" author="axctg3" dbms="postgresql">
         <createIndex indexName="IDX_CLASSIFICACAO_FISCAL_UNQ" tableName="CLASSIFICACAO_FISCAL" unique="true">
             <column name="CODIGO"/>
