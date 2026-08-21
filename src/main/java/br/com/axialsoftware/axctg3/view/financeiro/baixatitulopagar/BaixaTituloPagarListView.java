@@ -9,6 +9,7 @@ import br.com.axialsoftware.axctg3.entity.financeiro.TituloPagar;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.financeiro.ItemPagarService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -75,18 +76,28 @@ public class BaixaTituloPagarListView extends StandardListView<TituloPagar> {
     @ViewComponent
     private HorizontalLayout buttonsPanel;
 
+    // Cache do intervalo em uso, pra getPageTitle() não precisar reconsultar o
+    // ConfigRel (prepararConfigRel() não é memoizado) a cada chamada do Vaadin.
+    private LocalDate dataVencimentoInicial = LocalDate.now();
+    private LocalDate dataVencimentoFinal = LocalDate.now();
+
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
         ConfigRel configRel = utilGeralService.prepararConfigRel();
-        LocalDate dataInicial = Optional.ofNullable(configRel.getDataVencimentoPagarInicial()).orElse(LocalDate.now());
-        LocalDate dataFinal = Optional.ofNullable(configRel.getDataVencimentoPagarFinal()).orElse(LocalDate.now());
-        tituloPagarsDl.setParameter("dataVencimentoInicial", dataInicial);
-        tituloPagarsDl.setParameter("dataVencimentoFinal", dataFinal);
+        dataVencimentoInicial = Optional.ofNullable(configRel.getDataVencimentoPagarInicial()).orElse(LocalDate.now());
+        dataVencimentoFinal = Optional.ofNullable(configRel.getDataVencimentoPagarFinal()).orElse(LocalDate.now());
+        tituloPagarsDl.setParameter("dataVencimentoInicial", dataVencimentoInicial);
+        tituloPagarsDl.setParameter("dataVencimentoFinal", dataVencimentoFinal);
         tituloPagarsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
         tituloPagarsDl.load();
 
         Dialog dialog = UiComponentUtils.findDialog(this);
         buttonsPanel.setVisible(dialog == null);
+    }
+
+    @Override
+    public String getPageTitle() {
+        return super.getPageTitle() + utilGeralService.formatIntervaloTitulo("vencimento", dataVencimentoInicial, dataVencimentoFinal);
     }
 
     @Supply(to = "tituloPagarsDataGrid.aberto", subject = "renderer")
@@ -135,10 +146,17 @@ public class BaixaTituloPagarListView extends StandardListView<TituloPagar> {
                         configRel.setDataVencimentoPagarFinal(closeEvent.getValue("dataVencimentoFinal"));
                         saveContext.saving(configRel);
                         dataManager.save(saveContext);
-                        tituloPagarsDl.setParameter("dataVencimentoInicial", configRel.getDataVencimentoPagarInicial());
-                        tituloPagarsDl.setParameter("dataVencimentoFinal", configRel.getDataVencimentoPagarFinal());
+                        dataVencimentoInicial = Optional.ofNullable(configRel.getDataVencimentoPagarInicial()).orElse(LocalDate.now());
+                        dataVencimentoFinal = Optional.ofNullable(configRel.getDataVencimentoPagarFinal()).orElse(LocalDate.now());
+                        tituloPagarsDl.setParameter("dataVencimentoInicial", dataVencimentoInicial);
+                        tituloPagarsDl.setParameter("dataVencimentoFinal", dataVencimentoFinal);
                         tituloPagarsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
                         tituloPagarsDl.load();
+                        // getPageTitle() não é reconsultado automaticamente pelo Vaadin fora
+                        // de navegação — atualiza o título da aba in-place, sem navigate()
+                        // (que reinstancia a view e perderia seleção múltipla/filtro/ordenação
+                        // da grid, usados pelas actions de baixa em lote logo abaixo).
+                        UI.getCurrent().getPage().setTitle(getPageTitle());
                     }
                 })
                 .open();

@@ -5,6 +5,7 @@ import br.com.axialsoftware.axctg3.entity.cadastros.ConfigRel;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -56,18 +57,28 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
     @ViewComponent
     private HorizontalLayout buttonsPanel;
 
+    // Cache do intervalo em uso, pra getPageTitle() não precisar reconsultar o
+    // ConfigRel (prepararConfigRel() não é memoizado) a cada chamada do Vaadin.
+    private LocalDate dataEmissaoInicial = LocalDate.now();
+    private LocalDate dataEmissaoFinal = LocalDate.now();
+
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
         ConfigRel configRel = utilGeralService.prepararConfigRel();
-        LocalDate dataInicial = Optional.ofNullable(configRel.getDataEmissaoReceberInicial()).orElse(LocalDate.now());
-        LocalDate dataFinal = Optional.ofNullable(configRel.getDataEmissaoReceberFinal()).orElse(LocalDate.now());
-        tituloRecebersDl.setParameter("dataEmissaoInicial", dataInicial);
-        tituloRecebersDl.setParameter("dataEmissaoFinal", dataFinal);
+        dataEmissaoInicial = Optional.ofNullable(configRel.getDataEmissaoReceberInicial()).orElse(LocalDate.now());
+        dataEmissaoFinal = Optional.ofNullable(configRel.getDataEmissaoReceberFinal()).orElse(LocalDate.now());
+        tituloRecebersDl.setParameter("dataEmissaoInicial", dataEmissaoInicial);
+        tituloRecebersDl.setParameter("dataEmissaoFinal", dataEmissaoFinal);
         tituloRecebersDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
         tituloRecebersDl.load();
 
         Dialog dialog = UiComponentUtils.findDialog(this);
         buttonsPanel.setVisible(dialog == null);
+    }
+
+    @Override
+    public String getPageTitle() {
+        return super.getPageTitle() + utilGeralService.formatIntervaloTitulo("emissão", dataEmissaoInicial, dataEmissaoFinal);
     }
 
     @Supply(to = "tituloRecebersDataGrid.aberto", subject = "renderer")
@@ -111,10 +122,16 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
                         configRel.setDataEmissaoReceberFinal(closeEvent.getValue("dataEmissaoFinal"));
                         saveContext.saving(configRel);
                         dataManager.save(saveContext);
-                        tituloRecebersDl.setParameter("dataEmissaoInicial", configRel.getDataEmissaoReceberInicial());
-                        tituloRecebersDl.setParameter("dataEmissaoFinal", configRel.getDataEmissaoReceberFinal());
+                        dataEmissaoInicial = Optional.ofNullable(configRel.getDataEmissaoReceberInicial()).orElse(LocalDate.now());
+                        dataEmissaoFinal = Optional.ofNullable(configRel.getDataEmissaoReceberFinal()).orElse(LocalDate.now());
+                        tituloRecebersDl.setParameter("dataEmissaoInicial", dataEmissaoInicial);
+                        tituloRecebersDl.setParameter("dataEmissaoFinal", dataEmissaoFinal);
                         tituloRecebersDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
                         tituloRecebersDl.load();
+                        // getPageTitle() não é reconsultado automaticamente pelo Vaadin fora
+                        // de navegação — atualiza o título da aba in-place, sem navigate()
+                        // (que reinstancia a view e perderia seleção/filtro/ordenação da grid).
+                        UI.getCurrent().getPage().setTitle(getPageTitle());
                     }
                 })
                 .open();

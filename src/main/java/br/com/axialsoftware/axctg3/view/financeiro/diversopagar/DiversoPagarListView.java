@@ -6,6 +6,7 @@ import br.com.axialsoftware.axctg3.entity.financeiro.DiversoPagar;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.financeiro.DiversoPagarService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -64,18 +65,28 @@ public class DiversoPagarListView extends StandardListView<DiversoPagar> {
     @ViewComponent
     private HorizontalLayout buttonsPanel;
 
+    // Cache do intervalo em uso, pra getPageTitle() não precisar reconsultar o
+    // ConfigRel (prepararConfigRel() não é memoizado) a cada chamada do Vaadin.
+    private LocalDate dataEmissaoInicial = LocalDate.now();
+    private LocalDate dataEmissaoFinal = LocalDate.now();
+
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
         ConfigRel configRel = utilGeralService.prepararConfigRel();
-        LocalDate dataInicial = Optional.ofNullable(configRel.getDataEmissaoDiversoInicial()).orElse(LocalDate.now());
-        LocalDate dataFinal = Optional.ofNullable(configRel.getDataEmissaoDiversoFinal()).orElse(LocalDate.now());
-        diversoPagarsDl.setParameter("dataEmissaoInicial", dataInicial);
-        diversoPagarsDl.setParameter("dataEmissaoFinal", dataFinal);
+        dataEmissaoInicial = Optional.ofNullable(configRel.getDataEmissaoDiversoInicial()).orElse(LocalDate.now());
+        dataEmissaoFinal = Optional.ofNullable(configRel.getDataEmissaoDiversoFinal()).orElse(LocalDate.now());
+        diversoPagarsDl.setParameter("dataEmissaoInicial", dataEmissaoInicial);
+        diversoPagarsDl.setParameter("dataEmissaoFinal", dataEmissaoFinal);
         diversoPagarsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
         diversoPagarsDl.load();
 
         Dialog dialog = UiComponentUtils.findDialog(this);
         buttonsPanel.setVisible(dialog == null);
+    }
+
+    @Override
+    public String getPageTitle() {
+        return super.getPageTitle() + utilGeralService.formatIntervaloTitulo("emissão", dataEmissaoInicial, dataEmissaoFinal);
     }
 
     @Supply(to = "diversoPagarsDataGrid.aberto", subject = "renderer")
@@ -119,10 +130,16 @@ public class DiversoPagarListView extends StandardListView<DiversoPagar> {
                         configRel.setDataEmissaoDiversoFinal(closeEvent.getValue("dataEmissaoFinal"));
                         saveContext.saving(configRel);
                         dataManager.save(saveContext);
-                        diversoPagarsDl.setParameter("dataEmissaoInicial", configRel.getDataEmissaoDiversoInicial());
-                        diversoPagarsDl.setParameter("dataEmissaoFinal", configRel.getDataEmissaoDiversoFinal());
+                        dataEmissaoInicial = Optional.ofNullable(configRel.getDataEmissaoDiversoInicial()).orElse(LocalDate.now());
+                        dataEmissaoFinal = Optional.ofNullable(configRel.getDataEmissaoDiversoFinal()).orElse(LocalDate.now());
+                        diversoPagarsDl.setParameter("dataEmissaoInicial", dataEmissaoInicial);
+                        diversoPagarsDl.setParameter("dataEmissaoFinal", dataEmissaoFinal);
                         diversoPagarsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
                         diversoPagarsDl.load();
+                        // getPageTitle() não é reconsultado automaticamente pelo Vaadin fora
+                        // de navegação — atualiza o título da aba in-place, sem navigate()
+                        // (que reinstancia a view e perderia seleção/filtro/ordenação da grid).
+                        UI.getCurrent().getPage().setTitle(getPageTitle());
                     }
                 })
                 .open();

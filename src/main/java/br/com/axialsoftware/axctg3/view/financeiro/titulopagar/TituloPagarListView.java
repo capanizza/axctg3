@@ -6,6 +6,7 @@ import br.com.axialsoftware.axctg3.entity.financeiro.TituloPagar;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.financeiro.TituloPagarService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -64,18 +65,28 @@ public class TituloPagarListView extends StandardListView<TituloPagar> {
     @ViewComponent
     private HorizontalLayout buttonsPanel;
 
+    // Cache do intervalo em uso, pra getPageTitle() não precisar reconsultar o
+    // ConfigRel (prepararConfigRel() não é memoizado) a cada chamada do Vaadin.
+    private LocalDate dataEmissaoInicial = LocalDate.now();
+    private LocalDate dataEmissaoFinal = LocalDate.now();
+
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
         ConfigRel configRel = utilGeralService.prepararConfigRel();
-        LocalDate dataInicial = Optional.ofNullable(configRel.getDataEmissaoPagarInicial()).orElse(LocalDate.now());
-        LocalDate dataFinal = Optional.ofNullable(configRel.getDataEmissaoPagarFinal()).orElse(LocalDate.now());
-        tituloPagarsDl.setParameter("dataEmissaoInicial", dataInicial);
-        tituloPagarsDl.setParameter("dataEmissaoFinal", dataFinal);
+        dataEmissaoInicial = Optional.ofNullable(configRel.getDataEmissaoPagarInicial()).orElse(LocalDate.now());
+        dataEmissaoFinal = Optional.ofNullable(configRel.getDataEmissaoPagarFinal()).orElse(LocalDate.now());
+        tituloPagarsDl.setParameter("dataEmissaoInicial", dataEmissaoInicial);
+        tituloPagarsDl.setParameter("dataEmissaoFinal", dataEmissaoFinal);
         tituloPagarsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
         tituloPagarsDl.load();
 
         Dialog dialog = UiComponentUtils.findDialog(this);
         buttonsPanel.setVisible(dialog == null);
+    }
+
+    @Override
+    public String getPageTitle() {
+        return super.getPageTitle() + utilGeralService.formatIntervaloTitulo("emissão", dataEmissaoInicial, dataEmissaoFinal);
     }
 
     @Supply(to = "tituloPagarsDataGrid.aberto", subject = "renderer")
@@ -119,10 +130,16 @@ public class TituloPagarListView extends StandardListView<TituloPagar> {
                         configRel.setDataEmissaoPagarFinal(closeEvent.getValue("dataEmissaoFinal"));
                         saveContext.saving(configRel);
                         dataManager.save(saveContext);
-                        tituloPagarsDl.setParameter("dataEmissaoInicial", configRel.getDataEmissaoPagarInicial());
-                        tituloPagarsDl.setParameter("dataEmissaoFinal", configRel.getDataEmissaoPagarFinal());
+                        dataEmissaoInicial = Optional.ofNullable(configRel.getDataEmissaoPagarInicial()).orElse(LocalDate.now());
+                        dataEmissaoFinal = Optional.ofNullable(configRel.getDataEmissaoPagarFinal()).orElse(LocalDate.now());
+                        tituloPagarsDl.setParameter("dataEmissaoInicial", dataEmissaoInicial);
+                        tituloPagarsDl.setParameter("dataEmissaoFinal", dataEmissaoFinal);
                         tituloPagarsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
                         tituloPagarsDl.load();
+                        // getPageTitle() não é reconsultado automaticamente pelo Vaadin fora
+                        // de navegação — atualiza o título da aba in-place, sem navigate()
+                        // (que reinstancia a view e perderia seleção/filtro/ordenação da grid).
+                        UI.getCurrent().getPage().setTitle(getPageTitle());
                     }
                 })
                 .open();

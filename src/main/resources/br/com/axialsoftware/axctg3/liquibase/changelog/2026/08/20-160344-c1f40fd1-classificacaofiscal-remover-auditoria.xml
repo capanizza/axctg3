@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/20-160344-c1f40fd1-classificacaofiscal-remover-auditoria.xml">
+
+    <!-- ClassificacaoFiscal deixa de ter version/auditoria/soft delete, a pedido.
+         O índice único parcial (where DELETED_DATE is null) depende da coluna
+         DELETED_DATE, então precisa ser derrubado antes de dropar as colunas. -->
+    <changeSet id="1" author="axctg3" dbms="postgresql">
+        <dropIndex indexName="IDX_CLASSIFICACAO_FISCAL_UNQ" tableName="CLASSIFICACAO_FISCAL"/>
+    </changeSet>
+
+    <!-- Sem soft delete daqui pra frente, uma linha já soft-deletada some de vista mas
+         continua na tabela. Sob o índice parcial antigo, dois registros com o mesmo CODIGO
+         eram legais desde que só um estivesse "vivo" (removido + recriado com o mesmo
+         código); sem o filtro de DELETED_DATE, o índice único simples do changeSet 3 rejeita
+         esse duplicado e derruba a subida da aplicação. Remove essas linhas mortas antes de
+         dropar a coluna que as distingue.
+         Exclui as ainda referenciadas por PRODUTO.CLASSIFICACAO_FISCAL_ID (FK sem ON DELETE,
+         é RESTRICT por padrão no Postgres) — um produto pode apontar pra uma classificação
+         que foi soft-deletada sem que ninguém tenha limpado essa referência; apagar a linha
+         mesmo assim quebraria a FK e travaria a subida. Se sobrar duplicata nesse caso raro,
+         o changeSet 3 falha alto e localizado, sinalizando pra reconciliar manualmente. -->
+    <changeSet id="1b" author="axctg3" dbms="postgresql">
+        <delete tableName="CLASSIFICACAO_FISCAL">
+            <where>DELETED_DATE IS NOT NULL
+                AND ID NOT IN (SELECT CLASSIFICACAO_FISCAL_ID FROM PRODUTO WHERE CLASSIFICACAO_FISCAL_ID IS NOT NULL)</where>
+        </delete>
+    </changeSet>
+
+    <changeSet id="2" author="axctg3">
+        <dropColumn tableName="CLASSIFICACAO_FISCAL">
+            <column name="VERSION"/>
+            <column name="CREATED_BY"/>
+            <column name="CREATED_DATE"/>
+            <column name="LAST_MODIFIED_BY"/>
+            <column name="LAST_MODIFIED_DATE"/>
+            <column name="DELETED_BY"/>
+            <column name="DELETED_DATE"/>
+        </dropColumn>
+    </changeSet>
+
+    <!-- Recria o índice único, agora sem o filtro de soft delete (a tabela não tem mais
+         DELETED_DATE). No HSQLDB de teste esse índice nunca existiu (o changeset original
+         de criação era postgresql-only), então não há equivalente a recriar lá. -->
+    <changeSet id="3" author="axctg3" dbms="postgresql">
+        <createIndex indexName="IDX_CLASSIFICACAO_FISCAL_UNQ" tableName="CLASSIFICACAO_FISCAL" unique="true">
+            <column name="CODIGO"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

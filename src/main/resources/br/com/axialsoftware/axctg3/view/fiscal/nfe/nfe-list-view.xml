@@ -29,7 +29,6 @@
     <layout>
         <hbox id="buttonsPanel" wrap="true" width="100%">
             <startSlot>
-                <button id="createButton" action="nfesDataGrid.createAction" themeNames="small"/>
                 <button id="editButton" action="nfesDataGrid.editAction" themeNames="small"/>
                 <button id="removeButton" action="nfesDataGrid.removeAction" themeNames="small"/>
                 <button id="importXmlButton" text="msg://nfeListView.importXmlButton.text" themeNames="small"/>
@@ -44,8 +43,7 @@
                   dataContainer="nfesDc"
                   columnReorderingAllowed="true" themeNames="small">
             <actions>
-                <action id="createAction" type="list_create"/>
-                <action id="editAction" type="list_edit"/>
+                <action id="editAction" type="list_read"/>
                 <action id="removeAction" type="list_remove"/>
             </actions>
             <columns resizable="true">

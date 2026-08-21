@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Component
@@ -149,5 +150,17 @@ public class UtilGeralService {
         dt = dt.with(java.time.temporal.TemporalAdjusters.lastDayOfMonth());
         mapa.put("dataFinal", dt);
         return mapa;
+    }
+
+    /**
+     * Sufixo " rotulo: dd/MM/yyyy a dd/MM/yyyy" usado no getPageTitle() das listagens
+     * financeiras (emissão/vencimento). Datas nulas caem em hoje — mesma tolerância do
+     * onBeforeShow dessas telas, que lê o mesmo par de campos do ConfigRel (nullable).
+     */
+    public String formatIntervaloTitulo(String rotulo, LocalDate dataInicial, LocalDate dataFinal) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        LocalDate inicial = dataInicial == null ? LocalDate.now() : dataInicial;
+        LocalDate fim = dataFinal == null ? LocalDate.now() : dataFinal;
+        return " " + rotulo + ": " + inicial.format(formatter) + " a " + fim.format(formatter);
     }
 }
