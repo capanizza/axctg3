@@ -110,25 +110,20 @@
             </tab>
             <tab id="itensTab" label="Itens">
                 <vbox width="100%">
-                    <!--hbox id="itensButtonsPanel" classNames="buttons-panel">
-                        <button id="itemCreateButton" action="nfeItensDataGrid.create" themeNames="small"/>
-                        <button id="itemEditButton" action="nfeItensDataGrid.edit" themeNames="small"/>
-                        <button id="itemRemoveButton" action="nfeItensDataGrid.remove" themeNames="small"/>
-                    </hbox-->
+                    <hbox id="itensButtonsPanel" classNames="buttons-panel">
+                        <button id="itemViewButton" action="nfeItensDataGrid.view" themeNames="small"/>
+                    </hbox>
+                    <!-- list_read (não list_edit) — abre o NfeItemDetailView somente para leitura, sem
+                         ficar desabilitado quando a Nfe (view read-only) desativa list_edit/create/remove
+                         via @AdjustWhenViewReadOnly. Ver NfeDetailView. -->
                     <dataGrid id="nfeItensDataGrid" dataContainer="itensDc" width="100%" minHeight="20em" themeNames="xsmall">
-                        <!--actions>
-                            <action id="create" type="list_create">
+                        <actions>
+                            <action id="view" type="list_read" text="Visualizar">
                                 <properties>
                                     <property name="openMode" value="DIALOG"/>
                                 </properties>
                             </action>
-                            <action id="edit" type="list_edit">
-                                <properties>
-                                    <property name="openMode" value="DIALOG"/>
-                                </properties>
-                            </action>
-                            <action id="remove" type="list_remove"/>
-                        </actions-->
+                        </actions>
                         <columns resizable="true">
                             <column property="item" width="8%" textAlign="CENTER"/>
                             <column property="codProd" width="12%"/>
