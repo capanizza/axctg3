@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/22-122704-c1f40fd1-aliquotaibscbs-cstpiscofins-adicionar.xml">
+    <changeSet id="1" author="axctg3">
+        <!-- PIS/Cofins são extintos em 31/12/2026. Campos nullable de propósito: só
+             passam a ter valor a partir do ano em que a extinção valer e o CST novo
+             for conhecido oficialmente (nenhuma NT publicada até 22/08/2026, ver
+             docs/REFORMA-TRIBUTARIA-IBS-CBS.md). Sem defaultValue — null aqui
+             significa "não se aplica", diferente de 0.00 "imposto extinto". -->
+        <addColumn tableName="ALIQUOTA_IBS_CBS">
+            <column name="CST_PIS_COFINS" type="INT"/>
+            <column name="ALIQ_PIS" type="DECIMAL(5,2)"/>
+            <column name="ALIQ_COFINS" type="DECIMAL(5,2)"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

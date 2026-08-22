@@ -93,6 +93,48 @@ public class AliquotaIbsCbs {
     @NotNull
     private BigDecimal aliqCbs = BigDecimal.ZERO;
 
+    // PIS/Cofins são extintos em 31/12/2026 — os 3 campos abaixo só passam a ter
+    // valor a partir do ano em que a extinção valer (2027+) e o CST novo for
+    // conhecido oficialmente (nenhuma NT publicada até 22/08/2026, ver
+    // docs/REFORMA-TRIBUTARIA-IBS-CBS.md). Nullable de propósito: null = não se
+    // aplica (PIS/Cofins reais, com alíquotas por regime, não cabem num valor de
+    // referência único por ano), 0.00 = imposto extinto.
+    @Column(name = "CST_PIS_COFINS")
+    @NumberFormat(pattern = "00")
+    private Integer cstPisCofins;
+
+    @Column(name = "ALIQ_PIS", precision = 5, scale = 2)
+    @NumberFormat(pattern = "##0.00")
+    private BigDecimal aliqPis;
+
+    @Column(name = "ALIQ_COFINS", precision = 5, scale = 2)
+    @NumberFormat(pattern = "##0.00")
+    private BigDecimal aliqCofins;
+
+    public Integer getCstPisCofins() {
+        return cstPisCofins;
+    }
+
+    public void setCstPisCofins(Integer cstPisCofins) {
+        this.cstPisCofins = cstPisCofins;
+    }
+
+    public BigDecimal getAliqPis() {
+        return aliqPis;
+    }
+
+    public void setAliqPis(BigDecimal aliqPis) {
+        this.aliqPis = aliqPis;
+    }
+
+    public BigDecimal getAliqCofins() {
+        return aliqCofins;
+    }
+
+    public void setAliqCofins(BigDecimal aliqCofins) {
+        this.aliqCofins = aliqCofins;
+    }
+
     public BigDecimal getAliqCbs() {
         return aliqCbs;
     }

@@ -40,6 +40,23 @@
                                  width="20%" themeNames="small"
                                  label="msg://br.com.axialsoftware.axctg3.entity.tabelas/AliquotaIbsCbs.aliqCbs"/>
             </hbox>
+            <hbox width="100%">
+                <integerField id="cstPisCofinsField"
+                              property="cstPisCofins"
+                              dataContainer="aliquotaIbsCbsDc"
+                              width="20%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.tabelas/AliquotaIbsCbs.cstPisCofins"/>
+                <bigDecimalField id="aliqPisField"
+                                 property="aliqPis"
+                                 dataContainer="aliquotaIbsCbsDc"
+                                 width="20%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.tabelas/AliquotaIbsCbs.aliqPis"/>
+                <bigDecimalField id="aliqCofinsField"
+                                 property="aliqCofins"
+                                 dataContainer="aliquotaIbsCbsDc"
+                                 width="20%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.tabelas/AliquotaIbsCbs.aliqCofins"/>
+            </hbox>
         </vbox>
         <hbox id="detailActions">
             <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>

@@ -48,10 +48,13 @@
                 <action id="removeAction" type="list_remove"/>
             </actions>
             <columns resizable="true">
-                <column property="ano" width="20%" filterable="true"/>
-                <column property="aliqIbsUf" width="20%"/>
-                <column property="aliqIbsMun" width="20%"/>
-                <column property="aliqCbs" width="20%"/>
+                <column property="ano" width="12%" filterable="true"/>
+                <column property="aliqIbsUf" width="12%"/>
+                <column property="aliqIbsMun" width="12%"/>
+                <column property="aliqCbs" width="12%"/>
+                <column property="cstPisCofins" width="12%"/>
+                <column property="aliqPis" width="12%"/>
+                <column property="aliqCofins" width="12%"/>
             </columns>
         </dataGrid>
         <hbox id="lookupActions" visible="false">
