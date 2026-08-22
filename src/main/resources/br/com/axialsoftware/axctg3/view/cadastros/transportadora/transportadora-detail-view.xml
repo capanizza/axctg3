@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://transportadoraDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="transportadoraDc"
+                  class="br.com.axialsoftware.axctg3.entity.cadastros.Transportadora">
+            <fetchPlan extends="_base"/>
+            <loader id="transportadoraDl"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <vbox id="form" width="100%">
+            <hbox width="100%" expand="nomeField">
+                <integerField id="codigoField"
+                              property="codigo"
+                              dataContainer="transportadoraDc"
+                              width="10%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Transportadora.codigo"/>
+                <textField id="nomeField"
+                           property="nome"
+                           dataContainer="transportadoraDc" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Transportadora.nome"/>
+            </hbox>
+            <hbox width="100%" expand="enderecoField">
+                <textField id="cnpjField"
+                           property="cnpj"
+                           dataContainer="transportadoraDc"
+                           width="20%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Transportadora.cnpj"/>
+                <textField id="enderecoField"
+                           property="endereco"
+                           dataContainer="transportadoraDc" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Transportadora.endereco"/>
+            </hbox>
+            <hbox width="100%" expand="bairroField">
+                <textField id="bairroField"
+                           property="bairro"
+                           dataContainer="transportadoraDc" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Transportadora.bairro"/>
+                <textField id="cidadeField"
+                           property="cidade"
+                           dataContainer="transportadoraDc"
+                           width="25%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Transportadora.cidade"/>
+                <textField id="estadoField"
+                           property="estado"
+                           dataContainer="transportadoraDc"
+                           width="10%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Transportadora.estado"/>
+                <textField id="cepField"
+                           property="cep"
+                           dataContainer="transportadoraDc"
+                           width="15%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Transportadora.cep"/>
+            </hbox>
+        </vbox>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>
