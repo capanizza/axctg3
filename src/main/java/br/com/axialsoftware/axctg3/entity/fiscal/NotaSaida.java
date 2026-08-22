@@ -1,6 +1,12 @@
 package br.com.axialsoftware.axctg3.entity.fiscal;
 
+import br.com.axialsoftware.axctg3.entity.cadastros.CondicaoPagamento;
+import br.com.axialsoftware.axctg3.entity.cadastros.Mensagem;
 import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
+import br.com.axialsoftware.axctg3.entity.cadastros.Transportadora;
+import br.com.axialsoftware.axctg3.entity.cadastros.Vendedor;
+import br.com.axialsoftware.axctg3.entity.financeiro.Banco;
+import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
 import io.jmix.core.DeletePolicy;
 import io.jmix.core.annotation.DeletedBy;
 import io.jmix.core.annotation.DeletedDate;
@@ -36,6 +42,12 @@ import java.util.UUID;
         @Index(name = "IDX_NOTA_SAIDA_DATA_EMISSAO", columnList = "DATA_EMISSAO"),
         @Index(name = "IDX_NOTA_SAIDA_PARCEIRO", columnList = "PARCEIRO_ID"),
         @Index(name = "IDX_NOTA_SAIDA_NATUREZA", columnList = "NATUREZA_ID"),
+        @Index(name = "IDX_NOTA_SAIDA_CONDICAO_PAGAMENTO", columnList = "CONDICAO_PAGAMENTO_ID"),
+        @Index(name = "IDX_NOTA_SAIDA_BANCO", columnList = "BANCO_ID"),
+        @Index(name = "IDX_NOTA_SAIDA_TRANSPORTADORA", columnList = "TRANSPORTADORA_ID"),
+        @Index(name = "IDX_NOTA_SAIDA_VENDEDOR", columnList = "VENDEDOR_ID"),
+        @Index(name = "IDX_NOTA_SAIDA_CLASS_TRIB", columnList = "CLASS_TRIB_ID"),
+        @Index(name = "IDX_NOTA_SAIDA_MENSAGEM", columnList = "MENSAGEM_ID"),
         @Index(name = "IDX_NOTA_SAIDA_UNQ", columnList = "NUMERO, COD_EMPRESA, ESPECIE, SERIE", unique = true)
 })
 @Entity
@@ -110,6 +122,40 @@ public class NotaSaida {
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private NaturezaOperacao natureza;
+
+    @JoinColumn(name = "CONDICAO_PAGAMENTO_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private CondicaoPagamento condicaoPagamento;
+
+    @JoinColumn(name = "BANCO_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Banco banco;
+
+    @JoinColumn(name = "TRANSPORTADORA_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Transportadora transportadora;
+
+    @JoinColumn(name = "VENDEDOR_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Vendedor vendedor;
+
+    // Código de Classificação Tributária (cClassTrib no leiaute NFe/NFCe, grupo
+    // gIBSCBS) — referência real pra ClassTrib, mesmo padrão de
+    // NaturezaOperacao.classTrib/Produto.classTrib. Nullable: a nota pode nascer sem
+    // classificação escolhida e ser completada depois, antes da emissão.
+    @JoinColumn(name = "CLASS_TRIB_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private ClassTrib classTrib;
+
+    @JoinColumn(name = "MENSAGEM_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Mensagem mensagem;
+
+    // mesmo padrão de Lancamento.complementoHistorico: texto livre que complementa a
+    // Mensagem cadastrada, digitado nesta nota específica
+    @Column(name = "COMPLEMENTO_MENSAGEM")
+    @Lob
+    private String complementoMensagem;
 
     @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
     @Column(name = "VALOR", precision = 19, scale = 2)
@@ -325,6 +371,62 @@ public class NotaSaida {
 
     public void setNatureza(@NotNull NaturezaOperacao natureza) {
         this.natureza = natureza;
+    }
+
+    public CondicaoPagamento getCondicaoPagamento() {
+        return condicaoPagamento;
+    }
+
+    public void setCondicaoPagamento(CondicaoPagamento condicaoPagamento) {
+        this.condicaoPagamento = condicaoPagamento;
+    }
+
+    public Banco getBanco() {
+        return banco;
+    }
+
+    public void setBanco(Banco banco) {
+        this.banco = banco;
+    }
+
+    public Transportadora getTransportadora() {
+        return transportadora;
+    }
+
+    public void setTransportadora(Transportadora transportadora) {
+        this.transportadora = transportadora;
+    }
+
+    public Vendedor getVendedor() {
+        return vendedor;
+    }
+
+    public void setVendedor(Vendedor vendedor) {
+        this.vendedor = vendedor;
+    }
+
+    public ClassTrib getClassTrib() {
+        return classTrib;
+    }
+
+    public void setClassTrib(ClassTrib classTrib) {
+        this.classTrib = classTrib;
+    }
+
+    public Mensagem getMensagem() {
+        return mensagem;
+    }
+
+    public void setMensagem(Mensagem mensagem) {
+        this.mensagem = mensagem;
+    }
+
+    public String getComplementoMensagem() {
+        return complementoMensagem;
+    }
+
+    public void setComplementoMensagem(String complementoMensagem) {
+        this.complementoMensagem = complementoMensagem;
     }
 
     public @NotNull Parceiro getParceiro() {

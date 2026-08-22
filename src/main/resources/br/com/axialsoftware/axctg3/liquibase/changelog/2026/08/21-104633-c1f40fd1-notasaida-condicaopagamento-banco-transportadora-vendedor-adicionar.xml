@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/21-104633-c1f40fd1-notasaida-condicaopagamento-banco-transportadora-vendedor-adicionar.xml">
+
+    <changeSet id="1" author="axctg3">
+        <addColumn tableName="NOTA_SAIDA">
+            <column name="CONDICAO_PAGAMENTO_ID" type="UUID"/>
+            <column name="BANCO_ID" type="UUID"/>
+            <column name="TRANSPORTADORA_ID" type="UUID"/>
+            <column name="VENDEDOR_ID" type="UUID"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="2" author="axctg3">
+        <createIndex indexName="IDX_NOTA_SAIDA_CONDICAO_PAGAMENTO" tableName="NOTA_SAIDA">
+            <column name="CONDICAO_PAGAMENTO_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="CONDICAO_PAGAMENTO_ID" baseTableName="NOTA_SAIDA"
+                                 constraintName="FK_NOTA_SAIDA_ON_CONDICAO_PAGAMENTO" referencedColumnNames="ID"
+                                 referencedTableName="CONDICAO_PAGAMENTO"/>
+    </changeSet>
+
+    <changeSet id="3" author="axctg3">
+        <createIndex indexName="IDX_NOTA_SAIDA_BANCO" tableName="NOTA_SAIDA">
+            <column name="BANCO_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="BANCO_ID" baseTableName="NOTA_SAIDA"
+                                 constraintName="FK_NOTA_SAIDA_ON_BANCO" referencedColumnNames="ID"
+                                 referencedTableName="BANCO"/>
+    </changeSet>
+
+    <changeSet id="4" author="axctg3">
+        <createIndex indexName="IDX_NOTA_SAIDA_TRANSPORTADORA" tableName="NOTA_SAIDA">
+            <column name="TRANSPORTADORA_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="TRANSPORTADORA_ID" baseTableName="NOTA_SAIDA"
+                                 constraintName="FK_NOTA_SAIDA_ON_TRANSPORTADORA" referencedColumnNames="ID"
+                                 referencedTableName="TRANSPORTADORA"/>
+    </changeSet>
+
+    <changeSet id="5" author="axctg3">
+        <createIndex indexName="IDX_NOTA_SAIDA_VENDEDOR" tableName="NOTA_SAIDA">
+            <column name="VENDEDOR_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="VENDEDOR_ID" baseTableName="NOTA_SAIDA"
+                                 constraintName="FK_NOTA_SAIDA_ON_VENDEDOR" referencedColumnNames="ID"
+                                 referencedTableName="VENDEDOR"/>
+    </changeSet>
+</databaseChangeLog>

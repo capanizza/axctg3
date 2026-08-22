@@ -217,6 +217,62 @@ aprovado pela SUFRAMA entre jan/2022 e a publicação da lei) — esses mantêm 
 integralmente. Nenhuma mudança de comportamento esperada em `aliqIpi`/`valorIpi`
 antes da virada pra 2027.
 
+### Imposto Seletivo (IS)
+
+Entra em vigor **01/01/2027**, junto com a CBS plena — sem ano de teste separado em
+2026 (diferente de IBS/CBS, que tiveram 2026 como ano de calibração).
+
+**Mas ainda depende de uma lei que não saiu** (situação em 22/08/2026): a LC 214/2025
+dedicou um livro inteiro ao IS, mas remeteu a lista de produtos/serviços tributados e
+as alíquotas específicas pra uma **lei ordinária separada**, ainda não publicada.
+Trava constitucional da **noventena**: essa lei precisa sair até **03/10/2026** pra
+que a cobrança consiga mesmo começar em 01/01/2027 — se atrasar, a cobrança efetiva
+empurra pra depois dessa data. É um prazo concreto a acompanhar.
+
+Escopo: tributo de incidência **restrita** (não é amplo como IBS/CBS) —
+popularmente "imposto do pecado", desestimula consumo/produção de bens nocivos à
+saúde e ao meio ambiente: cigarro, bebida alcoólica, veículos/embarcações/aeronaves
+de alto impacto ambiental, extração de recursos não renováveis, entre outros a
+definir na lei ordinária.
+
+Isto é só o cronograma — a modelagem de dados do IS continua fora do escopo deste
+documento (ver "Fora de escopo desta decisão" no final).
+
+### PIS/Cofins — pergunta em aberto sobre o leiaute pós-extinção (2026-08-22)
+
+PIS e Cofins são extintos em 31/12/2026 (CBS entra em vigor plena em 01/01/2027).
+**Não encontrei confirmação oficial** de como o leiaute da NFe vai tratar o grupo de
+tags PIS/COFINS a partir daí — busquei na NT 2025.002-RTC e em guias técnicos
+derivados, nenhum resolve esse ponto específico. Duas hipóteses:
+
+1. **Grupo continua existindo, com CST/valores zerados** (possivelmente um CST novo
+   indicando "tributo extinto") — é o padrão histórico do leiaute da NFe quando um
+   tributo não incide (mantém o grupo, zera o conteúdo, em vez de omitir a tag). É a
+   hipótese mais provável por precedente, mas não confirmada.
+2. **Grupo passa a ser omitido** do XML a partir de 2027.
+
+Provavelmente só sai uma Nota Técnica específica sobre isso mais perto da virada
+(dez/2026-jan/2027) — o layout do DANFE também ainda não saiu, então não seria
+surpresa esse detalhe demorar igual. **Reconferir antes de codificar qualquer
+comportamento definitivo.**
+
+Na prática, `NfeItem` já está pronto pros dois cenários sem mudança estrutural: os
+campos `cstPis`/`basePis`/`aliqPis`/`valorPis`/`cstCofins`/`baseCofins`/`aliqCofins`/
+`valorCofins` são nullable, sem `@NotNull` — se o grupo continuar vindo zerado, eles
+seguem sendo populados (com zero); se passar a ser omitido, simplesmente deixam de vir
+preenchidos nas importações novas. Não têm como ser removidos da entidade de qualquer
+forma, porque notas históricas (pré-2027, com PIS/Cofins reais) continuam precisando
+deles.
+
+`AliquotaIbsCbs` ganhou os campos `cstPisCofins`/`aliqPis`/`aliqCofins` (todos
+nullable, sem default) só como referência preparatória — mesmo padrão "informativo,
+não lido automaticamente" que já vale pra `aliqIbsUf`/`aliqIbsMun`/`aliqCbs` na
+mesma entidade. `cstPisCofins` é um CST hipotético (não existe na tabela oficial
+hoje); fica null pros anos anteriores a 2027, já que PIS/Cofins ainda vigentes têm
+alíquotas reais por regime que não cabem num "valor único de referência por ano".
+Nenhuma lógica de emissão lê esses campos ainda — só a modelagem. **Mesma ressalva
+acima: reconferir contra a NT oficial antes de usar em emissão real.**
+
 ### Substituição Tributária (ICMS-ST)
 
 Atrelada ao próprio ICMS — **não existe uma "ST" genérica no sistema novo** (a
