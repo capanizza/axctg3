@@ -13,8 +13,7 @@
         <dataLoadCoordinator auto="true"/>
     </facets>
     <actions>
-        <action id="saveCloseAction" type="detail_saveClose"/>
-        <action id="closeAction" type="detail_close"/>
+        <action id="closeAction" type="detail_close" text="msg://nfeItemDetailView.closeAction.text"/>
     </actions>
     <layout>
         <tabSheet id="formTabs" width="100%">
@@ -174,7 +173,6 @@
             </tab>
         </tabSheet>
         <hbox id="detailActions">
-            <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
             <button id="closeButton" action="closeAction" themeNames="small"/>
         </hbox>
     </layout>
