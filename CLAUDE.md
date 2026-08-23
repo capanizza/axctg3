@@ -189,8 +189,17 @@ i18n is **one pair of bundles** for the whole app —
 per-package bundles. Both files must stay key-for-key identical. Keys are
 `<entity.package>/<Entity>.<attr>` and `<view.package>/<viewId>.<element>`.
 
-Themes `axctg3-aura` (active — wired via `@StyleSheet` on `Axctg3Application`) and
-`axctg3-lumo` live in `src/main/resources/META-INF/resources/themes/`.
+Custom CSS for the two themes lives in
+`src/main/resources/META-INF/resources/css/axctg3-aura/` (active — wired via
+`@StyleSheet("context://css/axctg3-aura/styles.css")` on `Axctg3Application`) and
+`css/axctg3-lumo/` (unused today). **Never put this under a `themes/` path** — Vaadin's
+`StaticFileServer` reserves every `/themes/<name>/...` URL for its own frontend
+application-theme / dev-bundle asset resolution (`APP_THEME_ASSETS_PATTERN`), and this
+project's CSS isn't one of those (no `theme.json`, no `frontend/themes/` folder). Serving
+it from `/themes/...` "works" right after a cold `bootRun` but breaks after a Jmix
+hotdeploy re-syncs the dev bundle — `IllegalStateException: Asset '...' is not found in
+project frontend directory...` — and the running page loses the stylesheet, visibly
+wrecking the main view's font sizes and logo sizing until a hard refresh or full restart.
 Never edit `src/main/frontend/generated/` — regenerated every build.
 
 ### Test harness — two flavors, both `@ActiveProfiles("test")`
