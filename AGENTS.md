@@ -200,6 +200,12 @@ it from `/themes/...` "works" right after a cold `bootRun` but breaks after a Jm
 hotdeploy re-syncs the dev bundle — `IllegalStateException: Asset '...' is not found in
 project frontend directory...` — and the running page loses the stylesheet, visibly
 wrecking the main view's font sizes and logo sizing until a hard refresh or full restart.
+Moving it out of `/themes/` has a second-order cost, though: `/themes/**` is hard-coded as
+a public (no-auth) resource in `HandlerHelper.getPublicResources()`, so Jmix's default
+security chain would otherwise demand a session for `/css/**` and the login page — which
+needs the CSS *before* authenticating — would render unstyled. `Axctg3SecurityConfiguration`
+carries a dedicated `SecurityFilterChain` bean permitting `/css/**`; if that custom CSS
+path ever changes, update the `securityMatcher` there too.
 Never edit `src/main/frontend/generated/` — regenerated every build.
 
 ### Test harness — two flavors, both `@ActiveProfiles("test")`

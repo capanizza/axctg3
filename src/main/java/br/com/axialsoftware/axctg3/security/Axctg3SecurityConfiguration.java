@@ -46,4 +46,23 @@ public class Axctg3SecurityConfiguration {
 
         return http.build();
     }
+
+    /**
+     * Libera o CSS custom do projeto (servido de {@code /css/**}, fora do namespace
+     * {@code /themes/**} reservado pelo Vaadin — ver CLAUDE.md) sem autenticação. Sem isso,
+     * o filtro padrão do Jmix exige sessão pra esses arquivos — o próprio {@code /themes/**}
+     * está hard-coded como recurso público em
+     * {@link com.vaadin.flow.server.HandlerHelper#getPublicResources()} — e a tela de login
+     * (que carrega o CSS antes de autenticar) renderiza sem estilo.
+     */
+    @Bean
+    @Order(JmixSecurityFilterChainOrder.CUSTOM)
+    SecurityFilterChain customCssFilterChain(HttpSecurity http) throws Exception {
+        http.securityMatcher("/css/**")
+                .authorizeHttpRequests(authorize ->
+                        authorize.anyRequest().permitAll()
+                );
+
+        return http.build();
+    }
 }
