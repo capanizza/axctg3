@@ -20,13 +20,13 @@
             <tab id="produtoTab" label="Produto">
                 <vbox width="100%">
                     <hbox width="100%" expand="descProdField">
-                        <integerField id="itemField" property="item" dataContainer="nfeItemDc" width="8%" themeNames="small" readOnly="true" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeItem.item"/>
-                        <textField id="codProdField" property="codProd" dataContainer="nfeItemDc" width="16%" themeNames="small" maxLength="60" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeItem.codProd"/>
+                        <integerField id="itemField" property="item" dataContainer="nfeItemDc" width="5%" themeNames="small" readOnly="true" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeItem.item"/>
+                        <textField id="codProdField" property="codProd" dataContainer="nfeItemDc" width="10%" themeNames="small" maxLength="60" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeItem.codProd"/>
                         <textField id="descProdField" property="descProd" dataContainer="nfeItemDc" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeItem.descProd"/>
                         <textField id="codEanField" property="codEan" dataContainer="nfeItemDc" width="12%" themeNames="small" maxLength="14" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeItem.codEan"/>
-                        <textField id="ncmField" property="ncm" dataContainer="nfeItemDc" width="8%" themeNames="small" maxLength="8" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeItem.ncm"/>
+                        <textField id="ncmField" property="ncm" dataContainer="nfeItemDc" width="10%" themeNames="small" maxLength="8" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeItem.ncm"/>
                         <textField id="cestField" property="cest" dataContainer="nfeItemDc" width="8%" themeNames="small" maxLength="7" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeItem.cest"/>
-                        <integerField id="cfopField" property="cfop" dataContainer="nfeItemDc" width="8%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeItem.cfop"/>
+                        <integerField id="cfopField" property="cfop" dataContainer="nfeItemDc" width="6%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeItem.cfop"/>
                     </hbox>
                     <hbox width="100%">
                         <textField id="unComField" property="unCom" dataContainer="nfeItemDc" width="8%" themeNames="small" maxLength="6" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeItem.unCom"/>
@@ -76,7 +76,7 @@
             <tab id="ipiTab" label="IPI">
                 <vbox width="100%">
                     <hbox width="100%">
-                        <textField id="codEnqIpiField" property="codEnqIpi" dataContainer="nfeItemDc" width="10%" themeNames="small" maxLength="3" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeItem.codEnqIpi"/>
+                        <textField id="codEnqIpiField" property="codEnqIpi" dataContainer="nfeItemDc" width="12%" themeNames="small" maxLength="3" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeItem.codEnqIpi"/>
                         <textField id="cstIpiField" property="cstIpi" dataContainer="nfeItemDc" width="10%" themeNames="small" maxLength="2" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeItem.cstIpi"/>
                         <bigDecimalField id="baseIpiField" property="baseIpi" dataContainer="nfeItemDc" width="16%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeItem.baseIpi"/>
                         <bigDecimalField id="aliqIpiField" property="aliqIpi" dataContainer="nfeItemDc" width="14%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeItem.aliqIpi"/>

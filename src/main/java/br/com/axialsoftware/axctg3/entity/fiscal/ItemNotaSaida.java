@@ -12,6 +12,7 @@ import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -174,7 +175,7 @@ public class ItemNotaSaida {
     @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
     @JmixProperty
     public BigDecimal getSubTotal() {
-        return quantidade.multiply(valorUnitario);
+        return quantidade.multiply(valorUnitario).setScale(2, RoundingMode.HALF_UP);
     }
 
     public BigDecimal getPesoBruto() {

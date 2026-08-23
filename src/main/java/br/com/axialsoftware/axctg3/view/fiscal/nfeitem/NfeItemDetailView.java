@@ -9,6 +9,6 @@ import io.jmix.flowui.view.*;
 @ViewController(id = "NfeItem.detail")
 @ViewDescriptor(path = "nfe-item-detail-view.xml")
 @EditedEntityContainer("nfeItemDc")
-@DialogMode(width = "70%")
+@DialogMode(width = "80%")
 public class NfeItemDetailView extends StandardDetailView<NfeItem> {
 }

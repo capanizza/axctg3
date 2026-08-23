@@ -71,21 +71,22 @@
                                            property="especie"
                                            maxLength="4"
                                            dataContainer="notaSaidaDc"
-                                           width="10%" themeNames="small"
+                                           width="8%" themeNames="small"
                                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.especie"/>
                                 <textField id="serieField"
                                            property="serie"
                                            maxLength="2"
                                            dataContainer="notaSaidaDc"
-                                           width="10%" themeNames="small"
+                                           width="5%" themeNames="small"
                                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.serie"/>
                                 <datePicker id="dataSaidaField"
                                             property="dataSaida"
                                             dataContainer="notaSaidaDc"
-                                            width="15%" themeNames="small"
+                                            width="13%" themeNames="small"
                                             label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.dataSaida"/>
                                 <entityPicker id="naturezaField"
                                               property="natureza"
+                                              width="36%"
                                               dataContainer="notaSaidaDc" themeNames="small"
                                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.natureza">
                                     <actions>
@@ -93,12 +94,10 @@
                                         <action id="entityClearAction" type="entity_clear"/>
                                     </actions>
                                 </entityPicker>
-                            </hbox>
-                            <hbox width="100%">
                                 <entityPicker id="classTribField"
                                               property="classTrib"
                                               dataContainer="notaSaidaDc"
-                                              width="40%" themeNames="small"
+                                              width="36%" themeNames="small"
                                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.classTrib">
                                     <actions>
                                         <action id="entityLookupAction" type="entity_lookup"/>
@@ -150,6 +149,67 @@
                             </hbox>
                         </vbox>
                     </tab>
+                    <tab id="complementosTab" label="Complementos">
+                        <vbox width="100%">
+                            <hbox width="100%" expand="complementoMensagemField">
+                                <entityPicker id="mensagemField"
+                                              property="mensagem"
+                                              dataContainer="notaSaidaDc"
+                                              width="40%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.mensagem">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
+                                <textArea id="complementoMensagemField"
+                                          property="complementoMensagem"
+                                          dataContainer="notaSaidaDc"
+                                          height="6.5em" themeNames="small"
+                                          label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.complementoMensagem"/>
+                            </hbox>
+                            <hbox width="100%">
+                                <bigDecimalField id="freteField"
+                                                 property="frete"
+                                                 dataContainer="notaSaidaDc"
+                                                 width="16%" themeNames="small"
+                                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.frete"/>
+                                <bigDecimalField id="seguroField"
+                                                 property="seguro"
+                                                 dataContainer="notaSaidaDc"
+                                                 width="16%" themeNames="small"
+                                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.seguro"/>
+                                <bigDecimalField id="descontoField"
+                                                 property="desconto"
+                                                 dataContainer="notaSaidaDc"
+                                                 width="16%" themeNames="small"
+                                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.desconto"/>
+                                <bigDecimalField id="despesasField"
+                                                 property="despesas"
+                                                 dataContainer="notaSaidaDc"
+                                                 width="16%" themeNames="small"
+                                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.despesas"/>
+                                <bigDecimalField id="pesoLiquidoField"
+                                                 property="pesoLiquido"
+                                                 dataContainer="notaSaidaDc"
+                                                 width="16%" themeNames="small"
+                                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.pesoLiquido"/>
+                                <bigDecimalField id="pesoBrutoField"
+                                                 property="pesoBruto"
+                                                 dataContainer="notaSaidaDc"
+                                                 width="15%" themeNames="small"
+                                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.pesoBruto"/>
+                            </hbox>
+                            <hbox width="100%">
+                                <textField id="chaveField"
+                                           property="chave"
+                                           dataContainer="notaSaidaDc"
+                                           width="50%" themeNames="small"
+                                           readOnly="true"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.chave"/>
+                            </hbox>
+                        </vbox>
+                    </tab>
                     <tab id="itensTab" label="Itens">
                         <vbox width="100%">
                             <hbox id="itensButtonsPanel" classNames="buttons-panel">
@@ -157,7 +217,10 @@
                                 <button id="itemEditButton" action="itensNotaSaidaDataGrid.edit" themeNames="small"/>
                                 <button id="itemRemoveButton" action="itensNotaSaidaDataGrid.remove" themeNames="small"/>
                             </hbox>
-                            <dataGrid id="itensNotaSaidaDataGrid" dataContainer="itensDc" width="100%" minHeight="12em" themeNames="small">
+                            <dataGrid id="itensNotaSaidaDataGrid"
+                                      dataContainer="itensDc"
+                                      width="100%"
+                                      themeNames="small">
                                 <actions>
                                     <action id="create" type="list_create">
                                         <properties>
@@ -226,69 +289,6 @@
                                                  dataContainer="notaSaidaDc"
                                                  width="25%" themeNames="small"
                                                  label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.valorIpi"/>
-                            </hbox>
-                        </vbox>
-                    </tab>
-                    <tab id="complementosTab" label="Complementos">
-                        <vbox width="100%">
-                            <hbox width="100%">
-                                <textField id="chaveField"
-                                           property="chave"
-                                           dataContainer="notaSaidaDc"
-                                           width="40%" themeNames="small"
-                                           readOnly="true"
-                                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.chave"/>
-                            </hbox>
-                            <hbox width="100%" expand="complementoMensagemField">
-                                <entityPicker id="mensagemField"
-                                              property="mensagem"
-                                              dataContainer="notaSaidaDc"
-                                              width="25%" themeNames="small"
-                                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.mensagem">
-                                    <actions>
-                                        <action id="entityLookupAction" type="entity_lookup"/>
-                                        <action id="entityClearAction" type="entity_clear"/>
-                                    </actions>
-                                </entityPicker>
-                                <textArea id="complementoMensagemField"
-                                          property="complementoMensagem"
-                                          dataContainer="notaSaidaDc"
-                                          height="9.5em" themeNames="small"
-                                          label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.complementoMensagem"/>
-                            </hbox>
-                            <hbox width="100%">
-                                <bigDecimalField id="freteField"
-                                                 property="frete"
-                                                 dataContainer="notaSaidaDc"
-                                                 width="25%" themeNames="small"
-                                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.frete"/>
-                                <bigDecimalField id="seguroField"
-                                                 property="seguro"
-                                                 dataContainer="notaSaidaDc"
-                                                 width="25%" themeNames="small"
-                                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.seguro"/>
-                                <bigDecimalField id="descontoField"
-                                                 property="desconto"
-                                                 dataContainer="notaSaidaDc"
-                                                 width="25%" themeNames="small"
-                                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.desconto"/>
-                                <bigDecimalField id="despesasField"
-                                                 property="despesas"
-                                                 dataContainer="notaSaidaDc"
-                                                 width="25%" themeNames="small"
-                                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.despesas"/>
-                            </hbox>
-                            <hbox width="100%">
-                                <bigDecimalField id="pesoLiquidoField"
-                                                 property="pesoLiquido"
-                                                 dataContainer="notaSaidaDc"
-                                                 width="20%" themeNames="small"
-                                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.pesoLiquido"/>
-                                <bigDecimalField id="pesoBrutoField"
-                                                 property="pesoBruto"
-                                                 dataContainer="notaSaidaDc"
-                                                 width="20%" themeNames="small"
-                                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.pesoBruto"/>
                             </hbox>
                         </vbox>
                     </tab>

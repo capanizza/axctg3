@@ -24,7 +24,7 @@
                 <integerField id="itemField"
                               property="item"
                               dataContainer="itemNotaSaidaDc"
-                              width="10%" themeNames="small"
+                              width="5%" themeNames="small"
                               readOnly="true"
                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.item"/>
                 <entityPicker id="produtoField"
@@ -36,116 +36,118 @@
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
                 </entityPicker>
-            </hbox>
-            <hbox width="100%" expand="subTotalField">
-                <bigDecimalField id="quantidadeField"
-                                 property="quantidade"
-                                 dataContainer="itemNotaSaidaDc"
-                                 width="18%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.quantidade"/>
-                <bigDecimalField id="valorUnitarioField"
-                                 property="valorUnitario"
-                                 dataContainer="itemNotaSaidaDc"
-                                 width="18%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.valorUnitario"/>
-                <bigDecimalField id="valorDescontoField"
-                                 property="valorDesconto"
-                                 dataContainer="itemNotaSaidaDc"
-                                 width="18%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.valorDesconto"/>
-                <bigDecimalField id="porcDescontoField"
-                                 property="porcDesconto"
-                                 dataContainer="itemNotaSaidaDc"
-                                 width="18%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.porcDesconto"/>
-                <bigDecimalField id="subTotalField"
-                                 property="subTotal"
-                                 dataContainer="itemNotaSaidaDc" themeNames="small"
-                                 readOnly="true"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.subTotal"/>
-            </hbox>
-            <hbox width="100%" expand="valorStField">
-                <bigDecimalField id="baseIcmsField"
-                                 property="baseIcms"
-                                 dataContainer="itemNotaSaidaDc"
-                                 width="16%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.baseIcms"/>
-                <bigDecimalField id="aliqIcmsField"
-                                 property="aliqIcms"
-                                 dataContainer="itemNotaSaidaDc"
-                                 width="16%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.aliqIcms"/>
-                <bigDecimalField id="valorIcmsField"
-                                 property="valorIcms"
-                                 dataContainer="itemNotaSaidaDc"
-                                 width="16%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.valorIcms"/>
-                <bigDecimalField id="baseStField"
-                                 property="baseSt"
-                                 dataContainer="itemNotaSaidaDc"
-                                 width="16%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.baseSt"/>
-                <bigDecimalField id="valorStField"
-                                 property="valorSt"
-                                 dataContainer="itemNotaSaidaDc" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.valorSt"/>
-            </hbox>
-            <hbox width="100%" expand="seguroField">
-                <bigDecimalField id="baseIpiField"
-                                 property="baseIpi"
-                                 dataContainer="itemNotaSaidaDc"
-                                 width="16%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.baseIpi"/>
-                <bigDecimalField id="aliqIpiField"
-                                 property="aliqIpi"
-                                 dataContainer="itemNotaSaidaDc"
-                                 width="16%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.aliqIpi"/>
-                <bigDecimalField id="valorIpiField"
-                                 property="valorIpi"
-                                 dataContainer="itemNotaSaidaDc"
-                                 width="16%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.valorIpi"/>
-                <bigDecimalField id="freteField"
-                                 property="frete"
-                                 dataContainer="itemNotaSaidaDc"
-                                 width="16%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.frete"/>
-                <bigDecimalField id="seguroField"
-                                 property="seguro"
-                                 dataContainer="itemNotaSaidaDc" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.seguro"/>
-            </hbox>
-            <hbox width="100%" expand="pesoBrutoField">
-                <bigDecimalField id="despesasField"
-                                 property="despesas"
-                                 dataContainer="itemNotaSaidaDc"
-                                 width="14%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.despesas"/>
                 <integerField id="cfopField"
                               property="cfop"
                               dataContainer="itemNotaSaidaDc"
-                              width="14%" themeNames="small"
+                              width="6%" themeNames="small"
                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.cfop"/>
                 <textField id="cstField"
                            property="cst"
                            maxLength="4"
                            dataContainer="itemNotaSaidaDc"
-                           width="14%" themeNames="small"
+                           width="5%" themeNames="small"
                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.cst"/>
                 <integerField id="codClassTribField"
                               property="codClassTrib"
                               dataContainer="itemNotaSaidaDc"
-                              width="16%" themeNames="small"
+                              width="20%" themeNames="small"
                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.codClassTrib"/>
+            </hbox>
+            <hbox width="100%" expand="valorUnitarioField">
+                <bigDecimalField id="quantidadeField"
+                                 property="quantidade"
+                                 dataContainer="itemNotaSaidaDc"
+                                 width="12%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.quantidade"/>
+                <bigDecimalField id="valorUnitarioField"
+                                 property="valorUnitario"
+                                 dataContainer="itemNotaSaidaDc"
+                                 width="16%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.valorUnitario"/>
+                <bigDecimalField id="subTotalField"
+                                 property="subTotal"
+                                 dataContainer="itemNotaSaidaDc" themeNames="small"
+                                 readOnly="true"
+                                 width="12%"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.subTotal"/>
+                <bigDecimalField id="freteField"
+                                 property="frete"
+                                 dataContainer="itemNotaSaidaDc"
+                                 width="12%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.frete"/>
+                <bigDecimalField id="seguroField"
+                                 property="seguro"
+                                 dataContainer="itemNotaSaidaDc" themeNames="small"
+                                 width="12%"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.seguro"/>
+                <bigDecimalField id="valorDescontoField"
+                                 property="valorDesconto"
+                                 dataContainer="itemNotaSaidaDc"
+                                 width="12%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.valorDesconto"/>
+                <bigDecimalField id="porcDescontoField"
+                                 property="porcDesconto"
+                                 dataContainer="itemNotaSaidaDc"
+                                 width="8%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.porcDesconto"/>
+                <bigDecimalField id="despesasField"
+                                 property="despesas"
+                                 dataContainer="itemNotaSaidaDc"
+                                 width="12%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.despesas"/>
+            </hbox>
+            <hbox width="100%">
+                <bigDecimalField id="baseIcmsField"
+                                 property="baseIcms"
+                                 dataContainer="itemNotaSaidaDc"
+                                 width="12%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.baseIcms"/>
+                <bigDecimalField id="aliqIcmsField"
+                                 property="aliqIcms"
+                                 dataContainer="itemNotaSaidaDc"
+                                 width="12%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.aliqIcms"/>
+                <bigDecimalField id="valorIcmsField"
+                                 property="valorIcms"
+                                 dataContainer="itemNotaSaidaDc"
+                                 width="12%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.valorIcms"/>
+                <bigDecimalField id="baseStField"
+                                 property="baseSt"
+                                 dataContainer="itemNotaSaidaDc"
+                                 width="12%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.baseSt"/>
+                <bigDecimalField id="valorStField"
+                                 property="valorSt"
+                                 dataContainer="itemNotaSaidaDc" themeNames="small"
+                                 width="12%"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.valorSt"/>
+                <bigDecimalField id="baseIpiField"
+                                 property="baseIpi"
+                                 dataContainer="itemNotaSaidaDc"
+                                 width="12%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.baseIpi"/>
+                <bigDecimalField id="aliqIpiField"
+                                 property="aliqIpi"
+                                 dataContainer="itemNotaSaidaDc"
+                                 width="12%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.aliqIpi"/>
+                <bigDecimalField id="valorIpiField"
+                                 property="valorIpi"
+                                 dataContainer="itemNotaSaidaDc"
+                                 width="12%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.valorIpi"/>
+            </hbox>
+            <hbox width="100%">
                 <bigDecimalField id="pesoLiquidoField"
                                  property="pesoLiquido"
                                  dataContainer="itemNotaSaidaDc"
-                                 width="14%" themeNames="small"
+                                 width="12%" themeNames="small"
                                  label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.pesoLiquido"/>
                 <bigDecimalField id="pesoBrutoField"
                                  property="pesoBruto"
                                  dataContainer="itemNotaSaidaDc" themeNames="small"
+                                 width="12%"
                                  label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.pesoBruto"/>
             </hbox>
         </vbox>

@@ -9,6 +9,6 @@ import io.jmix.flowui.view.*;
 @ViewController(id = "ItemNotaSaida.detail")
 @ViewDescriptor(path = "item-nota-saida-detail-view.xml")
 @EditedEntityContainer("itemNotaSaidaDc")
-@DialogMode(width = "60%")
+@DialogMode(width = "80%")
 public class ItemNotaSaidaDetailView extends StandardDetailView<ItemNotaSaida> {
 }
