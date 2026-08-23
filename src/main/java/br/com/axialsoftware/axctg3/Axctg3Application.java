@@ -24,7 +24,7 @@ import javax.sql.DataSource;
 @Push
 @StyleSheet(Aura.STYLESHEET)
 @StyleSheet(JmixAura.STYLESHEET)
-@StyleSheet("context://css/axctg3-aura/styles.css")
+@StyleSheet("themes/axctg3-aura/styles.css")
 @PWA(name = "Axctg3", shortName = "Axctg3", offline = false)
 @SpringBootApplication
 public class Axctg3Application implements AppShellConfigurator {
