@@ -58,13 +58,13 @@
                 <textField id="chaveField"
                            property="chave"
                            dataContainer="notaSaidaDc"
-                           width="20%" themeNames="small"
+                           width="30%" themeNames="small"
                            readOnly="true"
                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.chave"/>
                 <checkbox id="canceladaField"
                           property="cancelada"
                           dataContainer="notaSaidaDc"
-                          width="10%"
+                          width="12%"
                           alignSelf="END"
                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.cancelada"/>
             </hbox>
