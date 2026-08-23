@@ -206,6 +206,14 @@ security chain would otherwise demand a session for `/css/**` and the login page
 needs the CSS *before* authenticating — would render unstyled. `Axctg3SecurityConfiguration`
 carries a dedicated `SecurityFilterChain` bean permitting `/css/**`; if that custom CSS
 path ever changes, update the `securityMatcher` there too.
+One residual dev-only quirk after both fixes: hot-deploying a `*-view.xml` from Studio can
+still leave the running tab looking deformed (bigger fonts, native-size logo) even with no
+exception in the log — Studio's hot-deploy pushes the view refresh over the same
+`BrowserLiveReload` websocket Vaadin uses for CSS live-reload, in-place, without an HTTP
+request, and that in-place swap occasionally drops the stylesheet. A plain browser refresh
+(F5) always fixes it — it forces a real GET of `/css/axctg3-aura/styles.css`, which now
+serves correctly. Harmless and dev-only: production has no hot-deploy, so this never
+happens there. Not worth chasing further inside Vaadin/Studio internals.
 Never edit `src/main/frontend/generated/` — regenerated every build.
 
 ### Test harness — two flavors, both `@ActiveProfiles("test")`
