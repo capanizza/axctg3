@@ -22,45 +22,101 @@
         <action id="closeAction" type="detail_close"/>
     </actions>
     <layout>
-        <formLayout id="form" dataContainer="lancamentoDc">
-            <responsiveSteps>
-                <responsiveStep minWidth="0" columns="1"/>
-                <responsiveStep minWidth="40em" columns="2"/>
-            </responsiveSteps>
-            <textField id="numeroField" property="numero"/>
-            <textField id="anoField" property="ano"/>
-            <textField id="mesField" property="mes"/>
-            <textField id="diaField" property="dia"/>
-            <textField id="codEmpresaField" property="codEmpresa"/>
-            <datePicker id="dataLancamentoField" property="dataLancamento"/>
-            <entityPicker id="contaDevedoraField" property="contaDevedora">
-                <actions>
-                    <action id="entityLookupAction" type="entity_lookup"/>
-                    <action id="entityClearAction" type="entity_clear"/>
-                </actions>
-            </entityPicker>
-            <entityPicker id="contaCredoraField" property="contaCredora">
-                <actions>
-                    <action id="entityLookupAction" type="entity_lookup"/>
-                    <action id="entityClearAction" type="entity_clear"/>
-                </actions>
-            </entityPicker>
-            <entityPicker id="centroCustoField" property="centroCusto">
-                <actions>
-                    <action id="entityLookupAction" type="entity_lookup"/>
-                    <action id="entityClearAction" type="entity_clear"/>
-                </actions>
-            </entityPicker>
-            <entityPicker id="historicoContabilField" property="historicoContabil">
-                <actions>
-                    <action id="entityLookupAction" type="entity_lookup"/>
-                    <action id="entityClearAction" type="entity_clear"/>
-                </actions>
-            </entityPicker>
-            <textArea id="complementoHistoricoField" height="9.5em" property="complementoHistorico"/>
-            <textField id="origemField" property="origem"/>
-            <textField id="valorField" property="valor"/>
-        </formLayout>
+        <vbox id="form" width="100%">
+            <hbox width="100%">
+                <integerField id="numeroField"
+                              property="numero"
+                              dataContainer="lancamentoDc"
+                              width="8%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.numero"/>
+                <integerField id="anoField"
+                              property="ano"
+                              dataContainer="lancamentoDc"
+                              width="8%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.ano"/>
+                <integerField id="mesField"
+                              property="mes"
+                              dataContainer="lancamentoDc"
+                              width="8%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.mes"/>
+                <integerField id="diaField"
+                              property="dia"
+                              dataContainer="lancamentoDc"
+                              width="8%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.dia"/>
+                <integerField id="codEmpresaField"
+                              property="codEmpresa"
+                              dataContainer="lancamentoDc"
+                              width="10%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.codEmpresa"/>
+                <datePicker id="dataLancamentoField"
+                            property="dataLancamento"
+                            dataContainer="lancamentoDc"
+                            width="18%" themeNames="small"
+                            label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.dataLancamento"/>
+                <bigDecimalField id="valorField"
+                                 property="valor"
+                                 dataContainer="lancamentoDc"
+                                 width="20%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.valor"/>
+            </hbox>
+            <hbox width="100%">
+                <entityPicker id="contaDevedoraField"
+                              property="contaDevedora"
+                              dataContainer="lancamentoDc"
+                              width="45%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.contaDevedora">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+                <entityPicker id="contaCredoraField"
+                              property="contaCredora"
+                              dataContainer="lancamentoDc"
+                              width="45%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.contaCredora">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+            </hbox>
+            <hbox width="100%">
+                <entityPicker id="centroCustoField"
+                              property="centroCusto"
+                              dataContainer="lancamentoDc"
+                              width="30%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.centroCusto">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+                <entityPicker id="historicoContabilField"
+                              property="historicoContabil"
+                              dataContainer="lancamentoDc"
+                              width="30%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.historicoContabil">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+                <textField id="origemField"
+                           property="origem"
+                           dataContainer="lancamentoDc"
+                           width="15%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.origem"/>
+            </hbox>
+            <hbox width="100%">
+                <textArea id="complementoHistoricoField"
+                          property="complementoHistorico"
+                          dataContainer="lancamentoDc"
+                          height="9.5em" width="100%" themeNames="small"
+                          label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.complementoHistorico"/>
+            </hbox>
+        </vbox>
         <hbox id="detailActions">
             <button id="saveAndCloseButton" action="saveCloseAction"/>
             <button id="closeButton" action="closeAction"/>
