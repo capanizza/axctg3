@@ -80,7 +80,7 @@ public class LancamentoEventListener {
                 lancamentoService.excluirSaldosAnteriores(event);
             } catch (Exception e) {
                 dialogs.createMessageDialog()
-                        .withHeader("Êrro")
+                        .withHeader("Erro")
                         .withText("Não alterou saldos")
                         .open();
             }

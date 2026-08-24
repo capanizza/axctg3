@@ -14,8 +14,6 @@ import io.jmix.data.Sequence;
 import io.jmix.data.Sequences;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -45,8 +43,6 @@ public class LancamentoService {
         this.relatorioService = relatorioService;
         this.sequences = sequences;
     }
-
-    private static final Logger log = LoggerFactory.getLogger(LancamentoService.class);
 
     public LocalDate calcularDataLancamento(Lancamento lancamento, Integer anoContabil, Integer mesContabil) {
         Integer dia;
@@ -130,6 +126,7 @@ public class LancamentoService {
             if (contaAux.getGrau() == 1) {
                 break;
             }
+            String codCtaAtual = contaAux.getCodigo();
             codCtaAcima = contaAux.getCodContaSup().trim();
             try {
                 contaAux = dataManager.load(ContaContabil.class)
@@ -142,7 +139,13 @@ public class LancamentoService {
                         .parameter("codEmpresa", codEmpresa)
                         .one();
             } catch (Exception e) {
-                log.info("Aqui");
+                // Cadeia de contas quebrada: codContaSup não resolve pra nenhuma conta desse
+                // ano/empresa. Sem isso, contaAux nunca mudaria e o while(true) giraria pra
+                // sempre reaplicando o mesmo delta na mesma conta — travando a requisição e
+                // duplicando o saldo a cada volta. Falhar alto em vez de engolir.
+                throw new IllegalStateException(
+                        "Conta contábil %s (empresa %d, ano %d) aponta pra codContaSup=%s, que não existe nesse ano/empresa — cadeia de contas quebrada"
+                                .formatted(codCtaAtual, codEmpresa, anoContabil, codCtaAcima), e);
             }
         }
         return resultado;
