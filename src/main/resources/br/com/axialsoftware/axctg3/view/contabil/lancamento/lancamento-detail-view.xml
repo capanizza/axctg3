@@ -23,13 +23,14 @@
     </actions>
     <layout>
         <vbox id="form" width="100%">
-            <!-- numeroField/anoField/mesField/codEmpresaField/dataLancamentoField: sem
-                 property= de propósito — são @NotNull na entidade mas carimbados pelo
+            <!-- numeroField/anoField/mesField/dataLancamentoField: sem property= de
+                 propósito — são @NotNull na entidade mas carimbados pelo
                  LancamentoEventListener no save, não digitados. Vinculados via
                  property=, o Bean Validation por-componente do Jmix bloquearia o botão
                  salvar com eles em branco antes do listener rodar. LancamentoDetailView
                  sincroniza o valor exibido manualmente (onBeforeShow). Ver
-                 LancamentoDetailViewSalvarTest. -->
+                 LancamentoDetailViewSalvarTest. codEmpresa não aparece na tela — é a
+                 empresa selecionada na sessão, não faz sentido mostrar/editar aqui. -->
             <hbox width="100%">
                 <integerField id="numeroField"
                               readOnly="true"
@@ -48,10 +49,6 @@
                               dataContainer="lancamentoDc"
                               width="8%" themeNames="small"
                               label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.dia"/>
-                <integerField id="codEmpresaField"
-                              readOnly="true"
-                              width="10%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.codEmpresa"/>
                 <datePicker id="dataLancamentoField"
                             readOnly="true"
                             width="18%" themeNames="small"

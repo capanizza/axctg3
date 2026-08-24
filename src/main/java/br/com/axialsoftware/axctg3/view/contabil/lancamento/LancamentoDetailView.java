@@ -27,20 +27,19 @@ public class LancamentoDetailView extends StandardDetailView<Lancamento> {
     @ViewComponent
     private JmixIntegerField mesField;
     @ViewComponent
-    private JmixIntegerField codEmpresaField;
-    @ViewComponent
     private TypedDatePicker<LocalDate> dataLancamentoField;
 
     /**
-     * numero/ano/mes/codEmpresa/dataLancamento são {@code @NotNull} na entidade, mas
-     * carimbados pelo {@code LancamentoEventListener} no save (numero via sequence,
-     * dataLancamento a partir de dia+período contábil) — não digitados pelo usuário.
-     * Se ficassem vinculados via {@code property=} no XML, o Bean Validation
-     * por-componente do Jmix (anexado a todo campo ligado a um atributo
-     * {@code @NotNull}) barraria o botão salvar com esses campos em branco, antes do
-     * listener sequer rodar — por isso ficam desvinculados (só exibição) no XML, e
-     * sincronizados aqui manualmente com o valor real assim que a tela abre (existente:
-     * mostra o que já foi carimbado; nova: fica em branco até salvar).
+     * numero/ano/mes/dataLancamento são {@code @NotNull} na entidade, mas carimbados
+     * pelo {@code LancamentoEventListener} no save (numero via sequence, dataLancamento
+     * a partir de dia+período contábil) — não digitados pelo usuário. Se ficassem
+     * vinculados via {@code property=} no XML, o Bean Validation por-componente do Jmix
+     * (anexado a todo campo ligado a um atributo {@code @NotNull}) barraria o botão
+     * salvar com esses campos em branco, antes do listener sequer rodar — por isso
+     * ficam desvinculados (só exibição) no XML, e sincronizados aqui manualmente com o
+     * valor real assim que a tela abre (existente: mostra o que já foi carimbado; nova:
+     * fica em branco até salvar). codEmpresa não aparece na tela — é a empresa
+     * selecionada na sessão, não faz sentido mostrar/editar aqui.
      */
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
@@ -48,7 +47,6 @@ public class LancamentoDetailView extends StandardDetailView<Lancamento> {
         numeroField.setValue(lancamento.getNumero());
         anoField.setValue(lancamento.getAno());
         mesField.setValue(lancamento.getMes());
-        codEmpresaField.setValue(lancamento.getCodEmpresa());
         dataLancamentoField.setValue(lancamento.getDataLancamento());
     }
 }
