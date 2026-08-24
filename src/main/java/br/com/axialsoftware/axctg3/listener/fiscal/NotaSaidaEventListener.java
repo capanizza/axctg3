@@ -43,7 +43,7 @@ public class NotaSaidaEventListener {
                 notaSaida.setCodEmpresa(utilGeralService.getCodEmpresa());
             }
             if (notaSaida.getNumero() == null) {
-                long numero = sequences.createNextValue(Sequence.withName("nota_saida_seq"));
+                long numero = sequences.createNextValue(Sequence.withName("nota_saida_seq_" + notaSaida.getCodEmpresa()));
                 notaSaida.setNumero(Math.toIntExact(numero));
             }
         }

@@ -37,11 +37,12 @@ public class MovimentoBancoEventListener {
     public void onMovimentoBancoSaving(final EntitySavingEvent<MovimentoBanco> event) {
         if (event.isNewEntity()) {
             MovimentoBanco movimentoBanco = event.getEntity();
-            movimentoBanco.setCodEmpresa(utilGeralService.getCodEmpresa());
+            Integer codEmpresa = utilGeralService.getCodEmpresa();
+            movimentoBanco.setCodEmpresa(codEmpresa);
             if (movimentoBanco.getEntrada() == null) {
                 movimentoBanco.setEntrada(false);
             }
-            long numero = sequences.createNextValue(Sequence.withName("movimento_banco_seq"));
+            long numero = sequences.createNextValue(Sequence.withName("movimento_banco_seq_" + codEmpresa));
             movimentoBanco.setLancamento(Math.toIntExact(numero));
         }
     }

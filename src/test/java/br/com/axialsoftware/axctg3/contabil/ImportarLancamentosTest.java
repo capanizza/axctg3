@@ -124,7 +124,7 @@ public class ImportarLancamentosTest {
     void test_sequenciaReposicionadaNaFaixaImportada() {
         lancamentoService.ajustarSequenciaLancamento(57);
 
-        String nomeSequencia = "lancamento_seq_" + String.format("%4d%02d", ANO, MES);
+        String nomeSequencia = "lancamento_seq_" + COD_EMPRESA + "_" + String.format("%4d%02d", ANO, MES);
         long proximo = sequences.createNextValue(Sequence.withName(nomeSequencia));
 
         // O SQL de reposicionamento depende do store: no PostgreSQL (dev/produção) é

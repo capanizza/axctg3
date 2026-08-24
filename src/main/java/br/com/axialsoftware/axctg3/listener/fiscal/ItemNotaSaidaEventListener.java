@@ -5,6 +5,7 @@ import br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
+import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import io.jmix.core.event.EntitySavingEvent;
 import io.jmix.data.Sequence;
 import io.jmix.data.Sequences;
@@ -21,9 +22,11 @@ public class ItemNotaSaidaEventListener {
     private static final int CST_TRIBUTACAO_INTEGRAL = 0;
 
     private final Sequences sequences;
+    private final UtilGeralService utilGeralService;
 
-    public ItemNotaSaidaEventListener(Sequences sequences) {
+    public ItemNotaSaidaEventListener(Sequences sequences, UtilGeralService utilGeralService) {
         this.sequences = sequences;
+        this.utilGeralService = utilGeralService;
     }
 
     @EventListener
@@ -31,7 +34,8 @@ public class ItemNotaSaidaEventListener {
         if (event.isNewEntity()) {
             ItemNotaSaida itemNotaSaida = event.getEntity();
             if (itemNotaSaida.getItem() == null) {
-                long item = sequences.createNextValue(Sequence.withName("item_nota_saida_seq"));
+                Integer codEmpresa = utilGeralService.getCodEmpresa();
+                long item = sequences.createNextValue(Sequence.withName("item_nota_saida_seq_" + codEmpresa));
                 itemNotaSaida.setItem(Math.toIntExact(item));
             }
             NotaSaida notaSaida = itemNotaSaida.getNotaSaida();

@@ -46,7 +46,7 @@ public class LancamentoEventListener {
             lancamento.setDia(dataLancamento.getDayOfMonth());
             lancamento.setDataLancamento(dataLancamento);
             if (lancamento.getNumero() == null) {
-                String st = "lancamento_seq_" + String.format("%4d%02d", anoContabil, mesContabil);
+                String st = "lancamento_seq_" + codEmpresa + "_" + String.format("%4d%02d", anoContabil, mesContabil);
                 long numero = sequences.createNextValue(Sequence.withName(st));
                 lancamento.setNumero((int) numero);
             }

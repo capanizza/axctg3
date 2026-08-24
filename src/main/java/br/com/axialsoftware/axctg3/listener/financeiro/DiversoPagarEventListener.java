@@ -42,8 +42,9 @@ public class DiversoPagarEventListener {
     public void onDiversoPagarSaving(final EntitySavingEvent<DiversoPagar> event) {
         if (event.isNewEntity()) {
             DiversoPagar diversoPagar = event.getEntity();
-            diversoPagar.setCodEmpresa(utilGeralService.getCodEmpresa());
-            long numero = sequences.createNextValue(Sequence.withName("diverso_pagar_seq"));
+            Integer codEmpresa = utilGeralService.getCodEmpresa();
+            diversoPagar.setCodEmpresa(codEmpresa);
+            long numero = sequences.createNextValue(Sequence.withName("diverso_pagar_seq_" + codEmpresa));
             diversoPagar.setNumero(Math.toIntExact(numero));
         }
     }

@@ -43,9 +43,10 @@ public class TituloPagarEventListener {
     public void onTituloPagarSaving(final EntitySavingEvent<TituloPagar> event) {
         if (event.isNewEntity()) {
             TituloPagar tituloPagar = event.getEntity();
-            tituloPagar.setCodEmpresa(utilGeralService.getCodEmpresa());
+            Integer codEmpresa = utilGeralService.getCodEmpresa();
+            tituloPagar.setCodEmpresa(codEmpresa);
             if (tituloPagar.getNumero() == null) {
-                long numero = sequences.createNextValue(Sequence.withName("titulo_pagar_seq"));
+                long numero = sequences.createNextValue(Sequence.withName("titulo_pagar_seq_" + codEmpresa));
                 tituloPagar.setNumero(Math.toIntExact(numero));
             }
         }

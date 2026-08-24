@@ -518,9 +518,10 @@ public class LancamentoService {
      * receba um número já usado pelos importados.
      */
     public void ajustarSequenciaLancamento(int ultimoNumero) {
+        Integer codEmpresa = utilGeralService.getCodEmpresa();
         int ano = utilGeralService.getAnoContabil();
         int mes = utilGeralService.getMesContabil();
-        String st = "lancamento_seq_" + String.format("%4d%02d", ano, mes);
+        String st = "lancamento_seq_" + codEmpresa + "_" + String.format("%4d%02d", ano, mes);
         sequences.setCurrentValue(Sequence.withName(st), ultimoNumero);
     }
 
