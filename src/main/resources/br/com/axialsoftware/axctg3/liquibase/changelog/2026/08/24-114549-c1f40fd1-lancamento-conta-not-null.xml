@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/24-114549-c1f40fd1-lancamento-conta-not-null.xml">
+    <!-- CONTA_DEVEDORA_ID/CONTA_CREDORA_ID nunca deveriam aceitar null — um lançamento
+         sem uma das duas contas quebra LancamentoService.atualizarSaldosGrupo com NPE
+         (bug real encontrado em 2026-08-24: a transação reverte, mas a sequence de
+         numero já foi consumida, por isso "pulou" um número). Nenhuma linha existente
+         tem essas colunas nulas (conferido no Postgres de dev antes de escrever este
+         changeset), então a constraint é segura de aplicar direto. -->
+    <changeSet id="1" author="axctg3">
+        <addNotNullConstraint tableName="LANCAMENTO" columnName="CONTA_DEVEDORA_ID" columnDataType="UUID"/>
+    </changeSet>
+    <changeSet id="2" author="axctg3">
+        <addNotNullConstraint tableName="LANCAMENTO" columnName="CONTA_CREDORA_ID" columnDataType="UUID"/>
+    </changeSet>
+</databaseChangeLog>

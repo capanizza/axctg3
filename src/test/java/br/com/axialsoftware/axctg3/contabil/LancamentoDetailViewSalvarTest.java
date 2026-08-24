@@ -118,6 +118,47 @@ class LancamentoDetailViewSalvarTest {
         assertThat(salvo.getDataLancamento()).isNotNull();
     }
 
+    /**
+     * Regressão do bug real de 2026-08-24: contaDevedora/contaCredora não eram
+     * {@code @NotNull}, então salvar sem escolher uma das duas passava pela validação
+     * da UI e só quebrava depois, dentro de
+     * {@code LancamentoService.atualizarSaldosGrupo} (NPE em {@code contaAux}), com a
+     * numeração já consumida da sequence (que não é transacional, então "pula" um
+     * número mesmo com o save revertido). Com {@code @NotNull} na entidade, o Jmix
+     * bloqueia a validação da UI antes de sequer chamar o listener — sem NPE, sem
+     * número desperdiçado.
+     */
+    @Test
+    void salvarSemContaDevedoraNaoQuebraComNPE() {
+        viewNavigators.detailView(UiTestUtils.getCurrentView(), Lancamento.class)
+                .newEntity()
+                .withViewClass(LancamentoDetailView.class)
+                .navigate();
+        LancamentoDetailView view = UiTestUtils.getCurrentView();
+
+        // contaDevedoraField fica sem valor de propósito — só contaCredora/valor/dia
+        EntityPicker<ContaContabil> contaCredoraField = UiTestUtils.getComponent(view, "contaCredoraField");
+        contaCredoraField.setValue(credora);
+        JmixBigDecimalField valorField = UiTestUtils.getComponent(view, "valorField");
+        valorField.setValue(new BigDecimal("77.00"));
+        JmixIntegerField diaField = UiTestUtils.getComponent(view, "diaField");
+        diaField.setValue(15);
+
+        JmixButton saveAndCloseButton = UiTestUtils.getComponent(view, "saveAndCloseButton");
+        saveAndCloseButton.click();
+
+        // a validação barra o save (mensagem "campo obrigatório"), sem NPE e sem
+        // navegar embora — continua na mesma tela
+        Object currentView = UiTestUtils.getCurrentView();
+        assertThat(currentView).isInstanceOf(LancamentoDetailView.class);
+
+        List<Lancamento> salvos = dataManager.load(Lancamento.class)
+                .query("select e from Lancamento e where e.codEmpresa = :codEmpresa")
+                .parameter("codEmpresa", COD_EMPRESA)
+                .list();
+        assertThat(salvos).isEmpty();
+    }
+
     private ContaContabil criarConta(String codigo, String nome) {
         ContaContabil conta = dataManager.create(ContaContabil.class);
         conta.setCodigo(codigo);

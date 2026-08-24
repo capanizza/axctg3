@@ -93,12 +93,14 @@ public class Lancamento {
     @NotNull
     private LocalDate dataLancamento;
 
-    @JoinColumn(name = "CONTA_DEVEDORA_ID")
+    @JoinColumn(name = "CONTA_DEVEDORA_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull
     private ContaContabil contaDevedora;
 
-    @JoinColumn(name = "CONTA_CREDORA_ID")
+    @JoinColumn(name = "CONTA_CREDORA_ID", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull
     private ContaContabil contaCredora;
 
     @JoinColumn(name = "CENTRO_CUSTO_ID")
