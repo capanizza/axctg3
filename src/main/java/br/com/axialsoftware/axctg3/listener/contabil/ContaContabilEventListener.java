@@ -26,7 +26,7 @@ public class ContaContabilEventListener {
     @EventListener
     public void onContaContabilSaving(final EntitySavingEvent<ContaContabil> event) {
         if (event.isNewEntity()) {
-            ContaContabil contaContabil = (ContaContabil) event.getEntity();
+            ContaContabil contaContabil = event.getEntity();
             contaContabil.setCodEmpresa(utilGeralService.getCodEmpresa());
         }
     }

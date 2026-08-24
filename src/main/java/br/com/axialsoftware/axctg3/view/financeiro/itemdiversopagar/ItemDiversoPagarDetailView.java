@@ -48,7 +48,7 @@ public class ItemDiversoPagarDetailView extends StandardDetailView<ItemDiversoPa
     private void historicoFinanceiroFieldValidator(final HistoricoFinanceiro value) {
         if (!value.getBaixa()) {
             dialogs.createOptionDialog()
-                    .withHeader("Êrro na baixa")
+                    .withHeader("Erro na baixa")
                     .withText("Histórico não é de baixa")
                     .withActions(new DialogAction(DialogAction.Type.OK))
                     .open();
@@ -73,7 +73,7 @@ public class ItemDiversoPagarDetailView extends StandardDetailView<ItemDiversoPa
         HistoricoFinanceiro historicoFinanceiro = itemDiversoPagar.getHistoricoFinanceiro();
         if (historicoFinanceiro.getBaixa() && itemDiversoPagar.getBanco() == null) {
             dialogs.createOptionDialog()
-                    .withHeader("Êrro na baixa")
+                    .withHeader("Erro na baixa")
                     .withText("Indicar banco da baixa")
                     .withActions(new DialogAction(DialogAction.Type.OK))
                     .open();

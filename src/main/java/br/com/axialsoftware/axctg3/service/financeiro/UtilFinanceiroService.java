@@ -47,7 +47,7 @@ public class UtilFinanceiroService {
     public void verificarBaixa(BigDecimal valor, BigDecimal valorAberto, HistoricoFinanceiro hist, BigDecimal valorTitulo, BigDecimal valorBaixado) {
         if (valor.compareTo(valorAberto) > 0) {
             dialogs.createOptionDialog()
-                    .withHeader("Êrro na baixa")
+                    .withHeader("Erro na baixa")
                     .withText("Valor da baixa maior que valor do título")
                     .withActions(new DialogAction(DialogAction.Type.OK))
                     .open();
@@ -57,7 +57,7 @@ public class UtilFinanceiroService {
         if (valor.compareTo(valorTitulo) < 0) {
             if (!parcial) {
                 dialogs.createOptionDialog()
-                        .withHeader("Êrro na baixa")
+                        .withHeader("Erro na baixa")
                         .withText("Valor da baixa menor que valor do título, use baixa parcial")
                         .withActions(new DialogAction(DialogAction.Type.OK))
                         .open();
@@ -65,7 +65,7 @@ public class UtilFinanceiroService {
             }
             if (valorBaixado.add(valor).compareTo(valorTitulo) > 0) {
                 dialogs.createOptionDialog()
-                        .withHeader("Êrro na baixa")
+                        .withHeader("Erro na baixa")
                         .withText("Valor da baixa + valor baixado maior que valor do título")
                         .withActions(new DialogAction(DialogAction.Type.OK))
                         .open();
@@ -74,7 +74,7 @@ public class UtilFinanceiroService {
         }
         if (parcial && valor.compareTo(valorTitulo) == 0) {
             dialogs.createOptionDialog()
-                    .withHeader("Êrro na baixa")
+                    .withHeader("Erro na baixa")
                     .withText("Use baixa total")
                     .withActions(new DialogAction(DialogAction.Type.OK))
                     .open();

@@ -49,7 +49,7 @@ public class ItemReceberDetailView extends StandardDetailView<ItemReceber> {
     private void historicoFinanceiroFieldValidator(final HistoricoFinanceiro value) {
         if (!value.getBaixa()) {
             dialogs.createOptionDialog()
-                    .withHeader("Êrro na baixa")
+                    .withHeader("Erro na baixa")
                     .withText("Histórico não é de baixa")
                     .withActions(new DialogAction(DialogAction.Type.OK))
                     .open();
