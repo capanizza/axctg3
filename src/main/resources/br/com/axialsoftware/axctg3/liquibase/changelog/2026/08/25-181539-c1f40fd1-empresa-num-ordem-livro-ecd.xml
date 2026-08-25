@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/25-181539-c1f40fd1-empresa-num-ordem-livro-ecd.xml">
+    <!--
+        Número de ordem do livro digital (Registro I030.NUM_ORD do Sped ECD) — não é uma
+        Sequence do Jmix, ver comentário em Empresa.numOrdemLivroEcd. Nullable: o contador
+        preenche na mão antes de gerar o primeiro Sped ECD da empresa.
+    -->
+    <changeSet id="1" author="axctg3">
+        <addColumn tableName="EMPRESA">
+            <column name="NUM_ORDEM_LIVRO_ECD" type="INT"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

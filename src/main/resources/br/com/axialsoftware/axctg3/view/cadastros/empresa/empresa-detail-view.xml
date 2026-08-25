@@ -213,6 +213,11 @@
                                         dataContainer="empresaDc"
                                         width="25%" themeNames="small"
                                         label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.codPlanRef"/>
+                                <integerField id="numOrdemLivroEcdField"
+                                              property="numOrdemLivroEcd"
+                                              dataContainer="empresaDc"
+                                              width="25%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.numOrdemLivroEcd"/>
                             </hbox>
                         </vbox>
                     </tab>

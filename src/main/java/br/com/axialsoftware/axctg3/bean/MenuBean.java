@@ -9,6 +9,7 @@ import br.com.axialsoftware.axctg3.service.contabil.ContaContabilService;
 import br.com.axialsoftware.axctg3.service.contabil.DepreciacaoService;
 import br.com.axialsoftware.axctg3.service.contabil.EncerramentoService;
 import br.com.axialsoftware.axctg3.service.contabil.LancamentoService;
+import br.com.axialsoftware.axctg3.service.contabil.SpedEcdService;
 import br.com.axialsoftware.axctg3.service.financeiro.DiversoPagarService;
 import br.com.axialsoftware.axctg3.service.financeiro.ItemDiversoPagarService;
 import br.com.axialsoftware.axctg3.service.financeiro.ItemPagarService;
@@ -25,6 +26,8 @@ import io.jmix.flowui.app.inputdialog.DialogOutcome;
 import io.jmix.flowui.backgroundtask.BackgroundTask;
 import io.jmix.flowui.backgroundtask.TaskLifeCycle;
 import io.jmix.flowui.component.UiComponentUtils;
+import io.jmix.flowui.download.DownloadFormat;
+import io.jmix.flowui.download.Downloader;
 import io.jmix.flowui.view.View;
 import org.springframework.stereotype.Component;
 
@@ -58,8 +61,10 @@ public class MenuBean {
     private final TituloPagarService tituloPagarService;
     private final ItemPagarService itemPagarService;
     private final MovimentoBancoService movimentoBancoService;
+    private final SpedEcdService spedEcdService;
+    private final Downloader downloader;
 
-    public MenuBean(UtilGeralService utilGeralService, Dialogs dialogs, ContaContabilService contaContabilService, DataManager dataManager, LancamentoService lancamentoService, DepreciacaoService depreciacaoService, EncerramentoService encerramentoService, DiversoPagarService diversoPagarService, ItemDiversoPagarService itemDiversoPagarService, TituloReceberService tituloReceberService, ItemReceberService itemReceberService, TituloPagarService tituloPagarService, ItemPagarService itemPagarService, MovimentoBancoService movimentoBancoService) {
+    public MenuBean(UtilGeralService utilGeralService, Dialogs dialogs, ContaContabilService contaContabilService, DataManager dataManager, LancamentoService lancamentoService, DepreciacaoService depreciacaoService, EncerramentoService encerramentoService, DiversoPagarService diversoPagarService, ItemDiversoPagarService itemDiversoPagarService, TituloReceberService tituloReceberService, ItemReceberService itemReceberService, TituloPagarService tituloPagarService, ItemPagarService itemPagarService, MovimentoBancoService movimentoBancoService, SpedEcdService spedEcdService, Downloader downloader) {
         this.utilGeralService = utilGeralService;
         this.dialogs = dialogs;
         this.contaContabilService = contaContabilService;
@@ -74,6 +79,8 @@ public class MenuBean {
         this.tituloPagarService = tituloPagarService;
         this.itemPagarService = itemPagarService;
         this.movimentoBancoService = movimentoBancoService;
+        this.spedEcdService = spedEcdService;
+        this.downloader = downloader;
     }
 
     public void listarLancamentos() {
@@ -819,6 +826,33 @@ public class MenuBean {
                                         .open()),
                         new DialogAction(DialogAction.Type.NO)
                 )
+                .open();
+    }
+
+    /**
+     * Gera o arquivo texto do Sped ECD (Bloco 0 + Bloco I, leiaute 9) pro ano-calendário
+     * escolhido e oferece pra download — ver {@link SpedEcdService}. Não valida, assina
+     * nem transmite nada: isso é feito pelo usuário no PVA oficial do Sped Contábil.
+     */
+    public void gerarSpedEcd() {
+        View<?> ownerView = UiComponentUtils.getCurrentView();
+        dialogs.createInputDialog(ownerView)
+                .withHeader("Sped ECD")
+                .withParameters(
+                        intParameter("ano")
+                                .withLabel("Ano")
+                                .withDefaultValue(utilGeralService.getAnoContabil())
+                                .withRequired(true)
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withCloseListener(closeEvent -> {
+                    if (!closeEvent.closedWith(DialogOutcome.OK)) {
+                        return;
+                    }
+                    Integer ano = closeEvent.getValue("ano");
+                    byte[] arquivo = spedEcdService.gerarArquivo(utilGeralService.getCodEmpresa(), ano);
+                    downloader.download(arquivo, "ECD_" + ano + ".txt", DownloadFormat.TEXT);
+                })
                 .open();
     }
 
