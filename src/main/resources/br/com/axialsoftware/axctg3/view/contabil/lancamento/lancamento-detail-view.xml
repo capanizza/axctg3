@@ -44,15 +44,15 @@
                               readOnly="true"
                               width="8%" themeNames="small"
                               label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.mes"/>
+                <datePicker id="dataLancamentoField"
+                            readOnly="true"
+                            width="18%" themeNames="small"
+                            label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.dataLancamento"/>
                 <integerField id="diaField"
                               property="dia"
                               dataContainer="lancamentoDc"
                               width="8%" themeNames="small"
                               label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.dia"/>
-                <datePicker id="dataLancamentoField"
-                            readOnly="true"
-                            width="18%" themeNames="small"
-                            label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.dataLancamento"/>
                 <bigDecimalField id="valorField"
                                  property="valor"
                                  dataContainer="lancamentoDc"
