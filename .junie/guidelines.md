@@ -114,11 +114,15 @@ The pipeline:
 4. The service builds a `List<XxxDto>` and hands it to
    `RelatorioService.emitirRelatorio(...)` as a `JRBeanCollectionDataSource`.
 
-`RelatorioService` resolves templates from `<user.dir>/relatorios/*.jasper` — **on disk,
-not on the classpath**, with the file name passed in full (`"Balancete.jasper"`). A report
-added to `relatorios/` needs no build step, but the process working directory must be the
-project root. The filled report goes to the browser through the Jmix `Downloader` as
-`DownloadFormat.PDF` — nothing is written to disk.
+`RelatorioService` resolves templates from the classpath, at `/relatorios/<file>.jasper`,
+with the file name passed in full (`"Balancete.jasper"`) — **packaged inside the jar**,
+not read off disk at runtime. The Jaspersoft Studio workspace at `<project-root>/relatorios/`
+(`.jrxml` sources plus their compiled `.jasper`) stays outside `src/main/resources`;
+`build.gradle`'s `processResources` copies just the `*.jasper` files from there into the
+jar's classpath root on every build. A template edited in Jaspersoft Studio needs a rebuild
+(`compileJava`/`bootRun`/packaging) before the change is picked up — unlike the old on-disk
+lookup, there is no live-edit path anymore. The filled report goes to the browser through
+the Jmix `Downloader` as `DownloadFormat.PDF` — nothing is written to disk.
 
 `emitirRelatorio` swallows every exception into `log.info(e.getMessage())`, so a missing
 template or a bean/field mismatch produces **no error in the UI** — just no download.

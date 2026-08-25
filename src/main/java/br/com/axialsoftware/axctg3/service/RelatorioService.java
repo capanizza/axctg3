@@ -11,8 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.HashMap;
@@ -29,11 +28,9 @@ public class RelatorioService {
                                 JRDataSource dataSource,
                                 HashMap<String, Object> parametros,
                                 String nomeSaida) {
-        final String path = System.getProperty("user.dir").replace('\\','/');
-        File file = new File(path + "/relatorios/" + nomeRelatorio);
-        try {
+        try (InputStream is = abrirTemplate(nomeRelatorio)) {
             JasperPrint jasperPrint = JasperFillManager.fillReport(
-                    new FileInputStream(file),
+                    is,
                     parametros,
                     dataSource);
 
@@ -48,14 +45,11 @@ public class RelatorioService {
     public void emitirRelatorio2(String nomeRelatorio,
                                  HashMap<String, Object> parametros,
                                  String nomeSaida) {
-        final String path = System.getProperty("user.dir").replace('\\','/');
-        File file = new File(path + "/relatorios/" + nomeRelatorio);
-
         String conexao = "jdbc:postgresql://localhost:5432/axialdb";
-        try {
+        try (InputStream is = abrirTemplate(nomeRelatorio)) {
             Connection connection = DriverManager.getConnection(conexao, "postgres", "root");
             JasperPrint jasperPrint = JasperFillManager.fillReport(
-                    new FileInputStream(file),
+                    is,
                     parametros,
                     connection);
 
@@ -64,6 +58,19 @@ public class RelatorioService {
         } catch (Exception e) {
             log.info(e.getMessage());
         }
+    }
+
+    /**
+     * Templates .jasper são empacotados dentro do jar (ver processResources em
+     * build.gradle, que copia relatorios/*.jasper do workspace do Jaspersoft Studio
+     * pra raiz do classpath) — não são mais lidos do disco em tempo de execução.
+     */
+    private InputStream abrirTemplate(String nomeRelatorio) {
+        InputStream is = getClass().getResourceAsStream("/relatorios/" + nomeRelatorio);
+        if (is == null) {
+            throw new IllegalStateException("Template de relatório não encontrado no classpath: relatorios/" + nomeRelatorio);
+        }
+        return is;
     }
 
 }

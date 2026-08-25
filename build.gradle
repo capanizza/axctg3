@@ -61,6 +61,17 @@ test {
     useJUnitPlatform()
 }
 
+// Empacota os relatórios compilados (.jasper) dentro do jar, na raiz do classpath
+// (relatorios/*.jasper), a partir do workspace do Jaspersoft Studio em /relatorios.
+// Só os .jasper entram — .jrxml/.classpath/.project/.settings continuam fora do jar.
+// Ver RelatorioService, que carrega os templates via classpath, não mais do disco.
+tasks.named('processResources') {
+    from('relatorios') {
+        include '*.jasper'
+        into 'relatorios'
+    }
+}
+
 idea {
     module {
         excludeDirs.addAll(files '.jmix', 'node_modules', 'src/main/frontend/generated/', 'src/main/bundles')
