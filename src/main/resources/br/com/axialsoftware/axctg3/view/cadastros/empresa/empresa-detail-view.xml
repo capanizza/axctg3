@@ -114,11 +114,11 @@
                                            label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.cep"/>
                             </hbox>
                             <hbox width="100%">
-                                <textField id="logoField"
-                                           property="logo"
-                                           dataContainer="empresaDc"
-                                           width="40%" themeNames="small"
-                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.logo"/>
+                                <fileStorageUploadField id="logoField"
+                                                         property="logo"
+                                                         dataContainer="empresaDc"
+                                                         width="40%" themeNames="small"
+                                                         label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.logo"/>
                             </hbox>
                         </vbox>
                     </tab>

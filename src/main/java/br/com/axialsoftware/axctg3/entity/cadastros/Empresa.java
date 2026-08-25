@@ -286,8 +286,12 @@ public class Empresa {
     @Column(name = "SELECIONADA")
     private Boolean selecionada = false;
 
-    @Column(name = "LOGO", length = 255)
-    private String logo;
+    // FileRef (io.jmix.core.FileRef, serializado como String pelo Jmix) — mesmo padrão de
+    // certificadoArquivo abaixo. Era um caminho de texto solto até 2026-08-25 (ver
+    // changelog 25-...-empresa-logo-fileref); dados antigos não são FileRefs válidos e
+    // foram zerados na migração — cada empresa precisa reenviar o logo pela tela.
+    @Column(name = "LOGO")
+    private FileRef logo;
 
     // Código de Regime Tributário (CRT do leiaute NFe) — decide se a emissão própria usa
     // CST (regime normal) ou CSOSN (Simples) no bloco de ICMS de cada item. Nullable:
@@ -345,11 +349,11 @@ public class Empresa {
         this.crt = crt == null ? null : crt.getId();
     }
 
-    public String getLogo() {
+    public FileRef getLogo() {
         return logo;
     }
 
-    public void setLogo(String logo) {
+    public void setLogo(FileRef logo) {
         this.logo = logo;
     }
 

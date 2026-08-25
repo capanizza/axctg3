@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/25-132816-c1f40fd1-empresa-logo-fileref.xml">
+    <!--
+        Empresa.logo passa de caminho de texto solto (VARCHAR(255), preenchido à mão em
+        cada instalação) pra FileRef (io.jmix.core.FileRef, serializado como String pelo
+        Jmix) — mesmo padrão de CERTIFICADO_ARQUIVO (17-104423). Um caminho de disco antigo
+        não é um FileRef válido, então a coluna é dropada e recriada em vez de só alterar o
+        tipo: não existe conversão automática possível (o arquivo apontado pelo caminho
+        antigo não está no storage do Jmix). Cada empresa precisa reenviar o logo pela tela
+        (aba Endereço) depois desta migração.
+    -->
+    <changeSet id="1" author="axctg3">
+        <dropColumn tableName="EMPRESA" columnName="LOGO"/>
+        <addColumn tableName="EMPRESA">
+            <column name="LOGO" type="VARCHAR(1000)"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

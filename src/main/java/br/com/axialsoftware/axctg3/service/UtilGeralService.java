@@ -4,10 +4,20 @@ import br.com.axialsoftware.axctg3.entity.User;
 import br.com.axialsoftware.axctg3.entity.cadastros.ConfigRel;
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import io.jmix.core.DataManager;
+import io.jmix.core.FileRef;
+import io.jmix.core.FileStorage;
 import io.jmix.core.security.CurrentAuthentication;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -17,12 +27,16 @@ import java.util.*;
 @Component
 public class UtilGeralService {
 
+    private static final Logger log = LoggerFactory.getLogger(UtilGeralService.class);
+
     private final CurrentAuthentication currentAuthentication;
     private final DataManager dataManager;
+    private final FileStorage fileStorage;
 
-    public UtilGeralService(CurrentAuthentication currentAuthentication, DataManager dataManager) {
+    public UtilGeralService(CurrentAuthentication currentAuthentication, DataManager dataManager, FileStorage fileStorage) {
         this.currentAuthentication = currentAuthentication;
         this.dataManager = dataManager;
+        this.fileStorage = fileStorage;
     }
 
     public Integer getCodEmpresa() {
@@ -80,8 +94,36 @@ public class UtilGeralService {
         return getEmpresa().getNome();
     }
 
+    /**
+     * Caminho no disco pro logo da empresa atual, pronto pra virar o parâmetro LOGO dos
+     * relatórios Jasper (imageExpression $P{LOGO} espera um caminho String, não mudou nos
+     * .jrxml). Empresa.logo é FileRef (jmix-localfs); aqui materializamos o conteúdo num
+     * arquivo temporário estável por empresa — reescrito a cada chamada (o logo é pequeno
+     * e troca raramente), sem crescimento de disco porque o nome é sempre o mesmo por
+     * codEmpresa. Retorna null se a empresa não tem logo configurado ou se a leitura falhar.
+     */
     public String getLogoEmpresa() {
-        return getEmpresa().getLogo();
+        Empresa empresa = getEmpresa();
+        FileRef logoFileRef = empresa.getLogo();
+        if (logoFileRef == null) {
+            return null;
+        }
+        try {
+            String extensao = "";
+            int pontoIdx = logoFileRef.getFileName().lastIndexOf('.');
+            if (pontoIdx >= 0) {
+                extensao = logoFileRef.getFileName().substring(pontoIdx);
+            }
+            Path destino = Paths.get(System.getProperty("java.io.tmpdir"),
+                    "axctg3-logo-" + empresa.getCodigo() + extensao);
+            try (InputStream is = fileStorage.openStream(logoFileRef)) {
+                Files.copy(is, destino, StandardCopyOption.REPLACE_EXISTING);
+            }
+            return destino.toAbsolutePath().toString();
+        } catch (IOException e) {
+            log.info("Falha ao materializar logo da empresa {}: {}", empresa.getCodigo(), e.getMessage());
+            return null;
+        }
     }
 
     public ConfigRel prepararConfigRel() {
