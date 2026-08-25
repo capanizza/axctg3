@@ -380,14 +380,12 @@ and `clean test` (an empty role class silently drops all its policies; an empty
   with a bean datasource.
 - `application.properties` ships dev DB credentials and `ui.login.defaultUsername`/
   `defaultPassword`; both must go before any production deploy.
-- `Empresa.logo` (`entity/cadastros/Empresa.java`) is a plain-text file path, not a
-  `FileRef` — an older convention than `certificadoArquivo` on the same entity, which
-  already uses `FileRef`/jmix-localfs. Reports read it as the `LOGO` parameter and use it
-  directly as a Jasper `imageExpression` (`$P{LOGO}`, e.g. in `Balancete.jrxml`), so unlike
-  the `.jasper` templates themselves (packaged into the jar, see above), the logo image is
-  **not** bundled — it varies per company/installation, so it must exist on disk at
-  whatever path each `Empresa` row points to. Confirmed on 2026-08-25 testing a real
-  external-server deploy: the packaged jar ran fine, but the logo only rendered after
-  copying the image file next to the jar by hand. Migrating this field to `FileRef` (like
-  `certificadoArquivo`) would remove the manual step, but that's a schema + view + Jasper
-  parameter change, not done yet.
+- `Empresa.logo` (`entity/cadastros/Empresa.java`) is a `FileRef` since 2026-08-25 (same
+  `FileRef`/jmix-localfs pattern as `certificadoArquivo`, uploaded via
+  `fileStorageUploadField` on the Endereço tab) — no longer a manual per-install file copy.
+  `UtilGeralService.getLogoEmpresa()` materializes it to a stable temp path per company so
+  the `LOGO` Jasper parameter (`$P{LOGO}` imageExpression, e.g. in `Balancete.jrxml`) keeps
+  working unchanged. Gotcha confirmed live the same day: picking a file in the upload field
+  does **not** persist it — the detail view still needs Save. Skip Save and the field looks
+  filled but `Empresa.logo` stays `null`; reports then render with a silently blank logo
+  area (no exception — same `emitirRelatorio` swallow-everything behavior noted above).
