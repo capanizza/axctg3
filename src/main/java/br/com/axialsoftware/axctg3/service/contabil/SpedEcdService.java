@@ -6,6 +6,8 @@ import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
 import br.com.axialsoftware.axctg3.entity.contabil.HistoricoContabil;
 import br.com.axialsoftware.axctg3.entity.contabil.Lancamento;
 import br.com.axialsoftware.axctg3.entity.contabil.SaldoConta;
+import br.com.axialsoftware.axctg3.entity.enums.CodAssin;
+import br.com.axialsoftware.axctg3.entity.enums.CodNat;
 import io.jmix.core.DataManager;
 import io.jmix.core.metamodel.datatype.EnumClass;
 
@@ -14,19 +16,26 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Gera o arquivo texto do Sped ECD (Escrituração Contábil Digital) — v1: Bloco 0
- * (abertura/identificação) + Bloco I (lançamentos contábeis), leiaute 9 (jan/2026).
+ * (abertura/identificação) + Bloco I (lançamentos contábeis) + Bloco J (Balanço
+ * Patrimonial/DRE), leiaute 9 (jan/2026).
  *
  * <p>Não assina nem transmite nada — o arquivo gerado aqui é submetido pelo usuário ao
  * PVA do Sped Contábil (Programa Validador e Assinador, oficial da Receita Federal), que
  * faz a validação de conteúdo, assinatura digital e transmissão.
  *
- * <p>Fora do escopo desta versão: Bloco J (Balanço Patrimonial/DRE agregados), registro
- * 0007 (outras inscrições cadastrais — é pra inscrição em *outras* entidades, não a UF/IE
- * da própria empresa) e I052 (código de aglutinação — só alimenta o Bloco J).
+ * <p>Fora do escopo desta versão: registro 0007 (outras inscrições cadastrais — é pra
+ * inscrição em *outras* entidades, não a UF/IE da própria empresa), J210/J215 (DLPA/DMPL
+ * — movimentação de Lucros/Prejuízos Acumulados, registro facultativo) e Bloco K
+ * (Conglomerados Econômicos — só obrigatório pra controladoras com demonstrações
+ * consolidadas). Blocos C e K saem só como marcador vazio — ver
+ * {@link #gravarBlocoCVazio} pro motivo do Bloco C.
  *
  * <p>Referências usadas na implementação: Manual de Orientação do Leiaute 9 da ECD
  * (RFB, jan/2026) e o gerador do legado Delphi (AxCtg, {@code F_SpedContabil.pas}, via
@@ -69,8 +78,8 @@ public class SpedEcdService {
         SpedTextWriter w = new SpedTextWriter();
         gravarBloco0(w, empresa, dtIni, dtFin);
         gravarBlocoCVazio(w);
-        gravarBlocoI(w, empresa, codEmpresa, ano, dtIni, dtFin, versaoLeiaute);
-        gravarBlocoJVazio(w);
+        Map<String, BigDecimal> saldoResultadoAtual = gravarBlocoI(w, empresa, codEmpresa, ano, dtIni, dtFin, versaoLeiaute);
+        gravarBlocoJ(w, empresa, codEmpresa, ano, dtIni, dtFin, saldoResultadoAtual);
         gravarBlocoKVazio(w);
         w.escreverBloco9("0");
 
@@ -89,18 +98,6 @@ public class SpedEcdService {
         w.abrirBloco("C");
         w.registro("C001", 1); // IND_DAD = 1 (bloco sem dados informados)
         w.fecharBloco("C990");
-    }
-
-    /**
-     * Bloco J (Demonstrações Contábeis — Balanço/DRE) — placeholder temporário até a
-     * geração completa (J100/J150/J210/J215/J900/J930) entrar numa próxima leva. Sem isso
-     * o registro de abertura do bloco nem aparece, e o manual exige que todo bloco tenha
-     * seu marcador de abertura mesmo vazio.
-     */
-    private void gravarBlocoJVazio(SpedTextWriter w) {
-        w.abrirBloco("J");
-        w.registro("J001", 1); // IND_DAD = 1 (bloco sem dados informados)
-        w.fecharBloco("J990");
     }
 
     /**
@@ -152,8 +149,14 @@ public class SpedEcdService {
         w.fecharBloco("0990");
     }
 
-    private void gravarBlocoI(SpedTextWriter w, Empresa empresa, Integer codEmpresa, Integer ano,
-                               LocalDate dtIni, LocalDate dtFin, String versaoLeiaute) {
+    /**
+     * @return saldo de cada conta de resultado (analítica e sintética, chave = código)
+     *         antes do encerramento — ver {@link #calcularSaldoResultadoAntesEncerramento}
+     *         — reaproveitado pelo Bloco J (DRE, registro J150) pra não recalcular duas
+     *         vezes a mesma coisa.
+     */
+    private Map<String, BigDecimal> gravarBlocoI(SpedTextWriter w, Empresa empresa, Integer codEmpresa, Integer ano,
+                                                  LocalDate dtIni, LocalDate dtFin, String versaoLeiaute) {
         w.abrirBloco("I");
 
         w.registro("I001", 0);
@@ -182,8 +185,10 @@ public class SpedEcdService {
         gravarCentrosCusto(w, codEmpresa);
         gravarSaldosPeriodicos(w, codEmpresa, ano, dtIni, dtFin);
         gravarLancamentos(w, codEmpresa, dtIni, dtFin);
+        Map<String, BigDecimal> saldoResultadoAtual = gravarSaldoResultadoAntesEncerramento(w, codEmpresa, ano, dtFin);
 
         w.fecharBloco("I990");
+        return saldoResultadoAtual;
     }
 
     /**
@@ -222,6 +227,14 @@ public class SpedEcdService {
 
             if (temPlanoReferencial && analitica && conta.getContaReferencial() != null) {
                 w.registro("I051", "", conta.getContaReferencial().getCodigo());
+            }
+
+            // Código de aglutinação (Bloco J): default = o próprio código da conta —
+            // confirmado contra amostra real, empresa que não usa uma tabela de
+            // aglutinação separada da própria hierarquia do plano de contas. Só pra
+            // analíticas (REGRA_REGISTRO_PARA_CONTA_ANALITICA do manual).
+            if (analitica) {
+                w.registro("I052", "", conta.getCodigo());
             }
         }
     }
@@ -331,6 +344,227 @@ public class SpedEcdService {
                     lancamento.getValor(), "C", "", codHistPad, hist,
                     ""); // COD_PART
         }
+    }
+
+    /**
+     * Registros I350/I355 (saldo das contas de resultado antes do encerramento) — exigidos
+     * pra dar suporte ao Bloco J: como o encerramento zera as contas de resultado (transfere
+     * o resultado pra {@code Empresa.codContaEnc}), o saldo "puro" do exercício só existe
+     * olhando os lançamentos sem a reversão do próprio encerramento — ver
+     * {@link #calcularSaldoResultadoAntesEncerramento}. DT_RES = mesma data de
+     * DT_EX_SOCIAL já usada no I030 (fim do período).
+     */
+    private Map<String, BigDecimal> gravarSaldoResultadoAntesEncerramento(SpedTextWriter w, Integer codEmpresa,
+                                                                           Integer ano, LocalDate dtFin) {
+        Map<String, BigDecimal> saldos = calcularSaldoResultadoAntesEncerramento(codEmpresa, ano);
+        if (saldos.isEmpty()) {
+            return saldos;
+        }
+
+        w.registro("I350", dtFin);
+
+        List<ContaContabil> contasAnaliticas = dataManager.load(ContaContabil.class)
+                .query("select c from ContaContabil c where c.codEmpresa = :codEmpresa and c.ano = :ano " +
+                        "and c.codNat = :codNat and c.analitica = true order by c.codigo")
+                .parameter("codEmpresa", codEmpresa)
+                .parameter("ano", ano)
+                .parameter("codNat", CodNat.CONTAS_DE_RESULTADO.getId())
+                .list();
+        for (ContaContabil conta : contasAnaliticas) {
+            BigDecimal saldo = saldos.getOrDefault(conta.getCodigo(), BigDecimal.ZERO);
+            if (saldo.signum() == 0) {
+                continue;
+            }
+            w.registro("I355", conta.getCodigo(), "", saldo.abs(), indDC(saldo));
+        }
+        return saldos;
+    }
+
+    /**
+     * Reconstrói o saldo de cada conta de resultado (analítica e sintética, subindo a
+     * hierarquia igual {@code LancamentoService.atualizarSaldosGrupo}) como se o
+     * encerramento daquele ano nunca tivesse sido lançado — soma todos os lançamentos do
+     * ano exceto os de origem "enc" (gravados por {@code EncerramentoService}). Reaproveitado
+     * pro ano corrente (I355/J150.VL_CTA_FIN) e pro ano anterior (J150.VL_CTA_INI,
+     * comparativo — fica vazio se a empresa não tinha esse exercício no axctg3 ainda).
+     */
+    private Map<String, BigDecimal> calcularSaldoResultadoAntesEncerramento(Integer codEmpresa, Integer ano) {
+        List<ContaContabil> contasResultado = dataManager.load(ContaContabil.class)
+                .query("select c from ContaContabil c where c.codEmpresa = :codEmpresa and c.ano = :ano " +
+                        "and c.codNat = :codNat")
+                .parameter("codEmpresa", codEmpresa)
+                .parameter("ano", ano)
+                .parameter("codNat", CodNat.CONTAS_DE_RESULTADO.getId())
+                .list();
+        if (contasResultado.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<String, ContaContabil> contasPorCodigo = new HashMap<>();
+        Map<String, BigDecimal> saldos = new LinkedHashMap<>();
+        for (ContaContabil conta : contasResultado) {
+            contasPorCodigo.put(conta.getCodigo(), conta);
+            saldos.put(conta.getCodigo(), BigDecimal.ZERO);
+        }
+
+        List<Lancamento> lancamentosDoAno = dataManager.load(Lancamento.class)
+                .query("select l from Lancamento l where l.codEmpresa = :codEmpresa and l.ano = :ano " +
+                        "and (l.origem is null or l.origem <> 'enc')")
+                .parameter("codEmpresa", codEmpresa)
+                .parameter("ano", ano)
+                .list();
+        for (Lancamento lancamento : lancamentosDoAno) {
+            aplicarNaHierarquiaResultado(contasPorCodigo, saldos, lancamento.getContaDevedora(), lancamento.getValor());
+            aplicarNaHierarquiaResultado(contasPorCodigo, saldos, lancamento.getContaCredora(), lancamento.getValor().negate());
+        }
+        return saldos;
+    }
+
+    /** Débito soma, crédito subtrai (via sinal de {@code delta}) — mesma convenção de {@code atualizarSaldosGrupo}. */
+    private void aplicarNaHierarquiaResultado(Map<String, ContaContabil> contasResultado,
+                                               Map<String, BigDecimal> saldos, ContaContabil contaLancada, BigDecimal delta) {
+        if (contaLancada.getCodNat() != CodNat.CONTAS_DE_RESULTADO) {
+            return; // contrapartida (caixa, fornecedores etc.) não entra na DRE
+        }
+        ContaContabil atual = contaLancada;
+        while (atual != null) {
+            BigDecimal saldoAtual = saldos.get(atual.getCodigo());
+            if (saldoAtual == null) {
+                break; // segurança — não deveria acontecer (mapa já tem todas as contas de resultado do ano)
+            }
+            saldos.put(atual.getCodigo(), saldoAtual.add(delta));
+            if (atual.getGrau() == 1) {
+                break;
+            }
+            atual = contasResultado.get(atual.getCodContaSup().trim());
+        }
+    }
+
+    /**
+     * Bloco J (Demonstrações Contábeis): J100 (Balanço Patrimonial, contas de ativo e
+     * passivo/PL) + J150 (DRE, contas de resultado) + termo de encerramento/signatários.
+     * Código de aglutinação (COD_AGL) = próprio código da conta em ambos, mesma convenção
+     * do I052. Fora do escopo: J210/J215 (DLPA/DMPL, facultativo).
+     */
+    private void gravarBlocoJ(SpedTextWriter w, Empresa empresa, Integer codEmpresa, Integer ano,
+                               LocalDate dtIni, LocalDate dtFin, Map<String, BigDecimal> saldoResultadoAtual) {
+        w.abrirBloco("J");
+        w.registro("J001", 0);
+        w.registro("J005", dtIni, dtFin, 1, "");
+
+        List<ContaContabil> contasBalanco = dataManager.load(ContaContabil.class)
+                .query("select c from ContaContabil c where c.codEmpresa = :codEmpresa and c.ano = :ano " +
+                        "and c.codNat in :nats and c.codigo <> :contaDummy order by c.codigo")
+                .parameter("codEmpresa", codEmpresa)
+                .parameter("ano", ano)
+                .parameter("nats", List.of(CodNat.CONTAS_DE_ATIVO.getId(), CodNat.CONTAS_DE_PASSIVO.getId(),
+                        CodNat.PATRIMONIO_LIQUIDO.getId()))
+                .parameter("contaDummy", CONTA_DUMMY_LEGADO)
+                .list();
+
+        int mesIni = dtIni.getMonthValue();
+        int mesFin = dtFin.getMonthValue();
+        for (ContaContabil conta : contasBalanco) {
+            boolean analitica = Boolean.TRUE.equals(conta.getAnalitica());
+            List<SaldoConta> saldosConta = conta.getSaldosConta();
+            BigDecimal saldoIni = saldosConta.get(mesIni - 1).getSaldoAnterior();
+            BigDecimal saldoFin = saldosConta.get(mesFin - 1).getSaldoAtual();
+            String indGrpBal = conta.getCodNat() == CodNat.CONTAS_DE_ATIVO ? "A" : "P";
+
+            w.registro("J100",
+                    conta.getCodigo(),
+                    analitica ? "D" : "T",
+                    conta.getGrau(),
+                    conta.getCodContaSup(),
+                    indGrpBal,
+                    conta.getNome(),
+                    saldoIni.abs(), indDC(saldoIni),
+                    saldoFin.abs(), indDC(saldoFin),
+                    ""); // NOTA_EXP_REF — sem notas explicativas modeladas
+        }
+
+        List<ContaContabil> contasResultado = dataManager.load(ContaContabil.class)
+                .query("select c from ContaContabil c where c.codEmpresa = :codEmpresa and c.ano = :ano " +
+                        "and c.codNat = :codNat order by c.codigo")
+                .parameter("codEmpresa", codEmpresa)
+                .parameter("ano", ano)
+                .parameter("codNat", CodNat.CONTAS_DE_RESULTADO.getId())
+                .list();
+
+        // Comparativo do período anterior — facultativo (campo "Não" obrigatório no
+        // manual); fica em branco se a empresa não tinha esse exercício ainda no axctg3.
+        Map<String, BigDecimal> saldoResultadoAnterior = calcularSaldoResultadoAntesEncerramento(codEmpresa, ano - 1);
+
+        int numOrdem = 1;
+        for (ContaContabil conta : contasResultado) {
+            boolean analitica = Boolean.TRUE.equals(conta.getAnalitica());
+            BigDecimal saldoAnt = saldoResultadoAnterior.get(conta.getCodigo());
+            BigDecimal saldoFin = saldoResultadoAtual.getOrDefault(conta.getCodigo(), BigDecimal.ZERO);
+
+            w.registro("J150",
+                    numOrdem++,
+                    conta.getCodigo(),
+                    analitica ? "D" : "T",
+                    conta.getGrau(),
+                    conta.getCodContaSup(),
+                    conta.getNome(),
+                    saldoAnt == null ? "" : saldoAnt.abs(),
+                    saldoAnt == null ? "" : indDC(saldoAnt),
+                    saldoFin.abs(), indDC(saldoFin),
+                    saldoFin.signum() < 0 ? "R" : "D", // natureza da linha — confirmado contra amostra real
+                    ""); // NOTA_EXP_REF
+        }
+
+        gravarTermoEncerramentoJ(w, empresa, dtIni, dtFin);
+
+        w.fecharBloco("J990");
+    }
+
+    /**
+     * J900 (Termo de Encerramento, mesmos dados do I030/0000) + J930 (signatários — o
+     * manual exige pelo menos um contador/contabilista e um que não seja contador; usa os
+     * dados já cadastrados em {@code Empresa}, aba "Dados dos responsáveis").
+     */
+    private void gravarTermoEncerramentoJ(SpedTextWriter w, Empresa empresa, LocalDate dtIni, LocalDate dtFin) {
+        w.registro("J900",
+                "TERMO DE ENCERRAMENTO",
+                empresa.getNumOrdemLivroEcd(),
+                "DIARIO CONTABIL GERAL",
+                empresa.getNome(),
+                SpedTextWriter.QTD_LIN_ARQUIVO,
+                dtIni,
+                dtFin);
+
+        if (empresa.getNmContabilista() != null && !empresa.getNmContabilista().isBlank()) {
+            w.registro("J930",
+                    empresa.getNmContabilista(),
+                    SpedTextWriter.soDigitos(empresa.getCpfContabilista()),
+                    qualif(empresa.getCodAssinContabilista()),
+                    id(empresa.getCodAssinContabilista()),
+                    empresa.getInscCrc(),
+                    empresa.getEmailContabilista(),
+                    SpedTextWriter.soDigitos(empresa.getFoneContabilista()),
+                    empresa.getUfCrc(),
+                    empresa.getNumSeqCrc(),
+                    empresa.getDtCrc(),
+                    "N");
+        }
+        if (empresa.getNmResponsavel() != null && !empresa.getNmResponsavel().isBlank()) {
+            w.registro("J930",
+                    empresa.getNmResponsavel(),
+                    SpedTextWriter.soDigitos(empresa.getCpfResponsavel()),
+                    qualif(empresa.getCodAssinResponsavel()),
+                    id(empresa.getCodAssinResponsavel()),
+                    "", // IND_CRC — só pra contador
+                    "", // EMAIL — não modelado pro responsável legal
+                    SpedTextWriter.soDigitos(empresa.getFoneResponsavel()),
+                    "", "", "", // UF_CRC/NUM_SEQ_CRC/DT_CRC — só pra contador
+                    boolSN(empresa.getIndRespLegal()));
+        }
+    }
+
+    private static String qualif(CodAssin codAssin) {
+        return codAssin == null ? "" : codAssin.name().replace('_', ' ');
     }
 
     private static String codHist(Integer codigo) {

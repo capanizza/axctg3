@@ -181,14 +181,15 @@ class SpedEcdServiceTest {
     }
 
     @Test
-    void test_gerarArquivo_blocosCJKSaoMarcadoresVaziosNaOrdemCerta() {
+    void test_gerarArquivo_blocosCKVaziosBlocoJPreenchidoNaOrdemCerta() {
         byte[] arquivo = spedEcdService.gerarArquivo(COD_EMPRESA, DT_INI, DT_FIN, VERSAO);
         String[] linhas = new String(arquivo, StandardCharsets.ISO_8859_1).split("\r\n");
 
-        // C/J/K não são preenchidos nesta versão — só o marcador "bloco sem dados" (IND_DAD=1),
-        // estruturalmente obrigatório mesmo vazio (cap. 3.1 do manual)
+        // C/K não são preenchidos nesta versão — só o marcador "bloco sem dados" (IND_DAD=1),
+        // estruturalmente obrigatório mesmo vazio (cap. 3.1 do manual). J agora tem conteúdo
+        // real (Balanço/DRE) — IND_DAD=0.
         assertThat(campo(unicaLinhaComReg(linhas, "C001"), 1)).isEqualTo("1");
-        assertThat(campo(unicaLinhaComReg(linhas, "J001"), 1)).isEqualTo("1");
+        assertThat(campo(unicaLinhaComReg(linhas, "J001"), 1)).isEqualTo("0");
         assertThat(campo(unicaLinhaComReg(linhas, "K001"), 1)).isEqualTo("1");
 
         // ordem dos blocos no arquivo: 0, C, I, J, K, 9 (cap. 3.1 do manual)
@@ -198,6 +199,48 @@ class SpedEcdServiceTest {
                 .filter(aberturasDeBloco::contains)
                 .toList();
         assertThat(ordemBlocos).containsExactly("0000", "C001", "I001", "J001", "K001", "9001");
+    }
+
+    @Test
+    void test_gerarArquivo_blocoJBalancoEDreBatemComOsSaldos() {
+        byte[] arquivo = spedEcdService.gerarArquivo(COD_EMPRESA, DT_INI, DT_FIN, VERSAO);
+        String[] linhas = new String(arquivo, StandardCharsets.ISO_8859_1).split("\r\n");
+
+        // J100 (Balanço): só ativo/passivo — a conta "4" (Receita, resultado) não aparece
+        List<String> contasNoJ100 = Arrays.stream(linhas)
+                .filter(l -> "J100".equals(campo(l, 0)))
+                .map(l -> campo(l, 1))
+                .toList();
+        assertThat(contasNoJ100).contains(caixa.getCodigo(), "1").doesNotContain("4", vendas.getCodigo());
+
+        String j100Caixa = Arrays.stream(linhas)
+                .filter(l -> "J100".equals(campo(l, 0)) && caixa.getCodigo().equals(campo(l, 1)))
+                .findFirst().orElseThrow();
+        // caixa só teve débitos no ano (1000 jan + 500 jun) partindo de saldo zero
+        assertThat(campo(j100Caixa, 9).replace(",", ".")).isEqualTo("1500.00");
+        assertThat(campo(j100Caixa, 10)).isEqualTo("D");
+
+        // J150 (DRE): só resultado — "vendas" aparece, "caixa" não
+        List<String> contasNoJ150 = Arrays.stream(linhas)
+                .filter(l -> "J150".equals(campo(l, 0)))
+                .map(l -> campo(l, 2))
+                .toList();
+        assertThat(contasNoJ150).contains(vendas.getCodigo(), "4").doesNotContain("1", caixa.getCodigo());
+
+        String j150Vendas = Arrays.stream(linhas)
+                .filter(l -> "J150".equals(campo(l, 0)) && vendas.getCodigo().equals(campo(l, 2)))
+                .findFirst().orElseThrow();
+        // vendas é credora nos 2 lançamentos (1000 + 500) — saldo antes do encerramento
+        assertThat(campo(j150Vendas, 9).replace(",", ".")).isEqualTo("1500.00");
+        assertThat(campo(j150Vendas, 10)).isEqualTo("C");
+        assertThat(campo(j150Vendas, 11)).isEqualTo("R"); // natureza de receita (saldo final credor)
+
+        // I355 (saldo antes do encerramento) tem que bater com o mesmo valor do J150
+        String i355Vendas = Arrays.stream(linhas)
+                .filter(l -> "I355".equals(campo(l, 0)) && vendas.getCodigo().equals(campo(l, 1)))
+                .findFirst().orElseThrow();
+        assertThat(campo(i355Vendas, 3).replace(",", ".")).isEqualTo("1500.00");
+        assertThat(campo(i355Vendas, 4)).isEqualTo("C");
     }
 
     @Test
