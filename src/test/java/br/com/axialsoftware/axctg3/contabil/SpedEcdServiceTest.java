@@ -208,7 +208,14 @@ class SpedEcdServiceTest {
     }
 
     @Test
-    void test_gerarArquivo_blocoJBalancoEDreBatemComOsSaldos() {
+    void test_gerarArquivo_blocoJUsaSaldoDoPeriodoNoBalancoESaldoTransfNaDre() {
+        // saldoTransf só é gravado por EncerramentoService.lancarEncerramentoConta no
+        // fechamento do exercício — fora do escopo deste teste rodar o encerramento de
+        // verdade, então simula o resultado dele direto na conta (pedido do usuário: J150
+        // e I355 leem esse campo, não recalculam nada por conta própria).
+        vendas.setSaldoTransf(new java.math.BigDecimal("-1500.00")); // credor
+        dataManager.save(vendas);
+
         byte[] arquivo = spedEcdService.gerarArquivo(COD_EMPRESA, DT_INI, DT_FIN, VERSAO);
         String[] linhas = new String(arquivo, StandardCharsets.ISO_8859_1).split("\r\n");
 
@@ -226,27 +233,37 @@ class SpedEcdServiceTest {
         assertThat(campo(j100Caixa, 9).replace(",", ".")).isEqualTo("1500.00");
         assertThat(campo(j100Caixa, 10)).isEqualTo("D");
 
-        // J150 (DRE): só resultado — "vendas" aparece, "caixa" não
+        // J150 (DRE): só quem tem saldoTransf <> 0 — "vendas" aparece; "4" (sintética,
+        // nunca tem saldoTransf — só EncerramentoService grava, e só em analíticas) e
+        // "caixa"/"1" (balanço) não
         List<String> contasNoJ150 = Arrays.stream(linhas)
                 .filter(l -> "J150".equals(campo(l, 0)))
                 .map(l -> campo(l, 2))
                 .toList();
-        assertThat(contasNoJ150).contains(vendas.getCodigo(), "4").doesNotContain("1", caixa.getCodigo());
+        assertThat(contasNoJ150).containsExactly(vendas.getCodigo());
 
-        String j150Vendas = Arrays.stream(linhas)
-                .filter(l -> "J150".equals(campo(l, 0)) && vendas.getCodigo().equals(campo(l, 2)))
-                .findFirst().orElseThrow();
-        // vendas é credora nos 2 lançamentos (1000 + 500) — saldo antes do encerramento
-        assertThat(campo(j150Vendas, 9).replace(",", ".")).isEqualTo("1500.00");
+        String j150Vendas = unicaLinhaComReg(linhas, "J150");
+        assertThat(campo(j150Vendas, 9).replace(",", ".")).isEqualTo("1500.00"); // = |saldoTransf|
         assertThat(campo(j150Vendas, 10)).isEqualTo("C");
-        assertThat(campo(j150Vendas, 11)).isEqualTo("R"); // natureza de receita (saldo final credor)
+        assertThat(campo(j150Vendas, 11)).isEqualTo("R"); // natureza de receita (saldo credor)
 
-        // I355 (saldo antes do encerramento) tem que bater com o mesmo valor do J150
-        String i355Vendas = Arrays.stream(linhas)
-                .filter(l -> "I355".equals(campo(l, 0)) && vendas.getCodigo().equals(campo(l, 1)))
-                .findFirst().orElseThrow();
+        // I355 usa a mesma fonte (saldoTransf) — tem que bater com o J150
+        String i355Vendas = unicaLinhaComReg(linhas, "I355");
+        assertThat(campo(i355Vendas, 1)).isEqualTo(vendas.getCodigo());
         assertThat(campo(i355Vendas, 3).replace(",", ".")).isEqualTo("1500.00");
         assertThat(campo(i355Vendas, 4)).isEqualTo("C");
+    }
+
+    @Test
+    void test_gerarArquivo_blocoJNaoListaContaComSaldoTransfNuloOuZero() {
+        // nenhuma conta de resultado do fixture tem saldoTransf preenchido (encerramento
+        // nunca rodou) — I350/I355/J150 devem sair vazios, não com linha de saldo zero
+        byte[] arquivo = spedEcdService.gerarArquivo(COD_EMPRESA, DT_INI, DT_FIN, VERSAO);
+        String[] linhas = new String(arquivo, StandardCharsets.ISO_8859_1).split("\r\n");
+
+        assertThat(Arrays.stream(linhas).anyMatch(l -> "I350".equals(campo(l, 0)))).isFalse();
+        assertThat(Arrays.stream(linhas).anyMatch(l -> "I355".equals(campo(l, 0)))).isFalse();
+        assertThat(Arrays.stream(linhas).anyMatch(l -> "J150".equals(campo(l, 0)))).isFalse();
     }
 
     @Test
