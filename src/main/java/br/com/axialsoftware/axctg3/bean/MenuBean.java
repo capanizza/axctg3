@@ -852,7 +852,7 @@ public class MenuBean {
         LocalDate dataInicial = optData.orElse(LocalDate.of(anoContabil, 1, 1));
         optData = Optional.ofNullable(configRel.getDataSpedEcdFinal());
         LocalDate dataFinal = optData.orElse(LocalDate.of(anoContabil, 12, 31));
-        String versao = Optional.ofNullable(configRel.getVersaoSpedEcd()).orElse("1.00");
+        String versao = Optional.ofNullable(configRel.getVersaoSpedEcd()).orElse("9.00");
         String pastaPadrao = Optional.ofNullable(configRel.getPastaSpedEcd()).orElse("");
 
         dialogs.createInputDialog(ownerView)

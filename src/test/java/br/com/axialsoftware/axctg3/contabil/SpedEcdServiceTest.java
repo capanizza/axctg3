@@ -49,7 +49,7 @@ class SpedEcdServiceTest {
     private static final int ANO = 2097;
     private static final LocalDate DT_INI = LocalDate.of(ANO, 1, 1);
     private static final LocalDate DT_FIN = LocalDate.of(ANO, 12, 31);
-    private static final String VERSAO = "1.00";
+    private static final String VERSAO = "9.00";
 
     @Autowired
     DataManager dataManager;
