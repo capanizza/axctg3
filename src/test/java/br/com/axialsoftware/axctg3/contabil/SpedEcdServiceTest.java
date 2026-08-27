@@ -170,6 +170,10 @@ class SpedEcdServiceTest {
         assertThat(contagemReal.get("I250")).isEqualTo(4L);
         // I150 um por mês do período pedido — aqui o período é o ano inteiro (DT_INI/DT_FIN)
         assertThat(contagemReal.get("I150")).isEqualTo(12L);
+
+        // I200 tem 6 campos depois do REG — o último, DT_LCTO_EXT, fica em branco (não modelado)
+        String i200 = unicaLinhaComReg(linhas, "I200");
+        assertThat(campo(i200, 5)).isEmpty();
     }
 
     @Test

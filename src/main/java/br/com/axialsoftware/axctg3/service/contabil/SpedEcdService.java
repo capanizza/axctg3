@@ -266,7 +266,8 @@ public class SpedEcdService {
             // encerramento de contas de resultado — ver EncerramentoService.java
             String indLcto = "enc".equals(lancamento.getOrigem()) ? "E" : "N";
 
-            w.registro("I200", numLcto, lancamento.getDataLancamento(), lancamento.getValor(), indLcto);
+            w.registro("I200", numLcto, lancamento.getDataLancamento(), lancamento.getValor(), indLcto,
+                    ""); // DT_LCTO_EXT — data no sistema externo de origem, não modelada
 
             String codHistPad = lancamento.getHistoricoContabil() != null
                     ? codHist(lancamento.getHistoricoContabil().getCodigo()) : "";
