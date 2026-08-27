@@ -25,7 +25,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -82,18 +81,6 @@ public class ContaReferencialImportService {
             Map.entry("U100E", CodPlanRef.Partidos_politicos),
             Map.entry("U150E", CodPlanRef.Partidos_politicos)
     );
-
-    /** Planos cujas abas oficiais misturam código pontuado (níveis rasos, ex. "2.1.0.0.0.00.00")
-     * com código já concatenado sem ponto (níveis mais fundos, ex. "210000000") na mesma coluna —
-     * as 3 abas "B" (financeiras). Achado em 2026-08-15 comparando o dado real no Postgres: tirar
-     * o ponto igual aos demais planos faz contas diferentes colidirem em {@code (codPlanRef,
-     * codigo)} (ex.: "2.1.0.0.0.00.00" PASSIVO vs "210000000" INVESTIMENTOS), e o upsert de
-     * {@link #salvarLinha} sobrescreveria uma conta com a outra. Nesses planos o código
-     * permanece pontuado como a fonte manda; nos demais 7, só dígitos. */
-    private static final Set<CodPlanRef> PLANOS_COM_CODIGO_MISTO = Set.of(
-            CodPlanRef.Financeiras_lucro_real,
-            CodPlanRef.Imunes_e_isentas_financeiras,
-            CodPlanRef.Financeiras_lucro_presumido);
 
     private static final List<String> COLUNAS_OBRIGATORIAS = List.of(
             "CÓDIGO", "DESCRIÇÃO", "TIPO", "CONTA SUPERIOR", "NÍVEL", "NATUREZA");
@@ -296,13 +283,13 @@ public class ContaReferencialImportService {
             try {
                 String nivel = valor(celulas, colunaPorNome, "NÍVEL");
                 String natureza = valor(celulas, colunaPorNome, "NATUREZA");
-                boolean mantemPonto = PLANOS_COM_CODIGO_MISTO.contains(codPlanRef);
+                // Código mantido igual à fonte, com ponto — o PVA do Sped exige o código
+                // referencial pontuado no registro I051 (ex. "1.01.01.01.01"), confirmado
+                // rodando o arquivo real no validador. Uma leva anterior tirava o ponto pra
+                // "só dígitos" (exceto nas 3 abas "B", que já misturam pontuado/concatenado
+                // na mesma coluna e colidiam se normalizadas) — decisão revertida.
                 String codigoNormalizado = codigo.trim();
                 String codContaSup = blankToNull(valor(celulas, colunaPorNome, "CONTA SUPERIOR"));
-                if (!mantemPonto) {
-                    codigoNormalizado = removerPontos(codigoNormalizado);
-                    codContaSup = removerPontos(codContaSup);
-                }
                 linhas.add(new Linha(
                         codigoNormalizado,
                         valor(celulas, colunaPorNome, "DESCRIÇÃO"),
@@ -370,10 +357,5 @@ public class ContaReferencialImportService {
 
     private String blankToNull(String v) {
         return (v == null || v.isBlank()) ? null : v;
-    }
-
-    /** Código/conta superior vêm da fonte pontuados ("1.01.01"); armazenamos só os dígitos. */
-    private String removerPontos(String v) {
-        return v == null ? null : v.replace(".", "");
     }
 }

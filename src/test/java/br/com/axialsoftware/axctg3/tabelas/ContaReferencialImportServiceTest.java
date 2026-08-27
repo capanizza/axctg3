@@ -78,7 +78,9 @@ class ContaReferencialImportServiceTest {
         assertThat(raiz.codPlanRef()).isEqualTo(CodPlanRef.PJ_em_geral_lucro_real);
 
         ContaReferencialImportService.Linha filha = linhaPorDescricao(resultado, "FILHA L100A");
-        assertThat(filha.codigo()).isEqualTo("901"); // "9.01" na fonte — armazenamos só os dígitos
+        // código mantido igual à fonte, com ponto — o PVA do Sped exige o código referencial
+        // pontuado no registro I051, confirmado rodando o arquivo real no validador
+        assertThat(filha.codigo()).isEqualTo("9.01");
         assertThat(filha.analitica()).isTrue();
         assertThat(filha.codContaSup()).isEqualTo("9");
         assertThat(filha.orientacoes()).isEqualTo("Orientação de teste");
@@ -89,10 +91,7 @@ class ContaReferencialImportServiceTest {
         assertThat(semOrientacoes.codPlanRef()).isEqualTo(CodPlanRef.Financeiras_lucro_real);
 
         // U100B: cabeçalho da coluna de código em branco na fonte real — cobre o fallback pra
-        // coluna A (sem ele, codigo() viria null e a linha seria descartada). Imunes_e_isentas_
-        // financeiras é um dos 3 planos "B" que mantêm o código pontuado (ver
-        // PLANOS_COM_CODIGO_MISTO) — sem isso, código pontuado de nível raso colide com código já
-        // liso de nível fundo na fonte real.
+        // coluna A (sem ele, codigo() viria null e a linha seria descartada).
         ContaReferencialImportService.Linha comCabecalhoEmBranco = linhaPorDescricao(resultado, "FILHA U100B");
         assertThat(comCabecalhoEmBranco.codigo()).isEqualTo("9.01");
         assertThat(comCabecalhoEmBranco.codPlanRef()).isEqualTo(CodPlanRef.Imunes_e_isentas_financeiras);
