@@ -174,6 +174,24 @@ class SpedEcdServiceTest {
         // I200 tem 6 campos depois do REG — o último, DT_LCTO_EXT, fica em branco (não modelado)
         String i200 = unicaLinhaComReg(linhas, "I200");
         assertThat(campo(i200, 5)).isEmpty();
+
+        // I250 tem 8 campos depois do REG — o último, COD_PART, fica em branco (não modelado)
+        String i250 = unicaLinhaComReg(linhas, "I250");
+        assertThat(campo(i250, 8)).isEmpty();
+    }
+
+    @Test
+    void test_gerarArquivo_naoListaContaDummyHerdadaDoLegado() {
+        criarConta("000000000", "Diversos", 1, "", CodNat.CONTAS_DE_ATIVO, true, null);
+
+        byte[] arquivo = spedEcdService.gerarArquivo(COD_EMPRESA, DT_INI, DT_FIN, VERSAO);
+        String[] linhas = new String(arquivo, StandardCharsets.ISO_8859_1).split("\r\n");
+
+        List<String> contasNoI050 = Arrays.stream(linhas)
+                .filter(l -> "I050".equals(campo(l, 0)))
+                .map(l -> campo(l, 5))
+                .toList();
+        assertThat(contasNoI050).doesNotContain("000000000");
     }
 
     @Test

@@ -146,16 +146,25 @@ public class SpedEcdService {
         w.fecharBloco("I990");
     }
 
+    /**
+     * Conta "coringa" herdada do plano de contas do legado Delphi (grau 1, sem hierarquia,
+     * nome genérico "Diversos") — não representa uma conta contábil real e não deve
+     * aparecer no arquivo. Excluída aqui em vez de exigir soft-delete no cadastro porque a
+     * herança se repete em todo plano de contas migrado do legado, não só numa empresa.
+     */
+    private static final String CONTA_DUMMY_LEGADO = "000000000";
+
     private void gravarPlanoDeContas(SpedTextWriter w, Empresa empresa, Integer codEmpresa, Integer ano) {
         boolean temPlanoReferencial = empresa.getCodPlanRef() != null;
         LocalDate dtAltPadrao = LocalDate.of(ano, 1, 1);
 
         List<ContaContabil> contas = dataManager.load(ContaContabil.class)
                 .query("select c from ContaContabil c " +
-                        "where c.codEmpresa = :codEmpresa and c.ano = :ano " +
+                        "where c.codEmpresa = :codEmpresa and c.ano = :ano and c.codigo <> :contaDummy " +
                         "order by c.codigo")
                 .parameter("codEmpresa", codEmpresa)
                 .parameter("ano", ano)
+                .parameter("contaDummy", CONTA_DUMMY_LEGADO)
                 .list();
 
         for (ContaContabil conta : contas) {
@@ -227,11 +236,13 @@ public class SpedEcdService {
                             "where s.contaContabil.codEmpresa = :codEmpresa " +
                             "and s.contaContabil.ano = :ano and s.mes = :mes " +
                             "and s.contaContabil.analitica = true " +
+                            "and s.contaContabil.codigo <> :contaDummy " +
                             "and (s.saldoAnterior <> 0 or s.debitoMes <> 0 or s.creditoMes <> 0) " +
                             "order by s.contaContabil.codigo")
                     .parameter("codEmpresa", codEmpresa)
                     .parameter("ano", ano)
                     .parameter("mes", mes)
+                    .parameter("contaDummy", CONTA_DUMMY_LEGADO)
                     .list();
 
             for (SaldoConta saldo : saldos) {
@@ -274,9 +285,11 @@ public class SpedEcdService {
             String hist = lancamento.getComplementoHistorico();
 
             w.registro("I250", lancamento.getContaDevedora().getCodigo(), "",
-                    lancamento.getValor(), "D", "", codHistPad, hist);
+                    lancamento.getValor(), "D", "", codHistPad, hist,
+                    ""); // COD_PART — código do participante, não modelado
             w.registro("I250", lancamento.getContaCredora().getCodigo(), "",
-                    lancamento.getValor(), "C", "", codHistPad, hist);
+                    lancamento.getValor(), "C", "", codHistPad, hist,
+                    ""); // COD_PART
         }
     }
 
