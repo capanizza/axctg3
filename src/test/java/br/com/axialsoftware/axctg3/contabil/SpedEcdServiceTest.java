@@ -47,6 +47,9 @@ class SpedEcdServiceTest {
 
     private static final int COD_EMPRESA = 9407;
     private static final int ANO = 2097;
+    private static final LocalDate DT_INI = LocalDate.of(ANO, 1, 1);
+    private static final LocalDate DT_FIN = LocalDate.of(ANO, 12, 31);
+    private static final String VERSAO = "1.00";
 
     @Autowired
     DataManager dataManager;
@@ -113,7 +116,7 @@ class SpedEcdServiceTest {
 
     @Test
     void test_gerarArquivo_fechamentosBatemComAsLinhasReais() {
-        byte[] arquivo = spedEcdService.gerarArquivo(COD_EMPRESA, ANO);
+        byte[] arquivo = spedEcdService.gerarArquivo(COD_EMPRESA, DT_INI, DT_FIN, VERSAO);
         String texto = new String(arquivo, StandardCharsets.ISO_8859_1);
 
         assertThat(texto).contains("\r\n");
@@ -131,11 +134,22 @@ class SpedEcdServiceTest {
 
         long declaradoEmI030 = Long.parseLong(campo(unicaLinhaComReg(linhas, "I030"), 4));
         assertThat(declaradoEmI030).isEqualTo(totalReal);
+
+        // COD_VER_LC do I010 é o parâmetro versaoLeiaute — confirma que não ficou hardcoded
+        assertThat(campo(unicaLinhaComReg(linhas, "I010"), 2)).isEqualTo(VERSAO);
+    }
+
+    @Test
+    void test_gerarArquivo_dataInicialEFinalEmAnosDiferentesRejeitado() {
+        LocalDate dtFinOutroAno = LocalDate.of(ANO + 1, 1, 31);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+                        spedEcdService.gerarArquivo(COD_EMPRESA, DT_INI, dtFinOutroAno, VERSAO))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void test_gerarArquivo_9900ListaContagemRealDeCadaRegistro() {
-        byte[] arquivo = spedEcdService.gerarArquivo(COD_EMPRESA, ANO);
+        byte[] arquivo = spedEcdService.gerarArquivo(COD_EMPRESA, DT_INI, DT_FIN, VERSAO);
         String[] linhas = new String(arquivo, StandardCharsets.ISO_8859_1).split("\r\n");
 
         Map<String, Long> contagemReal = Arrays.stream(linhas)
@@ -160,7 +174,7 @@ class SpedEcdServiceTest {
 
     @Test
     void test_gerarArquivo_somaDosI250BateComI155PorContaEMes() {
-        byte[] arquivo = spedEcdService.gerarArquivo(COD_EMPRESA, ANO);
+        byte[] arquivo = spedEcdService.gerarArquivo(COD_EMPRESA, DT_INI, DT_FIN, VERSAO);
         String[] linhas = new String(arquivo, StandardCharsets.ISO_8859_1).split("\r\n");
 
         // mês de janeiro: só a venda de 1000,00 — acha o I155 do caixa dentro do primeiro

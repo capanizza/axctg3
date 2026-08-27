@@ -44,21 +44,31 @@ public class SpedEcdService {
     }
 
     /**
-     * Gera o arquivo do Sped ECD pro ano-calendário inteiro (01/01 a 31/12) — o manual
-     * exige que DT_INI e DT_FIN estejam no mesmo ano.
+     * Gera o arquivo do Sped ECD pro período informado — o manual exige que DT_INI e
+     * DT_FIN estejam no mesmo ano-calendário; o plano de contas e os saldos mensais
+     * (Bloco I) são carregados pelo {@code ano} correspondente (todo o exercício, mesmo
+     * que o período pedido seja mais estreito — útil pra gerar só um mês em teste).
+     *
+     * @param versaoLeiaute valor gravado no campo COD_VER_LC do registro I010 —
+     *                       configurável porque não é fixo entre exercícios/retificações
+     *                       (ver {@code ConfigRel.versaoSpedEcd}).
      */
-    public byte[] gerarArquivo(Integer codEmpresa, Integer ano) {
+    public byte[] gerarArquivo(Integer codEmpresa, LocalDate dtIni, LocalDate dtFin, String versaoLeiaute) {
+        if (dtIni.getYear() != dtFin.getYear()) {
+            throw new IllegalArgumentException(
+                    "Data inicial e final do Sped ECD devem estar no mesmo ano-calendário.");
+        }
+
         Empresa empresa = dataManager.load(Empresa.class)
                 .query("select e from Empresa e where e.codigo = :codEmpresa")
                 .parameter("codEmpresa", codEmpresa)
                 .one();
 
-        LocalDate dtIni = LocalDate.of(ano, 1, 1);
-        LocalDate dtFin = LocalDate.of(ano, 12, 31);
+        int ano = dtIni.getYear();
 
         SpedTextWriter w = new SpedTextWriter();
         gravarBloco0(w, empresa, dtIni, dtFin);
-        gravarBlocoI(w, empresa, codEmpresa, ano, dtIni, dtFin);
+        gravarBlocoI(w, empresa, codEmpresa, ano, dtIni, dtFin, versaoLeiaute);
         w.escreverBloco9("0");
 
         return w.finalizar();
@@ -103,11 +113,11 @@ public class SpedEcdService {
     }
 
     private void gravarBlocoI(SpedTextWriter w, Empresa empresa, Integer codEmpresa, Integer ano,
-                               LocalDate dtIni, LocalDate dtFin) {
+                               LocalDate dtIni, LocalDate dtFin, String versaoLeiaute) {
         w.abrirBloco("I");
 
         w.registro("I001", 0);
-        w.registro("I010", "G", "9.00");
+        w.registro("I010", "G", versaoLeiaute);
 
         String desMun = empresa.getMunicipio() != null ? empresa.getMunicipio().getNome() : "";
         String nireDigitos = SpedTextWriter.soDigitos(empresa.getNire());

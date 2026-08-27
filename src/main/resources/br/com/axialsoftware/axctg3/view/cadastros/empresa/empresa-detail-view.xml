@@ -155,28 +155,34 @@
                                 <select id="indSitEspField"
                                         property="indSitEsp"
                                         dataContainer="empresaDc"
-                                        width="20%" themeNames="small"
+                                        emptySelectionAllowed="true"
+                                        width="17%" themeNames="small"
                                         label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.indSitEsp"/>
                                 <select id="indSitIniPerField"
                                         property="indSitIniPer"
                                         dataContainer="empresaDc"
-                                        width="20%" themeNames="small"
+                                        width="17%" themeNames="small"
                                         label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.indSitIniPer"/>
                                 <select id="indFinEscField"
                                         property="indFinEsc"
                                         dataContainer="empresaDc"
-                                        width="20%" themeNames="small"
+                                        width="17%" themeNames="small"
                                         label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.indFinEsc"/>
                                 <select id="indGrandePorteField"
                                         property="indGrandePorte"
-                                        width="20%" themeNames="small"
+                                        width="17%" themeNames="small"
                                         dataContainer="empresaDc"
                                         label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.indGrandePorte"/>
                                 <select id="tipEcdField"
                                         property="tipEcd"
                                         dataContainer="empresaDc"
-                                        width="20%" themeNames="small"
+                                        width="16%" themeNames="small"
                                         label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.tipEcd"/>
+                                <select id="indNireField"
+                                        property="indNire"
+                                        dataContainer="empresaDc"
+                                        width="16%" themeNames="small"
+                                        label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.indNire"/>
                             </hbox>
                             <hbox width="100%">
                                 <textField id="codScpField"
