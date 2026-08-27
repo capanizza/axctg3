@@ -68,10 +68,50 @@ public class SpedEcdService {
 
         SpedTextWriter w = new SpedTextWriter();
         gravarBloco0(w, empresa, dtIni, dtFin);
+        gravarBlocoCVazio(w);
         gravarBlocoI(w, empresa, codEmpresa, ano, dtIni, dtFin, versaoLeiaute);
+        gravarBlocoJVazio(w);
+        gravarBlocoKVazio(w);
         w.escreverBloco9("0");
 
         return w.finalizar();
+    }
+
+    /**
+     * Bloco C (Informações Recuperadas da Escrituração Contábil Anterior) — o manual é
+     * explícito que "os registros do Bloco C não precisam ser importados, pois são
+     * preenchidos pelo próprio PGE do Sped Contábil" quando o usuário usa o menu
+     * Escrituração/Recuperar ECD anterior *dentro do PVA*. Não é papel do gerador
+     * preencher isso — só o marcador de bloco (todo bloco é estruturalmente obrigatório,
+     * mesmo sem dados, conforme cap. 3.1 do manual).
+     */
+    private void gravarBlocoCVazio(SpedTextWriter w) {
+        w.abrirBloco("C");
+        w.registro("C001", 1); // IND_DAD = 1 (bloco sem dados informados)
+        w.fecharBloco("C990");
+    }
+
+    /**
+     * Bloco J (Demonstrações Contábeis — Balanço/DRE) — placeholder temporário até a
+     * geração completa (J100/J150/J210/J215/J900/J930) entrar numa próxima leva. Sem isso
+     * o registro de abertura do bloco nem aparece, e o manual exige que todo bloco tenha
+     * seu marcador de abertura mesmo vazio.
+     */
+    private void gravarBlocoJVazio(SpedTextWriter w) {
+        w.abrirBloco("J");
+        w.registro("J001", 1); // IND_DAD = 1 (bloco sem dados informados)
+        w.fecharBloco("J990");
+    }
+
+    /**
+     * Bloco K (Conglomerados Econômicos) — só obrigatório ter dados pra controladoras que
+     * apresentam demonstrações consolidadas (Lei 6.404/76 / CPC 36); fora desse caso, é só
+     * o marcador vazio, igual ao Bloco C.
+     */
+    private void gravarBlocoKVazio(SpedTextWriter w) {
+        w.abrirBloco("K");
+        w.registro("K001", 1); // IND_DAD = 1 (bloco sem dados informados)
+        w.fecharBloco("K990");
     }
 
     private void gravarBloco0(SpedTextWriter w, Empresa empresa, LocalDate dtIni, LocalDate dtFin) {

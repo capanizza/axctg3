@@ -181,6 +181,26 @@ class SpedEcdServiceTest {
     }
 
     @Test
+    void test_gerarArquivo_blocosCJKSaoMarcadoresVaziosNaOrdemCerta() {
+        byte[] arquivo = spedEcdService.gerarArquivo(COD_EMPRESA, DT_INI, DT_FIN, VERSAO);
+        String[] linhas = new String(arquivo, StandardCharsets.ISO_8859_1).split("\r\n");
+
+        // C/J/K não são preenchidos nesta versão — só o marcador "bloco sem dados" (IND_DAD=1),
+        // estruturalmente obrigatório mesmo vazio (cap. 3.1 do manual)
+        assertThat(campo(unicaLinhaComReg(linhas, "C001"), 1)).isEqualTo("1");
+        assertThat(campo(unicaLinhaComReg(linhas, "J001"), 1)).isEqualTo("1");
+        assertThat(campo(unicaLinhaComReg(linhas, "K001"), 1)).isEqualTo("1");
+
+        // ordem dos blocos no arquivo: 0, C, I, J, K, 9 (cap. 3.1 do manual)
+        List<String> aberturasDeBloco = List.of("0000", "C001", "I001", "J001", "K001", "9001");
+        List<String> ordemBlocos = Arrays.stream(linhas)
+                .map(l -> campo(l, 0))
+                .filter(aberturasDeBloco::contains)
+                .toList();
+        assertThat(ordemBlocos).containsExactly("0000", "C001", "I001", "J001", "K001", "9001");
+    }
+
+    @Test
     void test_gerarArquivo_naoListaContaDummyHerdadaDoLegado() {
         criarConta("000000000", "Diversos", 1, "", CodNat.CONTAS_DE_ATIVO, true, null);
 
