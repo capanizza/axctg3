@@ -140,7 +140,7 @@ public class SpedEcdService {
         gravarPlanoDeContas(w, empresa, codEmpresa, ano);
         gravarHistoricos(w, codEmpresa);
         gravarCentrosCusto(w, codEmpresa);
-        gravarSaldosPeriodicos(w, codEmpresa, ano);
+        gravarSaldosPeriodicos(w, codEmpresa, ano, dtIni, dtFin);
         gravarLancamentos(w, codEmpresa, dtIni, dtFin);
 
         w.fecharBloco("I990");
@@ -203,18 +203,30 @@ public class SpedEcdService {
         }
     }
 
-    private void gravarSaldosPeriodicos(SpedTextWriter w, Integer codEmpresa, Integer ano) {
-        // I150 sempre um por mês do período inteiro, mesmo sem saldo/movimento — regra
-        // REGRA_CONTINUIDADE_SALDOS_PERIODICOS do manual exige isso.
-        for (int mes = 1; mes <= 12; mes++) {
-            LocalDate inicioMes = LocalDate.of(ano, mes, 1);
-            LocalDate fimMes = LocalDate.of(ano, mes, YearMonth.of(ano, mes).lengthOfMonth());
+    private void gravarSaldosPeriodicos(SpedTextWriter w, Integer codEmpresa, Integer ano,
+                                         LocalDate dtIni, LocalDate dtFin) {
+        // I150 um por mês do período DECLARADO (dtIni-dtFin), não do ano inteiro — regra
+        // REGRA_CONTINUIDADE_SALDOS_PERIODICOS do manual exige continuidade sem buracos
+        // dentro do período da escrituração, que é o intervalo pedido, não necessariamente
+        // o exercício inteiro (confirmado contra amostra real gerada pro legado com um
+        // período de um mês só: só saiu 1 I150, não 12).
+        YearMonth mesIni = YearMonth.from(dtIni);
+        YearMonth mesFin = YearMonth.from(dtFin);
+        for (YearMonth ym = mesIni; !ym.isAfter(mesFin); ym = ym.plusMonths(1)) {
+            int mes = ym.getMonthValue();
+            LocalDate inicioMes = ym.atDay(1);
+            LocalDate fimMes = ym.atEndOfMonth();
             w.registro("I150", inicioMes, fimMes);
 
+            // Só contas analíticas — contas sintéticas (somatório) não entram no I155: o
+            // saldo delas é obtido por agregação da hierarquia (COD_CTA_SUP no I050) pelo
+            // próprio PVA, não declarado aqui. Confirmado contra amostra real: o legado só
+            // emite I155 pras contas analíticas.
             List<SaldoConta> saldos = dataManager.load(SaldoConta.class)
                     .query("select s from SaldoConta s " +
                             "where s.contaContabil.codEmpresa = :codEmpresa " +
                             "and s.contaContabil.ano = :ano and s.mes = :mes " +
+                            "and s.contaContabil.analitica = true " +
                             "and (s.saldoAnterior <> 0 or s.debitoMes <> 0 or s.creditoMes <> 0) " +
                             "order by s.contaContabil.codigo")
                     .parameter("codEmpresa", codEmpresa)

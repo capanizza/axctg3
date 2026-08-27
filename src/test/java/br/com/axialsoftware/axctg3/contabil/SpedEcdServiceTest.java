@@ -168,8 +168,30 @@ class SpedEcdServiceTest {
         // 2 lançamentos -> 2 I200, cada um com 2 partidas -> 4 I250
         assertThat(contagemReal.get("I200")).isEqualTo(2L);
         assertThat(contagemReal.get("I250")).isEqualTo(4L);
-        // I150 sempre um por mês do ano inteiro, mesmo sem movimento
+        // I150 um por mês do período pedido — aqui o período é o ano inteiro (DT_INI/DT_FIN)
         assertThat(contagemReal.get("I150")).isEqualTo(12L);
+    }
+
+    @Test
+    void test_gerarArquivo_periodoParcialSoGeraI150DosMesesPedidosEI155SoDeContaAnalitica() {
+        // achado comparando com uma amostra real do legado no mesmo período de 1 mês: só sai
+        // 1 I150 (não os 12 do ano), e só contas analíticas ganham I155 — contas sintéticas
+        // (grau superior, ex.: "1" e "4" aqui) têm o saldo obtido por agregação da hierarquia
+        // (COD_CTA_SUP no I050) pelo próprio PVA, não declarado no arquivo.
+        LocalDate dtIniJaneiro = LocalDate.of(ANO, 1, 1);
+        LocalDate dtFinJaneiro = LocalDate.of(ANO, 1, 31);
+        byte[] arquivo = spedEcdService.gerarArquivo(COD_EMPRESA, dtIniJaneiro, dtFinJaneiro, VERSAO);
+        String[] linhas = new String(arquivo, StandardCharsets.ISO_8859_1).split("\r\n");
+
+        long qtdI150 = Arrays.stream(linhas).filter(l -> "I150".equals(campo(l, 0))).count();
+        assertThat(qtdI150).isEqualTo(1L);
+
+        List<String> contasNoI155 = Arrays.stream(linhas)
+                .filter(l -> "I155".equals(campo(l, 0)))
+                .map(l -> campo(l, 1))
+                .toList();
+        assertThat(contasNoI155).doesNotContain("1", "4");
+        assertThat(contasNoI155).contains(caixa.getCodigo(), vendas.getCodigo());
     }
 
     @Test
