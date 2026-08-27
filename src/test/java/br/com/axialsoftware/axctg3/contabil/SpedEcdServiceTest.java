@@ -178,6 +178,12 @@ class SpedEcdServiceTest {
         // I250 tem 8 campos depois do REG — o último, COD_PART, fica em branco (não modelado)
         String i250 = unicaLinhaComReg(linhas, "I250");
         assertThat(campo(i250, 8)).isEmpty();
+
+        // 0007 (outras inscrições cadastrais) é obrigatório (1:N) apesar do nome — sai com
+        // a UF da própria empresa; a empresa de teste não tem município cadastrado, então
+        // o campo fica em branco (mesma lógica do UF do 0000)
+        assertThat(contagemReal.get("0007")).isEqualTo(1L);
+        assertThat(campo(unicaLinhaComReg(linhas, "0007"), 1)).isEmpty();
     }
 
     @Test

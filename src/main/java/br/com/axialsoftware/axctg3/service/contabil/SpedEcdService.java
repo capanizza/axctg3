@@ -30,12 +30,10 @@ import java.util.Map;
  * PVA do Sped Contábil (Programa Validador e Assinador, oficial da Receita Federal), que
  * faz a validação de conteúdo, assinatura digital e transmissão.
  *
- * <p>Fora do escopo desta versão: registro 0007 (outras inscrições cadastrais — é pra
- * inscrição em *outras* entidades, não a UF/IE da própria empresa), J210/J215 (DLPA/DMPL
- * — movimentação de Lucros/Prejuízos Acumulados, registro facultativo) e Bloco K
- * (Conglomerados Econômicos — só obrigatório pra controladoras com demonstrações
- * consolidadas). Blocos C e K saem só como marcador vazio — ver
- * {@link #gravarBlocoCVazio} pro motivo do Bloco C.
+ * <p>Fora do escopo desta versão: J210/J215 (DLPA/DMPL — movimentação de Lucros/Prejuízos
+ * Acumulados, registro facultativo) e Bloco K (Conglomerados Econômicos — só obrigatório
+ * pra controladoras com demonstrações consolidadas). Blocos C e K saem só como marcador
+ * vazio — ver {@link #gravarBlocoCVazio} pro motivo do Bloco C.
  *
  * <p>Referências usadas na implementação: Manual de Orientação do Leiaute 9 da ECD
  * (RFB, jan/2026) e o gerador do legado Delphi (AxCtg, {@code F_SpedContabil.pas}, via
@@ -145,6 +143,12 @@ public class SpedEcdService {
         );
 
         w.registro("0001", 0);
+
+        // COD_ENT_REF = UF da própria empresa (Secretaria da Fazenda estadual, tabela do
+        // manual) — registro obrigatório (1:N) apesar do nome sugerir só inscrições em
+        // *outras* entidades; confirmado contra amostra real e apontado pelo usuário via
+        // erro do PVA. COD_INSCR fica em branco (opcional).
+        w.registro("0007", uf, "");
 
         w.fecharBloco("0990");
     }
