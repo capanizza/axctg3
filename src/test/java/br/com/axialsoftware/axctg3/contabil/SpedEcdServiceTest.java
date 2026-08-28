@@ -233,19 +233,30 @@ class SpedEcdServiceTest {
         assertThat(campo(j100Caixa, 9).replace(",", ".")).isEqualTo("1500.00");
         assertThat(campo(j100Caixa, 10)).isEqualTo("D");
 
-        // J150 (DRE): só quem tem saldoTransf <> 0 — "vendas" aparece; "4" (sintética,
-        // nunca tem saldoTransf — só EncerramentoService grava, e só em analíticas) e
-        // "caixa"/"1" (balanço) não
+        // J150 (DRE): "vendas" (analítica, saldoTransf próprio) e "4"/Receita (sintética,
+        // recebe o total agregado dos filhos — pedido do usuário, confirmado contra o
+        // legado F_SpedContabil.pas) aparecem; "caixa"/"1" (balanço) não
         List<String> contasNoJ150 = Arrays.stream(linhas)
                 .filter(l -> "J150".equals(campo(l, 0)))
                 .map(l -> campo(l, 2))
                 .toList();
-        assertThat(contasNoJ150).containsExactly(vendas.getCodigo());
+        assertThat(contasNoJ150).containsExactlyInAnyOrder(vendas.getCodigo(), "4");
 
-        String j150Vendas = unicaLinhaComReg(linhas, "J150");
+        String j150Vendas = Arrays.stream(linhas)
+                .filter(l -> "J150".equals(campo(l, 0)) && vendas.getCodigo().equals(campo(l, 2)))
+                .findFirst().orElseThrow();
+        assertThat(campo(j150Vendas, 3)).isEqualTo("D"); // analítica
         assertThat(campo(j150Vendas, 9).replace(",", ".")).isEqualTo("1500.00"); // = |saldoTransf|
         assertThat(campo(j150Vendas, 10)).isEqualTo("C");
         assertThat(campo(j150Vendas, 11)).isEqualTo("R"); // natureza de receita (saldo credor)
+
+        String j150Receita = Arrays.stream(linhas)
+                .filter(l -> "J150".equals(campo(l, 0)) && "4".equals(campo(l, 2)))
+                .findFirst().orElseThrow();
+        assertThat(campo(j150Receita, 3)).isEqualTo("T"); // sintética
+        // agregado dos filhos: só "vendas" embaixo de "4", mesmo total
+        assertThat(campo(j150Receita, 9).replace(",", ".")).isEqualTo("1500.00");
+        assertThat(campo(j150Receita, 10)).isEqualTo("C");
 
         // I355 usa a mesma fonte (saldoTransf) — tem que bater com o J150
         String i355Vendas = unicaLinhaComReg(linhas, "I355");

@@ -179,7 +179,7 @@ public class SpedEcdService {
 
         gravarPlanoDeContas(w, empresa, codEmpresa, ano);
         gravarHistoricos(w, codEmpresa);
-        gravarCentrosCusto(w, codEmpresa);
+        gravarCentrosCusto(w, codEmpresa, ano);
         gravarSaldosPeriodicos(w, codEmpresa, ano, dtIni, dtFin);
         gravarLancamentos(w, codEmpresa, dtIni, dtFin);
         gravarSaldoResultadoAntesEncerramento(w, codEmpresa, ano, dtFin);
@@ -189,28 +189,31 @@ public class SpedEcdService {
 
     /**
      * Conta "coringa" herdada do plano de contas do legado Delphi (grau 1, sem hierarquia,
-     * nome genérico "Diversos") — não representa uma conta contábil real e não deve
-     * aparecer no arquivo. Excluída aqui em vez de exigir soft-delete no cadastro porque a
-     * herança se repete em todo plano de contas migrado do legado, não só numa empresa.
+     * nome genérico "Diversos", código todo em zeros — ex. "000000000") não representa
+     * conta contábil real e nunca deve aparecer no arquivo, em nenhum dos registros do
+     * SPED. Filtrada por padrão ("código não começa com '0'") em vez de comparar com uma
+     * string fixa: o legado repete esse "buraco negro" em todo plano de contas migrado, às
+     * vezes com quantidade de zeros diferente, e nenhuma conta real do plano de contas
+     * brasileiro começa com dígito '0' (grau 1 sempre começa em 1, 2, 3...).
      */
-    private static final String CONTA_DUMMY_LEGADO = "000000000";
-
     private void gravarPlanoDeContas(SpedTextWriter w, Empresa empresa, Integer codEmpresa, Integer ano) {
         boolean temPlanoReferencial = empresa.getCodPlanRef() != null;
-        LocalDate dtAltPadrao = LocalDate.of(ano, 1, 1);
+        // DT_ALT = data da última alteração do plano de contas. createdDate (auditoria do
+        // axctg3) é só quando a linha foi migrada/cadastrada no sistema — sem relação com
+        // histórico real da conta — então usamos 31/12 do ano anterior pra toda conta,
+        // convenção pedida pelo usuário pra plano de contas sem alteração dentro do período.
+        LocalDate dtAlt = LocalDate.of(ano - 1, 12, 31);
 
         List<ContaContabil> contas = dataManager.load(ContaContabil.class)
                 .query("select c from ContaContabil c " +
-                        "where c.codEmpresa = :codEmpresa and c.ano = :ano and c.codigo <> :contaDummy " +
+                        "where c.codEmpresa = :codEmpresa and c.ano = :ano and c.codigo not like '0%' " +
                         "order by c.codigo")
                 .parameter("codEmpresa", codEmpresa)
                 .parameter("ano", ano)
-                .parameter("contaDummy", CONTA_DUMMY_LEGADO)
                 .list();
 
         for (ContaContabil conta : contas) {
             boolean analitica = Boolean.TRUE.equals(conta.getAnalitica());
-            LocalDate dtAlt = conta.getCreatedDate() != null ? conta.getCreatedDate().toLocalDate() : dtAltPadrao;
 
             w.registro("I050",
                     dtAlt,
@@ -249,14 +252,15 @@ public class SpedEcdService {
         }
     }
 
-    private void gravarCentrosCusto(SpedTextWriter w, Integer codEmpresa) {
+    private void gravarCentrosCusto(SpedTextWriter w, Integer codEmpresa, Integer ano) {
         List<CentroCusto> centros = dataManager.load(CentroCusto.class)
                 .query("select c from CentroCusto c where c.codEmpresa = :codEmpresa order by c.codigo")
                 .parameter("codEmpresa", codEmpresa)
                 .list();
 
+        // Mesma convenção do DT_ALT do I050 — ver comentário em gravarPlanoDeContas.
+        LocalDate dtAlt = LocalDate.of(ano - 1, 12, 31);
         for (CentroCusto centro : centros) {
-            LocalDate dtAlt = centro.getCreatedDate() != null ? centro.getCreatedDate().toLocalDate() : null;
             w.registro("I100", dtAlt, centro.getCodigo(), centro.getNome());
         }
     }
@@ -285,13 +289,12 @@ public class SpedEcdService {
                             "where s.contaContabil.codEmpresa = :codEmpresa " +
                             "and s.contaContabil.ano = :ano and s.mes = :mes " +
                             "and s.contaContabil.analitica = true " +
-                            "and s.contaContabil.codigo <> :contaDummy " +
+                            "and s.contaContabil.codigo not like '0%' " +
                             "and (s.saldoAnterior <> 0 or s.debitoMes <> 0 or s.creditoMes <> 0) " +
                             "order by s.contaContabil.codigo")
                     .parameter("codEmpresa", codEmpresa)
                     .parameter("ano", ano)
                     .parameter("mes", mes)
-                    .parameter("contaDummy", CONTA_DUMMY_LEGADO)
                     .list();
 
             for (SaldoConta saldo : saldos) {
@@ -367,18 +370,53 @@ public class SpedEcdService {
 
     /**
      * Contas analíticas de resultado do ano/empresa com {@code saldoTransf} preenchido e
-     * diferente de zero — fonte única do I355 e do J150 (VL_CTA_FIN do ano corrente,
-     * VL_CTA_INI comparativo do ano anterior).
+     * diferente de zero — fonte do I355 (só analíticas, mesma convenção do I155). Pro J150,
+     * que precisa da árvore inteira (sintéticas incluídas), ver
+     * {@link #agregarSaldoTransfPorConta}.
      */
     private List<ContaContabil> contasResultadoComSaldoTransf(Integer codEmpresa, Integer ano) {
         return dataManager.load(ContaContabil.class)
                 .query("select c from ContaContabil c where c.codEmpresa = :codEmpresa and c.ano = :ano " +
-                        "and c.codNat = :codNat and c.analitica = true " +
+                        "and c.codNat = :codNat and c.analitica = true and c.codigo not like '0%' " +
                         "and c.saldoTransf is not null and c.saldoTransf <> 0 order by c.codigo")
                 .parameter("codEmpresa", codEmpresa)
                 .parameter("ano", ano)
                 .parameter("codNat", CodNat.CONTAS_DE_RESULTADO.getId())
                 .list();
+    }
+
+    /**
+     * Soma, de baixo pra cima na hierarquia (via {@code codContaSup}), o {@code saldoTransf}
+     * de cada conta de resultado do ano/empresa — inclusive sintéticas, que nunca têm
+     * {@code saldoTransf} próprio ({@code EncerramentoService} só grava direto nas
+     * analíticas). Pedido do usuário: o J150 precisa listar as sintéticas também, com o
+     * total agregado dos filhos — o legado (F_SpedContabil.pas, {@code GravaBlocoJ}) fazia
+     * o mesmo agregando isso numa stored procedure (RelBalancete) em vez de em memória.
+     * Carrega por grau decrescente e acumula no mapa: quando uma conta é processada, todos
+     * os descendentes dela (grau maior) já empurraram sua soma pra ela.
+     */
+    private Map<String, BigDecimal> agregarSaldoTransfPorConta(Integer codEmpresa, Integer ano) {
+        List<ContaContabil> contas = dataManager.load(ContaContabil.class)
+                .query("select c from ContaContabil c where c.codEmpresa = :codEmpresa and c.ano = :ano " +
+                        "and c.codNat = :codNat and c.codigo not like '0%' order by c.grau desc")
+                .parameter("codEmpresa", codEmpresa)
+                .parameter("ano", ano)
+                .parameter("codNat", CodNat.CONTAS_DE_RESULTADO.getId())
+                .list();
+
+        Map<String, BigDecimal> agregado = new LinkedHashMap<>();
+        for (ContaContabil conta : contas) {
+            BigDecimal proprio = Boolean.TRUE.equals(conta.getAnalitica()) && conta.getSaldoTransf() != null
+                    ? conta.getSaldoTransf() : BigDecimal.ZERO;
+            BigDecimal total = agregado.getOrDefault(conta.getCodigo(), BigDecimal.ZERO).add(proprio);
+            agregado.put(conta.getCodigo(), total);
+
+            String codSup = conta.getCodContaSup();
+            if (codSup != null && !codSup.isBlank()) {
+                agregado.merge(codSup, total, BigDecimal::add);
+            }
+        }
+        return agregado;
     }
 
     /**
@@ -395,12 +433,11 @@ public class SpedEcdService {
 
         List<ContaContabil> contasBalanco = dataManager.load(ContaContabil.class)
                 .query("select c from ContaContabil c where c.codEmpresa = :codEmpresa and c.ano = :ano " +
-                        "and c.codNat in :nats and c.codigo <> :contaDummy order by c.codigo")
+                        "and c.codNat in :nats and c.codigo not like '0%' order by c.codigo")
                 .parameter("codEmpresa", codEmpresa)
                 .parameter("ano", ano)
                 .parameter("nats", List.of(CodNat.CONTAS_DE_ATIVO.getId(), CodNat.CONTAS_DE_PASSIVO.getId(),
                         CodNat.PATRIMONIO_LIQUIDO.getId()))
-                .parameter("contaDummy", CONTA_DUMMY_LEGADO)
                 .list();
 
         int mesIni = dtIni.getMonthValue();
@@ -424,25 +461,35 @@ public class SpedEcdService {
                     ""); // NOTA_EXP_REF — sem notas explicativas modeladas
         }
 
-        // J150 só entra pra quem tem saldoTransf <> 0 no ano corrente (pedido do usuário) —
-        // na prática só contas analíticas (é só nelas que EncerramentoService grava
-        // saldoTransf). VL_CTA_INI é o comparativo do ano anterior — facultativo no manual,
-        // fica em branco se a empresa não tinha esse exercício ainda no axctg3.
-        List<ContaContabil> contasResultado = contasResultadoComSaldoTransf(codEmpresa, ano);
-        Map<String, BigDecimal> saldoTransfAnoAnterior = new LinkedHashMap<>();
-        for (ContaContabil contaAnoAnterior : contasResultadoComSaldoTransf(codEmpresa, ano - 1)) {
-            saldoTransfAnoAnterior.put(contaAnoAnterior.getCodigo(), contaAnoAnterior.getSaldoTransf());
-        }
+        // J150 lista analíticas e sintéticas de resultado (pedido do usuário, confirmado
+        // contra o legado F_SpedContabil.pas) — só entra quem tem saldo agregado <> 0 no ano
+        // corrente ou no comparativo. VL_CTA_INI é o comparativo do ano anterior —
+        // facultativo no manual, fica em branco se a conta não existia nesse ano no axctg3.
+        List<ContaContabil> contasResultadoTodas = dataManager.load(ContaContabil.class)
+                .query("select c from ContaContabil c where c.codEmpresa = :codEmpresa and c.ano = :ano " +
+                        "and c.codNat = :codNat and c.codigo not like '0%' order by c.codigo")
+                .parameter("codEmpresa", codEmpresa)
+                .parameter("ano", ano)
+                .parameter("codNat", CodNat.CONTAS_DE_RESULTADO.getId())
+                .list();
+        Map<String, BigDecimal> saldoTransfAgregado = agregarSaldoTransfPorConta(codEmpresa, ano);
+        Map<String, BigDecimal> saldoTransfAgregadoAnoAnterior = agregarSaldoTransfPorConta(codEmpresa, ano - 1);
 
         int numOrdem = 1;
-        for (ContaContabil conta : contasResultado) {
-            BigDecimal saldoFin = conta.getSaldoTransf(); // não nulo/não zero — garantido pela query
-            BigDecimal saldoAnt = saldoTransfAnoAnterior.get(conta.getCodigo());
+        for (ContaContabil conta : contasResultadoTodas) {
+            BigDecimal saldoFin = saldoTransfAgregado.getOrDefault(conta.getCodigo(), BigDecimal.ZERO);
+            BigDecimal saldoAnt = saldoTransfAgregadoAnoAnterior.get(conta.getCodigo());
+            boolean semSaldoFin = saldoFin.signum() == 0;
+            boolean semSaldoAnt = saldoAnt == null || saldoAnt.signum() == 0;
+            if (semSaldoFin && semSaldoAnt) {
+                continue;
+            }
+            boolean analitica = Boolean.TRUE.equals(conta.getAnalitica());
 
             w.registro("J150",
                     numOrdem++,
                     conta.getCodigo(),
-                    "D", // só entram contas analíticas — ver contasResultadoComSaldoTransf
+                    analitica ? "D" : "T",
                     conta.getGrau(),
                     conta.getCodContaSup(),
                     conta.getNome(),
