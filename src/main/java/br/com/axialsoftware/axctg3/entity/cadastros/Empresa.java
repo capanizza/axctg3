@@ -148,6 +148,19 @@ public class Empresa {
     @Column(name = "COD_PLAN_REF")
     private Integer codPlanRef;
 
+    // número de ordem do livro digital (Registro I030.NUM_ORD do Sped ECD) — não é uma
+    // Sequence do Jmix: regerar o mesmo livro (ex. corrigindo dado antes da transmissão
+    // final) precisa manter o mesmo número, e Sequences só expõe createNextValue (sempre
+    // incrementa, sem "peek"). O contador confirma/ajusta esse valor na mão, igual faz
+    // com NIRE/CRC — sem valor padrão automático.
+    @Column(name = "NUM_ORDEM_LIVRO_ECD")
+    private Integer numOrdemLivroEcd;
+
+    // data de arquivamento dos atos constitutivos na junta comercial — Registro
+    // I030.DT_ARQ do Sped ECD (advertência do PVA quando em branco).
+    @Column(name = "DT_ARQ")
+    private LocalDate dtArq;
+
     @Column(name = "NM_RESPONSAVEL", length = 50)
     private String nmResponsavel;
 
@@ -571,6 +584,22 @@ public class Empresa {
 
     public void setCodPlanRef(CodPlanRef codPlanRef) {
         this.codPlanRef = codPlanRef == null ? null : codPlanRef.getId();
+    }
+
+    public Integer getNumOrdemLivroEcd() {
+        return numOrdemLivroEcd;
+    }
+
+    public void setNumOrdemLivroEcd(Integer numOrdemLivroEcd) {
+        this.numOrdemLivroEcd = numOrdemLivroEcd;
+    }
+
+    public LocalDate getDtArq() {
+        return dtArq;
+    }
+
+    public void setDtArq(LocalDate dtArq) {
+        this.dtArq = dtArq;
     }
 
     public String getNmResponsavel() {

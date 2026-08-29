@@ -194,6 +194,18 @@ public class ConfigRel {
     @Column(name = "tipo_produto")
     private Integer tipoProduto;
 
+    @Column(name = "data_sped_ecd_inicial")
+    private LocalDate dataSpedEcdInicial;
+
+    @Column(name = "data_sped_ecd_final")
+    private LocalDate dataSpedEcdFinal;
+
+    @Column(name = "versao_sped_ecd")
+    private String versaoSpedEcd;
+
+    @Column(name = "pasta_sped_ecd")
+    private String pastaSpedEcd;
+
     public UUID getId() {
         return id;
     }
@@ -656,5 +668,37 @@ public class ConfigRel {
 
     public void setTipoProduto(TipoProduto tipoProduto) {
         this.tipoProduto = tipoProduto == null ? null : tipoProduto.getId();
+    }
+
+    public LocalDate getDataSpedEcdInicial() {
+        return dataSpedEcdInicial;
+    }
+
+    public void setDataSpedEcdInicial(LocalDate dataSpedEcdInicial) {
+        this.dataSpedEcdInicial = dataSpedEcdInicial;
+    }
+
+    public LocalDate getDataSpedEcdFinal() {
+        return dataSpedEcdFinal;
+    }
+
+    public void setDataSpedEcdFinal(LocalDate dataSpedEcdFinal) {
+        this.dataSpedEcdFinal = dataSpedEcdFinal;
+    }
+
+    public String getVersaoSpedEcd() {
+        return versaoSpedEcd;
+    }
+
+    public void setVersaoSpedEcd(String versaoSpedEcd) {
+        this.versaoSpedEcd = versaoSpedEcd;
+    }
+
+    public String getPastaSpedEcd() {
+        return pastaSpedEcd;
+    }
+
+    public void setPastaSpedEcd(String pastaSpedEcd) {
+        this.pastaSpedEcd = pastaSpedEcd;
     }
 }

@@ -101,6 +101,10 @@ public class EncerramentoService {
         Lancamento lancamento = dataManager.create(Lancamento.class);
         // codEmpresa/ano/mes/numero/dataLancamento são carimbados pelo LancamentoEventListener
         // a partir do período contábil corrente (por isso o encerramento só roda em dezembro).
+        // DIA precisa ser setado explicitamente: sem ele, LancamentoService.calcularDataLancamento
+        // assume dia 1 — lançamento de encerramento é sempre datado no último dia do exercício
+        // (31/12, já que MES_FECHAMENTO é sempre 12), não no dia 1 do mês.
+        lancamento.setDia(31);
         lancamento.setValor(saldo.abs());
         if (devedor) {
             lancamento.setContaCredora(conta);

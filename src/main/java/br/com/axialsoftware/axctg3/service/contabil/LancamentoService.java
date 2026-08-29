@@ -566,13 +566,23 @@ public class LancamentoService {
                 .orElse(null);
     }
 
-    private ContaContabil lerContaContabil(String conta, Integer codEmpresa) {
+    /**
+     * {@code ContaContabil} é uma linha por (empresa, ano, código) — sem o filtro de
+     * {@code ano}, uma empresa com vários exercícios cadastrados (caso normal depois do
+     * primeiro "Criar Próximo Exercício") tem várias contas com o mesmo código, uma por
+     * ano, e a query original devolvia uma qualquer sem ordenação determinística. Bug real:
+     * lançamentos de dezembro/2024 importados às vezes resolviam a conta pro ano de 2025,
+     * empurrando saldo pro mês/ano errado (visto na tela Verificação das Contas).
+     */
+    private ContaContabil lerContaContabil(String conta, Integer codEmpresa, Integer ano) {
         return dataManager.load(ContaContabil.class)
                 .query("select e from ContaContabil e " +
                         "where e.codigo = :conta " +
-                        "and e.codEmpresa = :codEmpresa")
+                        "and e.codEmpresa = :codEmpresa " +
+                        "and e.ano = :ano")
                 .parameter("conta", conta)
                 .parameter("codEmpresa", codEmpresa)
+                .parameter("ano", ano)
                 .optional()
                 .orElse(null);
     }
@@ -585,6 +595,10 @@ public class LancamentoService {
     public void gravarLancamento(LancamentoTmp lancamentoTmp) {
         Lancamento lancamento = dataManager.create(Lancamento.class);
         int codEmpresa = utilGeralService.getCodEmpresa();
+        // mesmo ano que o LancamentoEventListener vai carimbar em lancamento.ano no save
+        // (EntitySavingEvent usa o período corrente da sessão, não lancamentoTmp.getAno()) —
+        // resolver a conta pelo mesmo ano evita reintroduzir o bug acima.
+        int anoContabil = utilGeralService.getAnoContabil();
 
         lancamento.setId(lancamentoTmp.getId());
         lancamento.setVersion(lancamentoTmp.getVersion());
@@ -598,9 +612,9 @@ public class LancamentoService {
 //            lancamento.setContaDevedora(lancamentoTmp.getContaDevedora());
 //            lancamento.setHistoricoContabil(lancamentoTmp.getHistoricoContabil());
 //            lancamento.setCentroCusto(lancamentoTmp.getCentroCusto());
-        ContaContabil conta = lerContaContabil(lancamentoTmp.getDevedora(), codEmpresa);
+        ContaContabil conta = lerContaContabil(lancamentoTmp.getDevedora(), codEmpresa, anoContabil);
         lancamento.setContaDevedora(conta);
-        conta = lerContaContabil(lancamentoTmp.getCredora(), codEmpresa);
+        conta = lerContaContabil(lancamentoTmp.getCredora(), codEmpresa, anoContabil);
         lancamento.setContaCredora(conta);
         HistoricoContabil historico = lerHistoricoContabil(lancamentoTmp.getHist(), codEmpresa);
         lancamento.setHistoricoContabil(historico);

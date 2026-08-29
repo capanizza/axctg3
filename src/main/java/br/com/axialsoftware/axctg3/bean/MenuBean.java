@@ -1,6 +1,7 @@
 package br.com.axialsoftware.axctg3.bean;
 
 import br.com.axialsoftware.axctg3.entity.cadastros.ConfigRel;
+import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
 import br.com.axialsoftware.axctg3.entity.contabil.HistoricoContabil;
 import br.com.axialsoftware.axctg3.entity.financeiro.Banco;
@@ -9,6 +10,7 @@ import br.com.axialsoftware.axctg3.service.contabil.ContaContabilService;
 import br.com.axialsoftware.axctg3.service.contabil.DepreciacaoService;
 import br.com.axialsoftware.axctg3.service.contabil.EncerramentoService;
 import br.com.axialsoftware.axctg3.service.contabil.LancamentoService;
+import br.com.axialsoftware.axctg3.service.contabil.SpedEcdService;
 import br.com.axialsoftware.axctg3.service.financeiro.DiversoPagarService;
 import br.com.axialsoftware.axctg3.service.financeiro.ItemDiversoPagarService;
 import br.com.axialsoftware.axctg3.service.financeiro.ItemPagarService;
@@ -28,6 +30,8 @@ import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.view.View;
 import org.springframework.stereotype.Component;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
@@ -43,6 +47,8 @@ public class MenuBean {
 
     /** Uma empresa raramente passa de algumas centenas de contas — folga generosa mesmo assim. */
     private static final long TIMEOUT_ENCERRAMENTO_MINUTOS = 10;
+    /** Um ano inteiro de lançamentos pode ser um arquivo grande — folga generosa. */
+    private static final long TIMEOUT_SPED_ECD_MINUTOS = 10;
 
     private final UtilGeralService utilGeralService;
     private final Dialogs dialogs;
@@ -58,8 +64,9 @@ public class MenuBean {
     private final TituloPagarService tituloPagarService;
     private final ItemPagarService itemPagarService;
     private final MovimentoBancoService movimentoBancoService;
+    private final SpedEcdService spedEcdService;
 
-    public MenuBean(UtilGeralService utilGeralService, Dialogs dialogs, ContaContabilService contaContabilService, DataManager dataManager, LancamentoService lancamentoService, DepreciacaoService depreciacaoService, EncerramentoService encerramentoService, DiversoPagarService diversoPagarService, ItemDiversoPagarService itemDiversoPagarService, TituloReceberService tituloReceberService, ItemReceberService itemReceberService, TituloPagarService tituloPagarService, ItemPagarService itemPagarService, MovimentoBancoService movimentoBancoService) {
+    public MenuBean(UtilGeralService utilGeralService, Dialogs dialogs, ContaContabilService contaContabilService, DataManager dataManager, LancamentoService lancamentoService, DepreciacaoService depreciacaoService, EncerramentoService encerramentoService, DiversoPagarService diversoPagarService, ItemDiversoPagarService itemDiversoPagarService, TituloReceberService tituloReceberService, ItemReceberService itemReceberService, TituloPagarService tituloPagarService, ItemPagarService itemPagarService, MovimentoBancoService movimentoBancoService, SpedEcdService spedEcdService) {
         this.utilGeralService = utilGeralService;
         this.dialogs = dialogs;
         this.contaContabilService = contaContabilService;
@@ -74,6 +81,7 @@ public class MenuBean {
         this.tituloPagarService = tituloPagarService;
         this.itemPagarService = itemPagarService;
         this.movimentoBancoService = movimentoBancoService;
+        this.spedEcdService = spedEcdService;
     }
 
     public void listarLancamentos() {
@@ -820,6 +828,137 @@ public class MenuBean {
                         new DialogAction(DialogAction.Type.NO)
                 )
                 .open();
+    }
+
+    /**
+     * Gera o arquivo texto do Sped ECD (Bloco 0 + Bloco I, leiaute 9) pro período
+     * escolhido e grava direto em disco — ver {@link SpedEcdService}. Não valida, assina
+     * nem transmite nada: isso é feito pelo usuário no PVA oficial do Sped Contábil.
+     *
+     * <p>Período em vez de ano fechado de propósito: gerar só um mês ajuda a testar campos
+     * do arquivo sem esperar o exercício inteiro fechar — o PVA vai reclamar da
+     * descontinuidade do período nesse caso, o que é esperado.
+     */
+    public void gerarSpedEcd() {
+        View<?> ownerView = UiComponentUtils.getCurrentView();
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
+        Empresa empresa = dataManager.load(Empresa.class)
+                .query("select e from Empresa e where e.codigo = :codEmpresa")
+                .parameter("codEmpresa", utilGeralService.getCodEmpresa())
+                .one();
+
+        Integer anoContabil = utilGeralService.getAnoContabil();
+        Optional<LocalDate> optData = Optional.ofNullable(configRel.getDataSpedEcdInicial());
+        LocalDate dataInicial = optData.orElse(LocalDate.of(anoContabil, 1, 1));
+        optData = Optional.ofNullable(configRel.getDataSpedEcdFinal());
+        LocalDate dataFinal = optData.orElse(LocalDate.of(anoContabil, 12, 31));
+        String versao = Optional.ofNullable(configRel.getVersaoSpedEcd()).orElse("9.00");
+        String pastaPadrao = Optional.ofNullable(configRel.getPastaSpedEcd()).orElse("");
+
+        dialogs.createInputDialog(ownerView)
+                .withHeader("Sped ECD")
+                .withParameters(
+                        localDateParameter("dataInicial")
+                                .withLabel("Data inicial")
+                                .withDefaultValue(dataInicial)
+                                .withRequired(true),
+                        localDateParameter("dataFinal")
+                                .withLabel("Data final")
+                                .withDefaultValue(dataFinal)
+                                .withRequired(true),
+                        intParameter("numOrdemLivro")
+                                .withLabel("Número de ordem do livro")
+                                .withDefaultValue(empresa.getNumOrdemLivroEcd())
+                                .withRequired(true),
+                        stringParameter("versao")
+                                .withLabel("Versão do leiaute (COD_VER_LC)")
+                                .withDefaultValue(versao)
+                                .withRequired(true),
+                        stringParameter("pasta")
+                                .withLabel("Pasta de destino")
+                                .withDefaultValue(pastaPadrao)
+                                .withRequired(true),
+                        stringParameter("nomeArquivo")
+                                .withLabel("Nome do arquivo")
+                                .withDefaultValue("ECD_" + dataInicial.getYear() + ".txt")
+                                .withRequired(true)
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withCloseListener(closeEvent -> {
+                    if (!closeEvent.closedWith(DialogOutcome.OK)) {
+                        return;
+                    }
+                    LocalDate dtIni = closeEvent.getValue("dataInicial");
+                    LocalDate dtFin = closeEvent.getValue("dataFinal");
+                    Integer numOrdemLivro = closeEvent.getValue("numOrdemLivro");
+                    String versaoInformada = closeEvent.getValue("versao");
+                    String pasta = closeEvent.getValue("pasta");
+                    String nomeArquivo = closeEvent.getValue("nomeArquivo");
+
+                    if (!numOrdemLivro.equals(empresa.getNumOrdemLivroEcd())) {
+                        empresa.setNumOrdemLivroEcd(numOrdemLivro);
+                        dataManager.save(empresa);
+                    }
+                    configRel.setDataSpedEcdInicial(dtIni);
+                    configRel.setDataSpedEcdFinal(dtFin);
+                    configRel.setVersaoSpedEcd(versaoInformada);
+                    configRel.setPastaSpedEcd(pasta);
+                    SaveContext saveContext = new SaveContext();
+                    saveContext.saving(configRel);
+                    dataManager.save(saveContext);
+
+                    dialogs.createBackgroundTaskDialog(
+                                    new GerarSpedEcdTask(ownerView, dtIni, dtFin, versaoInformada, pasta, nomeArquivo))
+                            .withHeader("Sped ECD")
+                            .withText("Gerando arquivo...")
+                            .withCancelAllowed(false)
+                            .open();
+                })
+                .open();
+    }
+
+    /**
+     * Roda {@link SpedEcdService#gerarArquivo} numa thread separada e grava o resultado
+     * direto em disco — arquivo de um exercício inteiro pode demorar, daí o diálogo de
+     * progresso; sem etapas discretas pra publicar (é uma chamada só), a barra fica
+     * indeterminada. Mesmo raciocínio de "nada de UI dentro de run()" das outras
+     * BackgroundTask do arquivo.
+     */
+    protected class GerarSpedEcdTask extends BackgroundTask<Integer, Path> {
+
+        private final LocalDate dtIni;
+        private final LocalDate dtFin;
+        private final String versao;
+        private final String pasta;
+        private final String nomeArquivo;
+
+        protected GerarSpedEcdTask(View<?> ownerView, LocalDate dtIni, LocalDate dtFin, String versao,
+                                    String pasta, String nomeArquivo) {
+            super(TIMEOUT_SPED_ECD_MINUTOS, TimeUnit.MINUTES, ownerView);
+            this.dtIni = dtIni;
+            this.dtFin = dtFin;
+            this.versao = versao;
+            this.pasta = pasta;
+            this.nomeArquivo = nomeArquivo;
+        }
+
+        @Override
+        public Path run(TaskLifeCycle<Integer> taskLifeCycle) throws Exception {
+            byte[] arquivo = spedEcdService.gerarArquivo(utilGeralService.getCodEmpresa(), dtIni, dtFin, versao);
+            Path pastaDestino = Path.of(pasta);
+            Files.createDirectories(pastaDestino);
+            Path destino = pastaDestino.resolve(nomeArquivo);
+            Files.write(destino, arquivo);
+            return destino;
+        }
+
+        @Override
+        public void done(Path destino) {
+            dialogs.createMessageDialog()
+                    .withHeader("Sped ECD")
+                    .withText("Arquivo gravado em " + destino)
+                    .open();
+        }
     }
 
     /**

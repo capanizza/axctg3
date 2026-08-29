@@ -34,6 +34,10 @@
                       title="msg://br.com.axialsoftware.axctg3.view.tabelas.contareferencial/contaReferencialListView.title"/>
                 <item view="Associacao.list"
                       title="msg://br.com.axialsoftware.axctg3.view.contabil.associacao/associacaoListView.title"/>
+                <item id="gerarSpedEcd"
+                      title="msg://br.com.axialsoftware.axctg3/menu.spedEcd.gerarSpedEcd"
+                      bean="MenuBean"
+                      beanMethod="gerarSpedEcd"/>
             </menu>
             <menu id="encerramento" title="msg://br.com.axialsoftware.axctg3/menu.encerramento.title">
                 <item id="lancarEncerramento"
