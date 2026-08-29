@@ -172,7 +172,7 @@ public class SpedEcdService {
                 empresa.getNome(),
                 nire,
                 SpedTextWriter.soDigitos(empresa.getCnpj()),
-                "", // DT_ARQ — data de arquivamento dos atos constitutivos, não modelada
+                empresa.getDtArq(), // DT_ARQ
                 "", // DT_ARQ_CONV — conversão de sociedade simples em empresária, raro
                 desMun,
                 dtFin); // DT_EX_SOCIAL

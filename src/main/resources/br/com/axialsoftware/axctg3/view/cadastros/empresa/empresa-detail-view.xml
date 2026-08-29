@@ -224,6 +224,11 @@
                                               dataContainer="empresaDc"
                                               width="25%" themeNames="small"
                                               label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.numOrdemLivroEcd"/>
+                                <datePicker id="dtArqField"
+                                            property="dtArq"
+                                            dataContainer="empresaDc"
+                                            width="25%" themeNames="small"
+                                            label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.dtArq"/>
                             </hbox>
                         </vbox>
                     </tab>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/08/29-120124-c1f40fd1-empresa-dt-arq.xml">
+    <!--
+        Data de arquivamento dos atos constitutivos na junta comercial — Registro
+        I030.DT_ARQ do Sped ECD. O PVA advertia com o campo em branco.
+    -->
+    <changeSet id="1" author="axctg3">
+        <addColumn tableName="EMPRESA">
+            <column name="DT_ARQ" type="DATE"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

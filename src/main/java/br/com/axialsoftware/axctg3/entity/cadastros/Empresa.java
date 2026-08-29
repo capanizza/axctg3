@@ -156,6 +156,11 @@ public class Empresa {
     @Column(name = "NUM_ORDEM_LIVRO_ECD")
     private Integer numOrdemLivroEcd;
 
+    // data de arquivamento dos atos constitutivos na junta comercial — Registro
+    // I030.DT_ARQ do Sped ECD (advertência do PVA quando em branco).
+    @Column(name = "DT_ARQ")
+    private LocalDate dtArq;
+
     @Column(name = "NM_RESPONSAVEL", length = 50)
     private String nmResponsavel;
 
@@ -587,6 +592,14 @@ public class Empresa {
 
     public void setNumOrdemLivroEcd(Integer numOrdemLivroEcd) {
         this.numOrdemLivroEcd = numOrdemLivroEcd;
+    }
+
+    public LocalDate getDtArq() {
+        return dtArq;
+    }
+
+    public void setDtArq(LocalDate dtArq) {
+        this.dtArq = dtArq;
     }
 
     public String getNmResponsavel() {
