@@ -94,147 +94,161 @@
     <field name="aliqIcms" class="java.math.BigDecimal"/>
 
     <title>
-        <band height="345" splitType="Stretch">
-            <!-- Canhoto -->
-            <staticText>
-                <reportElement x="0" y="0" width="555" height="20" uuid="a1b2c3d4-0002-0001-0001-000000000001"/>
-                    <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.25"/></box>
-                <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
-                <text><![CDATA[RECEBEMOS DE (EMITENTE ABAIXO) OS PRODUTOS E/OU SERVIÇOS CONSTANTES DA NOTA FISCAL INDICADA ABAIXO — EMISSÃO E DESTINATÁRIO NO CORPO DO DOCUMENTO]]></text>
-            </staticText>
+        <band height="351" splitType="Stretch">
+            <!-- Canhoto — 2ª linha (data/assinatura) mais alta que a 1ª, com o campo de data
+                 estreito (15% da largura útil) e o quadro NF-e/Número/Série numa coluna à
+                 direita abrangendo a altura das duas linhas, igual ao DANFE oficial. -->
             <textField>
-                <reportElement x="0" y="20" width="240" height="20" uuid="a1b2c3d4-0002-0001-0001-000000000002"/>
-                    <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0"/></box>
+                <reportElement x="0" y="0" width="460" height="20" uuid="a1b2c3d4-0002-0001-0001-000000000001"/>
+                    <box leftPadding="2" rightPadding="2"><topPen lineWidth="0.5"/><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
+                <textFieldExpression><![CDATA["RECEBEMOS DE " + $P{EMIT_X_NOME} + " OS PRODUTOS E/OU SERVIÇOS CONSTANTES DA NOTA FISCAL ELETRÔNICA INDICADA AO LADO."]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="20" width="69" height="26" uuid="a1b2c3d4-0002-0001-0001-000000000002"/>
+                    <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.25"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["DATA DE RECEBIMENTO"]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="240" y="20" width="155" height="20" uuid="a1b2c3d4-0002-0001-0001-000000000003"/>
-                    <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0"/></box>
+                <reportElement x="69" y="20" width="391" height="26" uuid="a1b2c3d4-0002-0001-0001-000000000003"/>
+                    <box leftPadding="2" rightPadding="2"><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.25"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["IDENTIFICAÇÃO E ASSINATURA DO RECEBEDOR"]]></textFieldExpression>
             </textField>
+            <staticText>
+                <reportElement x="460" y="0" width="95" height="14" uuid="a1b2c3d4-0002-0001-0001-000000000004"/>
+                    <box leftPadding="2" rightPadding="2"><topPen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="8" isBold="true"/></textElement>
+                <text><![CDATA[NF-e]]></text>
+            </staticText>
             <textField>
-                <reportElement x="395" y="20" width="160" height="20" uuid="a1b2c3d4-0002-0001-0001-000000000004"/>
+                <reportElement x="460" y="14" width="95" height="16" uuid="a1b2c3d4-0002-0001-0001-00000000003c"/>
+                    <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="8" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["Nº " + $P{NUMERO_NF}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="460" y="30" width="95" height="16" uuid="a1b2c3d4-0002-0001-0001-00000000003d"/>
                     <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.25"/></box>
-                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="10" isBold="true"/></textElement>
-                <textFieldExpression><![CDATA["Nº " + $P{NUMERO_NF} + "   SÉRIE " + $P{SERIE}]]></textFieldExpression>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="8" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["SÉRIE " + $P{SERIE}]]></textFieldExpression>
             </textField>
             <line>
-                <reportElement x="0" y="41" width="555" height="1" uuid="a1b2c3d4-0002-0001-0001-000000000005"/>
+                <reportElement x="0" y="47" width="555" height="1" uuid="a1b2c3d4-0002-0001-0001-000000000005"/>
                 <graphicElement><pen lineStyle="Dashed"/></graphicElement>
             </line>
 
             <!-- Emitente / DANFE / Chave de acesso -->
             <image scaleImage="FillFrame">
-                <reportElement x="0" y="45" width="65" height="35" uuid="a1b2c3d4-0002-0001-0001-000000000006">
+                <reportElement x="0" y="51" width="65" height="35" uuid="a1b2c3d4-0002-0001-0001-000000000006">
                     <printWhenExpression><![CDATA[$P{LOGO} != null]]></printWhenExpression>
                 </reportElement>
                 <imageExpression><![CDATA[$P{LOGO}]]></imageExpression>
             </image>
-            <textField>
-                <reportElement x="65" y="45" width="165" height="16" uuid="a1b2c3d4-0002-0001-0001-000000000007"/>
+            <textField textAdjust="ScaleFont">
+                <reportElement x="65" y="51" width="165" height="16" uuid="a1b2c3d4-0002-0001-0001-000000000007"/>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="12" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA[$P{EMIT_X_NOME}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="0" y="86" width="230" height="11" uuid="a1b2c3d4-0002-0001-0001-000000000008"/>
+                <reportElement x="0" y="92" width="230" height="11" uuid="a1b2c3d4-0002-0001-0001-000000000008"/>
                 <textElement><font fontName="Times New Roman" size="8" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA[$P{EMIT_ENDERECO}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="0" y="97" width="230" height="11" uuid="a1b2c3d4-0002-0001-0001-000000000009"/>
+                <reportElement x="0" y="103" width="230" height="11" uuid="a1b2c3d4-0002-0001-0001-000000000009"/>
                 <textElement><font fontName="Times New Roman" size="8" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA[$P{EMIT_MUN_UF} + "  CEP " + $P{EMIT_CEP}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="0" y="108" width="115" height="11" uuid="a1b2c3d4-0002-0001-0001-00000000000a"/>
+                <reportElement x="0" y="114" width="115" height="11" uuid="a1b2c3d4-0002-0001-0001-00000000000a"/>
                 <textElement><font fontName="Times New Roman" size="8" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA["Fone: " + $P{EMIT_FONE}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="115" y="108" width="115" height="11" uuid="a1b2c3d4-0002-0001-0001-00000000000b"/>
+                <reportElement x="115" y="114" width="115" height="11" uuid="a1b2c3d4-0002-0001-0001-00000000000b"/>
                 <textElement><font fontName="Times New Roman" size="8" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA["IE: " + $P{EMIT_IE}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="0" y="119" width="230" height="11" uuid="a1b2c3d4-0002-0001-0001-00000000000c"/>
+                <reportElement x="0" y="125" width="230" height="11" uuid="a1b2c3d4-0002-0001-0001-00000000000c"/>
                 <textElement><font fontName="Times New Roman" size="8" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA["CNPJ: " + $P{EMIT_CNPJ}]]></textFieldExpression>
             </textField>
 
             <staticText>
-                <reportElement x="230" y="45" width="155" height="16" uuid="a1b2c3d4-0002-0001-0001-00000000000d"/>
+                <reportElement x="230" y="51" width="155" height="16" uuid="a1b2c3d4-0002-0001-0001-00000000000d"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="13" isBold="true"/></textElement>
                 <text><![CDATA[DANFE]]></text>
             </staticText>
             <staticText>
-                <reportElement x="230" y="61" width="155" height="20" uuid="a1b2c3d4-0002-0001-0001-00000000000e"/>
+                <reportElement x="230" y="67" width="155" height="20" uuid="a1b2c3d4-0002-0001-0001-00000000000e"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <text><![CDATA[Documento Auxiliar da Nota Fiscal Eletrônica]]></text>
             </staticText>
             <textField>
-                <reportElement x="230" y="81" width="155" height="12" uuid="a1b2c3d4-0002-0001-0001-00000000000f"/>
+                <reportElement x="230" y="87" width="155" height="12" uuid="a1b2c3d4-0002-0001-0001-00000000000f"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="7"/></textElement>
                 <textFieldExpression><![CDATA[$P{TP_NF_DESC}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="230" y="93" width="155" height="14" uuid="a1b2c3d4-0002-0001-0001-000000000010"/>
+                <reportElement x="230" y="99" width="155" height="14" uuid="a1b2c3d4-0002-0001-0001-000000000010"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="10" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA["Nº " + $P{NUMERO_NF} + "   SÉRIE " + $P{SERIE}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="230" y="107" width="120" height="10" uuid="a1b2c3d4-0002-0001-0001-000000000011"/>
+                <reportElement x="230" y="113" width="120" height="10" uuid="a1b2c3d4-0002-0001-0001-000000000011"/>
                 <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="Times New Roman" size="10" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA["FOLHA " + $V{PAGE_NUMBER} + "/"]]></textFieldExpression>
             </textField>
             <textField evaluationTime="Report">
-                <reportElement x="350" y="107" width="35" height="10" uuid="a1b2c3d4-0002-0001-0001-000000000038"/>
+                <reportElement x="350" y="113" width="35" height="10" uuid="a1b2c3d4-0002-0001-0001-000000000038"/>
                 <textElement textAlignment="Left" verticalAlignment="Middle"><font fontName="Times New Roman" size="10" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="230" y="117" width="155" height="10" uuid="a1b2c3d4-0002-0001-0001-000000000012"/>
+                <reportElement x="230" y="123" width="155" height="10" uuid="a1b2c3d4-0002-0001-0001-000000000012"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="6" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA[$P{TP_AMB_DESC}]]></textFieldExpression>
             </textField>
 
             <componentElement>
-                <reportElement x="390" y="45" width="165" height="32" uuid="a1b2c3d4-0002-0001-0001-000000000013"/>
+                <reportElement x="390" y="51" width="165" height="32" uuid="a1b2c3d4-0002-0001-0001-000000000013"/>
                 <c:Code128 xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd" textPosition="none">
                     <c:codeExpression><![CDATA[$P{CHAVE}]]></c:codeExpression>
                 </c:Code128>
             </componentElement>
             <textField>
-                <reportElement x="390" y="78" width="165" height="11" uuid="a1b2c3d4-0002-0001-0001-000000000014"/>
+                <reportElement x="390" y="84" width="165" height="11" uuid="a1b2c3d4-0002-0001-0001-000000000014"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="7" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA[$P{CHAVE_FORMATADA}]]></textFieldExpression>
             </textField>
             <staticText>
-                <reportElement x="390" y="89" width="165" height="8" uuid="a1b2c3d4-0002-0001-0001-000000000015"/>
+                <reportElement x="390" y="95" width="165" height="8" uuid="a1b2c3d4-0002-0001-0001-000000000015"/>
                 <textElement textAlignment="Center"><font fontName="Times New Roman" size="5"/></textElement>
                 <text><![CDATA[Consulte a autenticidade no portal da NF-e]]></text>
             </staticText>
             <staticText>
-                <reportElement x="390" y="98" width="165" height="8" uuid="a1b2c3d4-0002-0001-0001-000000000016"/>
+                <reportElement x="390" y="104" width="165" height="8" uuid="a1b2c3d4-0002-0001-0001-000000000016"/>
                 <textElement textAlignment="Center"><font fontName="Times New Roman" size="5"/></textElement>
                 <text><![CDATA[PROTOCOLO DE AUTORIZAÇÃO DE USO]]></text>
             </staticText>
             <textField>
-                <reportElement x="390" y="107" width="165" height="10" uuid="a1b2c3d4-0002-0001-0001-000000000017"/>
+                <reportElement x="390" y="113" width="165" height="10" uuid="a1b2c3d4-0002-0001-0001-000000000017"/>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="7" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA[$P{PROT_N_PROT} + " - " + $P{PROT_DH_RECBTO}]]></textFieldExpression>
             </textField>
 
             <!-- Natureza da operação -->
             <staticText>
-                <reportElement x="0" y="135" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-000000000018"/>
+                <reportElement x="0" y="141" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-000000000018"/>
                 <textElement><font fontName="Times New Roman" size="6" isBold="true"/></textElement>
                 <text><![CDATA[NATUREZA DA OPERAÇÃO]]></text>
             </staticText>
             <textField>
-                <reportElement x="0" y="143" width="555" height="16" uuid="a1b2c3d4-0002-0001-0001-000000000019"/>
+                <reportElement x="0" y="149" width="555" height="16" uuid="a1b2c3d4-0002-0001-0001-000000000019"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="8"/></textElement>
                 <textFieldExpression><![CDATA[$P{NAT_OP}]]></textFieldExpression>
@@ -242,54 +256,54 @@
 
             <!-- Destinatário / Remetente -->
             <staticText>
-                <reportElement x="0" y="160" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-00000000001a"/>
+                <reportElement x="0" y="166" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-00000000001a"/>
                 <textElement><font fontName="Times New Roman" size="6" isBold="true"/></textElement>
                 <text><![CDATA[DESTINATÁRIO / REMETENTE]]></text>
             </staticText>
             <textField>
-                <reportElement x="0" y="168" width="350" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000001b"/>
+                <reportElement x="0" y="174" width="350" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000001b"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Nome/Razão Social: " + $P{DEST_X_NOME}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="350" y="168" width="205" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000001c"/>
+                <reportElement x="350" y="174" width="205" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000001c"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["CNPJ/CPF: " + $P{DEST_DOC}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="0" y="181" width="350" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000001d"/>
+                <reportElement x="0" y="187" width="350" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000001d"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Endereço: " + $P{DEST_ENDERECO}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="350" y="181" width="205" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000001e"/>
+                <reportElement x="350" y="187" width="205" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000001e"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["IE: " + $P{DEST_IE}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="0" y="194" width="350" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000001f"/>
+                <reportElement x="0" y="200" width="350" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000001f"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Município/UF: " + $P{DEST_MUN_UF} + "  CEP " + $P{DEST_CEP}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="350" y="194" width="205" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000020"/>
+                <reportElement x="350" y="200" width="205" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000020"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Fone: " + $P{DEST_FONE}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="0" y="207" width="275" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000021"/>
+                <reportElement x="0" y="213" width="275" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000021"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Data Emissão: " + $P{DH_EMI}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="275" y="207" width="280" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000022"/>
+                <reportElement x="275" y="213" width="280" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000022"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Data Saída/Entrada: " + $P{DH_SAI_ENT}]]></textFieldExpression>
@@ -299,12 +313,13 @@
                  altura variável: nominal só 1 linha (13pt); com mais duplicatas, cresce em
                  múltiplos de 13pt e empurra pra baixo tudo que vem depois (Float). -->
             <staticText>
-                <reportElement x="0" y="220" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-000000000023"/>
+                <reportElement x="0" y="226" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-000000000023"/>
+                    <box leftPadding="2" rightPadding="2"><bottomPen lineWidth="0.25"/></box>
                 <textElement><font fontName="Times New Roman" size="6" isBold="true"/></textElement>
                 <text><![CDATA[FATURA / DUPLICATAS]]></text>
             </staticText>
             <componentElement>
-                <reportElement x="0" y="228" width="555" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000024"/>
+                <reportElement x="0" y="234" width="555" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000024"/>
                 <c:list xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd" printOrder="Horizontal">
                     <datasetRun subDataset="DuplicatasDataset">
                         <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($P{DUPLICATAS_LIST})]]></dataSourceExpression>
@@ -312,19 +327,19 @@
                     <c:listContents height="13" width="111">
                         <textField>
                             <reportElement x="0" y="0" width="22" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000039"/>
-                                <box leftPadding="2" rightPadding="1"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.25"/></box>
+                                <box leftPadding="2" rightPadding="3"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
                             <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                             <textFieldExpression><![CDATA[$F{numDup}]]></textFieldExpression>
                         </textField>
                         <textField>
                             <reportElement x="22" y="0" width="48" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000003a"/>
-                                <box rightPadding="1"><bottomPen lineWidth="0.25"/></box>
+                                <box rightPadding="3"><bottomPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
                             <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                             <textFieldExpression><![CDATA[$F{dataVenc}]]></textFieldExpression>
                         </textField>
                         <textField pattern="###,###,##0.00">
                             <reportElement x="70" y="0" width="41" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000003b"/>
-                                <box rightPadding="2"><bottomPen lineWidth="0.25"/></box>
+                                <box rightPadding="5"><bottomPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
                             <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                             <textFieldExpression><![CDATA[$F{valorDup}]]></textFieldExpression>
                         </textField>
@@ -335,60 +350,60 @@
             <!-- Cálculo do imposto — positionType Float: acompanha a altura real da lista de
                  duplicatas acima (que varia conforme a quantidade de parcelas). -->
             <staticText>
-                <reportElement positionType="Float" x="0" y="244" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-000000000025"/>
+                <reportElement positionType="Float" x="0" y="250" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-000000000025"/>
                 <textElement><font fontName="Times New Roman" size="6" isBold="true"/></textElement>
                 <text><![CDATA[CÁLCULO DO IMPOSTO]]></text>
             </staticText>
             <textField>
-                <reportElement positionType="Float" x="0" y="252" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000026"/>
+                <reportElement positionType="Float" x="0" y="258" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000026"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Base ICMS: " + $P{VALOR_BC}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="111" y="252" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000027"/>
+                <reportElement positionType="Float" x="111" y="258" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000027"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Valor ICMS: " + $P{VALOR_ICMS}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="222" y="252" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000028"/>
+                <reportElement positionType="Float" x="222" y="258" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000028"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Base ICMS ST: " + $P{VALOR_BC_ST}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="333" y="252" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000029"/>
+                <reportElement positionType="Float" x="333" y="258" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000029"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Valor ICMS ST: " + $P{VALOR_ST}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="444" y="252" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002a"/>
+                <reportElement positionType="Float" x="444" y="258" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002a"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Valor IPI: " + $P{VALOR_IPI}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="0" y="265" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002b"/>
+                <reportElement positionType="Float" x="0" y="271" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002b"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Valor Produtos: " + $P{VALOR_PROD}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="111" y="265" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002c"/>
+                <reportElement positionType="Float" x="111" y="271" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002c"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Valor Frete: " + $P{VALOR_FRETE}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="222" y="265" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002d"/>
+                <reportElement positionType="Float" x="222" y="271" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002d"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Seg/Desc/Outro: " + $P{VALOR_SEG_DESC_OUTRO}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="333" y="265" width="222" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002e"/>
+                <reportElement positionType="Float" x="333" y="271" width="222" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002e"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
                 <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="Times New Roman" size="8" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA["VALOR TOTAL DA NOTA: R$ " + $P{VALOR_NF}]]></textFieldExpression>
@@ -396,42 +411,42 @@
 
             <!-- Transportador / Volumes — também Float, na sequência do Cálculo do Imposto. -->
             <staticText>
-                <reportElement positionType="Float" x="0" y="281" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-00000000002f"/>
+                <reportElement positionType="Float" x="0" y="287" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-00000000002f"/>
                 <textElement><font fontName="Times New Roman" size="6" isBold="true"/></textElement>
                 <text><![CDATA[TRANSPORTADOR / VOLUMES TRANSPORTADOS]]></text>
             </staticText>
             <textField>
-                <reportElement positionType="Float" x="0" y="289" width="280" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000030"/>
+                <reportElement positionType="Float" x="0" y="295" width="280" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000030"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Nome: " + $P{TRANSP_X_NOME}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="280" y="289" width="275" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000031"/>
+                <reportElement positionType="Float" x="280" y="295" width="275" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000031"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Frete: " + $P{MOD_FRETE_DESC}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="0" y="302" width="280" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000032"/>
+                <reportElement positionType="Float" x="0" y="308" width="280" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000032"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Endereço/Município: " + $P{TRANSP_ENDERECO} + " - " + $P{TRANSP_MUN_UF}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="280" y="302" width="140" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000033"/>
+                <reportElement positionType="Float" x="280" y="308" width="140" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000033"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["CNPJ/CPF: " + $P{TRANSP_DOC} + "  IE: " + $P{TRANSP_IE}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="420" y="302" width="135" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000034"/>
+                <reportElement positionType="Float" x="420" y="308" width="135" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000034"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Placa/UF: " + $P{VEIC_PLACA_UF}]]></textFieldExpression>
             </textField>
             <textField textAdjust="StretchHeight">
-                <reportElement positionType="Float" x="0" y="315" width="555" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000035"/>
+                <reportElement positionType="Float" x="0" y="321" width="555" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000035"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Volumes: " + $P{VOLUMES}]]></textFieldExpression>
@@ -439,7 +454,7 @@
 
             <!-- Dados dos produtos -->
             <staticText>
-                <reportElement positionType="Float" x="0" y="331" width="555" height="10" uuid="a1b2c3d4-0002-0001-0001-000000000036"/>
+                <reportElement positionType="Float" x="0" y="337" width="555" height="10" uuid="a1b2c3d4-0002-0001-0001-000000000036"/>
                 <textElement><font fontName="Times New Roman" size="6" isBold="true"/></textElement>
                 <text><![CDATA[DADOS DOS PRODUTOS / SERVIÇOS]]></text>
             </staticText>
@@ -458,7 +473,7 @@
                 </reportElement>
                 <imageExpression><![CDATA[$P{LOGO}]]></imageExpression>
             </image>
-            <textField>
+            <textField textAdjust="ScaleFont">
                 <reportElement x="42" y="0" width="185" height="10" uuid="a1b2c3d4-0007-0001-0001-000000000002"/>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="7" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA[$P{EMIT_X_NOME}]]></textFieldExpression>
