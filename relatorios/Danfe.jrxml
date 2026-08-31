@@ -139,43 +139,48 @@
                 <graphicElement><pen lineStyle="Dashed"/></graphicElement>
             </line>
 
-            <!-- Emitente / DANFE / Chave de acesso -->
+            <!-- Emitente — nome em negrito ocupando a largura toda (stretch se for longo),
+                 logo embaixo à esquerda, endereço/bairro + cidade-UF-CEP + fone em 3 linhas à
+                 direita do logo — igual ao DANFE oficial (ACBr). Sem CNPJ/IE aqui (já saem na
+                 chave de acesso). Logo e linhas de endereço em positionType="Float" pra
+                 acompanhar o nome se ele estourar pra 2 linhas. Borda completa 0.25 desenhada
+                 por um <rectangle> único (não por box por campo) — assim não some quando o
+                 logo não vem preenchido (printWhenExpression) nem precisa alinhar pedaços de
+                 borda de elementos diferentes. -->
+            <textField textAdjust="StretchHeight">
+                <reportElement x="0" y="51" width="230" height="14" uuid="a1b2c3d4-0002-0001-0001-000000000007"/>
+                    <box leftPadding="2" rightPadding="2"/>
+                <textElement verticalAlignment="Top"><font fontName="Times New Roman" size="12" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{EMIT_X_NOME}]]></textFieldExpression>
+            </textField>
             <image scaleImage="FillFrame">
-                <reportElement x="0" y="51" width="65" height="35" uuid="a1b2c3d4-0002-0001-0001-000000000006">
+                <reportElement positionType="Float" x="0" y="65" width="65" height="33" uuid="a1b2c3d4-0002-0001-0001-000000000006">
                     <printWhenExpression><![CDATA[$P{LOGO} != null]]></printWhenExpression>
                 </reportElement>
                 <imageExpression><![CDATA[$P{LOGO}]]></imageExpression>
             </image>
-            <textField textAdjust="ScaleFont">
-                <reportElement x="65" y="51" width="165" height="16" uuid="a1b2c3d4-0002-0001-0001-000000000007"/>
-                <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="12" isBold="true"/></textElement>
-                <textFieldExpression><![CDATA[$P{EMIT_X_NOME}]]></textFieldExpression>
-            </textField>
             <textField>
-                <reportElement x="0" y="92" width="230" height="11" uuid="a1b2c3d4-0002-0001-0001-000000000008"/>
+                <reportElement positionType="Float" x="65" y="65" width="165" height="11" uuid="a1b2c3d4-0002-0001-0001-000000000008"/>
+                    <box leftPadding="2" rightPadding="2"/>
                 <textElement><font fontName="Times New Roman" size="8" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA[$P{EMIT_ENDERECO}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="0" y="103" width="230" height="11" uuid="a1b2c3d4-0002-0001-0001-000000000009"/>
+                <reportElement positionType="Float" x="65" y="76" width="165" height="11" uuid="a1b2c3d4-0002-0001-0001-000000000009"/>
+                    <box leftPadding="2" rightPadding="2"/>
                 <textElement><font fontName="Times New Roman" size="8" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA[$P{EMIT_MUN_UF} + "  CEP " + $P{EMIT_CEP}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement x="0" y="114" width="115" height="11" uuid="a1b2c3d4-0002-0001-0001-00000000000a"/>
+                <reportElement positionType="Float" x="65" y="87" width="165" height="11" uuid="a1b2c3d4-0002-0001-0001-00000000000a"/>
+                    <box leftPadding="2" rightPadding="2"/>
                 <textElement><font fontName="Times New Roman" size="8" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA["Fone: " + $P{EMIT_FONE}]]></textFieldExpression>
             </textField>
-            <textField>
-                <reportElement x="115" y="114" width="115" height="11" uuid="a1b2c3d4-0002-0001-0001-00000000000b"/>
-                <textElement><font fontName="Times New Roman" size="8" isBold="true"/></textElement>
-                <textFieldExpression><![CDATA["IE: " + $P{EMIT_IE}]]></textFieldExpression>
-            </textField>
-            <textField>
-                <reportElement x="0" y="125" width="230" height="11" uuid="a1b2c3d4-0002-0001-0001-00000000000c"/>
-                <textElement><font fontName="Times New Roman" size="8" isBold="true"/></textElement>
-                <textFieldExpression><![CDATA["CNPJ: " + $P{EMIT_CNPJ}]]></textFieldExpression>
-            </textField>
+            <rectangle>
+                <reportElement mode="Transparent" x="0" y="51" width="230" height="47" uuid="a1b2c3d4-0002-0001-0001-00000000003e"/>
+                <graphicElement><pen lineWidth="0.25"/></graphicElement>
+            </rectangle>
 
             <staticText>
                 <reportElement x="230" y="51" width="155" height="16" uuid="a1b2c3d4-0002-0001-0001-00000000000d"/>
