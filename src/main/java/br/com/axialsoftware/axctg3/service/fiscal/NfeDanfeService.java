@@ -1,5 +1,6 @@
 package br.com.axialsoftware.axctg3.service.fiscal;
 
+import br.com.axialsoftware.axctg3.entity.fiscal.DanfeDuplicataDto;
 import br.com.axialsoftware.axctg3.entity.fiscal.DanfeItemDto;
 import br.com.axialsoftware.axctg3.entity.fiscal.Nfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.NfeDuplicata;
@@ -14,9 +15,12 @@ import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -38,6 +42,21 @@ public class NfeDanfeService {
 
     private static final DateTimeFormatter DATA_HORA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     private static final DateTimeFormatter DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    // Símbolos fixos (não depende do locale da JVM que roda o relatório) — vírgula decimal,
+    // ponto a cada 3 casas, igual à convenção de @NumberFormat já usada nas entidades do
+    // projeto. Necessário porque valores concatenados com texto no .jrxml (ex.: "Base ICMS: "
+    // + $P{X}) viram String em tempo de compilação do relatório — o atributo `pattern` do
+    // JasperReports só funciona quando o campo permanece com tipo Number/Date, não String;
+    // concatenado, cai no BigDecimal.toString() puro (ponto decimal, sem separador de milhar).
+    private static final DecimalFormatSymbols SIMBOLOS_BR = criarSimbolosBr();
+
+    private static DecimalFormatSymbols criarSimbolosBr() {
+        DecimalFormatSymbols simbolos = new DecimalFormatSymbols();
+        simbolos.setDecimalSeparator(',');
+        simbolos.setGroupingSeparator('.');
+        return simbolos;
+    }
 
     private final DataManager dataManager;
     private final UtilGeralService utilGeralService;
@@ -128,19 +147,18 @@ public class NfeDanfeService {
         parametros.put("VEIC_PLACA_UF", nfe.getVeicPlaca() == null ? "" : nfe.getVeicPlaca() + "/" + nfe.getVeicUf());
         parametros.put("VOLUMES", formatarVolumes(nfe.getVolumes()));
 
-        parametros.put("DUPLICATAS", formatarDuplicatas(nfe.getDuplicatas()));
+        parametros.put("DUPLICATAS_LIST", montarDuplicatasDto(nfe.getDuplicatas()));
 
-        parametros.put("VALOR_BC", nfe.getValorBc());
-        parametros.put("VALOR_ICMS", nfe.getValorIcms());
-        parametros.put("VALOR_BC_ST", nfe.getValorBcSt());
-        parametros.put("VALOR_ST", nfe.getValorSt());
-        parametros.put("VALOR_PROD", nfe.getValorProd());
-        parametros.put("VALOR_FRETE", nfe.getValorFrete());
-        parametros.put("VALOR_SEG", nfe.getValorSeg());
-        parametros.put("VALOR_DESC", nfe.getValorDesc());
-        parametros.put("VALOR_OUTRO", nfe.getValorOutro());
-        parametros.put("VALOR_IPI", nfe.getValorIpi());
-        parametros.put("VALOR_NF", nfe.getValorNf());
+        parametros.put("VALOR_BC", formatarValor(nfe.getValorBc()));
+        parametros.put("VALOR_ICMS", formatarValor(nfe.getValorIcms()));
+        parametros.put("VALOR_BC_ST", formatarValor(nfe.getValorBcSt()));
+        parametros.put("VALOR_ST", formatarValor(nfe.getValorSt()));
+        parametros.put("VALOR_PROD", formatarValor(nfe.getValorProd()));
+        parametros.put("VALOR_FRETE", formatarValor(nfe.getValorFrete()));
+        BigDecimal segDescOutro = nvl(nfe.getValorSeg()).add(nvl(nfe.getValorDesc())).add(nvl(nfe.getValorOutro()));
+        parametros.put("VALOR_SEG_DESC_OUTRO", formatarValor(segDescOutro));
+        parametros.put("VALOR_IPI", formatarValor(nfe.getValorIpi()));
+        parametros.put("VALOR_NF", formatarValor(nfe.getValorNf()));
 
         parametros.put("INF_CPL", nfe.getInfCpl());
 
@@ -201,6 +219,20 @@ public class NfeDanfeService {
      */
     private static String nvl(String valor) {
         return valor == null ? "" : valor;
+    }
+
+    private static BigDecimal nvl(BigDecimal valor) {
+        return valor == null ? BigDecimal.ZERO : valor;
+    }
+
+    /** Dinheiro: "###,###,##0.00" com vírgula decimal / ponto de milhar (ver {@link #SIMBOLOS_BR}). */
+    private static String formatarValor(BigDecimal valor) {
+        return new DecimalFormat("###,###,##0.00", SIMBOLOS_BR).format(nvl(valor));
+    }
+
+    /** Peso: mesma máscara de dinheiro, 3 casas decimais — igual ao @NumberFormat de NfeVolume. */
+    private static String formatarPeso(BigDecimal valor) {
+        return new DecimalFormat("###,###,##0.000", SIMBOLOS_BR).format(nvl(valor));
     }
 
     private static String formatarCnpj(String cnpj) {
@@ -297,20 +329,39 @@ public class NfeDanfeService {
                         v.getEspecie() == null ? "" : v.getEspecie(),
                         v.getMarca() == null ? "" : v.getMarca(),
                         v.getNumeracao() == null ? "" : v.getNumeracao(),
-                        v.getPesoLiquido() == null ? BigDecimal.ZERO : v.getPesoLiquido(),
-                        v.getPesoBruto() == null ? BigDecimal.ZERO : v.getPesoBruto()))
+                        formatarPeso(v.getPesoLiquido()),
+                        formatarPeso(v.getPesoBruto())))
                 .collect(Collectors.joining("\n"));
     }
 
-    private static String formatarDuplicatas(List<NfeDuplicata> duplicatas) {
-        if (duplicatas == null || duplicatas.isEmpty()) {
-            return "";
+    /**
+     * Ordenado por vencimento (não por {@code numDup}) — {@code Nfe.duplicatas} não tem
+     * {@code @OrderBy}, então sem isso a ordem de leitura ficava arbitrária (a do banco).
+     * Vira um {@link DanfeDuplicataDto} por parcela (mesmo molde de {@link DanfeItemDto}):
+     * o {@code Danfe.jrxml} usa um componente {@code jr:list} (5 colunas, altura variável)
+     * em vez do antigo campo único de largura/altura fixas, com cada parcela como um
+     * registro do datasource da lista. {@code dataVenc} já sai formatada ("dd/MM/yyyy")
+     * porque o atributo {@code pattern} do JasperReports não formata campo
+     * {@code java.time.LocalDate} como esperado (testado: saía em ISO "2026-09-02") — dinheiro
+     * não tem esse problema, então {@code valorDup} continua {@code BigDecimal} com
+     * {@code pattern} no `.jrxml`.
+     */
+    private List<DanfeDuplicataDto> montarDuplicatasDto(List<NfeDuplicata> duplicatas) {
+        if (duplicatas == null) {
+            return List.of();
         }
         return duplicatas.stream()
-                .map(d -> String.format("%-10s %s   %s",
-                        d.getNumDup() == null ? "" : d.getNumDup(),
-                        d.getDataVenc() == null ? "" : d.getDataVenc().format(DATA),
-                        d.getValorDup() == null ? BigDecimal.ZERO : d.getValorDup()))
-                .collect(Collectors.joining("\n"));
+                .sorted(Comparator.comparing(NfeDuplicata::getDataVenc,
+                                Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(NfeDuplicata::getNumDup,
+                                Comparator.nullsLast(Comparator.naturalOrder())))
+                .map(d -> {
+                    DanfeDuplicataDto dto = dataManager.create(DanfeDuplicataDto.class);
+                    dto.setNumDup(nvl(d.getNumDup()));
+                    dto.setDataVenc(d.getDataVenc() == null ? "" : d.getDataVenc().format(DATA));
+                    dto.setValorDup(nvl(d.getValorDup()));
+                    return dto;
+                })
+                .toList();
     }
 }

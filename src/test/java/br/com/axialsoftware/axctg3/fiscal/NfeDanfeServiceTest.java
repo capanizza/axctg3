@@ -3,6 +3,7 @@ package br.com.axialsoftware.axctg3.fiscal;
 import br.com.axialsoftware.axctg3.entity.User;
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.fiscal.Nfe;
+import br.com.axialsoftware.axctg3.entity.fiscal.NfeDuplicata;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeDanfeService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeImportService;
 import br.com.axialsoftware.axctg3.test_support.AuthenticatedAsAdmin;
@@ -117,6 +118,37 @@ class NfeDanfeServiceTest {
         byte[] pdf = pdfCaptor.getValue();
         assertThat(pdf).isNotEmpty();
         assertThat(new String(pdf, 0, 4, StandardCharsets.US_ASCII)).isEqualTo("%PDF");
+    }
+
+    /**
+     * O quadro "FATURA/DUPLICATAS" virou um {@code jr:list} de altura variável (5 colunas) —
+     * uma nota com muitas parcelas (12 aqui, empurrando os quadros seguintes via
+     * {@code positionType="Float"}) é o cenário que estourava a caixa de altura fixa antes
+     * dessa mudança. Confirmado visualmente durante o desenvolvimento (3 linhas de 5/5/2,
+     * sem sobrepor "CÁLCULO DO IMPOSTO" logo abaixo); aqui só garante que continua gerando
+     * PDF real sem exceção.
+     */
+    @Test
+    void emitirDanfeComMuitasDuplicatasGeraPdfReal() throws IOException {
+        nfeImportService.importar("nfe_import_sample.xml", xmlAmostra());
+        Nfe nfe = dataManager.load(Nfe.class)
+                .query("select e from Nfe e where e.chave = :chave")
+                .parameter("chave", CHAVE)
+                .one();
+        for (int i = 2; i <= 12; i++) {
+            NfeDuplicata dup = dataManager.create(NfeDuplicata.class);
+            dup.setNfe(nfe);
+            dup.setNumDup(String.format("%03d", i));
+            dup.setDataVenc(java.time.LocalDate.of(2026, 9, i));
+            dup.setValorDup(new java.math.BigDecimal("1234.56"));
+            dataManager.save(dup);
+        }
+
+        nfeDanfeService.emitirDanfe(nfe.getId());
+
+        ArgumentCaptor<byte[]> pdfCaptor = ArgumentCaptor.forClass(byte[].class);
+        verify(downloader).download(pdfCaptor.capture(), eq("Danfe_" + CHAVE + ".pdf"), eq(DownloadFormat.PDF));
+        assertThat(new String(pdfCaptor.getValue(), 0, 4, StandardCharsets.US_ASCII)).isEqualTo("%PDF");
     }
 
     @Test
