@@ -313,7 +313,9 @@
                  altura variável: nominal só 1 linha (13pt); com mais duplicatas, cresce em
                  múltiplos de 13pt e empurra pra baixo tudo que vem depois (Float). -->
             <staticText>
-                <reportElement x="0" y="226" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-000000000023"/>
+                <reportElement x="0" y="226" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-000000000023">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
                     <box leftPadding="2" rightPadding="2"><bottomPen lineWidth="0.25"/></box>
                 <textElement><font fontName="Times New Roman" size="6" isBold="true"/></textElement>
                 <text><![CDATA[FATURA / DUPLICATAS]]></text>
