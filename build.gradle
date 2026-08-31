@@ -38,6 +38,16 @@ dependencies {
     implementation 'net.sf.jasperreports:jasperreports'
     implementation 'net.sf.jasperreports:jasperreports-fonts'
     implementation 'net.sf.jasperreports:jasperreports-functions'
+    // Renderização de barcode (usado pelo componente <barcode> do JasperReports, ex.: Code128
+    // da chave de acesso no Danfe.jrxml) — dependência opcional do próprio jasperreports, não
+    // resolvida por transitividade; versão 2.1 é a que a POM do jasperreports 6.20.x declara.
+    implementation 'net.sf.barcode4j:barcode4j:2.1'
+    // O barcode4j gera o desenho como imagem internamente, e o exportador de PDF do
+    // JasperReports sempre tenta "sniffar" se toda imagem é SVG (mesmo não sendo) via Apache
+    // Batik — sem isso, exportReportToPdf falha com NoClassDefFoundError em qualquer relatório
+    // com barcode, mesmo sem SVG de verdade envolvido. Versão 1.17 é a que a POM do
+    // jasperreports 6.20.x declara (também opcional, não resolvida por transitividade).
+    implementation 'org.apache.xmlgraphics:batik-bridge:1.17'
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'com.vaadin:vaadin-dev'

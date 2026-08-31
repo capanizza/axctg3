@@ -2,6 +2,7 @@ package br.com.axialsoftware.axctg3.view.fiscal.nfe;
 
 import br.com.axialsoftware.axctg3.entity.fiscal.Nfe;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
+import br.com.axialsoftware.axctg3.service.fiscal.NfeDanfeService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeImportService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
@@ -14,6 +15,8 @@ import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.backgroundtask.BackgroundTask;
 import io.jmix.flowui.backgroundtask.TaskLifeCycle;
 import io.jmix.flowui.component.UiComponentUtils;
+import io.jmix.flowui.component.grid.DataGrid;
+import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.*;
@@ -36,6 +39,10 @@ public class NfeListView extends StandardListView<Nfe> {
 
     @ViewComponent
     private CollectionLoader<Nfe> nfesDl;
+    @ViewComponent
+    private DataGrid<Nfe> nfesDataGrid;
+    @ViewComponent
+    private MessageBundle messageBundle;
     @Autowired
     private UtilGeralService utilGeralService;
     @ViewComponent
@@ -46,6 +53,8 @@ public class NfeListView extends StandardListView<Nfe> {
     private Dialogs dialogs;
     @Autowired
     private NfeImportService nfeImportService;
+    @Autowired
+    private NfeDanfeService nfeDanfeService;
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
@@ -76,6 +85,19 @@ public class NfeListView extends StandardListView<Nfe> {
                             .open();
                 })
                 .open();
+    }
+
+    @Subscribe("nfesDataGrid.emitirDanfeAction")
+    public void onNfesDataGridEmitirDanfeAction(final ActionPerformedEvent event) {
+        Nfe selecionada = nfesDataGrid.getSingleSelectedItem();
+        if (selecionada == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("nfeListView.emitirDanfeAction.text"))
+                    .withText(messageBundle.getMessage("nfeListView.emitirDanfe.naoSelecionado"))
+                    .open();
+            return;
+        }
+        nfeDanfeService.emitirDanfe(selecionada.getId());
     }
 
     /**
