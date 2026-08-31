@@ -313,7 +313,7 @@
                  altura variável: nominal só 1 linha (13pt); com mais duplicatas, cresce em
                  múltiplos de 13pt e empurra pra baixo tudo que vem depois (Float). -->
             <staticText>
-                <reportElement x="0" y="226" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-000000000023">
+                <reportElement positionType="Float" x="0" y="226" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-000000000023">
                     <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
                 </reportElement>
                     <box leftPadding="2" rightPadding="2"><bottomPen lineWidth="0.25"/></box>
@@ -321,7 +321,9 @@
                 <text><![CDATA[FATURA / DUPLICATAS]]></text>
             </staticText>
             <componentElement>
-                <reportElement x="0" y="234" width="555" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000024"/>
+                <reportElement x="0" y="234" width="555" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000024">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
                 <c:list xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd" printOrder="Horizontal">
                     <datasetRun subDataset="DuplicatasDataset">
                         <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($P{DUPLICATAS_LIST})]]></dataSourceExpression>
@@ -349,63 +351,91 @@
                 </c:list>
             </componentElement>
 
+            <!-- Cálculo do imposto onward: positionType="Float" only ever pushes an element
+                 DOWN past its own hardcoded design Y; it never pulls one UP past that floor
+                 when upstream content is absent (confirmed empirically during development —
+                 a single Float chain grows fine for N duplicatas but can't shrink to zero for
+                 none). Fix: two mutually exclusive copies of this whole block. COPY A keeps
+                 the original y (duplicatas present, floats down for 2+ same as always). COPY B
+                 uses y shifted up by 24 (label 8 + list 13 + margin 3), reachable only when
+                 there are none, sitting right after "Data Saída/Entrada" with no reserved gap. -->
             <!-- Cálculo do imposto — positionType Float: acompanha a altura real da lista de
                  duplicatas acima (que varia conforme a quantidade de parcelas). -->
             <staticText>
-                <reportElement positionType="Float" x="0" y="250" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-000000000025"/>
+                <reportElement positionType="Float" x="0" y="250" width="555" height="8" uuid="a1b2c3d4-0009-0001-0001-000000000025">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
                 <textElement><font fontName="Times New Roman" size="6" isBold="true"/></textElement>
                 <text><![CDATA[CÁLCULO DO IMPOSTO]]></text>
             </staticText>
             <textField>
-                <reportElement positionType="Float" x="0" y="258" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000026"/>
+                <reportElement positionType="Float" x="0" y="258" width="111" height="13" uuid="a1b2c3d4-0009-0001-0001-000000000026">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Base ICMS: " + $P{VALOR_BC}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="111" y="258" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000027"/>
+                <reportElement positionType="Float" x="111" y="258" width="111" height="13" uuid="a1b2c3d4-0009-0001-0001-000000000027">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Valor ICMS: " + $P{VALOR_ICMS}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="222" y="258" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000028"/>
+                <reportElement positionType="Float" x="222" y="258" width="111" height="13" uuid="a1b2c3d4-0009-0001-0001-000000000028">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Base ICMS ST: " + $P{VALOR_BC_ST}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="333" y="258" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000029"/>
+                <reportElement positionType="Float" x="333" y="258" width="111" height="13" uuid="a1b2c3d4-0009-0001-0001-000000000029">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Valor ICMS ST: " + $P{VALOR_ST}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="444" y="258" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002a"/>
+                <reportElement positionType="Float" x="444" y="258" width="111" height="13" uuid="a1b2c3d4-0009-0001-0001-00000000002a">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Valor IPI: " + $P{VALOR_IPI}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="0" y="271" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002b"/>
+                <reportElement positionType="Float" x="0" y="271" width="111" height="13" uuid="a1b2c3d4-0009-0001-0001-00000000002b">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Valor Produtos: " + $P{VALOR_PROD}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="111" y="271" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002c"/>
+                <reportElement positionType="Float" x="111" y="271" width="111" height="13" uuid="a1b2c3d4-0009-0001-0001-00000000002c">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Valor Frete: " + $P{VALOR_FRETE}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="222" y="271" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002d"/>
+                <reportElement positionType="Float" x="222" y="271" width="111" height="13" uuid="a1b2c3d4-0009-0001-0001-00000000002d">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Seg/Desc/Outro: " + $P{VALOR_SEG_DESC_OUTRO}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="333" y="271" width="222" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002e"/>
+                <reportElement positionType="Float" x="333" y="271" width="222" height="13" uuid="a1b2c3d4-0009-0001-0001-00000000002e">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
                 <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="Times New Roman" size="8" isBold="true"/></textElement>
                 <textFieldExpression><![CDATA["VALOR TOTAL DA NOTA: R$ " + $P{VALOR_NF}]]></textFieldExpression>
@@ -413,42 +443,56 @@
 
             <!-- Transportador / Volumes — também Float, na sequência do Cálculo do Imposto. -->
             <staticText>
-                <reportElement positionType="Float" x="0" y="287" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-00000000002f"/>
+                <reportElement positionType="Float" x="0" y="287" width="555" height="8" uuid="a1b2c3d4-0009-0001-0001-00000000002f">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
                 <textElement><font fontName="Times New Roman" size="6" isBold="true"/></textElement>
                 <text><![CDATA[TRANSPORTADOR / VOLUMES TRANSPORTADOS]]></text>
             </staticText>
             <textField>
-                <reportElement positionType="Float" x="0" y="295" width="280" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000030"/>
+                <reportElement positionType="Float" x="0" y="295" width="280" height="13" uuid="a1b2c3d4-0009-0001-0001-000000000030">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Nome: " + $P{TRANSP_X_NOME}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="280" y="295" width="275" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000031"/>
+                <reportElement positionType="Float" x="280" y="295" width="275" height="13" uuid="a1b2c3d4-0009-0001-0001-000000000031">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Frete: " + $P{MOD_FRETE_DESC}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="0" y="308" width="280" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000032"/>
+                <reportElement positionType="Float" x="0" y="308" width="280" height="13" uuid="a1b2c3d4-0009-0001-0001-000000000032">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Endereço/Município: " + $P{TRANSP_ENDERECO} + " - " + $P{TRANSP_MUN_UF}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="280" y="308" width="140" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000033"/>
+                <reportElement positionType="Float" x="280" y="308" width="140" height="13" uuid="a1b2c3d4-0009-0001-0001-000000000033">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["CNPJ/CPF: " + $P{TRANSP_DOC} + "  IE: " + $P{TRANSP_IE}]]></textFieldExpression>
             </textField>
             <textField>
-                <reportElement positionType="Float" x="420" y="308" width="135" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000034"/>
+                <reportElement positionType="Float" x="420" y="308" width="135" height="13" uuid="a1b2c3d4-0009-0001-0001-000000000034">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Placa/UF: " + $P{VEIC_PLACA_UF}]]></textFieldExpression>
             </textField>
             <textField textAdjust="StretchHeight">
-                <reportElement positionType="Float" x="0" y="321" width="555" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000035"/>
+                <reportElement positionType="Float" x="0" y="321" width="555" height="13" uuid="a1b2c3d4-0009-0001-0001-000000000035">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Volumes: " + $P{VOLUMES}]]></textFieldExpression>
@@ -456,7 +500,157 @@
 
             <!-- Dados dos produtos -->
             <staticText>
-                <reportElement positionType="Float" x="0" y="337" width="555" height="10" uuid="a1b2c3d4-0002-0001-0001-000000000036"/>
+                <reportElement positionType="Float" x="0" y="337" width="555" height="10" uuid="a1b2c3d4-0009-0001-0001-000000000036">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                <textElement><font fontName="Times New Roman" size="6" isBold="true"/></textElement>
+                <text><![CDATA[DADOS DOS PRODUTOS / SERVIÇOS]]></text>
+            </staticText>
+
+            <!-- Cálculo do imposto — positionType Float: acompanha a altura real da lista de
+                 duplicatas acima (que varia conforme a quantidade de parcelas). -->
+            <staticText>
+                <reportElement positionType="Float" x="0" y="226" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-000000000025">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                <textElement><font fontName="Times New Roman" size="6" isBold="true"/></textElement>
+                <text><![CDATA[CÁLCULO DO IMPOSTO]]></text>
+            </staticText>
+            <textField>
+                <reportElement positionType="Float" x="0" y="234" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000026">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Base ICMS: " + $P{VALOR_BC}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="111" y="234" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000027">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Valor ICMS: " + $P{VALOR_ICMS}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="222" y="234" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000028">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Base ICMS ST: " + $P{VALOR_BC_ST}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="333" y="234" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000029">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Valor ICMS ST: " + $P{VALOR_ST}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="444" y="234" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002a">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Valor IPI: " + $P{VALOR_IPI}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="0" y="247" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002b">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Valor Produtos: " + $P{VALOR_PROD}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="111" y="247" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002c">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Valor Frete: " + $P{VALOR_FRETE}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="222" y="247" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002d">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Seg/Desc/Outro: " + $P{VALOR_SEG_DESC_OUTRO}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="333" y="247" width="222" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002e">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="Times New Roman" size="8" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["VALOR TOTAL DA NOTA: R$ " + $P{VALOR_NF}]]></textFieldExpression>
+            </textField>
+
+            <!-- Transportador / Volumes — também Float, na sequência do Cálculo do Imposto. -->
+            <staticText>
+                <reportElement positionType="Float" x="0" y="263" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-00000000002f">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                <textElement><font fontName="Times New Roman" size="6" isBold="true"/></textElement>
+                <text><![CDATA[TRANSPORTADOR / VOLUMES TRANSPORTADOS]]></text>
+            </staticText>
+            <textField>
+                <reportElement positionType="Float" x="0" y="271" width="280" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000030">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Nome: " + $P{TRANSP_X_NOME}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="280" y="271" width="275" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000031">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Frete: " + $P{MOD_FRETE_DESC}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="0" y="284" width="280" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000032">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Endereço/Município: " + $P{TRANSP_ENDERECO} + " - " + $P{TRANSP_MUN_UF}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="280" y="284" width="140" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000033">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
+                <textFieldExpression><![CDATA["CNPJ/CPF: " + $P{TRANSP_DOC} + "  IE: " + $P{TRANSP_IE}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="420" y="284" width="135" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000034">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Placa/UF: " + $P{VEIC_PLACA_UF}]]></textFieldExpression>
+            </textField>
+            <textField textAdjust="StretchHeight">
+                <reportElement positionType="Float" x="0" y="297" width="555" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000035">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Volumes: " + $P{VOLUMES}]]></textFieldExpression>
+            </textField>
+
+            <!-- Dados dos produtos -->
+            <staticText>
+                <reportElement positionType="Float" x="0" y="313" width="555" height="10" uuid="a1b2c3d4-0002-0001-0001-000000000036">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
                 <textElement><font fontName="Times New Roman" size="6" isBold="true"/></textElement>
                 <text><![CDATA[DADOS DOS PRODUTOS / SERVIÇOS]]></text>
             </staticText>
