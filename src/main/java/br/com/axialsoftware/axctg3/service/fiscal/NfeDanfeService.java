@@ -99,31 +99,31 @@ public class NfeDanfeService {
         parametros.put("DH_SAI_ENT", formatarDataHora(nfe.getDhSaiEnt()));
         parametros.put("TP_NF_DESC", tpNfDescricao(nfe.getTpNf()));
         parametros.put("TP_AMB_DESC", tpAmbDescricao(nfe.getTpAmb()));
-        parametros.put("PROT_N_PROT", nfe.getProtNProt());
+        parametros.put("PROT_N_PROT", nvl(nfe.getProtNProt()));
         parametros.put("PROT_DH_RECBTO", formatarDataHora(nfe.getProtDhRecbto()));
 
         parametros.put("EMIT_CNPJ", formatarCnpj(nfe.getEmitCnpj()));
-        parametros.put("EMIT_X_NOME", nfe.getEmitXNome());
-        parametros.put("EMIT_X_FANT", nfe.getEmitXFant());
+        parametros.put("EMIT_X_NOME", nvl(nfe.getEmitXNome()));
+        parametros.put("EMIT_X_FANT", nvl(nfe.getEmitXFant()));
         parametros.put("EMIT_ENDERECO", enderecoCompleto(nfe.getEmitXLgr(), nfe.getEmitNro(), nfe.getEmitXCpl(), nfe.getEmitXBairro()));
         parametros.put("EMIT_MUN_UF", municipioUf(nfe.getEmitXMun(), nfe.getEmitUf()));
         parametros.put("EMIT_CEP", formatarCep(nfe.getEmitCep()));
-        parametros.put("EMIT_FONE", nfe.getEmitFone());
-        parametros.put("EMIT_IE", nfe.getEmitIe());
+        parametros.put("EMIT_FONE", nvl(nfe.getEmitFone()));
+        parametros.put("EMIT_IE", nvl(nfe.getEmitIe()));
 
         parametros.put("DEST_DOC", nfe.getDestCnpj() != null ? formatarCnpj(nfe.getDestCnpj()) : formatarCpf(nfe.getDestCpf()));
-        parametros.put("DEST_X_NOME", nfe.getDestXNome());
+        parametros.put("DEST_X_NOME", nvl(nfe.getDestXNome()));
         parametros.put("DEST_ENDERECO", enderecoCompleto(nfe.getDestXLgr(), nfe.getDestNro(), nfe.getDestXCpl(), nfe.getDestXBairro()));
         parametros.put("DEST_MUN_UF", municipioUf(nfe.getDestXMun(), nfe.getDestUf()));
         parametros.put("DEST_CEP", formatarCep(nfe.getDestCep()));
-        parametros.put("DEST_FONE", nfe.getDestFone());
-        parametros.put("DEST_IE", nfe.getDestIe());
+        parametros.put("DEST_FONE", nvl(nfe.getDestFone()));
+        parametros.put("DEST_IE", nvl(nfe.getDestIe()));
 
-        parametros.put("TRANSP_X_NOME", nfe.getTranspXNome());
-        parametros.put("TRANSP_ENDERECO", nfe.getTranspXEnder());
+        parametros.put("TRANSP_X_NOME", nvl(nfe.getTranspXNome()));
+        parametros.put("TRANSP_ENDERECO", nvl(nfe.getTranspXEnder()));
         parametros.put("TRANSP_MUN_UF", municipioUf(nfe.getTranspXMun(), nfe.getTranspUf()));
         parametros.put("TRANSP_DOC", nfe.getTranspCnpj() != null ? formatarCnpj(nfe.getTranspCnpj()) : formatarCpf(nfe.getTranspCpf()));
-        parametros.put("TRANSP_IE", nfe.getTranspIe());
+        parametros.put("TRANSP_IE", nvl(nfe.getTranspIe()));
         parametros.put("MOD_FRETE_DESC", modFreteDescricao(nfe.getModFrete()));
         parametros.put("VEIC_PLACA_UF", nfe.getVeicPlaca() == null ? "" : nfe.getVeicPlaca() + "/" + nfe.getVeicUf());
         parametros.put("VOLUMES", formatarVolumes(nfe.getVolumes()));
@@ -193,8 +193,21 @@ public class NfeDanfeService {
         return data == null ? "" : data.format(DATA_HORA);
     }
 
+    /**
+     * Nunca deixa um parâmetro de texto virar {@code null} — no {@code .jrxml}, uma
+     * expressão como {@code "IE: " + $P{X}} imprime a string literal "null" quando
+     * {@code $P{X}} é nulo (concatenação de String em Java), em vez de ficar em branco.
+     * Confirmado com nota real: transportadora pessoa física sem IE virou "IE: null".
+     */
+    private static String nvl(String valor) {
+        return valor == null ? "" : valor;
+    }
+
     private static String formatarCnpj(String cnpj) {
-        if (cnpj == null || cnpj.length() != 14) {
+        if (cnpj == null) {
+            return "";
+        }
+        if (cnpj.length() != 14) {
             return cnpj;
         }
         return cnpj.substring(0, 2) + "." + cnpj.substring(2, 5) + "." + cnpj.substring(5, 8)
@@ -202,7 +215,10 @@ public class NfeDanfeService {
     }
 
     private static String formatarCpf(String cpf) {
-        if (cpf == null || cpf.length() != 11) {
+        if (cpf == null) {
+            return "";
+        }
+        if (cpf.length() != 11) {
             return cpf;
         }
         return cpf.substring(0, 3) + "." + cpf.substring(3, 6) + "." + cpf.substring(6, 9)
@@ -210,7 +226,10 @@ public class NfeDanfeService {
     }
 
     private static String formatarCep(String cep) {
-        if (cep == null || cep.length() != 8) {
+        if (cep == null) {
+            return "";
+        }
+        if (cep.length() != 8) {
             return cep;
         }
         return cep.substring(0, 5) + "-" + cep.substring(5, 8);
