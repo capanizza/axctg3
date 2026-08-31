@@ -94,7 +94,7 @@
     <field name="aliqIcms" class="java.math.BigDecimal"/>
 
     <title>
-        <band height="351" splitType="Stretch">
+        <band height="334" splitType="Stretch">
             <!-- Canhoto — 2ª linha (data/assinatura) mais alta que a 1ª, com o campo de data
                  estreito (15% da largura útil) e o quadro NF-e/Número/Série numa coluna à
                  direita abrangendo a altura das duas linhas, igual ao DANFE oficial. -->
@@ -498,15 +498,6 @@
                 <textFieldExpression><![CDATA["Volumes: " + $P{VOLUMES}]]></textFieldExpression>
             </textField>
 
-            <!-- Dados dos produtos -->
-            <staticText>
-                <reportElement positionType="Float" x="0" y="337" width="555" height="10" uuid="a1b2c3d4-0009-0001-0001-000000000036">
-                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
-                </reportElement>
-                <textElement><font fontName="Times New Roman" size="6" isBold="true"/></textElement>
-                <text><![CDATA[DADOS DOS PRODUTOS / SERVIÇOS]]></text>
-            </staticText>
-
             <!-- Cálculo do imposto — positionType Float: acompanha a altura real da lista de
                  duplicatas acima (que varia conforme a quantidade de parcelas). -->
             <staticText>
@@ -645,15 +636,6 @@
                 <textElement verticalAlignment="Middle"><font fontName="Times New Roman" size="6"/></textElement>
                 <textFieldExpression><![CDATA["Volumes: " + $P{VOLUMES}]]></textFieldExpression>
             </textField>
-
-            <!-- Dados dos produtos -->
-            <staticText>
-                <reportElement positionType="Float" x="0" y="313" width="555" height="10" uuid="a1b2c3d4-0002-0001-0001-000000000036">
-                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
-                </reportElement>
-                <textElement><font fontName="Times New Roman" size="6" isBold="true"/></textElement>
-                <text><![CDATA[DADOS DOS PRODUTOS / SERVIÇOS]]></text>
-            </staticText>
         </band>
     </title>
 
@@ -739,81 +721,86 @@
     </pageHeader>
 
     <columnHeader>
-        <band height="14">
+        <band height="24">
             <staticText>
-                <reportElement x="0" y="0" width="38" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000001"/>
+                <reportElement x="0" y="0" width="555" height="10" uuid="a1b2c3d4-0003-0001-0001-000000000000"/>
+                <textElement><font fontName="Times New Roman" size="6" isBold="true"/></textElement>
+                <text><![CDATA[DADOS DOS PRODUTOS / SERVIÇOS]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="0" y="10" width="38" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000001"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="5" isBold="true"/></textElement>
                 <text><![CDATA[CÓDIGO]]></text>
             </staticText>
             <staticText>
-                <reportElement x="38" y="0" width="127" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000002"/>
+                <reportElement x="38" y="10" width="127" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000002"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="5" isBold="true"/></textElement>
                 <text><![CDATA[DESCRIÇÃO]]></text>
             </staticText>
             <staticText>
-                <reportElement x="165" y="0" width="38" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000003"/>
+                <reportElement x="165" y="10" width="38" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000003"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="5" isBold="true"/></textElement>
                 <text><![CDATA[NCM]]></text>
             </staticText>
             <staticText>
-                <reportElement x="203" y="0" width="22" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000004"/>
+                <reportElement x="203" y="10" width="22" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000004"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="5" isBold="true"/></textElement>
                 <text><![CDATA[CST]]></text>
             </staticText>
             <staticText>
-                <reportElement x="225" y="0" width="28" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000005"/>
+                <reportElement x="225" y="10" width="28" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000005"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="5" isBold="true"/></textElement>
                 <text><![CDATA[CFOP]]></text>
             </staticText>
             <staticText>
-                <reportElement x="253" y="0" width="22" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000006"/>
+                <reportElement x="253" y="10" width="22" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000006"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="5" isBold="true"/></textElement>
                 <text><![CDATA[UNID]]></text>
             </staticText>
             <staticText>
-                <reportElement x="275" y="0" width="40" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000007"/>
+                <reportElement x="275" y="10" width="40" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000007"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="5" isBold="true"/></textElement>
                 <text><![CDATA[QUANT]]></text>
             </staticText>
             <staticText>
-                <reportElement x="315" y="0" width="48" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000008"/>
+                <reportElement x="315" y="10" width="48" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000008"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="5" isBold="true"/></textElement>
                 <text><![CDATA[V.UNIT]]></text>
             </staticText>
             <staticText>
-                <reportElement x="363" y="0" width="48" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000009"/>
+                <reportElement x="363" y="10" width="48" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000009"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="5" isBold="true"/></textElement>
                 <text><![CDATA[V.TOTAL]]></text>
             </staticText>
             <staticText>
-                <reportElement x="411" y="0" width="45" height="14" uuid="a1b2c3d4-0003-0001-0001-00000000000a"/>
+                <reportElement x="411" y="10" width="45" height="14" uuid="a1b2c3d4-0003-0001-0001-00000000000a"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="5" isBold="true"/></textElement>
                 <text><![CDATA[B.CÁLC ICMS]]></text>
             </staticText>
             <staticText>
-                <reportElement x="456" y="0" width="40" height="14" uuid="a1b2c3d4-0003-0001-0001-00000000000b"/>
+                <reportElement x="456" y="10" width="40" height="14" uuid="a1b2c3d4-0003-0001-0001-00000000000b"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="5" isBold="true"/></textElement>
                 <text><![CDATA[V.ICMS]]></text>
             </staticText>
             <staticText>
-                <reportElement x="496" y="0" width="38" height="14" uuid="a1b2c3d4-0003-0001-0001-00000000000c"/>
+                <reportElement x="496" y="10" width="38" height="14" uuid="a1b2c3d4-0003-0001-0001-00000000000c"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="5" isBold="true"/></textElement>
                 <text><![CDATA[V.IPI]]></text>
             </staticText>
             <staticText>
-                <reportElement x="534" y="0" width="21" height="14" uuid="a1b2c3d4-0003-0001-0001-00000000000d"/>
+                <reportElement x="534" y="10" width="21" height="14" uuid="a1b2c3d4-0003-0001-0001-00000000000d"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="Times New Roman" size="5" isBold="true"/></textElement>
                 <text><![CDATA[%ICMS]]></text>
