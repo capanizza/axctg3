@@ -252,20 +252,25 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
 
     /**
      * O check de "só cancela NFe autorizada (cStat=100)" e de comprimento mínimo da
-     * justificativa acontece em {@code NfeCancelamentoService} — aqui só pede a
-     * justificativa e mostra o resultado, sem duplicar a regra de negócio.
+     * justificativa (quando preenchida) acontece em {@code NfeCancelamentoService} — aqui
+     * só pede a justificativa (pré-preenchida com o último texto usado, via
+     * {@code ConfigRel}) e mostra o resultado, sem duplicar a regra de negócio. Em branco
+     * é permitido: o service substitui por uma desculpa genérica ("NFe emitida
+     * incorretamente.") — só um valor digitado e curto demais é barrado aqui.
      */
     private void pedirJustificativaECancelar(String chave) {
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
         dialogs.createInputDialog(UiComponentUtils.getCurrentView())
                 .withHeader(messageBundle.getMessage("notaSaidaListView.cancelarNfeAction.text"))
                 .withParameters(
                         stringParameter("justificativa")
                                 .withLabel(messageBundle.getMessage("notaSaidaListView.cancelarNfe.justificativa.label"))
+                                .withDefaultValue(configRel.getJustificativaCancelamentoNfe())
                 )
                 .withActions(DialogActions.OK_CANCEL)
                 .withValidator(context -> {
                     String justificativa = context.getValue("justificativa");
-                    if (justificativa == null || justificativa.trim().length() < 15) {
+                    if (justificativa != null && !justificativa.isBlank() && justificativa.trim().length() < 15) {
                         return ValidationErrors.of(messageBundle.getMessage("notaSaidaListView.cancelarNfe.justificativa.minima"));
                     }
                     return ValidationErrors.none();
@@ -275,6 +280,8 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
                         return;
                     }
                     String justificativa = closeEvent.getValue("justificativa");
+                    configRel.setJustificativaCancelamentoNfe(justificativa);
+                    dataManager.save(configRel);
                     NfeCancelamentoService.ResultadoCancelamento resultado = nfeCancelamentoService.cancelarPorChave(chave, justificativa);
                     if (resultado.sucesso()) {
                         dialogs.createMessageDialog()

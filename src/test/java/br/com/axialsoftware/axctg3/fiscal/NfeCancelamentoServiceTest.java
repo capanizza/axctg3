@@ -67,15 +67,31 @@ class NfeCancelamentoServiceTest {
         assertThat(resultado.motivo()).contains("15 caracteres");
     }
 
+    /**
+     * Justificativa em branco (null ou só espaços) não é mais erro — vira a desculpa
+     * genérica "NFe emitida incorretamente." internamente, então passa direto pela
+     * validação de tamanho mínimo. Sem Empresa cadastrada pro codEmpresa de teste, a
+     * checagem seguinte (empresa) é quem barra — é essa mudança de motivo que confirma
+     * que o valor em branco foi aceito em vez de rejeitado por tamanho.
+     */
     @Test
-    void justificativaNulaNaoCancela() {
+    void justificativaNulaUsaTextoPadraoEmVezDeFalhar() {
         Nfe nfe = criarNfe(100, "135260000000001");
 
-        NfeCancelamentoService.ResultadoCancelamento resultado =
-                nfeCancelamentoService.cancelar(nfe.getId(), null);
+        NfeCancelamentoService.ResultadoCancelamento resultado = nfeCancelamentoService.cancelar(nfe.getId(), null);
 
         assertThat(resultado.sucesso()).isFalse();
-        assertThat(resultado.motivo()).contains("15 caracteres");
+        assertThat(resultado.motivo()).isEqualTo("Empresa não encontrada");
+    }
+
+    @Test
+    void justificativaEmBrancoUsaTextoPadraoEmVezDeFalhar() {
+        Nfe nfe = criarNfe(100, "135260000000001");
+
+        NfeCancelamentoService.ResultadoCancelamento resultado = nfeCancelamentoService.cancelar(nfe.getId(), "   ");
+
+        assertThat(resultado.sucesso()).isFalse();
+        assertThat(resultado.motivo()).isEqualTo("Empresa não encontrada");
     }
 
     @Test

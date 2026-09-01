@@ -2,6 +2,7 @@ package br.com.axialsoftware.axctg3.service.fiscal;
 
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.fiscal.Nfe;
+import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import io.jmix.core.DataManager;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
@@ -47,6 +48,11 @@ public class NfeCancelamentoService {
     // aqui pelo check de protCStat==100 em cancelar()).
     private static final String N_SEQ_EVENTO = "01";
     private static final int JUSTIFICATIVA_TAMANHO_MINIMO = 15;
+    // Desculpa genérica usada quando o operador deixa a justificativa em branco no
+    // diálogo — tem mais de 15 caracteres de propósito, então nunca cai na validação
+    // abaixo. "cancelar sem justificar" não é uma opção real (schema exige xJust), então
+    // isso substitui uma mensagem de erro por um valor aceitável na maioria dos casos.
+    private static final String JUSTIFICATIVA_PADRAO = "NFe emitida incorretamente.";
 
     private final DataManager dataManager;
     private final NfeXmlSigner signer;
@@ -83,8 +89,10 @@ public class NfeCancelamentoService {
         return cancelar(nfe, justificativa);
     }
 
-    private ResultadoCancelamento cancelar(Nfe nfe, String justificativa) {
-        if (justificativa == null || justificativa.trim().length() < JUSTIFICATIVA_TAMANHO_MINIMO) {
+    private ResultadoCancelamento cancelar(Nfe nfe, String justificativaInformada) {
+        String justificativa = justificativaInformada == null || justificativaInformada.isBlank()
+                ? JUSTIFICATIVA_PADRAO : justificativaInformada.trim();
+        if (justificativa.length() < JUSTIFICATIVA_TAMANHO_MINIMO) {
             return new ResultadoCancelamento(false, null,
                     "Justificativa precisa ter pelo menos " + JUSTIFICATIVA_TAMANHO_MINIMO + " caracteres");
         }
@@ -131,11 +139,32 @@ public class NfeCancelamentoService {
                 nfe.setProtCStat(101);
                 nfe.setProtXMotivo("Cancelamento de NF-e homologado");
                 dataManager.save(nfe);
+                marcarNotaSaidaComoCancelada(nfe.getChave());
                 return new ResultadoCancelamento(true, resposta.cStat(), resposta.xMotivo());
             }
             return new ResultadoCancelamento(false, resposta.cStat(), resposta.xMotivo());
         } catch (Exception e) {
             return new ResultadoCancelamento(false, null, "Erro ao cancelar: " + e.getMessage());
+        }
+    }
+
+    /**
+     * {@code NotaSaida} não tem FK pra {@code Nfe} (ligação só pela chave, mesmo motivo
+     * documentado no Javadoc das duas entidades) — por isso a busca por chave em vez de um
+     * relacionamento navegável. Nem toda {@code Nfe} cancelada tem uma {@code NotaSaida}
+     * correspondente (ex.: NFe importada de outro sistema só pra registro fiscal), então
+     * segue em silêncio quando não encontra — não é motivo pra reportar falha no
+     * cancelamento, que já aconteceu de verdade na SEFAZ.
+     */
+    private void marcarNotaSaidaComoCancelada(String chave) {
+        NotaSaida notaSaida = dataManager.load(NotaSaida.class)
+                .query("select e from NotaSaida e where e.chave = :chave")
+                .parameter("chave", chave)
+                .optional()
+                .orElse(null);
+        if (notaSaida != null) {
+            notaSaida.setCancelada(true);
+            dataManager.save(notaSaida);
         }
     }
 

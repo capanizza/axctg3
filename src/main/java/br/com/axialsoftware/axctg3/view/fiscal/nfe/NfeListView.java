@@ -1,5 +1,6 @@
 package br.com.axialsoftware.axctg3.view.fiscal.nfe;
 
+import br.com.axialsoftware.axctg3.entity.cadastros.ConfigRel;
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.enums.AmbienteNfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.Nfe;
@@ -162,20 +163,25 @@ public class NfeListView extends StandardListView<Nfe> {
 
     /**
      * O check de "só cancela NFe autorizada (cStat=100)" e de comprimento mínimo da
-     * justificativa acontece em {@code NfeCancelamentoService} — aqui só pede a
-     * justificativa e mostra o resultado, sem duplicar a regra de negócio.
+     * justificativa (quando preenchida) acontece em {@code NfeCancelamentoService} — aqui
+     * só pede a justificativa (pré-preenchida com o último texto usado, via
+     * {@code ConfigRel}) e mostra o resultado, sem duplicar a regra de negócio. Em branco
+     * é permitido: o service substitui por uma desculpa genérica ("NFe emitida
+     * incorretamente.") — só um valor digitado e curto demais é barrado aqui.
      */
     private void pedirJustificativaECancelar(UUID nfeId) {
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
         dialogs.createInputDialog(UiComponentUtils.getCurrentView())
                 .withHeader(messageBundle.getMessage("nfeListView.cancelarNfeAction.text"))
                 .withParameters(
                         stringParameter("justificativa")
                                 .withLabel(messageBundle.getMessage("nfeListView.cancelarNfe.justificativa.label"))
+                                .withDefaultValue(configRel.getJustificativaCancelamentoNfe())
                 )
                 .withActions(DialogActions.OK_CANCEL)
                 .withValidator(context -> {
                     String justificativa = context.getValue("justificativa");
-                    if (justificativa == null || justificativa.trim().length() < 15) {
+                    if (justificativa != null && !justificativa.isBlank() && justificativa.trim().length() < 15) {
                         return ValidationErrors.of(messageBundle.getMessage("nfeListView.cancelarNfe.justificativa.minima"));
                     }
                     return ValidationErrors.none();
@@ -185,6 +191,8 @@ public class NfeListView extends StandardListView<Nfe> {
                         return;
                     }
                     String justificativa = closeEvent.getValue("justificativa");
+                    configRel.setJustificativaCancelamentoNfe(justificativa);
+                    dataManager.save(configRel);
                     NfeCancelamentoService.ResultadoCancelamento resultado = nfeCancelamentoService.cancelar(nfeId, justificativa);
                     if (resultado.sucesso()) {
                         dialogs.createMessageDialog()
