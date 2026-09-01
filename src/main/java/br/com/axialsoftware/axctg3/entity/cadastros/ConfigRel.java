@@ -206,6 +206,12 @@ public class ConfigRel {
     @Column(name = "pasta_sped_ecd")
     private String pastaSpedEcd;
 
+    // Último texto de justificativa usado ao cancelar uma NFe (service/fiscal/
+    // NfeCancelamentoService) — prefill no diálogo de NfeListView/NotaSaidaListView, mesmo
+    // padrão de reaproveitar o último valor já usado nos outros filtros deste registro.
+    @Column(name = "justificativa_cancelamento_nfe")
+    private String justificativaCancelamentoNfe;
+
     public UUID getId() {
         return id;
     }
@@ -700,5 +706,13 @@ public class ConfigRel {
 
     public void setPastaSpedEcd(String pastaSpedEcd) {
         this.pastaSpedEcd = pastaSpedEcd;
+    }
+
+    public String getJustificativaCancelamentoNfe() {
+        return justificativaCancelamentoNfe;
+    }
+
+    public void setJustificativaCancelamentoNfe(String justificativaCancelamentoNfe) {
+        this.justificativaCancelamentoNfe = justificativaCancelamentoNfe;
     }
 }

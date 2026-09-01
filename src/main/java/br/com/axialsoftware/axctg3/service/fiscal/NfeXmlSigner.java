@@ -58,21 +58,35 @@ public class NfeXmlSigner {
 
     /** Assina o {@code infNFe} de chave {@code chave} dentro do documento, in-place. */
     public Document assinar(Document doc, String chave, Empresa empresa) throws Exception {
+        return assinarElemento(doc, "infNFe", empresa);
+    }
+
+    /**
+     * Assina o {@code infEvento} de um evento (ex.: cancelamento, tpEvento 110111) —
+     * mesma técnica de assinatura de {@link #assinar}, só muda a tag do elemento assinado
+     * ({@code infEvento} em vez de {@code infNFe}), já que o leiaute de evento usa a
+     * própria estrutura de assinatura da NFe (enveloped, C14N sem comentários, RSA-SHA1).
+     */
+    public Document assinarEvento(Document doc, Empresa empresa) throws Exception {
+        return assinarElemento(doc, "infEvento", empresa);
+    }
+
+    private Document assinarElemento(Document doc, String tagElementoAssinado, Empresa empresa) throws Exception {
         KeyStore keyStore = carregarKeyStore(empresa);
         String alias = primeiroAlias(keyStore);
         PrivateKey privateKey = (PrivateKey) keyStore.getKey(alias, empresa.getCertificadoSenha().toCharArray());
         X509Certificate certificado = (X509Certificate) keyStore.getCertificate(alias);
 
-        Element infNFe = primeiroPorTag(doc, "infNFe");
+        Element elementoAssinado = primeiroPorTag(doc, tagElementoAssinado);
         // Registra "Id" como atributo de tipo ID de verdade — sem isso a referência
-        // "#NFe<chave>" no Reference abaixo não resolve na hora de assinar.
-        infNFe.setIdAttribute("Id", true);
-        Element nfeRoot = (Element) infNFe.getParentNode();
+        // "#<Id>" no Reference abaixo não resolve na hora de assinar.
+        elementoAssinado.setIdAttribute("Id", true);
+        Element raiz = (Element) elementoAssinado.getParentNode();
 
         XMLSignatureFactory fac = XMLSignatureFactory.getInstance("DOM");
 
         Reference ref = fac.newReference(
-                "#" + infNFe.getAttribute("Id"),
+                "#" + elementoAssinado.getAttribute("Id"),
                 fac.newDigestMethod(DigestMethod.SHA1, null),
                 List.of(
                         fac.newTransform(Transform.ENVELOPED, (javax.xml.crypto.dsig.spec.TransformParameterSpec) null),
@@ -89,7 +103,7 @@ public class NfeXmlSigner {
         X509Data x509Data = kif.newX509Data(List.of(certificado));
         KeyInfo keyInfo = kif.newKeyInfo(List.of(x509Data));
 
-        DOMSignContext signContext = new DOMSignContext(privateKey, nfeRoot);
+        DOMSignContext signContext = new DOMSignContext(privateKey, raiz);
         XMLSignature signature = fac.newXMLSignature(signedInfo, keyInfo);
         signature.sign(signContext);
 

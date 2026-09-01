@@ -531,11 +531,45 @@ public class Nfe {
     private String protDigVal;
 
     // código de status do retorno da SEFAZ (100=autorizada, 101/151=cancelada, 110=denegada...)
+    // — atualizado pra 101 pelo evento de cancelamento (ver bloco "cancelamento" abaixo), o
+    // protocolo de AUTORIZAÇÃO original fica intocado em protNProt/protDhRecbto
     @Column(name = "PROT_C_STAT")
     private Integer protCStat;
 
     @Column(name = "PROT_X_MOTIVO", length = 255)
     private String protXMotivo;
+
+    // ---- cancelamento (evento tpEvento 110111) — service/fiscal/NfeCancelamentoService.
+    // Grupo próprio, separado de protNFe: preserva o protocolo de autorização original
+    // (protNProt) mesmo depois de cancelada, já que o protocolo do EVENTO de cancelamento
+    // é um número diferente.
+
+    // cStat do evento em si (135 = "Evento registrado e vinculado a NF-e"; ver
+    // NfeWebserviceClient.RespostaEvento.registrado()) — não confundir com protCStat, que
+    // é atualizado pra 101 (código canônico de "NFe cancelada") na hora do sucesso
+    @Column(name = "CANC_C_STAT")
+    private Integer cancCStat;
+
+    @Column(name = "CANC_X_MOTIVO", length = 255)
+    private String cancXMotivo;
+
+    // protocolo do EVENTO de cancelamento (nProt de retEvento/infEvento) — diferente do
+    // protocolo de autorização original (protNProt)
+    @Column(name = "CANC_N_PROT", length = 15)
+    private String cancNProt;
+
+    @Column(name = "CANC_DH_REG_EVENTO")
+    private OffsetDateTime cancDhRegEvento;
+
+    // justificativa informada pelo operador (mínimo 15 caracteres exigido pelo schema)
+    @Column(name = "CANC_X_JUST", length = 255)
+    private String cancXJust;
+
+    // XML de retorno do evento (retEvento) — útil pra reconsulta/auditoria, mesmo padrão de
+    // xmlEnvio/xmlRetorno abaixo
+    @Column(name = "CANC_XML_RETORNO")
+    @Lob
+    private String cancXmlRetorno;
 
     // ---- XML bruto (opcional — útil pra reconsulta/reimportação) ----
 
@@ -622,6 +656,54 @@ public class Nfe {
 
     public void setProtXMotivo(String protXMotivo) {
         this.protXMotivo = protXMotivo;
+    }
+
+    public Integer getCancCStat() {
+        return cancCStat;
+    }
+
+    public void setCancCStat(Integer cancCStat) {
+        this.cancCStat = cancCStat;
+    }
+
+    public String getCancXMotivo() {
+        return cancXMotivo;
+    }
+
+    public void setCancXMotivo(String cancXMotivo) {
+        this.cancXMotivo = cancXMotivo;
+    }
+
+    public String getCancNProt() {
+        return cancNProt;
+    }
+
+    public void setCancNProt(String cancNProt) {
+        this.cancNProt = cancNProt;
+    }
+
+    public OffsetDateTime getCancDhRegEvento() {
+        return cancDhRegEvento;
+    }
+
+    public void setCancDhRegEvento(OffsetDateTime cancDhRegEvento) {
+        this.cancDhRegEvento = cancDhRegEvento;
+    }
+
+    public String getCancXJust() {
+        return cancXJust;
+    }
+
+    public void setCancXJust(String cancXJust) {
+        this.cancXJust = cancXJust;
+    }
+
+    public String getCancXmlRetorno() {
+        return cancXmlRetorno;
+    }
+
+    public void setCancXmlRetorno(String cancXmlRetorno) {
+        this.cancXmlRetorno = cancXmlRetorno;
     }
 
     public Integer getProtCStat() {

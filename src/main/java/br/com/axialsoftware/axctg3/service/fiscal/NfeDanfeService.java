@@ -82,9 +82,14 @@ public class NfeDanfeService {
 
     /**
      * Carrega a {@link Nfe} pela chave de acesso e emite o DANFE. Usado logo após
-     * {@link NfeEmissaoService#emitir(UUID)}, que só devolve a chave, não o id da {@code Nfe}.
+     * {@link NfeEmissaoService#emitir(UUID)}, que só devolve a chave, não o id da {@code Nfe} —
+     * e também a partir de {@code NotaSaida.chave} (reimpressão de DANFE numa nota já emitida).
+     * Nesse segundo caso a chave pode não ter {@link Nfe} correspondente (nota emitida antes
+     * dessa entidade existir, ou convertida do legado sem o XML) — por isso devolve
+     * {@code boolean} em vez de estourar {@code NoResultException}; quem chama decide como
+     * avisar o usuário.
      */
-    public void emitirDanfePorChave(String chave) {
+    public boolean emitirDanfePorChave(String chave) {
         Nfe nfe = dataManager.load(Nfe.class)
                 .query("select e from Nfe e where e.chave = :chave")
                 .parameter("chave", chave)
@@ -92,8 +97,13 @@ public class NfeDanfeService {
                         .add("itens", FetchPlan.BASE)
                         .add("duplicatas", FetchPlan.BASE)
                         .add("volumes", FetchPlan.BASE))
-                .one();
+                .optional()
+                .orElse(null);
+        if (nfe == null) {
+            return false;
+        }
         emitir(nfe);
+        return true;
     }
 
     private void emitir(Nfe nfe) {
@@ -160,7 +170,7 @@ public class NfeDanfeService {
         parametros.put("VALOR_IPI", formatarValor(nfe.getValorIpi()));
         parametros.put("VALOR_NF", formatarValor(nfe.getValorNf()));
 
-        parametros.put("INF_CPL", nfe.getInfCpl());
+        parametros.put("INF_CPL", nvl(nfe.getInfCpl()));
 
         return parametros;
     }

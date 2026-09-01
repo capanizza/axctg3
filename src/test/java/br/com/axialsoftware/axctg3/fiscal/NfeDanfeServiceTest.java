@@ -155,10 +155,27 @@ class NfeDanfeServiceTest {
     void emitirDanfePorChaveGeraPdfReal() throws IOException {
         nfeImportService.importar("nfe_import_sample.xml", xmlAmostra());
 
-        nfeDanfeService.emitirDanfePorChave(CHAVE);
+        boolean emitido = nfeDanfeService.emitirDanfePorChave(CHAVE);
 
+        assertThat(emitido).isTrue();
         ArgumentCaptor<byte[]> pdfCaptor = ArgumentCaptor.forClass(byte[].class);
         verify(downloader).download(pdfCaptor.capture(), eq("Danfe_" + CHAVE + ".pdf"), eq(DownloadFormat.PDF));
         assertThat(new String(pdfCaptor.getValue(), 0, 4, StandardCharsets.US_ASCII)).isEqualTo("%PDF");
+    }
+
+    /**
+     * Caso real reportado em produção: {@code NotaSaida.chave} preenchida (nota emitida antes
+     * dessa tela existir, ou convertida do legado) sem {@link Nfe} correspondente na tabela —
+     * antes disso, {@code emitirDanfePorChave} estourava {@code NoResultException} sem
+     * tratamento até a UI (ver {@code NotaSaidaListView}). Devolve {@code false} em vez de
+     * lançar, e não deve baixar PDF nenhum.
+     */
+    @Test
+    void emitirDanfePorChaveSemNfeCorrespondenteDevolveFalse() {
+        boolean emitido = nfeDanfeService.emitirDanfePorChave(CHAVE);
+
+        assertThat(emitido).isFalse();
+        verify(downloader, org.mockito.Mockito.never())
+                .download(org.mockito.ArgumentMatchers.any(byte[].class), org.mockito.ArgumentMatchers.anyString(), eq(DownloadFormat.PDF));
     }
 }
