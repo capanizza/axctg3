@@ -170,7 +170,7 @@ public class NfeDanfeService {
         parametros.put("VALOR_IPI", formatarValor(nfe.getValorIpi()));
         parametros.put("VALOR_NF", formatarValor(nfe.getValorNf()));
 
-        parametros.put("INF_CPL", nfe.getInfCpl());
+        parametros.put("INF_CPL", nvl(nfe.getInfCpl()));
 
         return parametros;
     }
