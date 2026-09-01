@@ -1,15 +1,18 @@
 package br.com.axialsoftware.axctg3.view.fiscal.nfe;
 
+import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.fiscal.Nfe;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeDanfeService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeImportService;
+import br.com.axialsoftware.axctg3.service.fiscal.NfeWebserviceClient;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
+import io.jmix.core.Messages;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.backgroundtask.BackgroundTask;
@@ -55,6 +58,10 @@ public class NfeListView extends StandardListView<Nfe> {
     private NfeImportService nfeImportService;
     @Autowired
     private NfeDanfeService nfeDanfeService;
+    @Autowired
+    private NfeWebserviceClient nfeWebserviceClient;
+    @Autowired
+    private Messages messages;
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
@@ -101,11 +108,11 @@ public class NfeListView extends StandardListView<Nfe> {
     }
 
     /*
-     * Emitir NFe, Cancelar NFe, Consultar NFe, Verificar status do serviço e Inutilizar
-     * números de notas ainda não têm service implementado — só EmitirNfe (a partir de
-     * NotaSaidaListView) e EmitirDanfe existem hoje. Placeholders no dropDownButton pra já
-     * fixar a estrutura do menu; cada um vira handler de verdade quando o service
-     * correspondente for implementado.
+     * Emitir NFe, Cancelar NFe, Consultar NFe e Inutilizar números de notas ainda não têm
+     * service implementado — só EmitirNfe (a partir de NotaSaidaListView), EmitirDanfe e
+     * VerificarStatusServico (copiado de EmpresaDetailView) existem hoje. Placeholders no
+     * dropDownButton pra já fixar a estrutura do menu; cada um vira handler de verdade
+     * quando o service correspondente for implementado.
      */
     @Subscribe("nfesDataGrid.emitirNfeAction")
     public void onNfesDataGridEmitirNfeAction(final ActionPerformedEvent event) {
@@ -122,9 +129,32 @@ public class NfeListView extends StandardListView<Nfe> {
         mostrarEmDesenvolvimento("nfeListView.consultarNfeAction.text");
     }
 
+    /** Mesma lógica de {@code EmpresaDetailView.onTestarConexaoSefazButtonClick}. */
     @Subscribe("nfesDataGrid.verificarStatusServicoAction")
     public void onNfesDataGridVerificarStatusServicoAction(final ActionPerformedEvent event) {
-        mostrarEmDesenvolvimento("nfeListView.verificarStatusServicoAction.text");
+        Empresa empresa = utilGeralService.getEmpresa();
+        if (empresa.getCrt() == null || empresa.getAmbienteNfe() == null
+                || empresa.getCertificadoArquivo() == null || empresa.getCertificadoSenha() == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("nfeListView.verificarStatusServicoAction.text"))
+                    .withText(messageBundle.getMessage("nfeListView.verificarStatusServico.semConfig"))
+                    .open();
+            return;
+        }
+        try {
+            NfeWebserviceClient.Resposta resposta = nfeWebserviceClient.consultarStatusServico(empresa);
+            String ambiente = messages.getMessage(empresa.getAmbienteNfe());
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("nfeListView.verificarStatusServico.sucesso.header"))
+                    .withText(messageBundle.formatMessage("nfeListView.verificarStatusServico.sucesso.text",
+                            ambiente, resposta.cStat(), resposta.xMotivo()))
+                    .open();
+        } catch (Exception e) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("nfeListView.verificarStatusServico.falha.header"))
+                    .withText(messageBundle.formatMessage("nfeListView.verificarStatusServico.falha.text", e.getMessage()))
+                    .open();
+        }
     }
 
     @Subscribe("nfesDataGrid.inutilizarNumerosAction")

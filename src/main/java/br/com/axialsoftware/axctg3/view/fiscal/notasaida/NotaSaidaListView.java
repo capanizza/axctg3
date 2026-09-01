@@ -1,14 +1,17 @@
 package br.com.axialsoftware.axctg3.view.fiscal.notasaida;
 
 import br.com.axialsoftware.axctg3.entity.cadastros.ConfigRel;
+import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeDanfeService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeEmissaoService;
+import br.com.axialsoftware.axctg3.service.fiscal.NfeWebserviceClient;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
 import com.vaadin.flow.router.Route;
 import io.jmix.core.DataManager;
+import io.jmix.core.Messages;
 import io.jmix.core.SaveContext;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.ViewNavigators;
@@ -55,6 +58,10 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
     private NfeEmissaoService nfeEmissaoService;
     @Autowired
     private NfeDanfeService nfeDanfeService;
+    @Autowired
+    private NfeWebserviceClient nfeWebserviceClient;
+    @Autowired
+    private Messages messages;
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
@@ -187,10 +194,9 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
     }
 
     /*
-     * Cancelar NFe, Consultar NFe, Verificar status do serviço e Inutilizar números de
-     * notas ainda não têm service implementado. Placeholders no dropDownButton pra já
-     * fixar a estrutura do menu; cada um vira handler de verdade quando o service
-     * correspondente for implementado.
+     * Cancelar NFe, Consultar NFe e Inutilizar números de notas ainda não têm service
+     * implementado. Placeholders no dropDownButton pra já fixar a estrutura do menu; cada
+     * um vira handler de verdade quando o service correspondente for implementado.
      */
     @Subscribe("notaSaidasDataGrid.cancelarNfeAction")
     public void onNotaSaidasDataGridCancelarNfeAction(final ActionPerformedEvent event) {
@@ -202,9 +208,32 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
         mostrarEmDesenvolvimento("notaSaidaListView.consultarNfeAction.text");
     }
 
+    /** Mesma lógica de {@code EmpresaDetailView.onTestarConexaoSefazButtonClick}. */
     @Subscribe("notaSaidasDataGrid.verificarStatusServicoAction")
     public void onNotaSaidasDataGridVerificarStatusServicoAction(final ActionPerformedEvent event) {
-        mostrarEmDesenvolvimento("notaSaidaListView.verificarStatusServicoAction.text");
+        Empresa empresa = utilGeralService.getEmpresa();
+        if (empresa.getCrt() == null || empresa.getAmbienteNfe() == null
+                || empresa.getCertificadoArquivo() == null || empresa.getCertificadoSenha() == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.verificarStatusServicoAction.text"))
+                    .withText(messageBundle.getMessage("notaSaidaListView.verificarStatusServico.semConfig"))
+                    .open();
+            return;
+        }
+        try {
+            NfeWebserviceClient.Resposta resposta = nfeWebserviceClient.consultarStatusServico(empresa);
+            String ambiente = messages.getMessage(empresa.getAmbienteNfe());
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.verificarStatusServico.sucesso.header"))
+                    .withText(messageBundle.formatMessage("notaSaidaListView.verificarStatusServico.sucesso.text",
+                            ambiente, resposta.cStat(), resposta.xMotivo()))
+                    .open();
+        } catch (Exception e) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.verificarStatusServico.falha.header"))
+                    .withText(messageBundle.formatMessage("notaSaidaListView.verificarStatusServico.falha.text", e.getMessage()))
+                    .open();
+        }
     }
 
     @Subscribe("notaSaidasDataGrid.inutilizarNumerosAction")
