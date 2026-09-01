@@ -284,16 +284,17 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
                         AmbienteNfe novoAmbiente = closeEvent.getValue("ambienteNfe");
                         empresa.setAmbienteNfe(novoAmbiente);
                         dataManager.save(empresa);
-                        atualizarBadgeAmbiente();
-                        // getPageTitle() não é reconsultado automaticamente pelo Vaadin fora de
-                        // navegação — atualiza o título da aba in-place, sem navigate() (que
-                        // reinstanciaria a view e perderia seleção/filtro/ordenação da grid).
-                        UI.getCurrent().getPage().setTitle(getPageTitle());
                         dialogs.createMessageDialog()
                                 .withHeader(messageBundle.getMessage("notaSaidaListView.alternarAmbienteAction.text"))
                                 .withText(messageBundle.formatMessage("notaSaidaListView.alternarAmbiente.sucesso",
                                         messages.getMessage(novoAmbiente)))
                                 .open();
+                        // O <h1 id="viewTitle"> do cabeçalho (StandardMainView) só é recalculado
+                        // em AfterNavigationEvent — setTitle() muda só o document.title invisível
+                        // da aba. Mesmo padrão de SelecionarEmpresaListView pra troca de
+                        // empresa/período: reload() depois de abrir o diálogo de confirmação (o
+                        // diálogo já foi enviado ao cliente antes do reload chegar).
+                        UI.getCurrent().getPage().reload();
                     }
                 })
                 .open();
