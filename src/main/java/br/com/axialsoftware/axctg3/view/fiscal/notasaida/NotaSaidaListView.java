@@ -5,6 +5,7 @@ import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.enums.AmbienteNfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
+import br.com.axialsoftware.axctg3.service.fiscal.NfeCancelamentoService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeDanfeService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeEmissaoService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeWebserviceClient;
@@ -23,6 +24,7 @@ import io.jmix.flowui.app.inputdialog.DialogActions;
 import io.jmix.flowui.app.inputdialog.DialogOutcome;
 import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.grid.DataGrid;
+import io.jmix.flowui.component.validation.ValidationErrors;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.*;
@@ -33,6 +35,7 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 import static io.jmix.flowui.app.inputdialog.InputParameter.enumParameter;
+import static io.jmix.flowui.app.inputdialog.InputParameter.stringParameter;
 import static io.jmix.flowui.app.inputdialog.InputParameter.localDateParameter;
 
 @Route(value = "nota-saidas", layout = MainView.class)
@@ -64,6 +67,8 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
     private NfeEmissaoService nfeEmissaoService;
     @Autowired
     private NfeDanfeService nfeDanfeService;
+    @Autowired
+    private NfeCancelamentoService nfeCancelamentoService;
     @Autowired
     private NfeWebserviceClient nfeWebserviceClient;
     @Autowired
@@ -221,13 +226,70 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
     }
 
     /*
-     * Cancelar NFe, Consultar NFe e Inutilizar números de notas ainda não têm service
-     * implementado. Placeholders no dropDownButton pra já fixar a estrutura do menu; cada
-     * um vira handler de verdade quando o service correspondente for implementado.
+     * Consultar NFe e Inutilizar números de notas ainda não têm service implementado.
+     * Placeholders no dropDownButton pra já fixar a estrutura do menu; cada um vira
+     * handler de verdade quando o service correspondente for implementado.
      */
     @Subscribe("notaSaidasDataGrid.cancelarNfeAction")
     public void onNotaSaidasDataGridCancelarNfeAction(final ActionPerformedEvent event) {
-        mostrarEmDesenvolvimento("notaSaidaListView.cancelarNfeAction.text");
+        NotaSaida selecionada = notaSaidasDataGrid.getSingleSelectedItem();
+        if (selecionada == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.cancelarNfeAction.text"))
+                    .withText(messageBundle.getMessage("notaSaidaListView.cancelarNfe.naoSelecionado"))
+                    .open();
+            return;
+        }
+        if (selecionada.getChave() == null || selecionada.getChave().isBlank()) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.cancelarNfeAction.text"))
+                    .withText(messageBundle.getMessage("notaSaidaListView.cancelarNfe.naoEmitida"))
+                    .open();
+            return;
+        }
+        pedirJustificativaECancelar(selecionada.getChave());
+    }
+
+    /**
+     * O check de "só cancela NFe autorizada (cStat=100)" e de comprimento mínimo da
+     * justificativa acontece em {@code NfeCancelamentoService} — aqui só pede a
+     * justificativa e mostra o resultado, sem duplicar a regra de negócio.
+     */
+    private void pedirJustificativaECancelar(String chave) {
+        dialogs.createInputDialog(UiComponentUtils.getCurrentView())
+                .withHeader(messageBundle.getMessage("notaSaidaListView.cancelarNfeAction.text"))
+                .withParameters(
+                        stringParameter("justificativa")
+                                .withLabel(messageBundle.getMessage("notaSaidaListView.cancelarNfe.justificativa.label"))
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withValidator(context -> {
+                    String justificativa = context.getValue("justificativa");
+                    if (justificativa == null || justificativa.trim().length() < 15) {
+                        return ValidationErrors.of(messageBundle.getMessage("notaSaidaListView.cancelarNfe.justificativa.minima"));
+                    }
+                    return ValidationErrors.none();
+                })
+                .withCloseListener(closeEvent -> {
+                    if (!closeEvent.closedWith(DialogOutcome.OK)) {
+                        return;
+                    }
+                    String justificativa = closeEvent.getValue("justificativa");
+                    NfeCancelamentoService.ResultadoCancelamento resultado = nfeCancelamentoService.cancelarPorChave(chave, justificativa);
+                    if (resultado.sucesso()) {
+                        dialogs.createMessageDialog()
+                                .withHeader(messageBundle.getMessage("notaSaidaListView.cancelarNfe.sucesso.header"))
+                                .withText(messageBundle.formatMessage("notaSaidaListView.cancelarNfe.sucesso.text", resultado.motivo()))
+                                .open();
+                        notaSaidasDl.load();
+                    } else {
+                        dialogs.createMessageDialog()
+                                .withHeader(messageBundle.getMessage("notaSaidaListView.cancelarNfe.erro.header"))
+                                .withText(messageBundle.formatMessage("notaSaidaListView.cancelarNfe.erro.text", resultado.motivo()))
+                                .open();
+                    }
+                })
+                .open();
     }
 
     @Subscribe("notaSaidasDataGrid.consultarNfeAction")

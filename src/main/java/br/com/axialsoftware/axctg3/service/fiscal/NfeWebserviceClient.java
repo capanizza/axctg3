@@ -71,6 +71,12 @@ public class NfeWebserviceClient {
             AmbienteNfe.PRODUCAO, "https://nfe.fazenda.sp.gov.br/ws/nfestatusservico4.asmx",
             AmbienteNfe.HOMOLOGACAO, "https://homologacao.nfe.fazenda.sp.gov.br/ws/nfestatusservico4.asmx");
 
+    // Conferido em https://portal.fazenda.sp.gov.br/servicos/nfe/Paginas/URL-WEBSERVICES.aspx
+    // em 2026-09-01, mesmo critério dos outros três mapas acima.
+    private static final Map<AmbienteNfe, String> URL_RECEPCAO_EVENTO = Map.of(
+            AmbienteNfe.PRODUCAO, "https://nfe.fazenda.sp.gov.br/ws/nferecepcaoevento4.asmx",
+            AmbienteNfe.HOMOLOGACAO, "https://homologacao.nfe.fazenda.sp.gov.br/ws/nferecepcaoevento4.asmx");
+
     public record Resposta(Integer cStat, String xMotivo, String nRec, String xmlProtNFe) {
         public boolean autorizada() {
             return cStat != null && cStat == 100;
@@ -78,6 +84,14 @@ public class NfeWebserviceClient {
 
         public boolean loteRecebido() {
             return cStat != null && cStat == 103;
+        }
+    }
+
+    /** Resposta de {@code NFeRecepcaoEvento4} (cancelamento, carta de correção etc.). */
+    public record RespostaEvento(Integer cStat, String xMotivo, String nProt, String xmlRetEvento) {
+        /** 135 = "Evento registrado e vinculado a NF-e" — único cStat de sucesso de verdade. */
+        public boolean registrado() {
+            return cStat != null && cStat == 135;
         }
     }
 
@@ -110,6 +124,21 @@ public class NfeWebserviceClient {
         String respostaBody = enviar(URL_STATUS_SERVICO.get(empresa.getAmbienteNfe()),
                 "http://www.portalfiscal.inf.br/nfe/wsdl/NFeStatusServico4", corpo, empresa);
         return interpretarResposta(respostaBody);
+    }
+
+    /**
+     * Envia um evento assinado (ex.: cancelamento — {@code <evento>} com {@code infEvento}
+     * já assinado por {@link NfeXmlSigner#assinarEvento}) pra {@code NFeRecepcaoEvento4}.
+     * O {@code idLote} do envelope não tem relação com {@code nSeqEvento} do evento em si.
+     */
+    public RespostaEvento enviarEvento(byte[] xmlEventoAssinado, Empresa empresa) throws Exception {
+        String corpo = "<envEvento xmlns=\"http://www.portalfiscal.inf.br/nfe\" versao=\"1.00\">"
+                + "<idLote>1</idLote>"
+                + new String(xmlEventoAssinado, StandardCharsets.UTF_8)
+                + "</envEvento>";
+        String respostaBody = enviar(URL_RECEPCAO_EVENTO.get(empresa.getAmbienteNfe()),
+                "http://www.portalfiscal.inf.br/nfe/wsdl/NFeRecepcaoEvento4", corpo, empresa);
+        return interpretarRespostaEvento(respostaBody);
     }
 
     /** Consulta o recibo de um lote que voltou cStat=103 (processamento assíncrono). */
@@ -243,6 +272,37 @@ public class NfeWebserviceClient {
         }
         String nRec = texto(primeiroOuNull(doc, "infRec"), "nRec");
         return new Resposta(cStat, xMotivo, nRec, xmlProtNFe);
+    }
+
+    /**
+     * {@code retEnvEvento/retEvento/infEvento} tem o resultado de verdade (cStat=135
+     * registrado, ou uma rejeição específica do evento); quando o lote inteiro falha antes
+     * de processar o evento (lote malformado etc.), só {@code retEnvEvento/cStat} vem
+     * preenchido — mesma estrutura de fallback batch→item de {@link #interpretarResposta}.
+     */
+    private RespostaEvento interpretarRespostaEvento(String xmlResposta) throws ParserConfigurationException, SAXException, IOException {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(false);
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document doc = builder.parse(new ByteArrayInputStream(xmlResposta.getBytes(StandardCharsets.UTF_8)));
+
+        Element infEvento = primeiroOuNull(doc, "infEvento");
+        Integer cStat = null;
+        String xMotivo = null;
+        String nProt = null;
+        if (infEvento != null) {
+            cStat = inteiro(texto(infEvento, "cStat"));
+            xMotivo = texto(infEvento, "xMotivo");
+            nProt = texto(infEvento, "nProt");
+        } else {
+            Element retEnvEvento = primeiroOuNull(doc, "retEnvEvento");
+            if (retEnvEvento != null) {
+                cStat = inteiro(texto(retEnvEvento, "cStat"));
+                xMotivo = texto(retEnvEvento, "xMotivo");
+            }
+        }
+        String xmlRetEvento = serializar(primeiroOuNull(doc, "retEvento"));
+        return new RespostaEvento(cStat, xMotivo, nProt, xmlRetEvento);
     }
 
     private Element primeiroOuNull(Document doc, String tag) {

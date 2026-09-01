@@ -4,6 +4,7 @@ import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.enums.AmbienteNfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.Nfe;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
+import br.com.axialsoftware.axctg3.service.fiscal.NfeCancelamentoService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeDanfeService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeImportService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeWebserviceClient;
@@ -25,6 +26,7 @@ import io.jmix.flowui.backgroundtask.BackgroundTask;
 import io.jmix.flowui.backgroundtask.TaskLifeCycle;
 import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.grid.DataGrid;
+import io.jmix.flowui.component.validation.ValidationErrors;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.model.CollectionLoader;
@@ -34,9 +36,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static io.jmix.flowui.app.inputdialog.InputParameter.enumParameter;
+import static io.jmix.flowui.app.inputdialog.InputParameter.stringParameter;
 
 @Route(value = "nfes", layout = MainView.class)
 @ViewController(id = "Nfe.list")
@@ -70,6 +74,8 @@ public class NfeListView extends StandardListView<Nfe> {
     private NfeImportService nfeImportService;
     @Autowired
     private NfeDanfeService nfeDanfeService;
+    @Autowired
+    private NfeCancelamentoService nfeCancelamentoService;
     @Autowired
     private NfeWebserviceClient nfeWebserviceClient;
     @Autowired
@@ -129,11 +135,12 @@ public class NfeListView extends StandardListView<Nfe> {
     }
 
     /*
-     * Emitir NFe, Cancelar NFe, Consultar NFe e Inutilizar números de notas ainda não têm
-     * service implementado — só EmitirNfe (a partir de NotaSaidaListView), EmitirDanfe e
-     * VerificarStatusServico (copiado de EmpresaDetailView) existem hoje. Placeholders no
-     * dropDownButton pra já fixar a estrutura do menu; cada um vira handler de verdade
-     * quando o service correspondente for implementado.
+     * Emitir NFe, Consultar NFe e Inutilizar números de notas ainda não têm service
+     * implementado — só EmitirNfe (a partir de NotaSaidaListView), EmitirDanfe,
+     * VerificarStatusServico (copiado de EmpresaDetailView) e CancelarNfe (via
+     * NfeCancelamentoService, evento 110111) existem hoje. Placeholders no dropDownButton
+     * pra já fixar a estrutura do menu; cada um vira handler de verdade quando o service
+     * correspondente for implementado.
      */
     @Subscribe("nfesDataGrid.emitirNfeAction")
     public void onNfesDataGridEmitirNfeAction(final ActionPerformedEvent event) {
@@ -142,7 +149,57 @@ public class NfeListView extends StandardListView<Nfe> {
 
     @Subscribe("nfesDataGrid.cancelarNfeAction")
     public void onNfesDataGridCancelarNfeAction(final ActionPerformedEvent event) {
-        mostrarEmDesenvolvimento("nfeListView.cancelarNfeAction.text");
+        Nfe selecionada = nfesDataGrid.getSingleSelectedItem();
+        if (selecionada == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("nfeListView.cancelarNfeAction.text"))
+                    .withText(messageBundle.getMessage("nfeListView.cancelarNfe.naoSelecionado"))
+                    .open();
+            return;
+        }
+        pedirJustificativaECancelar(selecionada.getId());
+    }
+
+    /**
+     * O check de "só cancela NFe autorizada (cStat=100)" e de comprimento mínimo da
+     * justificativa acontece em {@code NfeCancelamentoService} — aqui só pede a
+     * justificativa e mostra o resultado, sem duplicar a regra de negócio.
+     */
+    private void pedirJustificativaECancelar(UUID nfeId) {
+        dialogs.createInputDialog(UiComponentUtils.getCurrentView())
+                .withHeader(messageBundle.getMessage("nfeListView.cancelarNfeAction.text"))
+                .withParameters(
+                        stringParameter("justificativa")
+                                .withLabel(messageBundle.getMessage("nfeListView.cancelarNfe.justificativa.label"))
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withValidator(context -> {
+                    String justificativa = context.getValue("justificativa");
+                    if (justificativa == null || justificativa.trim().length() < 15) {
+                        return ValidationErrors.of(messageBundle.getMessage("nfeListView.cancelarNfe.justificativa.minima"));
+                    }
+                    return ValidationErrors.none();
+                })
+                .withCloseListener(closeEvent -> {
+                    if (!closeEvent.closedWith(DialogOutcome.OK)) {
+                        return;
+                    }
+                    String justificativa = closeEvent.getValue("justificativa");
+                    NfeCancelamentoService.ResultadoCancelamento resultado = nfeCancelamentoService.cancelar(nfeId, justificativa);
+                    if (resultado.sucesso()) {
+                        dialogs.createMessageDialog()
+                                .withHeader(messageBundle.getMessage("nfeListView.cancelarNfe.sucesso.header"))
+                                .withText(messageBundle.formatMessage("nfeListView.cancelarNfe.sucesso.text", resultado.motivo()))
+                                .open();
+                        nfesDl.load();
+                    } else {
+                        dialogs.createMessageDialog()
+                                .withHeader(messageBundle.getMessage("nfeListView.cancelarNfe.erro.header"))
+                                .withText(messageBundle.formatMessage("nfeListView.cancelarNfe.erro.text", resultado.motivo()))
+                                .open();
+                    }
+                })
+                .open();
     }
 
     @Subscribe("nfesDataGrid.consultarNfeAction")
