@@ -100,6 +100,45 @@ public class NfeListView extends StandardListView<Nfe> {
         nfeDanfeService.emitirDanfe(selecionada.getId());
     }
 
+    /*
+     * Emitir NFe, Cancelar NFe, Consultar NFe, Verificar status do serviço e Inutilizar
+     * números de notas ainda não têm service implementado — só EmitirNfe (a partir de
+     * NotaSaidaListView) e EmitirDanfe existem hoje. Placeholders no dropDownButton pra já
+     * fixar a estrutura do menu; cada um vira handler de verdade quando o service
+     * correspondente for implementado.
+     */
+    @Subscribe("nfesDataGrid.emitirNfeAction")
+    public void onNfesDataGridEmitirNfeAction(final ActionPerformedEvent event) {
+        mostrarEmDesenvolvimento("nfeListView.emitirNfeAction.text");
+    }
+
+    @Subscribe("nfesDataGrid.cancelarNfeAction")
+    public void onNfesDataGridCancelarNfeAction(final ActionPerformedEvent event) {
+        mostrarEmDesenvolvimento("nfeListView.cancelarNfeAction.text");
+    }
+
+    @Subscribe("nfesDataGrid.consultarNfeAction")
+    public void onNfesDataGridConsultarNfeAction(final ActionPerformedEvent event) {
+        mostrarEmDesenvolvimento("nfeListView.consultarNfeAction.text");
+    }
+
+    @Subscribe("nfesDataGrid.verificarStatusServicoAction")
+    public void onNfesDataGridVerificarStatusServicoAction(final ActionPerformedEvent event) {
+        mostrarEmDesenvolvimento("nfeListView.verificarStatusServicoAction.text");
+    }
+
+    @Subscribe("nfesDataGrid.inutilizarNumerosAction")
+    public void onNfesDataGridInutilizarNumerosAction(final ActionPerformedEvent event) {
+        mostrarEmDesenvolvimento("nfeListView.inutilizarNumerosAction.text");
+    }
+
+    private void mostrarEmDesenvolvimento(String chaveTextoAcao) {
+        dialogs.createMessageDialog()
+                .withHeader(messageBundle.getMessage(chaveTextoAcao))
+                .withText(messageBundle.getMessage("nfeListView.emDesenvolvimento.text"))
+                .open();
+    }
+
     /**
      * Um {@code NfeImportService.importar} por iteração, publicando o progresso a cada arquivo
      * pra barra andar junto do trabalho real. Nada de UI dentro de {@link #run}, igual ao import

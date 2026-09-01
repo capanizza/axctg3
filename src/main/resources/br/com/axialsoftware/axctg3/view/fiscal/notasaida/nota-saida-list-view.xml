@@ -37,7 +37,16 @@
                 <button id="createButton" action="notaSaidasDataGrid.createAction" themeNames="small"/>
                 <button id="editButton" action="notaSaidasDataGrid.editAction" themeNames="small"/>
                 <button id="removeButton" action="notaSaidasDataGrid.removeAction" themeNames="small"/>
-                <button id="emitirNfeButton" action="notaSaidasDataGrid.emitirNfeAction" themeNames="small"/>
+                <dropdownButton id="notaSaidaAcoesDropdownButton" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.acoesDropdownButton.text" themeNames="small">
+                    <items>
+                        <actionItem id="emitirNfeItem" ref="notaSaidasDataGrid.emitirNfeAction"/>
+                        <actionItem id="emitirDanfeItem" ref="notaSaidasDataGrid.emitirDanfeAction"/>
+                        <actionItem id="cancelarNfeItem" ref="notaSaidasDataGrid.cancelarNfeAction"/>
+                        <actionItem id="consultarNfeItem" ref="notaSaidasDataGrid.consultarNfeAction"/>
+                        <actionItem id="verificarStatusServicoItem" ref="notaSaidasDataGrid.verificarStatusServicoAction"/>
+                        <actionItem id="inutilizarNumerosItem" ref="notaSaidasDataGrid.inutilizarNumerosAction"/>
+                    </items>
+                </dropdownButton>
             </startSlot>
             <endSlot>
                 <simplePagination id="pagination" dataLoader="notaSaidasDl"/>
@@ -54,6 +63,11 @@
                 <action id="editAction" type="list_edit"/>
                 <action id="removeAction" type="list_remove"/>
                 <action id="emitirNfeAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.emitirNfeAction.text" icon="vaadin:paperplane"/>
+                <action id="emitirDanfeAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.emitirDanfeAction.text" icon="vaadin:print"/>
+                <action id="cancelarNfeAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.cancelarNfeAction.text" icon="vaadin:ban"/>
+                <action id="consultarNfeAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.consultarNfeAction.text" icon="vaadin:search"/>
+                <action id="verificarStatusServicoAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.verificarStatusServicoAction.text" icon="vaadin:signal"/>
+                <action id="inutilizarNumerosAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.inutilizarNumerosAction.text" icon="vaadin:trash"/>
             </actions>
             <columns resizable="true">
                 <column property="numero" filterable="true" width="9%"/>

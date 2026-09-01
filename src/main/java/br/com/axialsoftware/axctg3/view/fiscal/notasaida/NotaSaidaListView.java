@@ -159,4 +159,57 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
                     .open();
         }
     }
+
+    @Subscribe("notaSaidasDataGrid.emitirDanfeAction")
+    public void onNotaSaidasDataGridEmitirDanfeAction(final ActionPerformedEvent event) {
+        NotaSaida selecionada = notaSaidasDataGrid.getSingleSelectedItem();
+        if (selecionada == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.emitirDanfeAction.text"))
+                    .withText(messageBundle.getMessage("notaSaidaListView.emitirDanfe.naoSelecionado"))
+                    .open();
+            return;
+        }
+        if (selecionada.getChave() == null || selecionada.getChave().isBlank()) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.emitirDanfeAction.text"))
+                    .withText(messageBundle.getMessage("notaSaidaListView.emitirDanfe.naoEmitida"))
+                    .open();
+            return;
+        }
+        nfeDanfeService.emitirDanfePorChave(selecionada.getChave());
+    }
+
+    /*
+     * Cancelar NFe, Consultar NFe, Verificar status do serviço e Inutilizar números de
+     * notas ainda não têm service implementado. Placeholders no dropDownButton pra já
+     * fixar a estrutura do menu; cada um vira handler de verdade quando o service
+     * correspondente for implementado.
+     */
+    @Subscribe("notaSaidasDataGrid.cancelarNfeAction")
+    public void onNotaSaidasDataGridCancelarNfeAction(final ActionPerformedEvent event) {
+        mostrarEmDesenvolvimento("notaSaidaListView.cancelarNfeAction.text");
+    }
+
+    @Subscribe("notaSaidasDataGrid.consultarNfeAction")
+    public void onNotaSaidasDataGridConsultarNfeAction(final ActionPerformedEvent event) {
+        mostrarEmDesenvolvimento("notaSaidaListView.consultarNfeAction.text");
+    }
+
+    @Subscribe("notaSaidasDataGrid.verificarStatusServicoAction")
+    public void onNotaSaidasDataGridVerificarStatusServicoAction(final ActionPerformedEvent event) {
+        mostrarEmDesenvolvimento("notaSaidaListView.verificarStatusServicoAction.text");
+    }
+
+    @Subscribe("notaSaidasDataGrid.inutilizarNumerosAction")
+    public void onNotaSaidasDataGridInutilizarNumerosAction(final ActionPerformedEvent event) {
+        mostrarEmDesenvolvimento("notaSaidaListView.inutilizarNumerosAction.text");
+    }
+
+    private void mostrarEmDesenvolvimento(String chaveTextoAcao) {
+        dialogs.createMessageDialog()
+                .withHeader(messageBundle.getMessage(chaveTextoAcao))
+                .withText(messageBundle.getMessage("notaSaidaListView.emDesenvolvimento.text"))
+                .open();
+    }
 }

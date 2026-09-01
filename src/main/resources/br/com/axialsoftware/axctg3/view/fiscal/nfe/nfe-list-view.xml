@@ -32,7 +32,16 @@
                 <button id="editButton" action="nfesDataGrid.editAction" themeNames="small"/>
                 <button id="removeButton" action="nfesDataGrid.removeAction" themeNames="small"/>
                 <button id="importXmlButton" text="msg://nfeListView.importXmlButton.text" themeNames="small"/>
-                <button id="emitirDanfeButton" action="nfesDataGrid.emitirDanfeAction" themeNames="small"/>
+                <dropdownButton id="nfeAcoesDropdownButton" text="msg://nfeListView.acoesDropdownButton.text" themeNames="small">
+                    <items>
+                        <actionItem id="emitirNfeItem" ref="nfesDataGrid.emitirNfeAction"/>
+                        <actionItem id="emitirDanfeItem" ref="nfesDataGrid.emitirDanfeAction"/>
+                        <actionItem id="cancelarNfeItem" ref="nfesDataGrid.cancelarNfeAction"/>
+                        <actionItem id="consultarNfeItem" ref="nfesDataGrid.consultarNfeAction"/>
+                        <actionItem id="verificarStatusServicoItem" ref="nfesDataGrid.verificarStatusServicoAction"/>
+                        <actionItem id="inutilizarNumerosItem" ref="nfesDataGrid.inutilizarNumerosAction"/>
+                    </items>
+                </dropdownButton>
             </startSlot>
             <endSlot>
                 <simplePagination id="pagination" dataLoader="nfesDl"/>
@@ -46,7 +55,12 @@
             <actions>
                 <action id="editAction" type="list_read"/>
                 <action id="removeAction" type="list_remove"/>
+                <action id="emitirNfeAction" text="msg://nfeListView.emitirNfeAction.text" icon="vaadin:paperplane"/>
                 <action id="emitirDanfeAction" text="msg://nfeListView.emitirDanfeAction.text" icon="vaadin:print"/>
+                <action id="cancelarNfeAction" text="msg://nfeListView.cancelarNfeAction.text" icon="vaadin:ban"/>
+                <action id="consultarNfeAction" text="msg://nfeListView.consultarNfeAction.text" icon="vaadin:search"/>
+                <action id="verificarStatusServicoAction" text="msg://nfeListView.verificarStatusServicoAction.text" icon="vaadin:signal"/>
+                <action id="inutilizarNumerosAction" text="msg://nfeListView.inutilizarNumerosAction.text" icon="vaadin:trash"/>
             </actions>
             <columns resizable="true">
                 <column property="numeroNf" filterable="true" width="8%"/>
