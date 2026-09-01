@@ -51,7 +51,8 @@ relacionar com NFe. Reverte a decisão de 2026-08-09 documentada em `Nfe.java`
 | Transmissão SOAP 1.2 + mTLS | `service/fiscal/NfeWebserviceClient.java` — endpoints SP conferidos em <https://portal.fazenda.sp.gov.br/servicos/nfe/Paginas/URL-WEBSERVICES.aspx> em 2026-08-17 |
 | Orquestração + salvamento | `service/fiscal/NfeEmissaoService.java` — reaproveita `NfeImportService.salvarEmitida(byte[])` (novo método, mesmo bloco de `SaveContext` do import) pra gravar o resultado em `Nfe`/`NfeItem` |
 | Teste isolado de certificado/mTLS | `NfeWebserviceClient.consultarStatusServico(Empresa)` — chama `NFeStatusServico4` (sem NFe nenhuma montada/assinada) — sugestão do usuário, mais simples que emitir de verdade e já confirma se cert+mTLS+conectividade funcionam. Botão "Testar conexão SEFAZ" na aba "Emissão NFe" do cadastro de Empresa (`EmpresaDetailView.java`) |
-| UI (emissão) | Botão "Emitir NFe" em `NotaSaidaListView` (`notaSaidasDataGrid.emitirNfeAction`) |
+| UI (emissão) | dropDownButton "Ações" em `NotaSaidaListView`/`NfeListView` — item "Emitir NFe" |
+| Cancelamento (evento `tpEvento` 110111) | `service/fiscal/NfeCancelamentoService.java` — monta/assina/transmite o evento via `NfeXmlSigner.assinarEvento`/`NfeWebserviceClient.enviarEvento` (endpoint `NFeRecepcaoEvento4`); grava protocolo/motivo do evento em campos novos de `Nfe` (`CANC_*`) preservando o protocolo de autorização original (`protNProt`), e atualiza `protCStat` pra 101. UI: item "Cancelar NFe" do mesmo dropDownButton, pede justificativa (mínimo 15 caracteres). **Validado em 2026-09-01** contra homologação SP: `cStat=135 "Evento registrado e vinculado a NF-e"` |
 
 ## Simplificações desta primeira versão (além das já citadas)
 
@@ -88,14 +89,29 @@ relacionar com NFe. Reverte a decisão de 2026-08-09 documentada em `Nfe.java`
   `cStat=107 "Serviço em Operação"` contra homologação SP — certificado, mTLS e
   conectividade validados de ponta a ponta. Falta validar o fluxo completo de emissão
   (`NfeXmlBuilder`/assinatura/`NFeAutorizacao4`), que ainda não foi exercitado.
-- **Endpoints SP** conferidos ao vivo em 2026-08-17, mas SEFAZ muda URL ocasionalmente —
-  reconferir se a conexão falhar com erro de rede antes de suspeitar de outra coisa.
+- **Endpoints SP** conferidos ao vivo em 2026-08-17 (emissão) e 2026-09-01
+  (`NFeRecepcaoEvento4`, cancelamento), mas SEFAZ muda URL ocasionalmente — reconferir
+  se a conexão falhar com erro de rede antes de suspeitar de outra coisa.
 - **Canonicalização da assinatura** — um espaço a mais invalida a assinatura; testar
-  contra homologação antes de qualquer nota de produção.
+  contra homologação antes de qualquer nota de produção. **Confirmado funcionando**
+  tanto pra `infNFe` (emissão, 2026-08-18) quanto pra `infEvento` (cancelamento,
+  2026-09-01 — `NfeXmlSigner.assinarEvento`, mesma técnica de assinatura, tag
+  diferente).
+- **`tpNF` sempre "1" (saída), independente do CFOP** (`NfeXmlBuilder.construirIde`) —
+  bug real encontrado em 2026-09-01 testando uma nota de "Compra de energia elétrica"
+  (CFOP 1252, que começa em "1" = entrada): a SEFAZ rejeitou com `cStat=770 "CFOP
+  Inexistente [... Tabela de CFOP(NT) está malformada ...]"`, mensagem confusa que na
+  prática significa "CFOP de entrada não existe na tabela de saída". Simplesmente uma
+  consequência do escopo já declarado ("NFe de entrada de terceiros — fica pra depois"),
+  mas vale deixar registrado: qualquer nota com CFOP começando em 1/2/3 vai ser rejeitada
+  hoje, sem mensagem clara do motivo. Corrigir (`tpNF` derivado do primeiro dígito do
+  CFOP, ou validação prévia bloqueando CFOP de entrada) quando entrada entrar em escopo.
 
 ## O que falta (próximas rodadas)
 
-- Cancelamento, carta de correção, inutilização.
+- Carta de correção, inutilização de numeração (cancelamento já implementado e validado
+  — ver tabela acima).
+- Validar/bloquear CFOP de entrada antes de montar o XML (ver "tpNF sempre 1" acima).
 - Outros UFs além de SP.
 - Crédito de ICMS do Simples de verdade (portar `calculacsosn` do Axial).
 - Frete/transportador em `NotaSaida`.
