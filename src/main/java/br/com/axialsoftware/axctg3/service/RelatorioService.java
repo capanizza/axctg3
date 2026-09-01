@@ -1,5 +1,7 @@
 package br.com.axialsoftware.axctg3.service;
 
+import com.vaadin.flow.component.UI;
+import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.download.DownloadFormat;
 import io.jmix.flowui.download.Downloader;
 import net.sf.jasperreports.engine.JRDataSource;
@@ -22,6 +24,9 @@ public class RelatorioService {
     @Autowired
     private Downloader downloader;
 
+    @Autowired
+    private Dialogs dialogs;
+
     private static final Logger log = LoggerFactory.getLogger(RelatorioService.class);
 
     public void emitirRelatorio(String nomeRelatorio,
@@ -37,8 +42,14 @@ public class RelatorioService {
             byte[] arq = JasperExportManager.exportReportToPdf(jasperPrint);
             downloader.download(arq, nomeSaida, DownloadFormat.PDF);
         } catch (Exception e) {
-            // colocar log do erro
-            log.info(e.getMessage());
+            log.error("Falha ao emitir relatório {}", nomeRelatorio, e);
+            // Sem UI ativa (chamada de teste/background), não dá pra abrir diálogo — só loga.
+            if (UI.getCurrent() != null) {
+                dialogs.createMessageDialog()
+                        .withHeader("Erro ao gerar relatório")
+                        .withText("Não foi possível gerar o relatório. Consulte o log da aplicação.")
+                        .open();
+            }
         }
     }
 
@@ -56,7 +67,14 @@ public class RelatorioService {
             byte[] arq = JasperExportManager.exportReportToPdf(jasperPrint);
             downloader.download(arq, nomeSaida, DownloadFormat.PDF);
         } catch (Exception e) {
-            log.info(e.getMessage());
+            log.error("Falha ao emitir relatório {}", nomeRelatorio, e);
+            // Sem UI ativa (chamada de teste/background), não dá pra abrir diálogo — só loga.
+            if (UI.getCurrent() != null) {
+                dialogs.createMessageDialog()
+                        .withHeader("Erro ao gerar relatório")
+                        .withText("Não foi possível gerar o relatório. Consulte o log da aplicação.")
+                        .open();
+            }
         }
     }
 
