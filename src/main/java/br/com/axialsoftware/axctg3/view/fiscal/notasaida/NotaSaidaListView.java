@@ -177,7 +177,13 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
                     .open();
             return;
         }
-        nfeDanfeService.emitirDanfePorChave(selecionada.getChave());
+        boolean emitido = nfeDanfeService.emitirDanfePorChave(selecionada.getChave());
+        if (!emitido) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.emitirDanfeAction.text"))
+                    .withText(messageBundle.getMessage("notaSaidaListView.emitirDanfe.naoEncontrada"))
+                    .open();
+        }
     }
 
     /*
