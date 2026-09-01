@@ -1,6 +1,7 @@
 package br.com.axialsoftware.axctg3.view.fiscal.nfe;
 
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
+import br.com.axialsoftware.axctg3.entity.enums.AmbienteNfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.Nfe;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeDanfeService;
@@ -10,11 +11,15 @@ import br.com.axialsoftware.axctg3.view.main.MainView;
 
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
+import io.jmix.core.DataManager;
 import io.jmix.core.Messages;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.Dialogs;
+import io.jmix.flowui.app.inputdialog.DialogActions;
+import io.jmix.flowui.app.inputdialog.DialogOutcome;
 import io.jmix.flowui.backgroundtask.BackgroundTask;
 import io.jmix.flowui.backgroundtask.TaskLifeCycle;
 import io.jmix.flowui.component.UiComponentUtils;
@@ -29,6 +34,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import static io.jmix.flowui.app.inputdialog.InputParameter.enumParameter;
 
 @Route(value = "nfes", layout = MainView.class)
 @ViewController(id = "Nfe.list")
@@ -50,10 +57,14 @@ public class NfeListView extends StandardListView<Nfe> {
     private UtilGeralService utilGeralService;
     @ViewComponent
     private HorizontalLayout buttonsPanel;
+    @ViewComponent
+    private Span ambienteBadge;
     @Autowired
     private DialogWindows dialogWindows;
     @Autowired
     private Dialogs dialogs;
+    @Autowired
+    private DataManager dataManager;
     @Autowired
     private NfeImportService nfeImportService;
     @Autowired
@@ -70,6 +81,15 @@ public class NfeListView extends StandardListView<Nfe> {
 
         Dialog dialog = UiComponentUtils.findDialog(this);
         buttonsPanel.setVisible(dialog == null);
+
+        atualizarBadgeAmbiente();
+    }
+
+    @Override
+    public String getPageTitle() {
+        String title = super.getPageTitle();
+        AmbienteNfe ambiente = ambienteAtual();
+        return ambiente == null ? title : "[" + messages.getMessage(ambiente) + "] " + title;
     }
 
     @Subscribe(id = "importXmlButton", subject = "clickListener")
@@ -162,11 +182,64 @@ public class NfeListView extends StandardListView<Nfe> {
         mostrarEmDesenvolvimento("nfeListView.inutilizarNumerosAction.text");
     }
 
+    @Subscribe("nfesDataGrid.alternarAmbienteAction")
+    public void onNfesDataGridAlternarAmbienteAction(final ActionPerformedEvent event) {
+        Empresa empresa = utilGeralService.getEmpresa();
+        dialogs.createInputDialog(UiComponentUtils.getCurrentView())
+                .withHeader(messageBundle.getMessage("nfeListView.alternarAmbienteAction.text"))
+                .withParameters(
+                        enumParameter("ambienteNfe", AmbienteNfe.class)
+                                .withLabel(messageBundle.getMessage("nfeListView.alternarAmbiente.label"))
+                                .withDefaultValue(empresa.getAmbienteNfe())
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withCloseListener(closeEvent -> {
+                    if (closeEvent.closedWith(DialogOutcome.OK)) {
+                        AmbienteNfe novoAmbiente = closeEvent.getValue("ambienteNfe");
+                        empresa.setAmbienteNfe(novoAmbiente);
+                        dataManager.save(empresa);
+                        atualizarBadgeAmbiente();
+                        dialogs.createMessageDialog()
+                                .withHeader(messageBundle.getMessage("nfeListView.alternarAmbienteAction.text"))
+                                .withText(messageBundle.formatMessage("nfeListView.alternarAmbiente.sucesso",
+                                        messages.getMessage(novoAmbiente)))
+                                .open();
+                    }
+                })
+                .open();
+    }
+
     private void mostrarEmDesenvolvimento(String chaveTextoAcao) {
         dialogs.createMessageDialog()
                 .withHeader(messageBundle.getMessage(chaveTextoAcao))
                 .withText(messageBundle.getMessage("nfeListView.emDesenvolvimento.text"))
                 .open();
+    }
+
+    /** {@code null} enquanto nenhuma empresa foi selecionada (ver {@code SelecionarEmpresaListView}). */
+    private AmbienteNfe ambienteAtual() {
+        if (utilGeralService.getCodEmpresa() == null) {
+            return null;
+        }
+        return utilGeralService.getEmpresa().getAmbienteNfe();
+    }
+
+    /**
+     * Badge colorido — produção em azul, homologação em vermelho — pra deixar o ambiente
+     * ativo visível na tela sem precisar abrir o cadastro da empresa. {@code getPageTitle}
+     * (só o título da aba do navegador) reforça a mesma informação, mas em texto puro: a
+     * API de título de página do Vaadin (HasDynamicTitle) não renderiza HTML/cor.
+     */
+    private void atualizarBadgeAmbiente() {
+        AmbienteNfe ambiente = ambienteAtual();
+        if (ambiente == null) {
+            ambienteBadge.setText(messageBundle.getMessage("nfeListView.ambienteBadge.naoConfigurado"));
+            ambienteBadge.getStyle().set("color", "var(--vaadin-text-color-secondary)").set("font-weight", "bold");
+            return;
+        }
+        ambienteBadge.setText(messageBundle.formatMessage("nfeListView.ambienteBadge.text", messages.getMessage(ambiente)));
+        String cor = ambiente == AmbienteNfe.PRODUCAO ? "var(--aura-blue-text)" : "var(--aura-red-text)";
+        ambienteBadge.getStyle().set("color", cor).set("font-weight", "bold");
     }
 
     /**

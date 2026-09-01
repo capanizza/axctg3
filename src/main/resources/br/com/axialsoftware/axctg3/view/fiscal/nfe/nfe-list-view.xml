@@ -40,8 +40,11 @@
                         <actionItem id="consultarNfeItem" ref="nfesDataGrid.consultarNfeAction"/>
                         <actionItem id="verificarStatusServicoItem" ref="nfesDataGrid.verificarStatusServicoAction"/>
                         <actionItem id="inutilizarNumerosItem" ref="nfesDataGrid.inutilizarNumerosAction"/>
+                        <separator/>
+                        <actionItem id="alternarAmbienteItem" ref="nfesDataGrid.alternarAmbienteAction"/>
                     </items>
                 </dropdownButton>
+                <span id="ambienteBadge" themeNames="small"/>
             </startSlot>
             <endSlot>
                 <simplePagination id="pagination" dataLoader="nfesDl"/>
@@ -61,6 +64,7 @@
                 <action id="consultarNfeAction" text="msg://nfeListView.consultarNfeAction.text" icon="vaadin:search"/>
                 <action id="verificarStatusServicoAction" text="msg://nfeListView.verificarStatusServicoAction.text" icon="vaadin:signal"/>
                 <action id="inutilizarNumerosAction" text="msg://nfeListView.inutilizarNumerosAction.text" icon="vaadin:trash"/>
+                <action id="alternarAmbienteAction" text="msg://nfeListView.alternarAmbienteAction.text" icon="vaadin:exchange"/>
             </actions>
             <columns resizable="true">
                 <column property="numeroNf" filterable="true" width="8%"/>

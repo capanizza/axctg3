@@ -45,8 +45,11 @@
                         <actionItem id="consultarNfeItem" ref="notaSaidasDataGrid.consultarNfeAction"/>
                         <actionItem id="verificarStatusServicoItem" ref="notaSaidasDataGrid.verificarStatusServicoAction"/>
                         <actionItem id="inutilizarNumerosItem" ref="notaSaidasDataGrid.inutilizarNumerosAction"/>
+                        <separator/>
+                        <actionItem id="alternarAmbienteItem" ref="notaSaidasDataGrid.alternarAmbienteAction"/>
                     </items>
                 </dropdownButton>
+                <span id="ambienteBadge" themeNames="small"/>
             </startSlot>
             <endSlot>
                 <simplePagination id="pagination" dataLoader="notaSaidasDl"/>
@@ -68,6 +71,7 @@
                 <action id="consultarNfeAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.consultarNfeAction.text" icon="vaadin:search"/>
                 <action id="verificarStatusServicoAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.verificarStatusServicoAction.text" icon="vaadin:signal"/>
                 <action id="inutilizarNumerosAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.inutilizarNumerosAction.text" icon="vaadin:trash"/>
+                <action id="alternarAmbienteAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.alternarAmbienteAction.text" icon="vaadin:exchange"/>
             </actions>
             <columns resizable="true">
                 <column property="numero" filterable="true" width="9%"/>

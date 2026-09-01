@@ -2,6 +2,7 @@ package br.com.axialsoftware.axctg3.view.fiscal.notasaida;
 
 import br.com.axialsoftware.axctg3.entity.cadastros.ConfigRel;
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
+import br.com.axialsoftware.axctg3.entity.enums.AmbienteNfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeDanfeService;
@@ -9,6 +10,7 @@ import br.com.axialsoftware.axctg3.service.fiscal.NfeEmissaoService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeWebserviceClient;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.DataManager;
 import io.jmix.core.Messages;
@@ -29,6 +31,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.Optional;
 
+import static io.jmix.flowui.app.inputdialog.InputParameter.enumParameter;
 import static io.jmix.flowui.app.inputdialog.InputParameter.localDateParameter;
 
 @Route(value = "nota-saidas", layout = MainView.class)
@@ -46,6 +49,8 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
     private DataGrid<NotaSaida> notaSaidasDataGrid;
     @ViewComponent
     private MessageBundle messageBundle;
+    @ViewComponent
+    private Span ambienteBadge;
     @Autowired
     private UtilGeralService utilGeralService;
     @Autowired
@@ -74,6 +79,8 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
         notaSaidasDl.setParameter("dataEmissaoFinal", dataEmissaoFinal);
         notaSaidasDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
         notaSaidasDl.load();
+
+        atualizarBadgeAmbiente();
     }
 
     @Override
@@ -94,7 +101,8 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
                     sdf.format(utilGeralService.localDateToSqlDate(dataEmissaoFinal));
             title = title + " " + title2;
         }
-        return title;
+        AmbienteNfe ambiente = ambienteAtual();
+        return ambiente == null ? title : "[" + messages.getMessage(ambiente) + "] " + title;
     }
 
     @Subscribe("notaSaidasDataGrid.delimitarAction")
@@ -145,6 +153,24 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
                     .open();
             return;
         }
+        if (ambienteAtual() == AmbienteNfe.HOMOLOGACAO) {
+            dialogs.createOptionDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.emitirNfe.confirmarHomologacao.header"))
+                    .withText(messageBundle.getMessage("notaSaidaListView.emitirNfe.confirmarHomologacao.text"))
+                    .withActions(
+                            new DialogAction(DialogAction.Type.OK)
+                                    .withText(messageBundle.getMessage("notaSaidaListView.emitirNfe.confirmarHomologacao.confirmar"))
+                                    .withHandler(e -> executarEmissaoNfe(selecionada)),
+                            new DialogAction(DialogAction.Type.CANCEL)
+                                    .withText(messageBundle.getMessage("notaSaidaListView.emitirNfe.confirmarHomologacao.cancelar"))
+                    )
+                    .open();
+            return;
+        }
+        executarEmissaoNfe(selecionada);
+    }
+
+    private void executarEmissaoNfe(NotaSaida selecionada) {
         NfeEmissaoService.ResultadoEmissao resultado = nfeEmissaoService.emitir(selecionada.getId());
         if (resultado.sucesso()) {
             dialogs.createOptionDialog()
@@ -241,10 +267,63 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
         mostrarEmDesenvolvimento("notaSaidaListView.inutilizarNumerosAction.text");
     }
 
+    @Subscribe("notaSaidasDataGrid.alternarAmbienteAction")
+    public void onNotaSaidasDataGridAlternarAmbienteAction(final ActionPerformedEvent event) {
+        Empresa empresa = utilGeralService.getEmpresa();
+        dialogs.createInputDialog(UiComponentUtils.getCurrentView())
+                .withHeader(messageBundle.getMessage("notaSaidaListView.alternarAmbienteAction.text"))
+                .withParameters(
+                        enumParameter("ambienteNfe", AmbienteNfe.class)
+                                .withLabel(messageBundle.getMessage("notaSaidaListView.alternarAmbiente.label"))
+                                .withDefaultValue(empresa.getAmbienteNfe())
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withCloseListener(closeEvent -> {
+                    if (closeEvent.closedWith(DialogOutcome.OK)) {
+                        AmbienteNfe novoAmbiente = closeEvent.getValue("ambienteNfe");
+                        empresa.setAmbienteNfe(novoAmbiente);
+                        dataManager.save(empresa);
+                        atualizarBadgeAmbiente();
+                        dialogs.createMessageDialog()
+                                .withHeader(messageBundle.getMessage("notaSaidaListView.alternarAmbienteAction.text"))
+                                .withText(messageBundle.formatMessage("notaSaidaListView.alternarAmbiente.sucesso",
+                                        messages.getMessage(novoAmbiente)))
+                                .open();
+                    }
+                })
+                .open();
+    }
+
     private void mostrarEmDesenvolvimento(String chaveTextoAcao) {
         dialogs.createMessageDialog()
                 .withHeader(messageBundle.getMessage(chaveTextoAcao))
                 .withText(messageBundle.getMessage("notaSaidaListView.emDesenvolvimento.text"))
                 .open();
+    }
+
+    /** {@code null} enquanto nenhuma empresa foi selecionada (ver {@code SelecionarEmpresaListView}). */
+    private AmbienteNfe ambienteAtual() {
+        if (utilGeralService.getCodEmpresa() == null) {
+            return null;
+        }
+        return utilGeralService.getEmpresa().getAmbienteNfe();
+    }
+
+    /**
+     * Badge colorido — produção em azul, homologação em vermelho — pra deixar o ambiente
+     * ativo visível na tela sem precisar abrir o cadastro da empresa. {@code getPageTitle}
+     * (só o título da aba do navegador) reforça a mesma informação, mas em texto puro: a
+     * API de título de página do Vaadin (HasDynamicTitle) não renderiza HTML/cor.
+     */
+    private void atualizarBadgeAmbiente() {
+        AmbienteNfe ambiente = ambienteAtual();
+        if (ambiente == null) {
+            ambienteBadge.setText(messageBundle.getMessage("notaSaidaListView.ambienteBadge.naoConfigurado"));
+            ambienteBadge.getStyle().set("color", "var(--vaadin-text-color-secondary)").set("font-weight", "bold");
+            return;
+        }
+        ambienteBadge.setText(messageBundle.formatMessage("notaSaidaListView.ambienteBadge.text", messages.getMessage(ambiente)));
+        String cor = ambiente == AmbienteNfe.PRODUCAO ? "var(--aura-blue-text)" : "var(--aura-red-text)";
+        ambienteBadge.getStyle().set("color", cor).set("font-weight", "bold");
     }
 }
