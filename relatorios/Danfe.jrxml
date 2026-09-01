@@ -1,0 +1,951 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- DANFE (Documento Auxiliar da Nota Fiscal Eletrônica) — modelo 55, retrato.
+     Escrito à mão (sem Jaspersoft Studio) seguindo o leiaute do MOC 7.0, Anexo II (Manual de
+     Especificações Técnicas do DANFE e Código de Barras — CONFAZ). Fonte Times New Roman
+     (item 3.7 do Anexo II exige Times New Roman ou Courier New) e tamanhos mínimos por campo
+     conforme itens 3.7.1 (rótulos de quadro, 5pt negrito caixa-alta — aqui 6pt), 3.7.4 (bloco
+     de identificação DANFE/nº/série/folha, 10pt negrito), 3.7.5 (chave de acesso, negrito) e
+     3.7.6 (dados do emitente: razão social 12pt negrito, demais dados 8pt negrito). O item
+     3.7.9 ("demais campos", 10pt) não foi aplicado na tabela de itens/cálculo do imposto/
+     transportador/duplicatas — conferido contra um DANFE oficial real (ACBr) que usa ~5,9pt
+     nessas áreas, então manter compacto aqui é consistente com a prática do mercado.
+     A disposição dos quadros segue o Anexo III.02 (A4 retrato, folhas soltas) — não é livre
+     (item 3.6.3: "a disposição de campos obrigatoriamente obedece ao disposto no anexo").
+     NFC-e (modelo 65) fora de escopo — ver NfeDanfeService. -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:c="http://jasperreports.sourceforge.net/jasperreports/components"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd"
+              name="Danfe" pageWidth="595" pageHeight="842" columnWidth="555"
+              leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="a1b2c3d4-0001-0001-0001-000000000001">
+
+    <!-- Uma duplicata por registro — cada "célula" do jr:list de FATURA/DUPLICATAS abaixo
+         (5 colunas, altura variável: nota com poucas parcelas não desperdiça espaço, nota com
+         muitas quebra em mais linhas em vez de estourar uma caixa de altura fixa). -->
+    <subDataset name="DuplicatasDataset">
+        <field name="numDup" class="java.lang.String"/>
+        <field name="dataVenc" class="java.lang.String"/>
+        <field name="valorDup" class="java.math.BigDecimal"/>
+    </subDataset>
+
+    <parameter name="LOGO" class="java.lang.String"/>
+    <parameter name="CHAVE" class="java.lang.String"/>
+    <parameter name="CHAVE_FORMATADA" class="java.lang.String"/>
+    <parameter name="NAT_OP" class="java.lang.String"/>
+    <parameter name="NUMERO_NF" class="java.lang.Integer"/>
+    <parameter name="SERIE" class="java.lang.Integer"/>
+    <parameter name="DH_EMI" class="java.lang.String"/>
+    <parameter name="DH_SAI_ENT" class="java.lang.String"/>
+    <parameter name="TP_NF_DESC" class="java.lang.String"/>
+    <parameter name="TP_AMB_DESC" class="java.lang.String"/>
+    <parameter name="PROT_N_PROT" class="java.lang.String"/>
+    <parameter name="PROT_DH_RECBTO" class="java.lang.String"/>
+    <parameter name="EMIT_CNPJ" class="java.lang.String"/>
+    <parameter name="EMIT_X_NOME" class="java.lang.String"/>
+    <parameter name="EMIT_X_FANT" class="java.lang.String"/>
+    <parameter name="EMIT_ENDERECO" class="java.lang.String"/>
+    <parameter name="EMIT_MUN_UF" class="java.lang.String"/>
+    <parameter name="EMIT_CEP" class="java.lang.String"/>
+    <parameter name="EMIT_FONE" class="java.lang.String"/>
+    <parameter name="EMIT_IE" class="java.lang.String"/>
+    <parameter name="DEST_DOC" class="java.lang.String"/>
+    <parameter name="DEST_X_NOME" class="java.lang.String"/>
+    <parameter name="DEST_ENDERECO" class="java.lang.String"/>
+    <parameter name="DEST_MUN_UF" class="java.lang.String"/>
+    <parameter name="DEST_CEP" class="java.lang.String"/>
+    <parameter name="DEST_FONE" class="java.lang.String"/>
+    <parameter name="DEST_IE" class="java.lang.String"/>
+    <parameter name="TRANSP_X_NOME" class="java.lang.String"/>
+    <parameter name="TRANSP_ENDERECO" class="java.lang.String"/>
+    <parameter name="TRANSP_MUN_UF" class="java.lang.String"/>
+    <parameter name="TRANSP_DOC" class="java.lang.String"/>
+    <parameter name="TRANSP_IE" class="java.lang.String"/>
+    <parameter name="MOD_FRETE_DESC" class="java.lang.String"/>
+    <parameter name="VEIC_PLACA_UF" class="java.lang.String"/>
+    <parameter name="VOLUMES" class="java.lang.String"/>
+    <parameter name="DUPLICATAS_LIST" class="java.util.List"/>
+    <parameter name="VALOR_BC" class="java.lang.String"/>
+    <parameter name="VALOR_ICMS" class="java.lang.String"/>
+    <parameter name="VALOR_BC_ST" class="java.lang.String"/>
+    <parameter name="VALOR_ST" class="java.lang.String"/>
+    <parameter name="VALOR_PROD" class="java.lang.String"/>
+    <parameter name="VALOR_FRETE" class="java.lang.String"/>
+    <parameter name="VALOR_SEG_DESC_OUTRO" class="java.lang.String"/>
+    <parameter name="VALOR_IPI" class="java.lang.String"/>
+    <parameter name="VALOR_NF" class="java.lang.String"/>
+    <parameter name="INF_CPL" class="java.lang.String"/>
+
+    <queryString>
+        <![CDATA[]]>
+    </queryString>
+
+    <field name="codProd" class="java.lang.String"/>
+    <field name="descProd" class="java.lang.String"/>
+    <field name="ncm" class="java.lang.String"/>
+    <field name="cst" class="java.lang.String"/>
+    <field name="cfop" class="java.lang.Integer"/>
+    <field name="unCom" class="java.lang.String"/>
+    <field name="quantCom" class="java.math.BigDecimal"/>
+    <field name="valorUnCom" class="java.math.BigDecimal"/>
+    <field name="valorProd" class="java.math.BigDecimal"/>
+    <field name="baseIcms" class="java.math.BigDecimal"/>
+    <field name="valorIcms" class="java.math.BigDecimal"/>
+    <field name="valorIpi" class="java.math.BigDecimal"/>
+    <field name="aliqIcms" class="java.math.BigDecimal"/>
+
+    <title>
+        <band height="334" splitType="Stretch">
+            <!-- Canhoto — 2ª linha (data/assinatura) mais alta que a 1ª, com o campo de data
+                 estreito (15% da largura útil) e o quadro NF-e/Número/Série numa coluna à
+                 direita abrangendo a altura das duas linhas, igual ao DANFE oficial. -->
+            <textField>
+                <reportElement x="0" y="0" width="484" height="20" uuid="a1b2c3d4-0002-0001-0001-000000000001"/>
+                    <box leftPadding="2" rightPadding="2"><topPen lineWidth="0.5"/><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["RECEBEMOS DE " + $P{EMIT_X_NOME} + " OS PRODUTOS E/OU SERVIÇOS CONSTANTES DA NOTA FISCAL ELETRÔNICA INDICADA AO LADO."]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="20" width="90" height="26" uuid="a1b2c3d4-0002-0001-0001-000000000002"/>
+                    <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Top"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["DATA DE RECEBIMENTO"]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="90" y="20" width="394" height="26" uuid="a1b2c3d4-0002-0001-0001-000000000003"/>
+                    <box leftPadding="2" rightPadding="2"><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Top"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["IDENTIFICAÇÃO E ASSINATURA DO RECEBEDOR"]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement x="484" y="0" width="71" height="14" uuid="a1b2c3d4-0002-0001-0001-000000000004"/>
+                    <box leftPadding="2" rightPadding="2"><topPen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="8" isBold="true"/></textElement>
+                <text><![CDATA[NF-e]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="484" y="14" width="71" height="16" uuid="a1b2c3d4-0002-0001-0001-00000000003c"/>
+                    <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="8" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["Nº " + $P{NUMERO_NF}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="484" y="30" width="71" height="16" uuid="a1b2c3d4-0002-0001-0001-00000000003d"/>
+                    <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.5"/><rightPen lineWidth="0.25"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="8" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["SÉRIE " + $P{SERIE}]]></textFieldExpression>
+            </textField>
+            <line>
+                <reportElement x="0" y="47" width="555" height="1" uuid="a1b2c3d4-0002-0001-0001-000000000005"/>
+                <graphicElement><pen lineStyle="Dashed"/></graphicElement>
+            </line>
+
+            <!-- Emitente / DANFE / Chave de acesso — três quadros da MESMA altura (51 a 133,
+                 82pt), cada um com borda completa 0.25 via <rectangle> próprio (não box por
+                 campo — some quando um campo não imprime e complica alinhar bordas de alturas
+                 diferentes). Central (DANFE) mais estreito (110pt); esquerda (emitente, 255pt)
+                 e direita (chave, 190pt) mais largos — proporção do DANFE oficial (ACBr).
+                 Posições fixas em todo mundo, sem Float: nome/logo/endereço não perseguem mais
+                 um ao outro, o nome só ganha uma altura reservada maior (3 linhas) e sobra
+                 espaço em branco embaixo se ele for curto. -->
+
+            <!-- Emitente: nome centralizado (até 3 linhas reservadas); logo embaixo à esquerda;
+                 endereço/bairro + cidade-UF-CEP + fone centralizados em 3 linhas à direita do
+                 logo. Sem CNPJ/IE (já saem na chave de acesso). -->
+            <textField>
+                <reportElement x="0" y="51" width="255" height="33" uuid="a1b2c3d4-0002-0001-0001-000000000007"/>
+                    <box leftPadding="2" rightPadding="2"/>
+                <textElement textAlignment="Center" verticalAlignment="Top"><font fontName="DejaVu Serif Condensed" size="10" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{EMIT_X_NOME}]]></textFieldExpression>
+            </textField>
+            <image scaleImage="FillFrame">
+                <reportElement x="0" y="84" width="65" height="49" uuid="a1b2c3d4-0002-0001-0001-000000000006"/>
+                <imageExpression><![CDATA[$P{LOGO}]]></imageExpression>
+            </image>
+            <textField>
+                <reportElement x="65" y="84" width="190" height="20" uuid="a1b2c3d4-0002-0001-0001-000000000008"/>
+                    <box leftPadding="2" rightPadding="2"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="7" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{EMIT_ENDERECO}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="65" y="104" width="190" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000009"/>
+                    <box leftPadding="2" rightPadding="2"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="7" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{EMIT_MUN_UF} + "  CEP " + $P{EMIT_CEP}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="65" y="117" width="190" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000000a"/>
+                    <box leftPadding="2" rightPadding="2"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="7" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["Fone: " + $P{EMIT_FONE}]]></textFieldExpression>
+            </textField>
+            <rectangle>
+                <reportElement mode="Transparent" x="0" y="51" width="255" height="82" uuid="a1b2c3d4-0002-0001-0001-00000000003e"/>
+                <graphicElement><pen lineWidth="0.25"/></graphicElement>
+            </rectangle>
+
+            <!-- DANFE — identificação, tudo centralizado. -->
+            <staticText>
+                <reportElement x="255" y="51" width="110" height="14" uuid="a1b2c3d4-0002-0001-0001-00000000000d"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="12" isBold="true"/></textElement>
+                <text><![CDATA[DANFE]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="255" y="65" width="110" height="16" uuid="a1b2c3d4-0002-0001-0001-00000000000e"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <text><![CDATA[Documento Auxiliar da Nota Fiscal Eletrônica]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="255" y="81" width="110" height="12" uuid="a1b2c3d4-0002-0001-0001-00000000000f"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="7"/></textElement>
+                <textFieldExpression><![CDATA[$P{TP_NF_DESC}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="255" y="93" width="110" height="10" uuid="a1b2c3d4-0002-0001-0001-000000000010"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="9" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["Nº " + $P{NUMERO_NF}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="255" y="103" width="110" height="10" uuid="a1b2c3d4-0002-0001-0001-00000000003f"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="9" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["SÉRIE " + $P{SERIE}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="255" y="113" width="70" height="10" uuid="a1b2c3d4-0002-0001-0001-000000000011"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="8" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["FOLHA " + $V{PAGE_NUMBER} + "/"]]></textFieldExpression>
+            </textField>
+            <textField evaluationTime="Report">
+                <reportElement x="325" y="113" width="40" height="10" uuid="a1b2c3d4-0002-0001-0001-000000000038"/>
+                <textElement textAlignment="Left" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="8" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="255" y="123" width="110" height="10" uuid="a1b2c3d4-0002-0001-0001-000000000012"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{TP_AMB_DESC}]]></textFieldExpression>
+            </textField>
+            <rectangle>
+                <reportElement mode="Transparent" x="255" y="51" width="110" height="82" uuid="a1b2c3d4-0002-0001-0001-000000000040"/>
+                <graphicElement><pen lineWidth="0.25"/></graphicElement>
+            </rectangle>
+
+            <!-- Chave de acesso / protocolo. -->
+            <componentElement>
+                <reportElement x="365" y="51" width="190" height="32" uuid="a1b2c3d4-0002-0001-0001-000000000013"/>
+                <c:Code128 xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd" textPosition="none">
+                    <c:codeExpression><![CDATA[$P{CHAVE}]]></c:codeExpression>
+                </c:Code128>
+            </componentElement>
+            <textField>
+                <reportElement x="365" y="84" width="190" height="11" uuid="a1b2c3d4-0002-0001-0001-000000000014"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="7" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{CHAVE_FORMATADA}]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement x="365" y="95" width="190" height="8" uuid="a1b2c3d4-0002-0001-0001-000000000015"/>
+                <textElement textAlignment="Center"><font fontName="DejaVu Serif Condensed" size="5"/></textElement>
+                <text><![CDATA[Consulte a autenticidade no portal da NF-e]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="365" y="104" width="190" height="8" uuid="a1b2c3d4-0002-0001-0001-000000000016"/>
+                <textElement textAlignment="Center"><font fontName="DejaVu Serif Condensed" size="5"/></textElement>
+                <text><![CDATA[PROTOCOLO DE AUTORIZAÇÃO DE USO]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="365" y="113" width="190" height="10" uuid="a1b2c3d4-0002-0001-0001-000000000017"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="7" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{PROT_N_PROT} + " - " + $P{PROT_DH_RECBTO}]]></textFieldExpression>
+            </textField>
+            <rectangle>
+                <reportElement mode="Transparent" x="365" y="51" width="190" height="82" uuid="a1b2c3d4-0002-0001-0001-000000000041"/>
+                <graphicElement><pen lineWidth="0.25"/></graphicElement>
+            </rectangle>
+
+            <!-- Natureza da operação -->
+            <staticText>
+                <reportElement x="0" y="141" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-000000000018"/>
+                <textElement><font fontName="DejaVu Serif Condensed" size="6" isBold="true"/></textElement>
+                <text><![CDATA[NATUREZA DA OPERAÇÃO]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="0" y="149" width="555" height="16" uuid="a1b2c3d4-0002-0001-0001-000000000019"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="8"/></textElement>
+                <textFieldExpression><![CDATA[$P{NAT_OP}]]></textFieldExpression>
+            </textField>
+
+            <!-- Destinatário / Remetente -->
+            <staticText>
+                <reportElement x="0" y="166" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-00000000001a"/>
+                <textElement><font fontName="DejaVu Serif Condensed" size="6" isBold="true"/></textElement>
+                <text><![CDATA[DESTINATÁRIO / REMETENTE]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="0" y="174" width="350" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000001b"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Nome/Razão Social: " + $P{DEST_X_NOME}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="350" y="174" width="205" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000001c"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["CNPJ/CPF: " + $P{DEST_DOC}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="187" width="350" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000001d"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Endereço: " + $P{DEST_ENDERECO}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="350" y="187" width="205" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000001e"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["IE: " + $P{DEST_IE}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="200" width="350" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000001f"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Município/UF: " + $P{DEST_MUN_UF} + "  CEP " + $P{DEST_CEP}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="350" y="200" width="205" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000020"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Fone: " + $P{DEST_FONE}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="0" y="213" width="275" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000021"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Data Emissão: " + $P{DH_EMI}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="275" y="213" width="280" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000022"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Data Saída/Entrada: " + $P{DH_SAI_ENT}]]></textFieldExpression>
+            </textField>
+
+            <!-- Fatura / Duplicatas — jr:list em 5 colunas (111pt cada, 5x111=555, sem sobra),
+                 altura variável: nominal só 1 linha (13pt); com mais duplicatas, cresce em
+                 múltiplos de 13pt e empurra pra baixo tudo que vem depois (Float). -->
+            <staticText>
+                <reportElement positionType="Float" x="0" y="226" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-000000000023">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><bottomPen lineWidth="0.25"/></box>
+                <textElement><font fontName="DejaVu Serif Condensed" size="6" isBold="true"/></textElement>
+                <text><![CDATA[FATURA / DUPLICATAS]]></text>
+            </staticText>
+            <componentElement>
+                <reportElement x="0" y="234" width="555" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000024">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                <c:list xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd" printOrder="Horizontal">
+                    <datasetRun subDataset="DuplicatasDataset">
+                        <dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($P{DUPLICATAS_LIST})]]></dataSourceExpression>
+                    </datasetRun>
+                    <c:listContents height="13" width="111">
+                        <textField>
+                            <reportElement x="0" y="0" width="22" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000039"/>
+                                <box leftPadding="2" rightPadding="3"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                            <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                            <textFieldExpression><![CDATA[$F{numDup}]]></textFieldExpression>
+                        </textField>
+                        <textField>
+                            <reportElement x="22" y="0" width="48" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000003a"/>
+                                <box leftPadding="2" rightPadding="2"><bottomPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                            <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                            <textFieldExpression><![CDATA[$F{dataVenc}]]></textFieldExpression>
+                        </textField>
+                        <textField pattern="###,###,##0.00">
+                            <reportElement x="70" y="0" width="41" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000003b"/>
+                                <box rightPadding="5"><bottomPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                            <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                            <textFieldExpression><![CDATA[$F{valorDup}]]></textFieldExpression>
+                        </textField>
+                    </c:listContents>
+                </c:list>
+            </componentElement>
+
+            <!-- Cálculo do imposto onward: positionType="Float" only ever pushes an element
+                 DOWN past its own hardcoded design Y; it never pulls one UP past that floor
+                 when upstream content is absent (confirmed empirically during development —
+                 a single Float chain grows fine for N duplicatas but can't shrink to zero for
+                 none). Fix: two mutually exclusive copies of this whole block. COPY A keeps
+                 the original y (duplicatas present, floats down for 2+ same as always). COPY B
+                 uses y shifted up by 24 (label 8 + list 13 + margin 3), reachable only when
+                 there are none, sitting right after "Data Saída/Entrada" with no reserved gap. -->
+            <!-- Cálculo do imposto — positionType Float: acompanha a altura real da lista de
+                 duplicatas acima (que varia conforme a quantidade de parcelas). -->
+            <staticText>
+                <reportElement positionType="Float" x="0" y="250" width="555" height="8" uuid="a1b2c3d4-0009-0001-0001-000000000025">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                <textElement><font fontName="DejaVu Serif Condensed" size="6" isBold="true"/></textElement>
+                <text><![CDATA[CÁLCULO DO IMPOSTO]]></text>
+            </staticText>
+            <textField>
+                <reportElement positionType="Float" x="0" y="258" width="111" height="13" uuid="a1b2c3d4-0009-0001-0001-000000000026">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Base ICMS: " + $P{VALOR_BC}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="111" y="258" width="111" height="13" uuid="a1b2c3d4-0009-0001-0001-000000000027">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Valor ICMS: " + $P{VALOR_ICMS}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="222" y="258" width="111" height="13" uuid="a1b2c3d4-0009-0001-0001-000000000028">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Base ICMS ST: " + $P{VALOR_BC_ST}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="333" y="258" width="111" height="13" uuid="a1b2c3d4-0009-0001-0001-000000000029">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Valor ICMS ST: " + $P{VALOR_ST}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="444" y="258" width="111" height="13" uuid="a1b2c3d4-0009-0001-0001-00000000002a">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Valor IPI: " + $P{VALOR_IPI}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="0" y="271" width="111" height="13" uuid="a1b2c3d4-0009-0001-0001-00000000002b">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Valor Produtos: " + $P{VALOR_PROD}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="111" y="271" width="111" height="13" uuid="a1b2c3d4-0009-0001-0001-00000000002c">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Valor Frete: " + $P{VALOR_FRETE}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="222" y="271" width="111" height="13" uuid="a1b2c3d4-0009-0001-0001-00000000002d">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Seg/Desc/Outro: " + $P{VALOR_SEG_DESC_OUTRO}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="333" y="271" width="222" height="13" uuid="a1b2c3d4-0009-0001-0001-00000000002e">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="8" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["VALOR TOTAL DA NOTA: R$ " + $P{VALOR_NF}]]></textFieldExpression>
+            </textField>
+
+            <!-- Transportador / Volumes — também Float, na sequência do Cálculo do Imposto. -->
+            <staticText>
+                <reportElement positionType="Float" x="0" y="287" width="555" height="8" uuid="a1b2c3d4-0009-0001-0001-00000000002f">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                <textElement><font fontName="DejaVu Serif Condensed" size="6" isBold="true"/></textElement>
+                <text><![CDATA[TRANSPORTADOR / VOLUMES TRANSPORTADOS]]></text>
+            </staticText>
+            <textField>
+                <reportElement positionType="Float" x="0" y="295" width="280" height="13" uuid="a1b2c3d4-0009-0001-0001-000000000030">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Nome: " + $P{TRANSP_X_NOME}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="280" y="295" width="275" height="13" uuid="a1b2c3d4-0009-0001-0001-000000000031">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Frete: " + $P{MOD_FRETE_DESC}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="0" y="308" width="280" height="13" uuid="a1b2c3d4-0009-0001-0001-000000000032">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Endereço/Município: " + $P{TRANSP_ENDERECO} + " - " + $P{TRANSP_MUN_UF}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="280" y="308" width="140" height="13" uuid="a1b2c3d4-0009-0001-0001-000000000033">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["CNPJ/CPF: " + $P{TRANSP_DOC} + "  IE: " + $P{TRANSP_IE}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="420" y="308" width="135" height="13" uuid="a1b2c3d4-0009-0001-0001-000000000034">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Placa/UF: " + $P{VEIC_PLACA_UF}]]></textFieldExpression>
+            </textField>
+            <textField textAdjust="StretchHeight">
+                <reportElement positionType="Float" x="0" y="321" width="555" height="13" uuid="a1b2c3d4-0009-0001-0001-000000000035">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} != null && !$P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Volumes: " + $P{VOLUMES}]]></textFieldExpression>
+            </textField>
+
+            <!-- Cálculo do imposto — positionType Float: acompanha a altura real da lista de
+                 duplicatas acima (que varia conforme a quantidade de parcelas). -->
+            <staticText>
+                <reportElement positionType="Float" x="0" y="226" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-000000000025">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                <textElement><font fontName="DejaVu Serif Condensed" size="6" isBold="true"/></textElement>
+                <text><![CDATA[CÁLCULO DO IMPOSTO]]></text>
+            </staticText>
+            <textField>
+                <reportElement positionType="Float" x="0" y="234" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000026">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Base ICMS: " + $P{VALOR_BC}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="111" y="234" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000027">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Valor ICMS: " + $P{VALOR_ICMS}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="222" y="234" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000028">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Base ICMS ST: " + $P{VALOR_BC_ST}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="333" y="234" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000029">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Valor ICMS ST: " + $P{VALOR_ST}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="444" y="234" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002a">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Valor IPI: " + $P{VALOR_IPI}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="0" y="247" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002b">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Valor Produtos: " + $P{VALOR_PROD}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="111" y="247" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002c">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Valor Frete: " + $P{VALOR_FRETE}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="222" y="247" width="111" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002d">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Seg/Desc/Outro: " + $P{VALOR_SEG_DESC_OUTRO}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="333" y="247" width="222" height="13" uuid="a1b2c3d4-0002-0001-0001-00000000002e">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="8" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["VALOR TOTAL DA NOTA: R$ " + $P{VALOR_NF}]]></textFieldExpression>
+            </textField>
+
+            <!-- Transportador / Volumes — também Float, na sequência do Cálculo do Imposto. -->
+            <staticText>
+                <reportElement positionType="Float" x="0" y="263" width="555" height="8" uuid="a1b2c3d4-0002-0001-0001-00000000002f">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                <textElement><font fontName="DejaVu Serif Condensed" size="6" isBold="true"/></textElement>
+                <text><![CDATA[TRANSPORTADOR / VOLUMES TRANSPORTADOS]]></text>
+            </staticText>
+            <textField>
+                <reportElement positionType="Float" x="0" y="271" width="280" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000030">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Nome: " + $P{TRANSP_X_NOME}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="280" y="271" width="275" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000031">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Frete: " + $P{MOD_FRETE_DESC}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="0" y="284" width="280" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000032">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Endereço/Município: " + $P{TRANSP_ENDERECO} + " - " + $P{TRANSP_MUN_UF}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="280" y="284" width="140" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000033">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["CNPJ/CPF: " + $P{TRANSP_DOC} + "  IE: " + $P{TRANSP_IE}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement positionType="Float" x="420" y="284" width="135" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000034">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Placa/UF: " + $P{VEIC_PLACA_UF}]]></textFieldExpression>
+            </textField>
+            <textField textAdjust="StretchHeight">
+                <reportElement positionType="Float" x="0" y="297" width="555" height="13" uuid="a1b2c3d4-0002-0001-0001-000000000035">
+                    <printWhenExpression><![CDATA[$P{DUPLICATAS_LIST} == null || $P{DUPLICATAS_LIST}.isEmpty()]]></printWhenExpression>
+                </reportElement>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA["Volumes: " + $P{VOLUMES}]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+
+    <!-- Cabeçalho condensado de continuação — só a partir da página 2 (a página 1 já tem o
+         cabeçalho completo na title band). printWhenExpression no nível da própria banda faz
+         a altura colapsar pra zero quando falso, então não sobra espaço em branco na página 1. -->
+    <pageHeader>
+        <band height="58">
+            <printWhenExpression><![CDATA[$V{PAGE_NUMBER} > 1]]></printWhenExpression>
+            <image scaleImage="FillFrame">
+                <reportElement x="0" y="0" width="40" height="24" uuid="a1b2c3d4-0007-0001-0001-000000000001">
+                    <printWhenExpression><![CDATA[$P{LOGO} != null]]></printWhenExpression>
+                </reportElement>
+                <imageExpression><![CDATA[$P{LOGO}]]></imageExpression>
+            </image>
+            <textField textAdjust="ScaleFont">
+                <reportElement x="42" y="0" width="185" height="10" uuid="a1b2c3d4-0007-0001-0001-000000000002"/>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="7" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{EMIT_X_NOME}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="42" y="10" width="185" height="8" uuid="a1b2c3d4-0007-0001-0001-000000000003"/>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["CNPJ: " + $P{EMIT_CNPJ}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="42" y="18" width="185" height="8" uuid="a1b2c3d4-0007-0001-0001-000000000004"/>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{EMIT_MUN_UF}]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement x="230" y="0" width="150" height="11" uuid="a1b2c3d4-0007-0001-0001-000000000005"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="9" isBold="true"/></textElement>
+                <text><![CDATA[DANFE]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="230" y="11" width="150" height="9" uuid="a1b2c3d4-0007-0001-0001-000000000006"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="8" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["Nº " + $P{NUMERO_NF} + "  SÉRIE " + $P{SERIE}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="230" y="20" width="75" height="8" uuid="a1b2c3d4-0007-0001-0001-000000000007"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="7" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["FOLHA " + $V{PAGE_NUMBER} + "/"]]></textFieldExpression>
+            </textField>
+            <textField evaluationTime="Report">
+                <reportElement x="305" y="20" width="75" height="8" uuid="a1b2c3d4-0007-0001-0001-000000000008"/>
+                <textElement textAlignment="Left" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="7" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+
+            <componentElement>
+                <reportElement x="385" y="0" width="170" height="20" uuid="a1b2c3d4-0007-0001-0001-000000000009"/>
+                <c:Code128 xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd" textPosition="none">
+                    <c:codeExpression><![CDATA[$P{CHAVE}]]></c:codeExpression>
+                </c:Code128>
+            </componentElement>
+            <textField>
+                <reportElement x="385" y="20" width="170" height="8" uuid="a1b2c3d4-0007-0001-0001-00000000000a"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{CHAVE_FORMATADA}]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement x="0" y="30" width="555" height="7" uuid="a1b2c3d4-0007-0001-0001-00000000000b"/>
+                <textElement><font fontName="DejaVu Serif Condensed" size="6" isBold="true"/></textElement>
+                <text><![CDATA[NATUREZA DA OPERAÇÃO]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="0" y="37" width="330" height="12" uuid="a1b2c3d4-0007-0001-0001-00000000000c"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA[$P{NAT_OP}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="330" y="37" width="225" height="12" uuid="a1b2c3d4-0007-0001-0001-00000000000d"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5"/></textElement>
+                <textFieldExpression><![CDATA["Prot.: " + $P{PROT_N_PROT}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageHeader>
+
+    <columnHeader>
+        <band height="24">
+            <staticText>
+                <reportElement x="0" y="0" width="555" height="10" uuid="a1b2c3d4-0003-0001-0001-000000000000"/>
+                <textElement><font fontName="DejaVu Serif Condensed" size="6" isBold="true"/></textElement>
+                <text><![CDATA[DADOS DOS PRODUTOS / SERVIÇOS]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="0" y="10" width="38" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000001"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5" isBold="true"/></textElement>
+                <text><![CDATA[CÓDIGO]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="38" y="10" width="127" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000002"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5" isBold="true"/></textElement>
+                <text><![CDATA[DESCRIÇÃO]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="165" y="10" width="38" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000003"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5" isBold="true"/></textElement>
+                <text><![CDATA[NCM]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="203" y="10" width="22" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000004"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5" isBold="true"/></textElement>
+                <text><![CDATA[CST]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="225" y="10" width="28" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000005"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5" isBold="true"/></textElement>
+                <text><![CDATA[CFOP]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="253" y="10" width="22" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000006"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5" isBold="true"/></textElement>
+                <text><![CDATA[UNID]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="275" y="10" width="40" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000007"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5" isBold="true"/></textElement>
+                <text><![CDATA[QUANT]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="315" y="10" width="48" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000008"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5" isBold="true"/></textElement>
+                <text><![CDATA[V.UNIT]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="363" y="10" width="48" height="14" uuid="a1b2c3d4-0003-0001-0001-000000000009"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5" isBold="true"/></textElement>
+                <text><![CDATA[V.TOTAL]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="411" y="10" width="45" height="14" uuid="a1b2c3d4-0003-0001-0001-00000000000a"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5" isBold="true"/></textElement>
+                <text><![CDATA[B.CÁLC ICMS]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="456" y="10" width="40" height="14" uuid="a1b2c3d4-0003-0001-0001-00000000000b"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5" isBold="true"/></textElement>
+                <text><![CDATA[V.ICMS]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="493" y="10" width="35" height="14" uuid="a1b2c3d4-0003-0001-0001-00000000000c"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5" isBold="true"/></textElement>
+                <text><![CDATA[V.IPI]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="528" y="10" width="27" height="14" uuid="a1b2c3d4-0003-0001-0001-00000000000d"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5" isBold="true"/></textElement>
+                <text><![CDATA[%ICMS]]></text>
+            </staticText>
+        </band>
+    </columnHeader>
+
+    <detail>
+        <band height="11">
+            <textField>
+                <reportElement x="0" y="0" width="38" height="11" uuid="a1b2c3d4-0004-0001-0001-000000000001"/>
+                    <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5"/></textElement>
+                <textFieldExpression><![CDATA[$F{codProd}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="38" y="0" width="127" height="11" uuid="a1b2c3d4-0004-0001-0001-000000000002"/>
+                    <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5"/></textElement>
+                <textFieldExpression><![CDATA[$F{descProd}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="165" y="0" width="38" height="11" uuid="a1b2c3d4-0004-0001-0001-000000000003"/>
+                    <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5"/></textElement>
+                <textFieldExpression><![CDATA[$F{ncm}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="203" y="0" width="22" height="11" uuid="a1b2c3d4-0004-0001-0001-000000000004"/>
+                    <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5"/></textElement>
+                <textFieldExpression><![CDATA[$F{cst}]]></textFieldExpression>
+            </textField>
+            <textField pattern="0000">
+                <reportElement x="225" y="0" width="28" height="11" uuid="a1b2c3d4-0004-0001-0001-000000000005"/>
+                    <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5"/></textElement>
+                <textFieldExpression><![CDATA[$F{cfop}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="253" y="0" width="22" height="11" uuid="a1b2c3d4-0004-0001-0001-000000000006"/>
+                    <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5"/></textElement>
+                <textFieldExpression><![CDATA[$F{unCom}]]></textFieldExpression>
+            </textField>
+            <textField pattern="###,###,##0.0000">
+                <reportElement x="275" y="0" width="40" height="11" uuid="a1b2c3d4-0004-0001-0001-000000000007"/>
+                    <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5"/></textElement>
+                <textFieldExpression><![CDATA[$F{quantCom}]]></textFieldExpression>
+            </textField>
+            <textField pattern="###,###,##0.0000">
+                <reportElement x="315" y="0" width="48" height="11" uuid="a1b2c3d4-0004-0001-0001-000000000008"/>
+                    <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5"/></textElement>
+                <textFieldExpression><![CDATA[$F{valorUnCom}]]></textFieldExpression>
+            </textField>
+            <textField pattern="###,###,##0.00">
+                <reportElement x="363" y="0" width="48" height="11" uuid="a1b2c3d4-0004-0001-0001-000000000009"/>
+                    <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5"/></textElement>
+                <textFieldExpression><![CDATA[$F{valorProd}]]></textFieldExpression>
+            </textField>
+            <textField pattern="###,###,##0.00">
+                <reportElement x="411" y="0" width="45" height="11" uuid="a1b2c3d4-0004-0001-0001-00000000000a"/>
+                    <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5"/></textElement>
+                <textFieldExpression><![CDATA[$F{baseIcms}]]></textFieldExpression>
+            </textField>
+            <textField pattern="###,###,##0.00">
+                <reportElement x="456" y="0" width="40" height="11" uuid="a1b2c3d4-0004-0001-0001-00000000000b"/>
+                    <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5"/></textElement>
+                <textFieldExpression><![CDATA[$F{valorIcms}]]></textFieldExpression>
+            </textField>
+            <textField pattern="###,###,##0.00">
+                <reportElement x="493" y="0" width="35" height="11" uuid="a1b2c3d4-0004-0001-0001-00000000000c"/>
+                    <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5"/></textElement>
+                <textFieldExpression><![CDATA[$F{valorIpi}]]></textFieldExpression>
+            </textField>
+            <textField pattern="##0.00">
+                <reportElement x="528" y="0" width="27" height="11" uuid="a1b2c3d4-0004-0001-0001-00000000000d"/>
+                    <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5"/></textElement>
+                <textFieldExpression><![CDATA[$F{aliqIcms}]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+
+    <pageFooter>
+        <band height="14">
+            <textField>
+                <reportElement x="0" y="0" width="300" height="14" uuid="a1b2c3d4-0005-0001-0001-000000000001"/>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5"/></textElement>
+                <textFieldExpression><![CDATA["Emitido em " + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(new java.util.Date())]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="455" y="0" width="65" height="14" uuid="a1b2c3d4-0005-0001-0001-000000000002"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5"/></textElement>
+                <textFieldExpression><![CDATA["Folha " + $V{PAGE_NUMBER} + "/"]]></textFieldExpression>
+            </textField>
+            <textField evaluationTime="Report">
+                <reportElement x="520" y="0" width="35" height="14" uuid="a1b2c3d4-0005-0001-0001-000000000003"/>
+                <textElement textAlignment="Left" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5"/></textElement>
+                <textFieldExpression><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+
+    <summary>
+        <band height="60">
+            <staticText>
+                <reportElement x="0" y="0" width="555" height="8" uuid="a1b2c3d4-0006-0001-0001-000000000001"/>
+                <textElement><font fontName="DejaVu Serif Condensed" size="6" isBold="true"/></textElement>
+                <text><![CDATA[DADOS ADICIONAIS]]></text>
+            </staticText>
+            <textField textAdjust="StretchHeight">
+                <reportElement x="0" y="8" width="555" height="50" uuid="a1b2c3d4-0006-0001-0001-000000000002"/>
+                    <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0.25"/></box>
+                <textElement verticalAlignment="Top"><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                <textFieldExpression><![CDATA[$P{INF_CPL}]]></textFieldExpression>
+            </textField>
+        </band>
+    </summary>
+</jasperReport>

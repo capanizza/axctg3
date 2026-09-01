@@ -32,6 +32,7 @@
                 <button id="editButton" action="nfesDataGrid.editAction" themeNames="small"/>
                 <button id="removeButton" action="nfesDataGrid.removeAction" themeNames="small"/>
                 <button id="importXmlButton" text="msg://nfeListView.importXmlButton.text" themeNames="small"/>
+                <button id="emitirDanfeButton" action="nfesDataGrid.emitirDanfeAction" themeNames="small"/>
             </startSlot>
             <endSlot>
                 <simplePagination id="pagination" dataLoader="nfesDl"/>
@@ -45,6 +46,7 @@
             <actions>
                 <action id="editAction" type="list_read"/>
                 <action id="removeAction" type="list_remove"/>
+                <action id="emitirDanfeAction" text="msg://nfeListView.emitirDanfeAction.text" icon="vaadin:print"/>
             </actions>
             <columns resizable="true">
                 <column property="numeroNf" filterable="true" width="8%"/>

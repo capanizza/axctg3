@@ -3,6 +3,7 @@ package br.com.axialsoftware.axctg3.view.fiscal.notasaida;
 import br.com.axialsoftware.axctg3.entity.cadastros.ConfigRel;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
+import br.com.axialsoftware.axctg3.service.fiscal.NfeDanfeService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeEmissaoService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
@@ -11,6 +12,7 @@ import io.jmix.core.DataManager;
 import io.jmix.core.SaveContext;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.ViewNavigators;
+import io.jmix.flowui.action.DialogAction;
 import io.jmix.flowui.app.inputdialog.DialogActions;
 import io.jmix.flowui.app.inputdialog.DialogOutcome;
 import io.jmix.flowui.component.UiComponentUtils;
@@ -51,6 +53,8 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
     private DataManager dataManager;
     @Autowired
     private NfeEmissaoService nfeEmissaoService;
+    @Autowired
+    private NfeDanfeService nfeDanfeService;
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
@@ -136,9 +140,16 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
         }
         NfeEmissaoService.ResultadoEmissao resultado = nfeEmissaoService.emitir(selecionada.getId());
         if (resultado.sucesso()) {
-            dialogs.createMessageDialog()
+            dialogs.createOptionDialog()
                     .withHeader(messageBundle.getMessage("notaSaidaListView.emitirNfe.sucesso.header"))
                     .withText(messageBundle.formatMessage("notaSaidaListView.emitirNfe.sucesso.text", resultado.chave()))
+                    .withActions(
+                            new DialogAction(DialogAction.Type.OK)
+                                    .withText(messageBundle.getMessage("notaSaidaListView.emitirNfe.sucesso.imprimirDanfe"))
+                                    .withHandler(e -> nfeDanfeService.emitirDanfePorChave(resultado.chave())),
+                            new DialogAction(DialogAction.Type.CANCEL)
+                                    .withText(messageBundle.getMessage("notaSaidaListView.emitirNfe.sucesso.fechar"))
+                    )
                     .open();
             notaSaidasDl.load();
         } else {
