@@ -53,6 +53,7 @@ relacionar com NFe. Reverte a decisão de 2026-08-09 documentada em `Nfe.java`
 | Teste isolado de certificado/mTLS | `NfeWebserviceClient.consultarStatusServico(Empresa)` — chama `NFeStatusServico4` (sem NFe nenhuma montada/assinada) — sugestão do usuário, mais simples que emitir de verdade e já confirma se cert+mTLS+conectividade funcionam. Botão "Testar conexão SEFAZ" na aba "Emissão NFe" do cadastro de Empresa (`EmpresaDetailView.java`) |
 | UI (emissão) | dropDownButton "Ações" em `NotaSaidaListView`/`NfeListView` — item "Emitir NFe" |
 | Cancelamento (evento `tpEvento` 110111) | `service/fiscal/NfeCancelamentoService.java` — monta/assina/transmite o evento via `NfeXmlSigner.assinarEvento`/`NfeWebserviceClient.enviarEvento` (endpoint `NFeRecepcaoEvento4`); grava protocolo/motivo do evento em campos novos de `Nfe` (`CANC_*`) preservando o protocolo de autorização original (`protNProt`), e atualiza `protCStat` pra 101. UI: item "Cancelar NFe" do mesmo dropDownButton, pede justificativa (mínimo 15 caracteres). **Validado em 2026-09-01** contra homologação SP: `cStat=135 "Evento registrado e vinculado a NF-e"` |
+| Inutilização de numeração (`inutNFe` v4.00 — leiaute/webservice próprio, **não** um `tpEvento`) | `service/fiscal/NfeInutilizacaoService.java` — monta/assina/transmite via `NfeXmlSigner.assinarInfInut`/`NfeWebserviceClient.enviarInutilizacao` (endpoint `NFeInutilizacao4`, sem envelope de lote, resposta síncrona). Diferente do cancelamento, a faixa nunca teve `Nfe` correspondente pra atualizar — resultado gravado numa entidade própria, `entity/fiscal/NfeInutilizacao.java`. UI: item "Inutilizar números de notas" do dropDownButton de `NfeListView` (só aqui — `NotaSaidaListView` continua placeholder), pede ano/série/faixa/justificativa (mínimo 15 caracteres, `ConfigRel.justificativaInutilizacaoNfe` lembra a última usada). **Validado em 2026-09-01** contra homologação SP: `cStat=102 "Inutilização de número homologado"`, protocolo `135260008131942` |
 
 ## Simplificações desta primeira versão (além das já citadas)
 
@@ -94,9 +95,9 @@ relacionar com NFe. Reverte a decisão de 2026-08-09 documentada em `Nfe.java`
   se a conexão falhar com erro de rede antes de suspeitar de outra coisa.
 - **Canonicalização da assinatura** — um espaço a mais invalida a assinatura; testar
   contra homologação antes de qualquer nota de produção. **Confirmado funcionando**
-  tanto pra `infNFe` (emissão, 2026-08-18) quanto pra `infEvento` (cancelamento,
-  2026-09-01 — `NfeXmlSigner.assinarEvento`, mesma técnica de assinatura, tag
-  diferente).
+  pra `infNFe` (emissão, 2026-08-18), `infEvento` (cancelamento, 2026-09-01) e `infInut`
+  (inutilização, 2026-09-01) — mesma técnica de assinatura em
+  `NfeXmlSigner.assinarElemento`, só muda a tag.
 - **`tpNF` sempre "1" (saída), independente do CFOP** (`NfeXmlBuilder.construirIde`) —
   bug real encontrado em 2026-09-01 testando uma nota de "Compra de energia elétrica"
   (CFOP 1252, que começa em "1" = entrada): a SEFAZ rejeitou com `cStat=770 "CFOP
@@ -109,8 +110,8 @@ relacionar com NFe. Reverte a decisão de 2026-08-09 documentada em `Nfe.java`
 
 ## O que falta (próximas rodadas)
 
-- Carta de correção, inutilização de numeração (cancelamento já implementado e validado
-  — ver tabela acima).
+- Carta de correção (cancelamento e inutilização de numeração já implementados e
+  validados — ver tabela acima).
 - Validar/bloquear CFOP de entrada antes de montar o XML (ver "tpNF sempre 1" acima).
 - Outros UFs além de SP.
 - Crédito de ICMS do Simples de verdade (portar `calculacsosn` do Axial).
