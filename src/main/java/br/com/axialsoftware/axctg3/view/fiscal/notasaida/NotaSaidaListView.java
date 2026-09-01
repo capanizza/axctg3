@@ -10,6 +10,7 @@ import br.com.axialsoftware.axctg3.service.fiscal.NfeEmissaoService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeWebserviceClient;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.DataManager;
@@ -284,6 +285,10 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
                         empresa.setAmbienteNfe(novoAmbiente);
                         dataManager.save(empresa);
                         atualizarBadgeAmbiente();
+                        // getPageTitle() não é reconsultado automaticamente pelo Vaadin fora de
+                        // navegação — atualiza o título da aba in-place, sem navigate() (que
+                        // reinstanciaria a view e perderia seleção/filtro/ordenação da grid).
+                        UI.getCurrent().getPage().setTitle(getPageTitle());
                         dialogs.createMessageDialog()
                                 .withHeader(messageBundle.getMessage("notaSaidaListView.alternarAmbienteAction.text"))
                                 .withText(messageBundle.formatMessage("notaSaidaListView.alternarAmbiente.sucesso",

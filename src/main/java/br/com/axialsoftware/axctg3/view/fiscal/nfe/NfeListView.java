@@ -10,6 +10,7 @@ import br.com.axialsoftware.axctg3.service.fiscal.NfeWebserviceClient;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
 import com.vaadin.flow.component.ClickEvent;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -199,6 +200,10 @@ public class NfeListView extends StandardListView<Nfe> {
                         empresa.setAmbienteNfe(novoAmbiente);
                         dataManager.save(empresa);
                         atualizarBadgeAmbiente();
+                        // getPageTitle() não é reconsultado automaticamente pelo Vaadin fora de
+                        // navegação — atualiza o título da aba in-place, sem navigate() (que
+                        // reinstanciaria a view e perderia seleção/filtro/ordenação da grid).
+                        UI.getCurrent().getPage().setTitle(getPageTitle());
                         dialogs.createMessageDialog()
                                 .withHeader(messageBundle.getMessage("nfeListView.alternarAmbienteAction.text"))
                                 .withText(messageBundle.formatMessage("nfeListView.alternarAmbiente.sucesso",
