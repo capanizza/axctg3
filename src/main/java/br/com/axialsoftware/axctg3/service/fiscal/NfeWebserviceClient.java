@@ -77,6 +77,11 @@ public class NfeWebserviceClient {
             AmbienteNfe.PRODUCAO, "https://nfe.fazenda.sp.gov.br/ws/nferecepcaoevento4.asmx",
             AmbienteNfe.HOMOLOGACAO, "https://homologacao.nfe.fazenda.sp.gov.br/ws/nferecepcaoevento4.asmx");
 
+    // Idem, conferido na mesma data.
+    private static final Map<AmbienteNfe, String> URL_INUTILIZACAO = Map.of(
+            AmbienteNfe.PRODUCAO, "https://nfe.fazenda.sp.gov.br/ws/nfeinutilizacao4.asmx",
+            AmbienteNfe.HOMOLOGACAO, "https://homologacao.nfe.fazenda.sp.gov.br/ws/nfeinutilizacao4.asmx");
+
     public record Resposta(Integer cStat, String xMotivo, String nRec, String xmlProtNFe) {
         public boolean autorizada() {
             return cStat != null && cStat == 100;
@@ -92,6 +97,14 @@ public class NfeWebserviceClient {
         /** 135 = "Evento registrado e vinculado a NF-e" — único cStat de sucesso de verdade. */
         public boolean registrado() {
             return cStat != null && cStat == 135;
+        }
+    }
+
+    /** Resposta de {@code NFeInutilizacao4} (Pedido de Inutilização de Numeração). */
+    public record RespostaInutilizacao(Integer cStat, String xMotivo, String nProt, String dhRecbto, String xmlRetInutNFe) {
+        /** 102 = "Inutilização de número homologada" — único cStat de sucesso de verdade. */
+        public boolean homologada() {
+            return cStat != null && cStat == 102;
         }
     }
 
@@ -139,6 +152,20 @@ public class NfeWebserviceClient {
         String respostaBody = enviar(URL_RECEPCAO_EVENTO.get(empresa.getAmbienteNfe()),
                 "http://www.portalfiscal.inf.br/nfe/wsdl/NFeRecepcaoEvento4", corpo, empresa);
         return interpretarRespostaEvento(respostaBody);
+    }
+
+    /**
+     * Envia um Pedido de Inutilização de Numeração assinado ({@code <inutNFe>} com
+     * {@code infInut} já assinado por {@link NfeXmlSigner#assinarInfInut}) pra
+     * {@code NFeInutilizacao4}. Diferente de {@link #autorizar} e {@link #enviarEvento},
+     * não tem envelope de lote (sem {@code idLote}) — o {@code inutNFe} vai direto como
+     * corpo de {@code nfeDadosMsg}, mesmo formato "sem wrapper" de {@link #consultarStatusServico}.
+     */
+    public RespostaInutilizacao enviarInutilizacao(byte[] xmlInutAssinado, Empresa empresa) throws Exception {
+        String corpo = new String(xmlInutAssinado, StandardCharsets.UTF_8);
+        String respostaBody = enviar(URL_INUTILIZACAO.get(empresa.getAmbienteNfe()),
+                "http://www.portalfiscal.inf.br/nfe/wsdl/NFeInutilizacao4", corpo, empresa);
+        return interpretarRespostaInutilizacao(respostaBody);
     }
 
     /** Consulta o recibo de um lote que voltou cStat=103 (processamento assíncrono). */
@@ -303,6 +330,27 @@ public class NfeWebserviceClient {
         }
         String xmlRetEvento = serializar(primeiroOuNull(doc, "retEvento"));
         return new RespostaEvento(cStat, xMotivo, nProt, xmlRetEvento);
+    }
+
+    /**
+     * {@code retInutNFe/infInut} tem o resultado de verdade (cStat=102 homologado, ou uma
+     * rejeição específica) — mesma estrutura de {@link #interpretarRespostaEvento}, mas
+     * {@code retInutNFe} não tem uma variante "lote inteiro falhou" pra usar de fallback,
+     * já que este webservice não processa em lote.
+     */
+    private RespostaInutilizacao interpretarRespostaInutilizacao(String xmlResposta) throws ParserConfigurationException, SAXException, IOException {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(false);
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document doc = builder.parse(new ByteArrayInputStream(xmlResposta.getBytes(StandardCharsets.UTF_8)));
+
+        Element infInut = primeiroOuNull(doc, "infInut");
+        Integer cStat = inteiro(texto(infInut, "cStat"));
+        String xMotivo = texto(infInut, "xMotivo");
+        String nProt = texto(infInut, "nProt");
+        String dhRecbto = texto(infInut, "dhRecbto");
+        String xmlRetInutNFe = serializar(infInut);
+        return new RespostaInutilizacao(cStat, xMotivo, nProt, dhRecbto, xmlRetInutNFe);
     }
 
     private Element primeiroOuNull(Document doc, String tag) {

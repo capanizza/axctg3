@@ -71,6 +71,15 @@ public class NfeXmlSigner {
         return assinarElemento(doc, "infEvento", empresa);
     }
 
+    /**
+     * Assina o {@code infInut} de um Pedido de Inutilização de Numeração ({@code inutNFe},
+     * leiaute 4.00) — mesma técnica de {@link #assinar}/{@link #assinarEvento}, só muda a
+     * tag do elemento assinado.
+     */
+    public Document assinarInfInut(Document doc, Empresa empresa) throws Exception {
+        return assinarElemento(doc, "infInut", empresa);
+    }
+
     private Document assinarElemento(Document doc, String tagElementoAssinado, Empresa empresa) throws Exception {
         KeyStore keyStore = carregarKeyStore(empresa);
         String alias = primeiroAlias(keyStore);

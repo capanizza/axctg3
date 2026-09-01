@@ -8,6 +8,7 @@ import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeCancelamentoService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeDanfeService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeImportService;
+import br.com.axialsoftware.axctg3.service.fiscal.NfeInutilizacaoService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeWebserviceClient;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
@@ -34,6 +35,7 @@ import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +43,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static io.jmix.flowui.app.inputdialog.InputParameter.enumParameter;
+import static io.jmix.flowui.app.inputdialog.InputParameter.intParameter;
 import static io.jmix.flowui.app.inputdialog.InputParameter.stringParameter;
 
 @Route(value = "nfes", layout = MainView.class)
@@ -77,6 +80,8 @@ public class NfeListView extends StandardListView<Nfe> {
     private NfeDanfeService nfeDanfeService;
     @Autowired
     private NfeCancelamentoService nfeCancelamentoService;
+    @Autowired
+    private NfeInutilizacaoService nfeInutilizacaoService;
     @Autowired
     private NfeWebserviceClient nfeWebserviceClient;
     @Autowired
@@ -245,7 +250,78 @@ public class NfeListView extends StandardListView<Nfe> {
 
     @Subscribe("nfesDataGrid.inutilizarNumerosAction")
     public void onNfesDataGridInutilizarNumerosAction(final ActionPerformedEvent event) {
-        mostrarEmDesenvolvimento("nfeListView.inutilizarNumerosAction.text");
+        pedirFaixaEInutilizar();
+    }
+
+    /**
+     * Não depende de seleção na grid — a faixa inutilizada nunca teve {@code Nfe}
+     * correspondente pra selecionar (mesmo motivo de {@link NfeInutilizacaoService} gravar
+     * o resultado numa entidade própria em vez de atualizar uma linha existente). Mesmo
+     * padrão de {@code ConfigRel} pra lembrar a justificativa de
+     * {@link #pedirJustificativaECancelar}; ano/série/faixa não são lembrados — mudam a
+     * cada pedido.
+     */
+    private void pedirFaixaEInutilizar() {
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
+        dialogs.createInputDialog(UiComponentUtils.getCurrentView())
+                .withHeader(messageBundle.getMessage("nfeListView.inutilizarNumerosAction.text"))
+                .withParameters(
+                        intParameter("ano")
+                                .withLabel(messageBundle.getMessage("nfeListView.inutilizarNumeros.ano.label"))
+                                .withDefaultValue(Year.now().getValue()),
+                        intParameter("serie")
+                                .withLabel(messageBundle.getMessage("nfeListView.inutilizarNumeros.serie.label"))
+                                .withDefaultValue(1),
+                        intParameter("numeroInicial")
+                                .withLabel(messageBundle.getMessage("nfeListView.inutilizarNumeros.numeroInicial.label")),
+                        intParameter("numeroFinal")
+                                .withLabel(messageBundle.getMessage("nfeListView.inutilizarNumeros.numeroFinal.label")),
+                        stringParameter("justificativa")
+                                .withLabel(messageBundle.getMessage("nfeListView.inutilizarNumeros.justificativa.label"))
+                                .withDefaultValue(configRel.getJustificativaInutilizacaoNfe())
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withValidator(context -> {
+                    Integer numeroInicial = context.getValue("numeroInicial");
+                    Integer numeroFinal = context.getValue("numeroFinal");
+                    if (numeroInicial == null || numeroFinal == null) {
+                        return ValidationErrors.of(messageBundle.getMessage("nfeListView.inutilizarNumeros.faixaObrigatoria"));
+                    }
+                    if (numeroInicial > numeroFinal) {
+                        return ValidationErrors.of(messageBundle.getMessage("nfeListView.inutilizarNumeros.faixaInvalida"));
+                    }
+                    String justificativa = context.getValue("justificativa");
+                    if (justificativa != null && !justificativa.isBlank() && justificativa.trim().length() < 15) {
+                        return ValidationErrors.of(messageBundle.getMessage("nfeListView.inutilizarNumeros.justificativa.minima"));
+                    }
+                    return ValidationErrors.none();
+                })
+                .withCloseListener(closeEvent -> {
+                    if (!closeEvent.closedWith(DialogOutcome.OK)) {
+                        return;
+                    }
+                    Integer ano = closeEvent.getValue("ano");
+                    Integer serie = closeEvent.getValue("serie");
+                    Integer numeroInicial = closeEvent.getValue("numeroInicial");
+                    Integer numeroFinal = closeEvent.getValue("numeroFinal");
+                    String justificativa = closeEvent.getValue("justificativa");
+                    configRel.setJustificativaInutilizacaoNfe(justificativa);
+                    dataManager.save(configRel);
+                    NfeInutilizacaoService.ResultadoInutilizacao resultado = nfeInutilizacaoService.inutilizar(
+                            utilGeralService.getCodEmpresa(), ano, serie, numeroInicial, numeroFinal, justificativa);
+                    if (resultado.sucesso()) {
+                        dialogs.createMessageDialog()
+                                .withHeader(messageBundle.getMessage("nfeListView.inutilizarNumeros.sucesso.header"))
+                                .withText(messageBundle.formatMessage("nfeListView.inutilizarNumeros.sucesso.text", resultado.motivo()))
+                                .open();
+                    } else {
+                        dialogs.createMessageDialog()
+                                .withHeader(messageBundle.getMessage("nfeListView.inutilizarNumeros.erro.header"))
+                                .withText(messageBundle.formatMessage("nfeListView.inutilizarNumeros.erro.text", resultado.motivo()))
+                                .open();
+                    }
+                })
+                .open();
     }
 
     @Subscribe("nfesDataGrid.alternarAmbienteAction")

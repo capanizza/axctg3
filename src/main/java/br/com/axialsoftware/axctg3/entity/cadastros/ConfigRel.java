@@ -212,6 +212,11 @@ public class ConfigRel {
     @Column(name = "justificativa_cancelamento_nfe")
     private String justificativaCancelamentoNfe;
 
+    // Último texto de justificativa usado ao inutilizar uma faixa de numeração de NFe
+    // (service/fiscal/NfeInutilizacaoService) — mesmo padrão do campo acima.
+    @Column(name = "justificativa_inutilizacao_nfe")
+    private String justificativaInutilizacaoNfe;
+
     public UUID getId() {
         return id;
     }
@@ -714,5 +719,13 @@ public class ConfigRel {
 
     public void setJustificativaCancelamentoNfe(String justificativaCancelamentoNfe) {
         this.justificativaCancelamentoNfe = justificativaCancelamentoNfe;
+    }
+
+    public String getJustificativaInutilizacaoNfe() {
+        return justificativaInutilizacaoNfe;
+    }
+
+    public void setJustificativaInutilizacaoNfe(String justificativaInutilizacaoNfe) {
+        this.justificativaInutilizacaoNfe = justificativaInutilizacaoNfe;
     }
 }
