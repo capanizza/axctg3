@@ -226,9 +226,11 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
     }
 
     /*
-     * Consultar NFe e Inutilizar números de notas ainda não têm service implementado.
-     * Placeholders no dropDownButton pra já fixar a estrutura do menu; cada um vira
-     * handler de verdade quando o service correspondente for implementado.
+     * Consultar NFe ainda não tem service implementado. Placeholder no dropDownButton pra
+     * já fixar a estrutura do menu; vira handler de verdade quando o service for
+     * implementado. ("Inutilizar números de notas" foi removido daqui em 2026-09-02 — a
+     * faixa inutilizada não tem NotaSaida correspondente pra selecionar, então o pedido de
+     * verdade só faz sentido em NfeListView, que já tem o fluxo completo.)
      */
     @Subscribe("notaSaidasDataGrid.cancelarNfeAction")
     public void onNotaSaidasDataGridCancelarNfeAction(final ActionPerformedEvent event) {
@@ -330,11 +332,6 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
                     .withText(messageBundle.formatMessage("notaSaidaListView.verificarStatusServico.falha.text", e.getMessage()))
                     .open();
         }
-    }
-
-    @Subscribe("notaSaidasDataGrid.inutilizarNumerosAction")
-    public void onNotaSaidasDataGridInutilizarNumerosAction(final ActionPerformedEvent event) {
-        mostrarEmDesenvolvimento("notaSaidaListView.inutilizarNumerosAction.text");
     }
 
     @Subscribe("notaSaidasDataGrid.alternarAmbienteAction")

@@ -10,6 +10,7 @@ import br.com.axialsoftware.axctg3.service.fiscal.NfeDanfeService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeImportService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeInutilizacaoService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeWebserviceClient;
+import br.com.axialsoftware.axctg3.view.fiscal.nfeinutilizacao.NfeInutilizacaoListView;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
 import com.vaadin.flow.component.ClickEvent;
@@ -252,6 +253,16 @@ public class NfeListView extends StandardListView<Nfe> {
     @Subscribe("nfesDataGrid.inutilizarNumerosAction")
     public void onNfesDataGridInutilizarNumerosAction(final ActionPerformedEvent event) {
         pedirFaixaEInutilizar();
+    }
+
+    /**
+     * Histórico das inutilizações já pedidas (ver {@link NfeInutilizacaoListView}) — tela de
+     * baixa importância pra ganhar item de menu próprio, então fica só a um clique daqui via
+     * dialog, mesmo padrão de {@code onImportXmlButtonClick} pra {@code NfeImportView}.
+     */
+    @Subscribe("nfesDataGrid.verInutilizacoesAction")
+    public void onNfesDataGridVerInutilizacoesAction(final ActionPerformedEvent event) {
+        dialogWindows.view(this, NfeInutilizacaoListView.class).open();
     }
 
     /**
