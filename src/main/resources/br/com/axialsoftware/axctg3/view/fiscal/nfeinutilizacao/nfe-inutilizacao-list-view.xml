@@ -29,7 +29,6 @@
     <layout>
         <hbox id="buttonsPanel" wrap="true" width="100%">
             <startSlot>
-                <button id="removeButton" action="nfeInutilizacoesDataGrid.removeAction" themeNames="small"/>
                 <button id="imprimirButton" action="nfeInutilizacoesDataGrid.imprimirAction" themeNames="small"/>
             </startSlot>
             <endSlot>
@@ -42,7 +41,6 @@
                   dataContainer="nfeInutilizacoesDc"
                   columnReorderingAllowed="true" themeNames="small">
             <actions>
-                <action id="removeAction" type="list_remove"/>
                 <action id="imprimirAction" text="msg://nfeInutilizacaoListView.imprimirAction.text" icon="vaadin:print"/>
             </actions>
             <columns resizable="true">

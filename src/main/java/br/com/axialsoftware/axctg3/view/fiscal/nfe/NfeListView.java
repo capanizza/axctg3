@@ -22,6 +22,7 @@ import io.jmix.core.DataManager;
 import io.jmix.core.Messages;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.Dialogs;
+import io.jmix.flowui.action.DialogAction;
 import io.jmix.flowui.app.inputdialog.DialogActions;
 import io.jmix.flowui.app.inputdialog.DialogOutcome;
 import io.jmix.flowui.backgroundtask.BackgroundTask;
@@ -287,6 +288,9 @@ public class NfeListView extends StandardListView<Nfe> {
                     if (numeroInicial == null || numeroFinal == null) {
                         return ValidationErrors.of(messageBundle.getMessage("nfeListView.inutilizarNumeros.faixaObrigatoria"));
                     }
+                    if (numeroInicial < 1 || numeroFinal < 1) {
+                        return ValidationErrors.of(messageBundle.getMessage("nfeListView.inutilizarNumeros.faixaNaoPositiva"));
+                    }
                     if (numeroInicial > numeroFinal) {
                         return ValidationErrors.of(messageBundle.getMessage("nfeListView.inutilizarNumeros.faixaInvalida"));
                     }
@@ -305,22 +309,47 @@ public class NfeListView extends StandardListView<Nfe> {
                     Integer numeroInicial = closeEvent.getValue("numeroInicial");
                     Integer numeroFinal = closeEvent.getValue("numeroFinal");
                     String justificativa = closeEvent.getValue("justificativa");
-                    configRel.setJustificativaInutilizacaoNfe(justificativa);
-                    dataManager.save(configRel);
-                    NfeInutilizacaoService.ResultadoInutilizacao resultado = nfeInutilizacaoService.inutilizar(
-                            utilGeralService.getCodEmpresa(), ano, serie, numeroInicial, numeroFinal, justificativa);
-                    if (resultado.sucesso()) {
-                        dialogs.createMessageDialog()
-                                .withHeader(messageBundle.getMessage("nfeListView.inutilizarNumeros.sucesso.header"))
-                                .withText(messageBundle.formatMessage("nfeListView.inutilizarNumeros.sucesso.text", resultado.motivo()))
-                                .open();
-                    } else {
-                        dialogs.createMessageDialog()
-                                .withHeader(messageBundle.getMessage("nfeListView.inutilizarNumeros.erro.header"))
-                                .withText(messageBundle.formatMessage("nfeListView.inutilizarNumeros.erro.text", resultado.motivo()))
-                                .open();
-                    }
+                    pedirConfirmacaoEInutilizar(configRel, ano, serie, numeroInicial, numeroFinal, justificativa);
                 })
+                .open();
+    }
+
+    /**
+     * Envio à SEFAZ é irreversível (ao contrário de um cadastro comum, não dá pra "desfazer"
+     * uma inutilização homologada) — por isso um passo de confirmação a mais depois do
+     * {@code InputDialog}, mostrando quantos números da faixa serão de fato inutilizados
+     * antes de disparar {@link NfeInutilizacaoService#inutilizar}.
+     */
+    private void pedirConfirmacaoEInutilizar(ConfigRel configRel, Integer ano, Integer serie,
+                                              Integer numeroInicial, Integer numeroFinal, String justificativa) {
+        int quantidade = numeroFinal - numeroInicial + 1;
+        dialogs.createOptionDialog()
+                .withHeader(messageBundle.getMessage("nfeListView.inutilizarNumeros.confirmar.header"))
+                .withText(messageBundle.formatMessage("nfeListView.inutilizarNumeros.confirmar.text",
+                        quantidade, numeroInicial, numeroFinal, serie, ano))
+                .withActions(
+                        new DialogAction(DialogAction.Type.YES)
+                                .withText(messageBundle.getMessage("nfeListView.inutilizarNumeros.confirmar.sim"))
+                                .withHandler(e -> {
+                                    configRel.setJustificativaInutilizacaoNfe(justificativa);
+                                    dataManager.save(configRel);
+                                    NfeInutilizacaoService.ResultadoInutilizacao resultado = nfeInutilizacaoService.inutilizar(
+                                            utilGeralService.getCodEmpresa(), ano, serie, numeroInicial, numeroFinal, justificativa);
+                                    if (resultado.sucesso()) {
+                                        dialogs.createMessageDialog()
+                                                .withHeader(messageBundle.getMessage("nfeListView.inutilizarNumeros.sucesso.header"))
+                                                .withText(messageBundle.formatMessage("nfeListView.inutilizarNumeros.sucesso.text", resultado.motivo()))
+                                                .open();
+                                    } else {
+                                        dialogs.createMessageDialog()
+                                                .withHeader(messageBundle.getMessage("nfeListView.inutilizarNumeros.erro.header"))
+                                                .withText(messageBundle.formatMessage("nfeListView.inutilizarNumeros.erro.text", resultado.motivo()))
+                                                .open();
+                                    }
+                                }),
+                        new DialogAction(DialogAction.Type.NO)
+                                .withText(messageBundle.getMessage("nfeListView.inutilizarNumeros.confirmar.nao"))
+                )
                 .open();
     }
 
