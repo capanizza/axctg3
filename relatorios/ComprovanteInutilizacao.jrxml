@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Comprovante de Inutilização de Numeração de NF-e — não existe leiaute oficial da SEFAZ
+     pra esse documento (diferente do DANFE, regido pelo MOC Anexo II): é só um registro
+     legível do que foi enviado/homologado, pra arquivo da empresa. Uma folha só, sem tabela
+     de itens — preenchida via JREmptyDataSource (ver NfeInutilizacaoComprovanteService),
+     mesmo padrão de ContaContabil2.jrxml (relatório "sem dado", só parâmetros). Fonte DejaVu
+     Sans Mono, a mais usada no projeto (ver relatorios/*.jrxml). -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ComprovanteInutilizacao" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="b2c3d4e5-0001-0001-0001-000000000001">
+
+    <parameter name="LOGO" class="java.lang.String"/>
+    <parameter name="NOME_EMPRESA" class="java.lang.String"/>
+    <parameter name="CNPJ_EMPRESA" class="java.lang.String"/>
+    <parameter name="AMBIENTE_DESC" class="java.lang.String"/>
+    <parameter name="MODELO" class="java.lang.Integer"/>
+    <parameter name="SERIE" class="java.lang.Integer"/>
+    <parameter name="ANO" class="java.lang.Integer"/>
+    <parameter name="NUMERO_INICIAL" class="java.lang.Integer"/>
+    <parameter name="NUMERO_FINAL" class="java.lang.Integer"/>
+    <parameter name="JUSTIFICATIVA" class="java.lang.String"/>
+    <parameter name="PROTOCOLO" class="java.lang.String"/>
+    <parameter name="DH_RECEBIMENTO" class="java.lang.String"/>
+    <parameter name="STATUS_DESC" class="java.lang.String"/>
+    <parameter name="DATA_EMISSAO" class="java.lang.String"/>
+
+    <queryString>
+        <![CDATA[]]>
+    </queryString>
+
+    <background>
+        <band splitType="Stretch"/>
+    </background>
+
+    <pageHeader>
+        <band height="95" splitType="Stretch">
+            <image scaleImage="FillFrame">
+                <reportElement x="0" y="0" width="60" height="45" uuid="b2c3d4e5-0002-0001-0001-000000000001">
+                    <printWhenExpression><![CDATA[$P{LOGO} != null]]></printWhenExpression>
+                </reportElement>
+                <imageExpression><![CDATA[$P{LOGO}]]></imageExpression>
+            </image>
+            <textField>
+                <reportElement x="65" y="0" width="350" height="18" uuid="b2c3d4e5-0002-0001-0001-000000000002"/>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="11" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{NOME_EMPRESA}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="65" y="18" width="350" height="14" uuid="b2c3d4e5-0002-0001-0001-000000000003"/>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="8"/></textElement>
+                <textFieldExpression><![CDATA["CNPJ: " + $P{CNPJ_EMPRESA}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="415" y="0" width="140" height="32" uuid="b2c3d4e5-0002-0001-0001-000000000004"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="9" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["Ambiente: " + $P{AMBIENTE_DESC}]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement x="0" y="50" width="555" height="30" uuid="b2c3d4e5-0002-0001-0001-000000000005"/>
+                    <box>
+                        <topPen lineWidth="0.75"/>
+                        <leftPen lineWidth="0.75"/>
+                        <bottomPen lineWidth="0.75"/>
+                        <rightPen lineWidth="0.75"/>
+                    </box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="12" isBold="true"/></textElement>
+                <text><![CDATA[COMPROVANTE DE INUTILIZAÇÃO DE NUMERAÇÃO DE NF-e]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="0" y="80" width="555" height="15" uuid="b2c3d4e5-0002-0001-0001-000000000006"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="8" isItalic="true"/></textElement>
+                <text><![CDATA[Pedido de Inutilização de Numeração — leiaute inutNFe, versão 4.00]]></text>
+            </staticText>
+        </band>
+    </pageHeader>
+
+    <detail>
+        <band height="200" splitType="Stretch">
+            <textField>
+                <reportElement x="0" y="0" width="140" height="22" uuid="b2c3d4e5-0003-0001-0001-000000000001"/>
+                    <box leftPadding="4" rightPadding="4">
+                        <topPen lineWidth="0.5"/>
+                        <leftPen lineWidth="0.5"/>
+                        <bottomPen lineWidth="0.5"/>
+                        <rightPen lineWidth="0.5"/>
+                    </box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="9"/></textElement>
+                <textFieldExpression><![CDATA["Modelo: " + $P{MODELO}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="140" y="0" width="140" height="22" uuid="b2c3d4e5-0003-0001-0001-000000000002"/>
+                    <box leftPadding="4" rightPadding="4">
+                        <topPen lineWidth="0.5"/>
+                        <leftPen lineWidth="0.0"/>
+                        <bottomPen lineWidth="0.5"/>
+                        <rightPen lineWidth="0.5"/>
+                    </box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="9"/></textElement>
+                <textFieldExpression><![CDATA["Série: " + $P{SERIE}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="280" y="0" width="275" height="22" uuid="b2c3d4e5-0003-0001-0001-000000000003"/>
+                    <box leftPadding="4" rightPadding="4">
+                        <topPen lineWidth="0.5"/>
+                        <leftPen lineWidth="0.0"/>
+                        <bottomPen lineWidth="0.5"/>
+                        <rightPen lineWidth="0.5"/>
+                    </box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="9"/></textElement>
+                <textFieldExpression><![CDATA["Ano: " + $P{ANO}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="0" y="22" width="277" height="22" uuid="b2c3d4e5-0003-0001-0001-000000000004"/>
+                    <box leftPadding="4" rightPadding="4">
+                        <topPen lineWidth="0.0"/>
+                        <leftPen lineWidth="0.5"/>
+                        <bottomPen lineWidth="0.5"/>
+                        <rightPen lineWidth="0.5"/>
+                    </box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="9"/></textElement>
+                <textFieldExpression><![CDATA["Número inicial: " + $P{NUMERO_INICIAL}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="277" y="22" width="278" height="22" uuid="b2c3d4e5-0003-0001-0001-000000000005"/>
+                    <box leftPadding="4" rightPadding="4">
+                        <topPen lineWidth="0.0"/>
+                        <leftPen lineWidth="0.0"/>
+                        <bottomPen lineWidth="0.5"/>
+                        <rightPen lineWidth="0.5"/>
+                    </box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="9"/></textElement>
+                <textFieldExpression><![CDATA["Número final: " + $P{NUMERO_FINAL}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="0" y="44" width="277" height="22" uuid="b2c3d4e5-0003-0001-0001-000000000006"/>
+                    <box leftPadding="4" rightPadding="4">
+                        <topPen lineWidth="0.0"/>
+                        <leftPen lineWidth="0.5"/>
+                        <bottomPen lineWidth="0.5"/>
+                        <rightPen lineWidth="0.5"/>
+                    </box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="9"/></textElement>
+                <textFieldExpression><![CDATA["Protocolo: " + $P{PROTOCOLO}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="277" y="44" width="278" height="22" uuid="b2c3d4e5-0003-0001-0001-000000000007"/>
+                    <box leftPadding="4" rightPadding="4">
+                        <topPen lineWidth="0.0"/>
+                        <leftPen lineWidth="0.0"/>
+                        <bottomPen lineWidth="0.5"/>
+                        <rightPen lineWidth="0.5"/>
+                    </box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="9"/></textElement>
+                <textFieldExpression><![CDATA["Recebido em: " + $P{DH_RECEBIMENTO}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="0" y="66" width="555" height="22" uuid="b2c3d4e5-0003-0001-0001-000000000008"/>
+                    <box leftPadding="4" rightPadding="4">
+                        <topPen lineWidth="0.0"/>
+                        <leftPen lineWidth="0.5"/>
+                        <bottomPen lineWidth="0.5"/>
+                        <rightPen lineWidth="0.5"/>
+                    </box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="9" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["Situação: " + $P{STATUS_DESC}]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement x="0" y="96" width="555" height="14" uuid="b2c3d4e5-0003-0001-0001-000000000009"/>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="8" isBold="true"/></textElement>
+                <text><![CDATA[Justificativa]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="0" y="110" width="555" height="46" uuid="b2c3d4e5-0003-0001-0001-00000000000a"/>
+                    <box leftPadding="4" rightPadding="4" topPadding="2">
+                        <topPen lineWidth="0.5"/>
+                        <leftPen lineWidth="0.5"/>
+                        <bottomPen lineWidth="0.5"/>
+                        <rightPen lineWidth="0.5"/>
+                    </box>
+                <textElement verticalAlignment="Top"><font fontName="DejaVu Sans Mono" size="9"/></textElement>
+                <textFieldExpression><![CDATA[$P{JUSTIFICATIVA}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="0" y="168" width="555" height="24" uuid="b2c3d4e5-0003-0001-0001-00000000000b"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="7" isItalic="true"/></textElement>
+                <textFieldExpression><![CDATA["Documento gerado pelo sistema em " + $P{DATA_EMISSAO} + " — sem leiaute oficial definido pela SEFAZ; o protocolo acima é o único comprovante de homologação."]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+</jasperReport>

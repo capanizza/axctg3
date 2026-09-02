@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
+      title="msg://nfeInutilizacaoListView.title"
+      focusComponent="nfeInutilizacoesDataGrid">
+    <data>
+        <collection id="nfeInutilizacoesDc"
+                    class="br.com.axialsoftware.axctg3.entity.fiscal.NfeInutilizacao">
+            <fetchPlan extends="_base"/>
+            <loader id="nfeInutilizacoesDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from NfeInutilizacao e
+                    where e.codEmpresa = :codEmpresa
+                    order by e.createdDate desc]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <startSlot>
+                <button id="removeButton" action="nfeInutilizacoesDataGrid.removeAction" themeNames="small"/>
+                <button id="imprimirButton" action="nfeInutilizacoesDataGrid.imprimirAction" themeNames="small"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="nfeInutilizacoesDl"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="nfeInutilizacoesDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="nfeInutilizacoesDc"
+                  columnReorderingAllowed="true" themeNames="small">
+            <actions>
+                <action id="removeAction" type="list_remove"/>
+                <action id="imprimirAction" text="msg://nfeInutilizacaoListView.imprimirAction.text" icon="vaadin:print"/>
+            </actions>
+            <columns resizable="true">
+                <column property="ano" filterable="true" width="7%"/>
+                <column property="serie" filterable="true" width="7%"/>
+                <column property="numeroInicial" filterable="true" width="9%"/>
+                <column property="numeroFinal" filterable="true" width="9%"/>
+                <column property="justificativa" filterable="true" width="22%"/>
+                <column property="retCStat" filterable="true" width="7%"/>
+                <column property="retXMotivo" filterable="true" width="15%"/>
+                <column property="retNProt" filterable="true" width="12%"/>
+                <column property="dhRecbto" filterable="true" width="12%"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction" themeNames="small"/>
+            <button id="discardButton" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>
