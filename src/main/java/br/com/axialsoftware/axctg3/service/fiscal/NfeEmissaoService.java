@@ -84,7 +84,12 @@ public class NfeEmissaoService {
         // duas NFe autorizadas pro mesmo número se essa tentativa na verdade tinha sido
         // autorizada e só a resposta se perdeu.
         notaSaida.setChaveTentativa(construido.chave());
-        dataManager.save(notaSaida);
+        // save() devolve a entidade mesclada com a VERSION nova — reatribuir é obrigatório
+        // aqui: o segundo save() mais adiante (linha ~128) usa esse mesmo notaSaida, e
+        // salvar de novo com a VERSION antiga (do objeto carregado no início do método)
+        // dispara "objeto alterado por outro" (OptimisticLockException) mesmo sem nenhuma
+        // edição concorrente de verdade — confirmado em teste real 2026-09-02.
+        notaSaida = dataManager.save(notaSaida);
 
         Document assinado;
         try {
