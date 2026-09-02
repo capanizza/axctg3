@@ -104,26 +104,7 @@ public class NfeEmissaoService {
         }
 
         if (consulta.cStat() != null && consulta.cStat() == 100) {
-            // Autorizada de verdade — só a resposta que se perdeu. O Nfe já pode ter sido
-            // gravado antes de a resposta se perder da primeira vez (é exatamente o caso
-            // confirmado em teste real: a SEFAZ autorizou e importService.salvarEmitida já
-            // tinha rodado; só o segundo save() de NotaSaida.chave falhou depois). Sem o XML
-            // completo (a consulta só devolve protNFe, não os itens/detalhes da nota), não
-            // dá pra reconstruir um Nfe que ainda não existe — só completa o que já existe.
-            boolean nfeJaGravada = dataManager.load(Nfe.class)
-                    .query("select e from Nfe e where e.chave = :chave")
-                    .parameter("chave", chaveTentativa)
-                    .optional()
-                    .isPresent();
-            if (!nfeJaGravada) {
-                return new ResultadoEmissao(false, chaveTentativa, consulta.nProt(),
-                        "NFe autorizada na SEFAZ (protocolo " + consulta.nProt() + "), mas o sistema não tem o "
-                                + "XML completo pra registrar a nota — contate o suporte.");
-            }
-            notaSaida.setChave(chaveTentativa);
-            notaSaida.setChaveTentativa(null);
-            dataManager.save(notaSaida);
-            return new ResultadoEmissao(true, chaveTentativa, consulta.nProt(), null);
+            return completarComProtocoloConfirmado(notaSaida, chaveTentativa, consulta.nProt());
         }
 
         if (consulta.cStat() != null && (consulta.cStat() == 217 || consulta.cStat() == 218)) {
@@ -138,6 +119,57 @@ public class NfeEmissaoService {
         return new ResultadoEmissao(false, chaveTentativa, null,
                 "Tentativa anterior pendente (chave " + chaveTentativa + ") — SEFAZ retornou cStat="
                         + consulta.cStat() + ": " + consulta.xMotivo() + ". Resolva antes de tentar de novo.");
+    }
+
+    /**
+     * Completa {@code NotaSaida.chave}/zera {@code chaveTentativa} pra uma chave já
+     * confirmada autorizada (cStat=100) via {@code NFeConsultaProtocolo4} — usado tanto por
+     * {@link #resolverTentativaPendente} quanto por {@link #completarSeAutorizada} (chamado
+     * direto pela UI, ver {@code NotaSaidaListView.consultarEExibir}, quando "Consultar NFe"
+     * já mostrou o resultado autorizado e a nota ainda não tinha isso salvo). O {@code Nfe}
+     * já pode ter sido gravado antes da resposta se perder da primeira vez (caso confirmado
+     * em teste real: {@link NfeImportService#salvarEmitida} já tinha rodado; só o segundo
+     * {@code save()} de {@code NotaSaida.chave} falhou depois). Sem o XML completo (a
+     * consulta só devolve {@code protNFe}, não os itens/detalhes da nota), não dá pra
+     * reconstruir um {@code Nfe} que ainda não existe — só completa o que já existe.
+     */
+    private ResultadoEmissao completarComProtocoloConfirmado(NotaSaida notaSaida, String chave, String nProt) {
+        boolean nfeJaGravada = dataManager.load(Nfe.class)
+                .query("select e from Nfe e where e.chave = :chave")
+                .parameter("chave", chave)
+                .optional()
+                .isPresent();
+        if (!nfeJaGravada) {
+            return new ResultadoEmissao(false, chave, nProt,
+                    "NFe autorizada na SEFAZ (protocolo " + nProt + "), mas o sistema não tem o "
+                            + "XML completo pra registrar a nota — contate o suporte.");
+        }
+        notaSaida.setChave(chave);
+        notaSaida.setChaveTentativa(null);
+        dataManager.save(notaSaida);
+        return new ResultadoEmissao(true, chave, nProt, null);
+    }
+
+    /**
+     * Completa o registro local a partir de uma {@link NfeWebserviceClient.RespostaConsulta}
+     * que a UI já obteve (evita perguntar duas vezes pra SEFAZ) — usado por "Consultar NFe"
+     * (só {@code NotaSaidaListView}, {@code Nfe} sempre já tem chave confirmada) quando o
+     * resultado veio autorizado e {@code NotaSaida.chave} ainda está vazia.
+     */
+    public ResultadoEmissao completarSeAutorizada(UUID notaSaidaId, NfeWebserviceClient.RespostaConsulta consulta) {
+        if (consulta.cStat() == null || consulta.cStat() != 100) {
+            return new ResultadoEmissao(false, null, consulta.nProt(),
+                    "Chave não está autorizada (cStat=" + consulta.cStat() + ": " + consulta.xMotivo() + ")");
+        }
+        NotaSaida notaSaida = carregarComFetchPlan(notaSaidaId);
+        if (notaSaida.getChave() != null && !notaSaida.getChave().isBlank()) {
+            return new ResultadoEmissao(true, notaSaida.getChave(), consulta.nProt(), null);
+        }
+        String chave = notaSaida.getChaveTentativa();
+        if (chave == null || chave.isBlank()) {
+            return new ResultadoEmissao(false, null, null, "Nota sem chave calculada pra confirmar");
+        }
+        return completarComProtocoloConfirmado(notaSaida, chave, consulta.nProt());
     }
 
     /** Monta o XML, assina e transmite pra SEFAZ — usado tanto numa primeira tentativa quanto numa reemissão segura. */

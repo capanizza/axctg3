@@ -324,7 +324,7 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
                     .open();
             return;
         }
-        consultarEExibir(chave);
+        consultarEExibir(selecionada, chave);
     }
 
     /**
@@ -334,8 +334,15 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
      * {@code onNotaSaidasDataGridVerificarStatusServicoAction} — não é um "sucesso/erro" de
      * pedido, então uma única mensagem informativa (sem branch sucesso/erro), igual ao
      * padrão de "Verificar status do serviço".
+     *
+     * <p>Se a consulta voltar autorizada e {@code notaSaida.chave} ainda estiver vazia
+     * (consultada via {@code chaveTentativa} — resposta anterior perdida/timeout), completa
+     * o registro local na hora ({@link NfeEmissaoService#completarSeAutorizada}) — sem isso,
+     * "Consultar NFe" confirmava a autorização mas não gravava chave/protocolo em lugar
+     * nenhum, deixando a nota travada mesmo sabendo que estava tudo certo (caso real,
+     * 2026-09-02).
      */
-    private void consultarEExibir(String chave) {
+    private void consultarEExibir(NotaSaida notaSaida, String chave) {
         Empresa empresa = utilGeralService.getEmpresa();
         if (empresa.getCrt() == null || empresa.getAmbienteNfe() == null
                 || empresa.getCertificadoArquivo() == null || empresa.getCertificadoSenha() == null) {
@@ -352,6 +359,20 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
                             resposta.cStat(), resposta.xMotivo())
                     : messageBundle.formatMessage("notaSaidaListView.consultarNfe.resultado.comProtocolo",
                             resposta.cStat(), resposta.xMotivo(), resposta.nProt(), resposta.dhRecbto());
+
+            boolean precisaCompletar = (notaSaida.getChave() == null || notaSaida.getChave().isBlank())
+                    && resposta.cStat() != null && resposta.cStat() == 100;
+            if (precisaCompletar) {
+                NfeEmissaoService.ResultadoEmissao resultado =
+                        nfeEmissaoService.completarSeAutorizada(notaSaida.getId(), resposta);
+                if (resultado.sucesso()) {
+                    texto = texto + " " + messageBundle.getMessage("notaSaidaListView.consultarNfe.chaveSalva");
+                    notaSaidasDl.load();
+                } else {
+                    texto = texto + " " + resultado.motivo();
+                }
+            }
+
             dialogs.createMessageDialog()
                     .withHeader(messageBundle.getMessage("notaSaidaListView.consultarNfeAction.text"))
                     .withText(texto)
