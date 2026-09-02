@@ -27,12 +27,17 @@ import java.util.UUID;
  *
  * <p>{@code NotaSaida.chaveTentativa} é gravada assim que a chave é calculada, antes de
  * assinar/transmitir — sobrevive a erro de comunicação/timeout com a SEFAZ (cenário em que
- * a nota pode ter sido autorizada de verdade sem a resposta ter chegado). Uma reemissão
- * reaproveita essa chave em vez de calcular outra ({@link NfeXmlBuilder#resolverCNf}) — se a
- * tentativa anterior tinha mesmo sido autorizada, a SEFAZ rejeita o reenvio da mesma chave
- * como duplicidade (cStat=539), em vez de autorizar duas NFe pro mesmo número; e enquanto
- * não resolvido, essa chave serve de reserva pra {@code NotaSaidaListView.onNotaSaidasDataGridConsultarNfeAction}
- * checar a situação na SEFAZ mesmo sem {@code NotaSaida.chave} confirmada.
+ * a nota pode ter sido autorizada de verdade sem a resposta ter chegado). Quando existe uma
+ * tentativa pendente, {@link #emitir} NÃO reenvia direto — {@link #resolverTentativaPendente}
+ * consulta a SEFAZ primeiro ({@code NFeConsultaProtocolo4}) com essa mesma chave: se autorizada,
+ * só completa o registro local (o {@code Nfe} normalmente já foi gravado, só o
+ * {@code NotaSaida.chave} que não confirmou); se "não localizada", segue pra
+ * {@link #transmitir}, que reaproveita a mesma chave em vez de sortear outra
+ * ({@link NfeXmlBuilder#resolverCNf}) — reenviar a MESMA chave de uma tentativa que tinha
+ * sido autorizada é rejeitado pela SEFAZ como duplicidade (cStat=539), em vez de autorizar
+ * duas NFe pro mesmo número. Enquanto pendente, essa chave também serve de reserva pra
+ * {@code NotaSaidaListView.onNotaSaidasDataGridConsultarNfeAction} (consulta manual, sem
+ * tentar reemitir).
  */
 @Service
 public class NfeEmissaoService {
@@ -70,6 +75,73 @@ public class NfeEmissaoService {
             return new ResultadoEmissao(false, null, null, "Empresa não encontrada");
         }
 
+        // Já existe uma tentativa pendente (resposta anterior perdida/timeout) — não
+        // reenvia às cegas: consulta primeiro (mesma chave, ver resolverTentativaPendente).
+        // Reenviar direto bateria em cStat=539 "Duplicidade de NF-e" se a tentativa anterior
+        // TINHA sido autorizada (confirmado em teste real 2026-09-02) — a consulta resolve
+        // isso antes de decidir se completa o registro local ou tenta de novo.
+        if (notaSaida.getChaveTentativa() != null && !notaSaida.getChaveTentativa().isBlank()) {
+            return resolverTentativaPendente(notaSaida, empresa);
+        }
+
+        return transmitir(notaSaida, empresa);
+    }
+
+    /**
+     * Resolve uma {@code chaveTentativa} pendente via {@code NFeConsultaProtocolo4} antes de
+     * decidir o que fazer — nunca reenvia sem saber o que a SEFAZ diz sobre essa chave
+     * específica.
+     */
+    private ResultadoEmissao resolverTentativaPendente(NotaSaida notaSaida, Empresa empresa) {
+        String chaveTentativa = notaSaida.getChaveTentativa();
+        NfeWebserviceClient.RespostaConsulta consulta;
+        try {
+            consulta = client.consultarProtocolo(chaveTentativa, empresa);
+        } catch (Exception e) {
+            return new ResultadoEmissao(false, chaveTentativa, null,
+                    "Tentativa anterior pendente (chave " + chaveTentativa + ") — não foi possível confirmar "
+                            + "com a SEFAZ: " + e.getMessage() + ". Tente de novo em instantes, ou use \"Consultar NFe\".");
+        }
+
+        if (consulta.cStat() != null && consulta.cStat() == 100) {
+            // Autorizada de verdade — só a resposta que se perdeu. O Nfe já pode ter sido
+            // gravado antes de a resposta se perder da primeira vez (é exatamente o caso
+            // confirmado em teste real: a SEFAZ autorizou e importService.salvarEmitida já
+            // tinha rodado; só o segundo save() de NotaSaida.chave falhou depois). Sem o XML
+            // completo (a consulta só devolve protNFe, não os itens/detalhes da nota), não
+            // dá pra reconstruir um Nfe que ainda não existe — só completa o que já existe.
+            boolean nfeJaGravada = dataManager.load(Nfe.class)
+                    .query("select e from Nfe e where e.chave = :chave")
+                    .parameter("chave", chaveTentativa)
+                    .optional()
+                    .isPresent();
+            if (!nfeJaGravada) {
+                return new ResultadoEmissao(false, chaveTentativa, consulta.nProt(),
+                        "NFe autorizada na SEFAZ (protocolo " + consulta.nProt() + "), mas o sistema não tem o "
+                                + "XML completo pra registrar a nota — contate o suporte.");
+            }
+            notaSaida.setChave(chaveTentativa);
+            notaSaida.setChaveTentativa(null);
+            dataManager.save(notaSaida);
+            return new ResultadoEmissao(true, chaveTentativa, consulta.nProt(), null);
+        }
+
+        if (consulta.cStat() != null && (consulta.cStat() == 217 || consulta.cStat() == 218)) {
+            // Não localizada — a SEFAZ nunca recebeu essa tentativa, reenviar é seguro.
+            // transmitir() reaproveita a MESMA chaveTentativa (NfeXmlBuilder.resolverCNf),
+            // não sorteia uma nova.
+            return transmitir(notaSaida, empresa);
+        }
+
+        // Qualquer outro cStat (denegada etc.) — não decide sozinho, devolve a situação pro
+        // usuário resolver antes de tentar de novo.
+        return new ResultadoEmissao(false, chaveTentativa, null,
+                "Tentativa anterior pendente (chave " + chaveTentativa + ") — SEFAZ retornou cStat="
+                        + consulta.cStat() + ": " + consulta.xMotivo() + ". Resolva antes de tentar de novo.");
+    }
+
+    /** Monta o XML, assina e transmite pra SEFAZ — usado tanto numa primeira tentativa quanto numa reemissão segura. */
+    private ResultadoEmissao transmitir(NotaSaida notaSaida, Empresa empresa) {
         NfeXmlBuilder.Resultado construido;
         try {
             construido = xmlBuilder.construir(notaSaida);
@@ -85,10 +157,10 @@ public class NfeEmissaoService {
         // autorizada e só a resposta se perdeu.
         notaSaida.setChaveTentativa(construido.chave());
         // save() devolve a entidade mesclada com a VERSION nova — reatribuir é obrigatório
-        // aqui: o segundo save() mais adiante (linha ~128) usa esse mesmo notaSaida, e
-        // salvar de novo com a VERSION antiga (do objeto carregado no início do método)
-        // dispara "objeto alterado por outro" (OptimisticLockException) mesmo sem nenhuma
-        // edição concorrente de verdade — confirmado em teste real 2026-09-02.
+        // aqui: o segundo save() mais adiante usa esse mesmo notaSaida, e salvar de novo com
+        // a VERSION antiga (do objeto carregado no início do método) dispara "objeto
+        // alterado por outro" (OptimisticLockException) mesmo sem nenhuma edição
+        // concorrente de verdade — confirmado em teste real 2026-09-02.
         notaSaida = dataManager.save(notaSaida);
 
         Document assinado;
