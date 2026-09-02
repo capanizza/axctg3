@@ -219,7 +219,52 @@ public class NfeListView extends StandardListView<Nfe> {
 
     @Subscribe("nfesDataGrid.consultarNfeAction")
     public void onNfesDataGridConsultarNfeAction(final ActionPerformedEvent event) {
-        mostrarEmDesenvolvimento("nfeListView.consultarNfeAction.text");
+        Nfe selecionada = nfesDataGrid.getSingleSelectedItem();
+        if (selecionada == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("nfeListView.consultarNfeAction.text"))
+                    .withText(messageBundle.getMessage("nfeListView.consultarNfe.naoSelecionado"))
+                    .open();
+            return;
+        }
+        consultarEExibir(selecionada.getChave());
+    }
+
+    /**
+     * {@code NFeConsultaProtocolo4} — situação oficial e atual de uma chave na SEFAZ
+     * (autorizada/cancelada/denegada/não localizada), independente do que está gravado
+     * localmente. Mesma checagem de config e mesmo texto de falha de rede de
+     * {@code onNfesDataGridVerificarStatusServicoAction} — não é um "sucesso/erro" de
+     * pedido, então uma única mensagem informativa (sem branch sucesso/erro), igual ao
+     * padrão de "Verificar status do serviço".
+     */
+    private void consultarEExibir(String chave) {
+        Empresa empresa = utilGeralService.getEmpresa();
+        if (empresa.getCrt() == null || empresa.getAmbienteNfe() == null
+                || empresa.getCertificadoArquivo() == null || empresa.getCertificadoSenha() == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("nfeListView.consultarNfeAction.text"))
+                    .withText(messageBundle.getMessage("nfeListView.verificarStatusServico.semConfig"))
+                    .open();
+            return;
+        }
+        try {
+            NfeWebserviceClient.RespostaConsulta resposta = nfeWebserviceClient.consultarProtocolo(chave, empresa);
+            String texto = resposta.nProt() == null
+                    ? messageBundle.formatMessage("nfeListView.consultarNfe.resultado.semProtocolo",
+                            resposta.cStat(), resposta.xMotivo())
+                    : messageBundle.formatMessage("nfeListView.consultarNfe.resultado.comProtocolo",
+                            resposta.cStat(), resposta.xMotivo(), resposta.nProt(), resposta.dhRecbto());
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("nfeListView.consultarNfeAction.text"))
+                    .withText(texto)
+                    .open();
+        } catch (Exception e) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("nfeListView.verificarStatusServico.falha.header"))
+                    .withText(messageBundle.formatMessage("nfeListView.verificarStatusServico.falha.text", e.getMessage()))
+                    .open();
+        }
     }
 
     /** Mesma lógica de {@code EmpresaDetailView.onTestarConexaoSefazButtonClick}. */

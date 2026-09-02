@@ -40,8 +40,10 @@ import java.util.Map;
  * https://portal.fazenda.sp.gov.br/servicos/nfe/Paginas/URL-WEBSERVICES.aspx em
  * 2026-08-17, não são tabela de banco por serem dado que praticamente nunca muda):
  * {@code NFeStatusServico4} (checagem simples, sem NFe nenhuma — bom teste isolado de
- * certificado/mTLS antes de emitir de verdade) e {@code NFeAutorizacao4}/
- * {@code NFeRetAutorizacao4} (transmissão da NFe assinada).
+ * certificado/mTLS antes de emitir de verdade), {@code NFeAutorizacao4}/
+ * {@code NFeRetAutorizacao4} (transmissão da NFe assinada), {@code NFeRecepcaoEvento4}
+ * (cancelamento etc.), {@code NFeInutilizacao4} (inutilização de numeração) e
+ * {@code NFeConsultaProtocolo4} (situação atual de uma NF-e específica pela chave).
  *
  * <p>Os webservices "...4" (leiaute 4.00) não usam mais o SOAP Header {@code nfeCabecMsg}
  * (obsoleto, ignorado desde a versão 4.0) — só {@code soap12:Body}/{@code nfeDadosMsg}.
@@ -82,6 +84,11 @@ public class NfeWebserviceClient {
             AmbienteNfe.PRODUCAO, "https://nfe.fazenda.sp.gov.br/ws/nfeinutilizacao4.asmx",
             AmbienteNfe.HOMOLOGACAO, "https://homologacao.nfe.fazenda.sp.gov.br/ws/nfeinutilizacao4.asmx");
 
+    // Conferido na mesma página em 2026-09-02.
+    private static final Map<AmbienteNfe, String> URL_CONSULTA_PROTOCOLO = Map.of(
+            AmbienteNfe.PRODUCAO, "https://nfe.fazenda.sp.gov.br/ws/nfeconsultaprotocolo4.asmx",
+            AmbienteNfe.HOMOLOGACAO, "https://homologacao.nfe.fazenda.sp.gov.br/ws/nfeconsultaprotocolo4.asmx");
+
     public record Resposta(Integer cStat, String xMotivo, String nRec, String xmlProtNFe) {
         public boolean autorizada() {
             return cStat != null && cStat == 100;
@@ -106,6 +113,17 @@ public class NfeWebserviceClient {
         public boolean homologada() {
             return cStat != null && cStat == 102;
         }
+    }
+
+    /**
+     * Resposta de {@code NFeConsultaProtocolo4} (Consulta de Situação de NF-e). {@code cStat}
+     * aqui é o status oficial e atual da chave consultada — 100 autorizada, 101/151
+     * cancelada, 110 denegada, 217/218 chave não localizada na base da SEFAZ (nunca chegou
+     * a ser transmitida, ou UF/ambiente errado) — não tem noção de "sucesso"/"erro" do
+     * pedido em si, é sempre a resposta de verdade (diferente de {@link RespostaInutilizacao}
+     * etc., que têm um único cStat de sucesso).
+     */
+    public record RespostaConsulta(Integer cStat, String xMotivo, String nProt, String dhRecbto, String xmlRetConsSitNFe) {
     }
 
     /** Envia a NFe assinada (processamento síncrono, indSinc=1 — evita precisar consultar recibo). */
@@ -166,6 +184,25 @@ public class NfeWebserviceClient {
         String respostaBody = enviar(URL_INUTILIZACAO.get(empresa.getAmbienteNfe()),
                 "http://www.portalfiscal.inf.br/nfe/wsdl/NFeInutilizacao4", corpo, empresa);
         return interpretarRespostaInutilizacao(respostaBody);
+    }
+
+    /**
+     * Consulta a situação atual de uma NF-e específica na SEFAZ, pela chave de acesso (44
+     * dígitos) — {@code NFeConsultaProtocolo4}, sem envelope de lote e sem assinatura (não é
+     * um documento sendo transmitido, só uma pergunta), mesmo formato "sem wrapper" de
+     * {@link #consultarStatusServico}. Serve pra reconciliar o status local com o oficial —
+     * nota importada do legado sem {@code protCStat} confiável, ou dúvida depois de um envio
+     * que deu timeout antes da confirmação chegar.
+     */
+    public RespostaConsulta consultarProtocolo(String chave, Empresa empresa) throws Exception {
+        String corpo = "<consSitNFe xmlns=\"http://www.portalfiscal.inf.br/nfe\" versao=\"4.00\">"
+                + "<tpAmb>" + empresa.getAmbienteNfe().getId() + "</tpAmb>"
+                + "<xServ>CONSULTAR</xServ>"
+                + "<chNFe>" + chave + "</chNFe>"
+                + "</consSitNFe>";
+        String respostaBody = enviar(URL_CONSULTA_PROTOCOLO.get(empresa.getAmbienteNfe()),
+                "http://www.portalfiscal.inf.br/nfe/wsdl/NFeConsultaProtocolo4", corpo, empresa);
+        return interpretarRespostaConsulta(respostaBody);
     }
 
     /** Consulta o recibo de um lote que voltou cStat=103 (processamento assíncrono). */
@@ -351,6 +388,32 @@ public class NfeWebserviceClient {
         String dhRecbto = texto(infInut, "dhRecbto");
         String xmlRetInutNFe = serializar(infInut);
         return new RespostaInutilizacao(cStat, xMotivo, nProt, dhRecbto, xmlRetInutNFe);
+    }
+
+    /**
+     * {@code retConsSitNFe/cStat} é o status oficial e final da chave consultada (autorizada,
+     * cancelada, denegada, não localizada etc.) — ao contrário de {@link #interpretarResposta},
+     * não dá pra usar {@code infProt} como fonte primária de {@code cStat}: quando a nota
+     * consultada está cancelada, {@code protNFe/infProt} ainda existe (mostra a autorização
+     * original, cStat=100) mas o status de verdade está em {@code retConsSitNFe}. {@code nProt}/
+     * {@code dhRecbto} vêm de {@code infProt} quando presente (protocolo de autorização —
+     * útil de mostrar mesmo numa nota já cancelada).
+     */
+    private RespostaConsulta interpretarRespostaConsulta(String xmlResposta) throws ParserConfigurationException, SAXException, IOException {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(false);
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document doc = builder.parse(new ByteArrayInputStream(xmlResposta.getBytes(StandardCharsets.UTF_8)));
+
+        Element retConsSitNFe = primeiroOuNull(doc, "retConsSitNFe");
+        Integer cStat = inteiro(texto(retConsSitNFe, "cStat"));
+        String xMotivo = texto(retConsSitNFe, "xMotivo");
+
+        Element infProt = primeiroOuNull(doc, "infProt");
+        String nProt = texto(infProt, "nProt");
+        String dhRecbto = texto(infProt, "dhRecbto");
+
+        return new RespostaConsulta(cStat, xMotivo, nProt, dhRecbto, xmlResposta);
     }
 
     private Element primeiroOuNull(Document doc, String tag) {

@@ -303,7 +303,59 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
 
     @Subscribe("notaSaidasDataGrid.consultarNfeAction")
     public void onNotaSaidasDataGridConsultarNfeAction(final ActionPerformedEvent event) {
-        mostrarEmDesenvolvimento("notaSaidaListView.consultarNfeAction.text");
+        NotaSaida selecionada = notaSaidasDataGrid.getSingleSelectedItem();
+        if (selecionada == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.consultarNfeAction.text"))
+                    .withText(messageBundle.getMessage("notaSaidaListView.consultarNfe.naoSelecionado"))
+                    .open();
+            return;
+        }
+        if (selecionada.getChave() == null || selecionada.getChave().isBlank()) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.consultarNfeAction.text"))
+                    .withText(messageBundle.getMessage("notaSaidaListView.consultarNfe.naoEmitida"))
+                    .open();
+            return;
+        }
+        consultarEExibir(selecionada.getChave());
+    }
+
+    /**
+     * {@code NFeConsultaProtocolo4} — situação oficial e atual de uma chave na SEFAZ
+     * (autorizada/cancelada/denegada/não localizada), independente do que está gravado
+     * localmente. Mesma checagem de config e mesmo texto de falha de rede de
+     * {@code onNotaSaidasDataGridVerificarStatusServicoAction} — não é um "sucesso/erro" de
+     * pedido, então uma única mensagem informativa (sem branch sucesso/erro), igual ao
+     * padrão de "Verificar status do serviço".
+     */
+    private void consultarEExibir(String chave) {
+        Empresa empresa = utilGeralService.getEmpresa();
+        if (empresa.getCrt() == null || empresa.getAmbienteNfe() == null
+                || empresa.getCertificadoArquivo() == null || empresa.getCertificadoSenha() == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.consultarNfeAction.text"))
+                    .withText(messageBundle.getMessage("notaSaidaListView.verificarStatusServico.semConfig"))
+                    .open();
+            return;
+        }
+        try {
+            NfeWebserviceClient.RespostaConsulta resposta = nfeWebserviceClient.consultarProtocolo(chave, empresa);
+            String texto = resposta.nProt() == null
+                    ? messageBundle.formatMessage("notaSaidaListView.consultarNfe.resultado.semProtocolo",
+                            resposta.cStat(), resposta.xMotivo())
+                    : messageBundle.formatMessage("notaSaidaListView.consultarNfe.resultado.comProtocolo",
+                            resposta.cStat(), resposta.xMotivo(), resposta.nProt(), resposta.dhRecbto());
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.consultarNfeAction.text"))
+                    .withText(texto)
+                    .open();
+        } catch (Exception e) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.verificarStatusServico.falha.header"))
+                    .withText(messageBundle.formatMessage("notaSaidaListView.verificarStatusServico.falha.text", e.getMessage()))
+                    .open();
+        }
     }
 
     /** Mesma lógica de {@code EmpresaDetailView.onTestarConexaoSefazButtonClick}. */
@@ -363,13 +415,6 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
                         UI.getCurrent().getPage().reload();
                     }
                 })
-                .open();
-    }
-
-    private void mostrarEmDesenvolvimento(String chaveTextoAcao) {
-        dialogs.createMessageDialog()
-                .withHeader(messageBundle.getMessage(chaveTextoAcao))
-                .withText(messageBundle.getMessage("notaSaidaListView.emDesenvolvimento.text"))
                 .open();
     }
 
