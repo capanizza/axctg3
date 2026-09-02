@@ -24,6 +24,15 @@ import java.util.UUID;
  * {@link NfeImportService#salvarEmitida(byte[])} — a NFe emitida vira uma linha em
  * {@code Nfe} exatamente como uma importada, e {@code NotaSaida.chave} é atualizado
  * separadamente (mesmo motivo de não haver FK entre as duas entidades).
+ *
+ * <p>{@code NotaSaida.chaveTentativa} é gravada assim que a chave é calculada, antes de
+ * assinar/transmitir — sobrevive a erro de comunicação/timeout com a SEFAZ (cenário em que
+ * a nota pode ter sido autorizada de verdade sem a resposta ter chegado). Uma reemissão
+ * reaproveita essa chave em vez de calcular outra ({@link NfeXmlBuilder#resolverCNf}) — se a
+ * tentativa anterior tinha mesmo sido autorizada, a SEFAZ rejeita o reenvio da mesma chave
+ * como duplicidade (cStat=539), em vez de autorizar duas NFe pro mesmo número; e enquanto
+ * não resolvido, essa chave serve de reserva pra {@code NotaSaidaListView.onNotaSaidasDataGridConsultarNfeAction}
+ * checar a situação na SEFAZ mesmo sem {@code NotaSaida.chave} confirmada.
  */
 @Service
 public class NfeEmissaoService {
@@ -68,6 +77,15 @@ public class NfeEmissaoService {
             return new ResultadoEmissao(false, null, null, "Erro ao montar XML: " + e.getMessage());
         }
 
+        // Gravada ANTES de assinar/transmitir — sobrevive a qualquer falha depois daqui
+        // (erro de comunicação, timeout, resposta perdida). Serve de reserva pra "Consultar
+        // NFe" (NotaSaidaListView) enquanto a SEFAZ não confirma, e é reaproveitada pelo
+        // NfeXmlBuilder numa reemissão (resolverCNf) em vez de gerar uma chave nova — evita
+        // duas NFe autorizadas pro mesmo número se essa tentativa na verdade tinha sido
+        // autorizada e só a resposta se perdeu.
+        notaSaida.setChaveTentativa(construido.chave());
+        dataManager.save(notaSaida);
+
         Document assinado;
         try {
             assinado = signer.assinar(construido.documento(), construido.chave(), empresa);
@@ -106,6 +124,7 @@ public class NfeEmissaoService {
         dataManager.save(nfeSalva);
 
         notaSaida.setChave(construido.chave());
+        notaSaida.setChaveTentativa(null);
         dataManager.save(notaSaida);
 
         return new ResultadoEmissao(true, construido.chave(), nfeSalva.getProtNProt(), null);

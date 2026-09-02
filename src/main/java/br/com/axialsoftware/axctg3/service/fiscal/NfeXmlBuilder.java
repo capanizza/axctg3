@@ -108,7 +108,6 @@ public class NfeXmlBuilder {
 
         Document doc = novoDocumento();
         Integer cUf = UfIbge.codigo(empresa.getMunicipio().getUf());
-        Integer cNf = chaveService.gerarCNf();
         Integer tpEmis = 1;
         // dhEmi é "agora" (momento real da transmissão pra SEFAZ, não a data de emissão
         // gravada na nota — que pode ser bem anterior, ver dhSaiEnt/dataSaida) — e o campo
@@ -119,6 +118,7 @@ public class NfeXmlBuilder {
         // repassado pra construirIde() em vez de cada um chamar OffsetDateTime.now() por
         // conta própria.
         OffsetDateTime dhEmi = OffsetDateTime.now(ZoneOffset.of("-03:00")).truncatedTo(java.time.temporal.ChronoUnit.SECONDS);
+        Integer cNf = resolverCNf(notaSaida, dhEmi);
         String chave = chaveService.gerarChave(cUf, dhEmi.toLocalDate(), empresa.getCnpj(),
                 55, serie, notaSaida.getNumero(), tpEmis, cNf);
         int cDv = Integer.parseInt(chave.substring(43));
@@ -177,6 +177,29 @@ public class NfeXmlBuilder {
         }
 
         return new Resultado(doc, chave);
+    }
+
+    /**
+     * Reaproveita o {@code cNF} de uma tentativa de emissão anterior não confirmada
+     * ({@code NotaSaida.chaveTentativa}, gravada por {@code NfeEmissaoService} antes de
+     * assinar/transmitir) em vez de sortear outro — mesma chave numa reemissão evita
+     * duplicidade quando a tentativa anterior tinha sido autorizada e só a resposta da
+     * SEFAZ se perdeu (a SEFAZ rejeita o reenvio da MESMA chave como cStat=539
+     * "Duplicidade de NF-e", em vez de autorizar duas NFe pro mesmo número). Só reaproveita
+     * se o AAMM da chave antiga ainda bate com o mês/ano de {@code dhEmi} agora — chave de
+     * mês anterior geraria a mesma inconsistência do cStat=502 já corrigido (chave e
+     * {@code dhEmi} têm que concordar); nesse caso, sorteia um {@code cNF} novo (tentativa
+     * antiga presumida resolvida ou abandonada há tempo demais pra ainda fazer sentido).
+     */
+    private Integer resolverCNf(NotaSaida notaSaida, OffsetDateTime dhEmi) {
+        String chaveTentativa = notaSaida.getChaveTentativa();
+        if (chaveTentativa != null && chaveTentativa.length() == 44) {
+            String aammAtual = String.format("%02d%02d", dhEmi.getYear() % 100, dhEmi.getMonthValue());
+            if (chaveService.extrairAamm(chaveTentativa).equals(aammAtual)) {
+                return chaveService.extrairCNf(chaveTentativa);
+            }
+        }
+        return chaveService.gerarCNf();
     }
 
     // ---- empresa/emitente ----

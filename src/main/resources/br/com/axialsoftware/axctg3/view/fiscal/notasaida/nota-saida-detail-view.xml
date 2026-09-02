@@ -207,6 +207,12 @@
                                            width="50%" themeNames="small"
                                            readOnly="true"
                                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.chave"/>
+                                <textField id="chaveTentativaField"
+                                           property="chaveTentativa"
+                                           dataContainer="notaSaidaDc"
+                                           width="50%" themeNames="small"
+                                           readOnly="true"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.chaveTentativa"/>
                             </hbox>
                         </vbox>
                     </tab>

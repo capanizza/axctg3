@@ -223,6 +223,15 @@ public class NotaSaida {
     @Column(name = "CHAVE", length = 50)
     private String chave;
 
+    // Chave calculada na última tentativa de emissão (NfeEmissaoService), gravada ANTES de
+    // assinar/transmitir — sobrevive a erro de comunicação/timeout, quando a SEFAZ pode ter
+    // autorizado mesmo sem a resposta ter chegado. Reaproveitada (mesmo cNF, não uma chave
+    // nova) numa reemissão, pra evitar duas NFe autorizadas com o mesmo número — e serve de
+    // reserva pra "Consultar NFe" quando `chave` ainda está vazia. Zerada assim que `chave`
+    // é confirmada (nota já autorizada, não precisa mais de tentativa pendente).
+    @Column(name = "CHAVE_TENTATIVA", length = 50)
+    private String chaveTentativa;
+
     @OnDelete(DeletePolicy.CASCADE)
     @Composition
     @OrderBy("item")
@@ -243,6 +252,14 @@ public class NotaSaida {
 
     public void setChave(String chave) {
         this.chave = chave;
+    }
+
+    public String getChaveTentativa() {
+        return chaveTentativa;
+    }
+
+    public void setChaveTentativa(String chaveTentativa) {
+        this.chaveTentativa = chaveTentativa;
     }
 
     public BigDecimal getPesoBruto() {

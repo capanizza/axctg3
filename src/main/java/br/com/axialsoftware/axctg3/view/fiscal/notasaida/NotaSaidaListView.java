@@ -311,14 +311,20 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
                     .open();
             return;
         }
-        if (selecionada.getChave() == null || selecionada.getChave().isBlank()) {
+        // Sem chave confirmada, cai pra chaveTentativa (última chave calculada antes de uma
+        // transmissão que não confirmou — comunicação/timeout, ver NfeEmissaoService) — é
+        // exatamente o caso em que essa consulta mais importa: resolve se a SEFAZ recebeu
+        // de verdade ou não, sem precisar reemitir às cegas.
+        String chave = selecionada.getChave() != null && !selecionada.getChave().isBlank()
+                ? selecionada.getChave() : selecionada.getChaveTentativa();
+        if (chave == null || chave.isBlank()) {
             dialogs.createMessageDialog()
                     .withHeader(messageBundle.getMessage("notaSaidaListView.consultarNfeAction.text"))
                     .withText(messageBundle.getMessage("notaSaidaListView.consultarNfe.naoEmitida"))
                     .open();
             return;
         }
-        consultarEExibir(selecionada.getChave());
+        consultarEExibir(chave);
     }
 
     /**

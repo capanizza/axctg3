@@ -49,6 +49,24 @@ public class NfeChaveService {
     }
 
     /**
+     * Extrai o {@code cNF} (8 dígitos) de uma chave de acesso já calculada — usado pra
+     * reaproveitar o mesmo {@code cNF} numa reemissão em vez de sortear outro (ver
+     * {@code NotaSaida.chaveTentativa}/{@code NfeEmissaoService}): se a tentativa anterior
+     * já tinha sido autorizada e só a resposta da SEFAZ se perdeu, reenviar com a MESMA
+     * chave faz a SEFAZ rejeitar como duplicidade (cStat=539) em vez de autorizar duas NFe
+     * pro mesmo número — reaproveitar cNF novo geraria uma chave diferente, escondendo a
+     * duplicidade em vez de a SEFAZ barrá-la.
+     */
+    public Integer extrairCNf(String chave44) {
+        return Integer.valueOf(chave44.substring(35, 43));
+    }
+
+    /** AAMM (posições 3-6, 4 dígitos) — usado só pra checar se uma chave reaproveitável ainda é do mês atual. */
+    public String extrairAamm(String chave44) {
+        return chave44.substring(2, 6);
+    }
+
+    /**
      * Dígito verificador módulo 11: pesos 2..9 cíclicos aplicados da direita pra esquerda,
      * soma dos produtos, resto = soma % 11; resto 0 ou 1 → DV 0, senão DV = 11 - resto.
      */
