@@ -10,6 +10,7 @@ import br.com.axialsoftware.axctg3.service.fiscal.NfeCartaCorrecaoService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeDanfeService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeEmissaoService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeWebserviceClient;
+import br.com.axialsoftware.axctg3.view.fiscal.nfecartacorrecao.NfeCartaCorrecaoListView;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
 import com.vaadin.flow.component.UI;
@@ -18,6 +19,7 @@ import com.vaadin.flow.router.Route;
 import io.jmix.core.DataManager;
 import io.jmix.core.Messages;
 import io.jmix.core.SaveContext;
+import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.action.DialogAction;
@@ -74,6 +76,8 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
     private NfeCartaCorrecaoService nfeCartaCorrecaoService;
     @Autowired
     private NfeWebserviceClient nfeWebserviceClient;
+    @Autowired
+    private DialogWindows dialogWindows;
     @Autowired
     private Messages messages;
 
@@ -358,7 +362,7 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
                         dialogs.createMessageDialog()
                                 .withHeader(messageBundle.getMessage("notaSaidaListView.emitirCce.sucesso.header"))
                                 .withText(messageBundle.formatMessage("notaSaidaListView.emitirCce.sucesso.text",
-                                        resultado.numeroSequencial(), resultado.motivo()))
+                                        resultado.numeroSequencial(), resultado.cStat(), resultado.motivo()))
                                 .open();
                     } else {
                         dialogs.createMessageDialog()
@@ -368,6 +372,32 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
                     }
                 })
                 .open();
+    }
+
+    /**
+     * Mesmos dados já visíveis na aba "Carta de Correção" de {@code NfeDetailView} — atalho
+     * de um clique, mesmo motivo de {@code NfeListView.onNfesDataGridVerCartasCorrecaoAction}.
+     */
+    @Subscribe("notaSaidasDataGrid.verCartasCorrecaoAction")
+    public void onNotaSaidasDataGridVerCartasCorrecaoAction(final ActionPerformedEvent event) {
+        NotaSaida selecionada = notaSaidasDataGrid.getSingleSelectedItem();
+        if (selecionada == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.verCartasCorrecaoAction.text"))
+                    .withText(messageBundle.getMessage("notaSaidaListView.verCartasCorrecao.naoSelecionado"))
+                    .open();
+            return;
+        }
+        if (selecionada.getChave() == null || selecionada.getChave().isBlank()) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.verCartasCorrecaoAction.text"))
+                    .withText(messageBundle.getMessage("notaSaidaListView.verCartasCorrecao.naoEmitida"))
+                    .open();
+            return;
+        }
+        DialogWindow<NfeCartaCorrecaoListView> dialogWindow = dialogWindows.view(this, NfeCartaCorrecaoListView.class).build();
+        dialogWindow.getView().setChave(selecionada.getChave());
+        dialogWindow.open();
     }
 
     @Subscribe("notaSaidasDataGrid.consultarNfeAction")

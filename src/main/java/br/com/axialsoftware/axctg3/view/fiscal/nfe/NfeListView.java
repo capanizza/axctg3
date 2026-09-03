@@ -11,6 +11,7 @@ import br.com.axialsoftware.axctg3.service.fiscal.NfeDanfeService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeImportService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeInutilizacaoService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeWebserviceClient;
+import br.com.axialsoftware.axctg3.view.fiscal.nfecartacorrecao.NfeCartaCorrecaoListView;
 import br.com.axialsoftware.axctg3.view.fiscal.nfeinutilizacao.NfeInutilizacaoListView;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
@@ -269,7 +270,7 @@ public class NfeListView extends StandardListView<Nfe> {
                         dialogs.createMessageDialog()
                                 .withHeader(messageBundle.getMessage("nfeListView.emitirCce.sucesso.header"))
                                 .withText(messageBundle.formatMessage("nfeListView.emitirCce.sucesso.text",
-                                        resultado.numeroSequencial(), resultado.motivo()))
+                                        resultado.numeroSequencial(), resultado.cStat(), resultado.motivo()))
                                 .open();
                     } else {
                         dialogs.createMessageDialog()
@@ -372,6 +373,27 @@ public class NfeListView extends StandardListView<Nfe> {
     @Subscribe("nfesDataGrid.verInutilizacoesAction")
     public void onNfesDataGridVerInutilizacoesAction(final ActionPerformedEvent event) {
         dialogWindows.view(this, NfeInutilizacaoListView.class).open();
+    }
+
+    /**
+     * Mesmos dados já visíveis na aba "Carta de Correção" de {@code NfeDetailView} — atalho
+     * de um clique, mesmo motivo de {@link #onNfesDataGridVerInutilizacoesAction}. Configura
+     * o controller com {@code .build().getView().setChave(...)} antes de {@code open()},
+     * já que {@link NfeCartaCorrecaoListView} precisa saber qual NFe filtrar.
+     */
+    @Subscribe("nfesDataGrid.verCartasCorrecaoAction")
+    public void onNfesDataGridVerCartasCorrecaoAction(final ActionPerformedEvent event) {
+        Nfe selecionada = nfesDataGrid.getSingleSelectedItem();
+        if (selecionada == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("nfeListView.verCartasCorrecaoAction.text"))
+                    .withText(messageBundle.getMessage("nfeListView.verCartasCorrecao.naoSelecionado"))
+                    .open();
+            return;
+        }
+        DialogWindow<NfeCartaCorrecaoListView> dialogWindow = dialogWindows.view(this, NfeCartaCorrecaoListView.class).build();
+        dialogWindow.getView().setChave(selecionada.getChave());
+        dialogWindow.open();
     }
 
     /**
