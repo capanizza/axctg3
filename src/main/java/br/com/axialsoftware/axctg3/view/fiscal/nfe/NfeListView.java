@@ -25,6 +25,7 @@ import io.jmix.core.DataManager;
 import io.jmix.core.Messages;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.Dialogs;
+import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.action.DialogAction;
 import io.jmix.flowui.app.inputdialog.DialogActions;
 import io.jmix.flowui.app.inputdialog.DialogOutcome;
@@ -32,6 +33,7 @@ import io.jmix.flowui.backgroundtask.BackgroundTask;
 import io.jmix.flowui.backgroundtask.TaskLifeCycle;
 import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.grid.DataGrid;
+import io.jmix.flowui.component.textarea.JmixTextArea;
 import io.jmix.flowui.component.validation.ValidationErrors;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.component.button.JmixButton;
@@ -92,6 +94,8 @@ public class NfeListView extends StandardListView<Nfe> {
     private NfeWebserviceClient nfeWebserviceClient;
     @Autowired
     private Messages messages;
+    @Autowired
+    private UiComponents uiComponents;
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
@@ -248,6 +252,7 @@ public class NfeListView extends StandardListView<Nfe> {
                 .withParameters(
                         stringParameter("textoCorrecao")
                                 .withLabel(messageBundle.getMessage("nfeListView.emitirCce.textoCorrecao.label"))
+                                .withField(this::criarTextAreaCorrecao)
                 )
                 .withActions(DialogActions.OK_CANCEL)
                 .withValidator(context -> {
@@ -280,6 +285,22 @@ public class NfeListView extends StandardListView<Nfe> {
                     }
                 })
                 .open();
+    }
+
+    /**
+     * Campo de várias linhas pro texto da correção — o padrão do resto do projeto
+     * (justificativa de cancelamento/inutilização) usa {@code stringParameter} de uma linha
+     * só, mas o texto de uma CC-e costuma ser mais longo/estruturado que uma justificativa
+     * curta, então aqui vale o esforço extra de {@code withField} (ver Javadoc de
+     * {@code InputParameter.withField}: precisa de {@code uiComponents.create(...)}, não
+     * {@code new JmixTextArea()} — o componente depende de injeção Spring, feita em
+     * {@code afterPropertiesSet()}).
+     */
+    private JmixTextArea criarTextAreaCorrecao() {
+        JmixTextArea textArea = uiComponents.create(JmixTextArea.class);
+        textArea.setWidthFull();
+        textArea.setMinHeight("8em");
+        return textArea;
     }
 
     @Subscribe("nfesDataGrid.consultarNfeAction")

@@ -21,12 +21,14 @@ import io.jmix.core.Messages;
 import io.jmix.core.SaveContext;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.Dialogs;
+import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.action.DialogAction;
 import io.jmix.flowui.app.inputdialog.DialogActions;
 import io.jmix.flowui.app.inputdialog.DialogOutcome;
 import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.grid.DataGrid;
+import io.jmix.flowui.component.textarea.JmixTextArea;
 import io.jmix.flowui.component.validation.ValidationErrors;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.model.CollectionLoader;
@@ -64,6 +66,8 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
     private Dialogs dialogs;
     @Autowired
     private ViewNavigators viewNavigators;
+    @Autowired
+    private UiComponents uiComponents;
     @Autowired
     private DataManager dataManager;
     @Autowired
@@ -340,6 +344,7 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
                 .withParameters(
                         stringParameter("textoCorrecao")
                                 .withLabel(messageBundle.getMessage("notaSaidaListView.emitirCce.textoCorrecao.label"))
+                                .withField(this::criarTextAreaCorrecao)
                 )
                 .withActions(DialogActions.OK_CANCEL)
                 .withValidator(context -> {
@@ -372,6 +377,18 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
                     }
                 })
                 .open();
+    }
+
+    /**
+     * Campo de várias linhas pro texto da correção — mesmo motivo/cuidado de
+     * {@code NfeListView.criarTextAreaCorrecao} (não compartilhado entre as duas classes
+     * porque não têm base comum; é só um helper de UI, sem lógica de negócio pra duplicar).
+     */
+    private JmixTextArea criarTextAreaCorrecao() {
+        JmixTextArea textArea = uiComponents.create(JmixTextArea.class);
+        textArea.setWidthFull();
+        textArea.setMinHeight("8em");
+        return textArea;
     }
 
     /**
