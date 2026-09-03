@@ -2,8 +2,10 @@ package br.com.axialsoftware.axctg3.service.fiscal;
 
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.enums.FinNfe;
+import br.com.axialsoftware.axctg3.entity.fiscal.ItemNotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.Nfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
+import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
 import io.jmix.core.DataManager;
 import io.jmix.core.FetchPlan;
 import org.springframework.stereotype.Service;
@@ -15,6 +17,8 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.StringWriter;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
@@ -81,6 +85,19 @@ public class NfeEmissaoService {
             return new ResultadoEmissao(false, null, null, "Empresa não encontrada");
         }
 
+        // NFe Complementar sem item nenhum lançado manualmente — gera o "pseudo item" a
+        // partir do cabeçalho (valorMercadoria/baseIcms/valorIcms/baseIpi/valorIpi), mesmo
+        // padrão do legado AxFat (F_Complemento.pas). Sempre na hora de emitir, nunca num
+        // listener de salvamento — assim nunca fica desatualizado se o operador editar o
+        // cabeçalho de novo depois de um primeiro save (ver gerarItemComplementar).
+        if (notaSaida.getFinNfe() == FinNfe.COMPLEMENTAR && notaSaida.getItens().isEmpty()) {
+            String erroItem = gerarItemComplementar(notaSaida, empresa);
+            if (erroItem != null) {
+                return new ResultadoEmissao(false, null, null, erroItem);
+            }
+            notaSaida = carregarComFetchPlan(notaSaida.getId());
+        }
+
         // Já existe uma tentativa pendente (resposta anterior perdida/timeout) — não
         // reenvia às cegas: consulta primeiro (mesma chave, ver resolverTentativaPendente).
         // Reenviar direto bateria em cStat=539 "Duplicidade de NF-e" se a tentativa anterior
@@ -124,6 +141,81 @@ public class NfeEmissaoService {
         // AJUSTE/DEVOLUCAO existem no enum só por completude do código oficial — não são
         // emitidos por esta versão (ver Javadoc de FinNfe).
         return "Finalidade \"" + finNfe + "\" ainda não é emitida por este sistema";
+    }
+
+    /**
+     * Gera o único item de uma NFe Complementar (finNFe=2) que o operador não lançou
+     * manualmente — mesmo padrão do legado AxFat (`F_Complemento.pas`): o operador só
+     * edita o cabeçalho da nota ("Valores calculados"), o item é montado sozinho aqui.
+     *
+     * <p>Diferente do legado (onde o XML pegava {@code vProd}/{@code vICMS} direto do
+     * cabeçalho, independente da quantidade do item), {@link NfeXmlBuilder} usa {@code
+     * item.getSubTotal()} (quantidade×valorUnitario) pra {@code vProd} — então o item
+     * precisa nascer matematicamente equivalente ao cabeçalho: {@code quantidade=1}/
+     * {@code valorUnitario=valorMercadoria} quando há diferença de preço, {@code 0}/{@code
+     * 0} quando é só imposto (senão {@code ICMSTot/vProd}, que {@link NfeXmlBuilder} ainda
+     * lê direto de {@code NotaSaida.valorMercadoria}, ficaria inconsistente com o item —
+     * mesma família de bug já corrigida pra frete/IBS-UF, confirmada de novo em
+     * homologação 2026-09-03 pra este caso específico antes desta correção existir).
+     *
+     * <p>Só ICMS e IPI são espelhados — {@code construirIcms} só lê {@code baseSt}/{@code
+     * valorSt} do item nos ramos CST 10/60, não no CST 00 usado aqui, então complemento de
+     * ICMS-ST fica de fora por ora (não é o caso de uso pedido).
+     */
+    private String gerarItemComplementar(NotaSaida notaSaida, Empresa empresa) {
+        if (empresa.getProdutoNfeComplementar() == null) {
+            return "Nota complementar sem itens — configure um Produto padrão em Empresa "
+                    + "(aba \"Emissão NFe\") pra gerar o item automaticamente, ou lance o item manualmente.";
+        }
+        if (notaSaida.getNatureza() == null || notaSaida.getNatureza().getCfop() == null) {
+            return "Natureza de operação sem CFOP configurado — necessário pro item automático da complementar.";
+        }
+
+        // Recarrega o produto com fetch plan explícito incluindo classTrib — o placeholder
+        // vindo de Empresa está "detached" e sem esse atributo buscado (ItemNotaSaidaEventListener.
+        // resolverCodClassTrib lê produto.getClassTrib() ao salvar o item, e um objeto
+        // detached não consegue mais buscar lazy; confirmado por IllegalStateException
+        // "Cannot get unfetched attribute [classTrib]" rodando os testes).
+        Produto produtoPlaceholder = dataManager.load(Produto.class)
+                .id(empresa.getProdutoNfeComplementar().getId())
+                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE).add("classTrib", FetchPlan.BASE))
+                .one();
+
+        ItemNotaSaida item = dataManager.create(ItemNotaSaida.class);
+        item.setNotaSaida(notaSaida);
+        item.setItem(1);
+        item.setProduto(produtoPlaceholder);
+        item.setCfop(notaSaida.getNatureza().getCfop());
+
+        BigDecimal valorMercadoria = nvl(notaSaida.getValorMercadoria());
+        if (valorMercadoria.compareTo(BigDecimal.ZERO) != 0) {
+            item.setQuantidade(BigDecimal.ONE);
+            item.setValorUnitario(valorMercadoria);
+        }
+
+        item.setBaseIcms(nvl(notaSaida.getBaseIcms()));
+        item.setValorIcms(nvl(notaSaida.getValorIcms()));
+        item.setAliqIcms(aliquotaEfetiva(item.getValorIcms(), item.getBaseIcms()));
+        item.setCst("00");
+
+        item.setBaseIpi(nvl(notaSaida.getBaseIpi()));
+        item.setValorIpi(nvl(notaSaida.getValorIpi()));
+        item.setAliqIpi(aliquotaEfetiva(item.getValorIpi(), item.getBaseIpi()));
+
+        dataManager.save(item);
+        return null;
+    }
+
+    private static BigDecimal nvl(BigDecimal valor) {
+        return valor == null ? BigDecimal.ZERO : valor;
+    }
+
+    /** {@code valor×100/base}, ou zero se a base for zero (evita divisão por zero). */
+    private static BigDecimal aliquotaEfetiva(BigDecimal valor, BigDecimal base) {
+        if (base == null || base.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+        return valor.multiply(new BigDecimal(100)).divide(base, 2, RoundingMode.HALF_UP);
     }
 
     /**
