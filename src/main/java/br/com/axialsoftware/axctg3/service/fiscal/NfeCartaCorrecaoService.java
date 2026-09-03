@@ -95,7 +95,7 @@ public class NfeCartaCorrecaoService {
     private ResultadoCorrecao corrigir(Nfe nfe, String textoCorrecaoInformado) {
         // Diferente da justificativa de cancelamento, aqui não há desculpa padrão: uma CC-e
         // sem correção real não faz sentido, então texto em branco é sempre rejeitado.
-        String textoCorrecao = textoCorrecaoInformado == null ? "" : textoCorrecaoInformado.trim();
+        String textoCorrecao = textoCorrecaoInformado == null ? "" : normalizarTexto(textoCorrecaoInformado);
         if (textoCorrecao.length() < TEXTO_TAMANHO_MINIMO) {
             return new ResultadoCorrecao(false, null,
                     "O texto da correção precisa ter pelo menos " + TEXTO_TAMANHO_MINIMO + " caracteres", null);
@@ -234,6 +234,21 @@ public class NfeCartaCorrecaoService {
         Element el = doc.createElementNS(NS_NFE, tag);
         el.setTextContent(String.valueOf(valor));
         parent.appendChild(el);
+    }
+
+    /**
+     * O schema da SEFAZ rejeita {@code xCorrecao} com quebra de linha literal no valor
+     * ({@code cStat=493 "Evento não atende o Schema XML específico"} — confirmado em
+     * homologação em 2026-09-03: funcionou com texto de uma linha, falhou assim que o
+     * operador digitou várias linhas num {@code textArea}). Em vez de proibir várias linhas
+     * na UI (ruim pra digitar um texto mais longo), normaliza aqui: qualquer sequência de
+     * espaço em branco (inclusive {@code \n}/{@code \r}/tab) vira um único espaço. O mesmo
+     * texto normalizado é o que fica gravado em {@link br.com.axialsoftware.axctg3.entity.fiscal.NfeCartaCorrecao#getTextoCorrecao()}
+     * — histórico e comprovante sempre mostram exatamente o que foi transmitido, nunca o
+     * texto multilinha original que só existiu no campo da tela.
+     */
+    private String normalizarTexto(String texto) {
+        return texto.trim().replaceAll("\\s+", " ");
     }
 
     private String somenteDigitos(String texto) {

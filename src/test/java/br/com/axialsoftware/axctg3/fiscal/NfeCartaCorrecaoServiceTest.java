@@ -79,6 +79,41 @@ class NfeCartaCorrecaoServiceTest {
         assertThat(resultado.motivo()).contains("15 caracteres");
     }
 
+    /**
+     * Regressão do bug real encontrado em homologação em 2026-09-03 ({@code cStat=493
+     * "Evento não atende o Schema XML específico"} — a SEFAZ rejeita {@code xCorrecao} com
+     * quebra de linha literal). O texto abaixo tem 20 caracteres "crus" (passaria na
+     * validação de tamanho mínimo se só houvesse {@code trim()}), mas colapsa pra 11 depois
+     * que as várias quebras de linha viram um único espaço — prova que a normalização
+     * acontece ANTES da checagem de tamanho, não depois.
+     */
+    @Test
+    void textoComVariasLinhasNormalizaAntesDeValidarTamanho() {
+        Nfe nfe = criarNfe(100, "135260000000001");
+
+        NfeCartaCorrecaoService.ResultadoCorrecao resultado =
+                nfeCartaCorrecaoService.corrigir(nfe.getId(), "abcde\n\n\n\n\n\n\n\n\n\nfghij");
+
+        assertThat(resultado.sucesso()).isFalse();
+        assertThat(resultado.motivo()).contains("15 caracteres");
+    }
+
+    /**
+     * Mesmo cenário do teste acima, mas com texto que continua válido (>=15) depois de
+     * normalizado — confirma que a normalização não trava um texto multilinha legítimo,
+     * só colapsa as quebras de linha (chega até a checagem de Empresa normalmente).
+     */
+    @Test
+    void textoComVariasLinhasValidoAposNormalizarContinua() {
+        Nfe nfe = criarNfe(100, "135260000000001");
+
+        NfeCartaCorrecaoService.ResultadoCorrecao resultado =
+                nfeCartaCorrecaoService.corrigir(nfe.getId(), "Primeira linha\nSegunda linha\nTerceira linha");
+
+        assertThat(resultado.sucesso()).isFalse();
+        assertThat(resultado.motivo()).isEqualTo("Empresa não encontrada");
+    }
+
     @Test
     void textoEmBrancoNaoCorrige() {
         Nfe nfe = criarNfe(100, "135260000000001");
