@@ -3,6 +3,7 @@ package br.com.axialsoftware.axctg3.view.fiscal.notasaida;
 import br.com.axialsoftware.axctg3.entity.cadastros.ConfigRel;
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.enums.AmbienteNfe;
+import br.com.axialsoftware.axctg3.entity.enums.FinNfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeCancelamentoService;
@@ -415,6 +416,50 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
         DialogWindow<NfeCartaCorrecaoListView> dialogWindow = dialogWindows.view(this, NfeCartaCorrecaoListView.class).build();
         dialogWindow.getView().setChave(selecionada.getChave());
         dialogWindow.open();
+    }
+
+    /**
+     * Abre {@code NotaSaidaDetailView} já em modo de criação, pré-preenchida com a
+     * finalidade "Complementar" e a chave da nota original — usado quando o erro está em
+     * VALOR (base de cálculo, alíquota, diferença de preço, quantidade), algo que a CC-e
+     * explicitamente não pode corrigir (ver {@code NfeCartaCorrecaoService.X_COND_USO}).
+     * Itens ficam vazios de propósito: só o operador sabe qual é a diferença de valor a
+     * lançar, nenhum cálculo automático (arriscado e não pedido). Depois de preencher os
+     * itens e salvar, a emissão de verdade acontece pelo botão "Emitir NFe" já existente —
+     * {@code NfeEmissaoService} não ganha um fluxo novo, só passa a montar
+     * {@code finNFe}/{@code NFref} corretos porque a nota carrega esses dados agora.
+     */
+    @Subscribe("notaSaidasDataGrid.emitirNfeComplementarAction")
+    public void onNotaSaidasDataGridEmitirNfeComplementarAction(final ActionPerformedEvent event) {
+        NotaSaida original = notaSaidasDataGrid.getSingleSelectedItem();
+        if (original == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.emitirNfeComplementarAction.text"))
+                    .withText(messageBundle.getMessage("notaSaidaListView.emitirNfeComplementar.naoSelecionado"))
+                    .open();
+            return;
+        }
+        if (original.getChave() == null || original.getChave().isBlank()) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.emitirNfeComplementarAction.text"))
+                    .withText(messageBundle.getMessage("notaSaidaListView.emitirNfeComplementar.naoEmitida"))
+                    .open();
+            return;
+        }
+        dialogWindows.detail(this, NotaSaida.class)
+                .withViewClass(NotaSaidaDetailView.class)
+                .newEntity()
+                .withInitializer(nova -> {
+                    nova.setFinNfe(FinNfe.COMPLEMENTAR);
+                    nova.setChaveNotaOriginal(original.getChave());
+                    nova.setParceiro(original.getParceiro());
+                    nova.setNatureza(original.getNatureza());
+                    nova.setEspecie(original.getEspecie());
+                    nova.setSerie(original.getSerie());
+                    nova.setDataEmissao(LocalDate.now());
+                    nova.setDataSaida(LocalDate.now());
+                })
+                .open();
     }
 
     @Subscribe("notaSaidasDataGrid.consultarNfeAction")

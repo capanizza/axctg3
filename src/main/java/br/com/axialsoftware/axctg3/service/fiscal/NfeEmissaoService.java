@@ -1,6 +1,7 @@
 package br.com.axialsoftware.axctg3.service.fiscal;
 
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
+import br.com.axialsoftware.axctg3.entity.enums.FinNfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.Nfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import io.jmix.core.DataManager;
@@ -66,6 +67,11 @@ public class NfeEmissaoService {
             return new ResultadoEmissao(false, null, null, "Nota já emitida (chave " + notaSaida.getChave() + ")");
         }
 
+        String erroFinalidade = validarFinalidade(notaSaida);
+        if (erroFinalidade != null) {
+            return new ResultadoEmissao(false, null, null, erroFinalidade);
+        }
+
         Empresa empresa = dataManager.load(Empresa.class)
                 .query("select e from Empresa e where e.codigo = :codigo")
                 .parameter("codigo", notaSaida.getCodEmpresa())
@@ -85,6 +91,39 @@ public class NfeEmissaoService {
         }
 
         return transmitir(notaSaida, empresa);
+    }
+
+    /**
+     * NFe Complementar (finNFe=2) precisa de {@code chaveNotaOriginal} (44 dígitos) pra
+     * montar o grupo {@code NFref} — sem isso a SEFAZ aceitaria como NFe normal disfarçada,
+     * sem vínculo com a nota original (ver {@code NfeXmlBuilder.construirIde}). O caminho
+     * inverso (finalidade normal com chave preenchida) também é barrado — mesmo raciocínio
+     * de outras checagens de consistência do projeto: mais barato travar aqui do que deixar
+     * um dado inconsistente virar XML.
+     */
+    private String validarFinalidade(NotaSaida notaSaida) {
+        FinNfe finNfe = notaSaida.getFinNfe() != null ? notaSaida.getFinNfe() : FinNfe.NORMAL;
+        String chaveNotaOriginal = notaSaida.getChaveNotaOriginal();
+        boolean temChaveOriginal = chaveNotaOriginal != null && !chaveNotaOriginal.isBlank();
+
+        if (finNfe == FinNfe.NORMAL) {
+            if (temChaveOriginal) {
+                return "Chave de nota original preenchida numa NFe normal — mude a finalidade "
+                        + "pra complementar ou limpe o campo";
+            }
+            return null;
+        }
+
+        if (finNfe == FinNfe.COMPLEMENTAR) {
+            if (!temChaveOriginal || !chaveNotaOriginal.trim().matches("\\d{44}")) {
+                return "NFe complementar precisa referenciar a chave da NFe original (44 dígitos)";
+            }
+            return null;
+        }
+
+        // AJUSTE/DEVOLUCAO existem no enum só por completude do código oficial — não são
+        // emitidos por esta versão (ver Javadoc de FinNfe).
+        return "Finalidade \"" + finNfe + "\" ainda não é emitida por este sistema";
     }
 
     /**

@@ -4,6 +4,7 @@ import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
 import br.com.axialsoftware.axctg3.entity.enums.AmbienteNfe;
 import br.com.axialsoftware.axctg3.entity.enums.CodRegimeTributario;
+import br.com.axialsoftware.axctg3.entity.enums.FinNfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.ItemNotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
@@ -35,8 +36,10 @@ import java.util.List;
  * XML→entidade fazendo a mesma coisa em paralelo).
  *
  * <p>Mesmo recorte de escopo do {@code Nfe}/{@code NfeItem} (ver Javadoc deles): sem
- * NFref/retirada/entrega/autXML/detExport/compra/cana/rastro/med/arma/veicProd/comb/
- * ISSQNtot/infIntermed/infRespTec/reboque/vagao/balsa/NVE/DI. Simplificações adicionais
+ * retirada/entrega/autXML/detExport/compra/cana/rastro/med/arma/veicProd/comb/
+ * ISSQNtot/infIntermed/infRespTec/reboque/vagao/balsa/NVE/DI. {@code NFref} tem suporte
+ * parcial desde a NFe Complementar (2026-09): só {@code refNFe} de referência simples
+ * (ver {@code construirIde}), sem os demais sub-grupos. Simplificações adicionais
  * específicas da emissão própria (primeira versão, docs/EMISSAO-NFE.md tem a lista
  * completa): sem diferimento/devolução de tributo no bloco IBS/CBS (fica zerado), sem
  * crédito de ICMS do Simples (pCredSN/vCredICMSSN zerado), frete/transportador não
@@ -247,12 +250,24 @@ public class NfeXmlBuilder {
         text(doc, ide, "tpEmis", tpEmis);
         text(doc, ide, "cDV", cDv);
         text(doc, ide, "tpAmb", empresa.getAmbienteNfe().getId());
-        text(doc, ide, "finNFe", 1);
+        FinNfe finNfe = notaSaida.getFinNfe() != null ? notaSaida.getFinNfe() : FinNfe.NORMAL;
+        text(doc, ide, "finNFe", finNfe.getId());
         text(doc, ide, "indFinal", 0);
         text(doc, ide, "indPres", 9);
         text(doc, ide, "indIntermed", 0);
         text(doc, ide, "procEmi", 0);
         text(doc, ide, "verProc", "axctg3");
+        // NFref/refNFe — chave da NFe original que esta nota complementa/ajusta/devolve.
+        // Não amarrado a um finNfe específico (o schema aceita NFref com finNFe 2/3/4);
+        // genérico o bastante pra servir qualquer finalidade futura sem mudar de novo.
+        // Posição no schema: último grupo dentro de <ide>, depois de verProc/dhCont/xJust
+        // (os dois últimos não usados aqui — só emissão normal/complementar, sem
+        // contingência).
+        if (notaSaida.getChaveNotaOriginal() != null && !notaSaida.getChaveNotaOriginal().isBlank()) {
+            Element nfRef = doc.createElementNS(NS_NFE, "NFref");
+            text(doc, nfRef, "refNFe", notaSaida.getChaveNotaOriginal().trim());
+            ide.appendChild(nfRef);
+        }
         return ide;
     }
 

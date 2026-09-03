@@ -214,6 +214,19 @@
                                            readOnly="true"
                                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.chaveTentativa"/>
                             </hbox>
+                            <hbox width="100%">
+                                <comboBox id="finNfeField"
+                                          property="finNfe"
+                                          dataContainer="notaSaidaDc"
+                                          width="30%" themeNames="small"
+                                          label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.finNfe"/>
+                                <textField id="chaveNotaOriginalField"
+                                           property="chaveNotaOriginal"
+                                           dataContainer="notaSaidaDc"
+                                           maxLength="44"
+                                           width="70%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.chaveNotaOriginal"/>
+                            </hbox>
                         </vbox>
                     </tab>
                     <tab id="itensTab" label="Itens">

@@ -57,6 +57,9 @@
                         <integerField id="procEmiField" property="procEmi" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.procEmi"/>
                         <textField id="verProcField" property="verProc" dataContainer="nfeDc" width="12%" themeNames="small" maxLength="20" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.verProc"/>
                     </hbox>
+                    <hbox width="100%">
+                        <textField id="refNfeField" property="refNfe" dataContainer="nfeDc" width="34%" themeNames="small" maxLength="44" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.refNfe"/>
+                    </hbox>
                 </vbox>
             </tab>
             <tab id="emitenteTab" label="Emitente">
