@@ -6,6 +6,7 @@ import br.com.axialsoftware.axctg3.entity.enums.AmbienteNfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeCancelamentoService;
+import br.com.axialsoftware.axctg3.service.fiscal.NfeCartaCorrecaoService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeDanfeService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeEmissaoService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeWebserviceClient;
@@ -69,6 +70,8 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
     private NfeDanfeService nfeDanfeService;
     @Autowired
     private NfeCancelamentoService nfeCancelamentoService;
+    @Autowired
+    private NfeCartaCorrecaoService nfeCartaCorrecaoService;
     @Autowired
     private NfeWebserviceClient nfeWebserviceClient;
     @Autowired
@@ -295,6 +298,72 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
                         dialogs.createMessageDialog()
                                 .withHeader(messageBundle.getMessage("notaSaidaListView.cancelarNfe.erro.header"))
                                 .withText(messageBundle.formatMessage("notaSaidaListView.cancelarNfe.erro.text", resultado.motivo()))
+                                .open();
+                    }
+                })
+                .open();
+    }
+
+    @Subscribe("notaSaidasDataGrid.emitirCceAction")
+    public void onNotaSaidasDataGridEmitirCceAction(final ActionPerformedEvent event) {
+        NotaSaida selecionada = notaSaidasDataGrid.getSingleSelectedItem();
+        if (selecionada == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.emitirCceAction.text"))
+                    .withText(messageBundle.getMessage("notaSaidaListView.emitirCce.naoSelecionado"))
+                    .open();
+            return;
+        }
+        if (selecionada.getChave() == null || selecionada.getChave().isBlank()) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.emitirCceAction.text"))
+                    .withText(messageBundle.getMessage("notaSaidaListView.emitirCce.naoEmitida"))
+                    .open();
+            return;
+        }
+        pedirTextoEEmitirCce(selecionada.getChave());
+    }
+
+    /**
+     * Diferente de {@link #pedirJustificativaECancelar}, aqui o texto é sempre obrigatório —
+     * uma CC-e sem correção real não faz sentido, então não há desculpa padrão pra texto em
+     * branco. Também não pré-preenche com {@code ConfigRel} (mesma decisão de
+     * {@code NfeListView.pedirTextoEEmitirCce}: cada correção é sobre um erro diferente).
+     */
+    private void pedirTextoEEmitirCce(String chave) {
+        dialogs.createInputDialog(UiComponentUtils.getCurrentView())
+                .withHeader(messageBundle.getMessage("notaSaidaListView.emitirCceAction.text"))
+                .withParameters(
+                        stringParameter("textoCorrecao")
+                                .withLabel(messageBundle.getMessage("notaSaidaListView.emitirCce.textoCorrecao.label"))
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withValidator(context -> {
+                    String texto = context.getValue("textoCorrecao");
+                    if (texto == null || texto.isBlank()) {
+                        return ValidationErrors.of(messageBundle.getMessage("notaSaidaListView.emitirCce.textoCorrecao.obrigatorio"));
+                    }
+                    if (texto.trim().length() < 15) {
+                        return ValidationErrors.of(messageBundle.getMessage("notaSaidaListView.emitirCce.textoCorrecao.minima"));
+                    }
+                    return ValidationErrors.none();
+                })
+                .withCloseListener(closeEvent -> {
+                    if (!closeEvent.closedWith(DialogOutcome.OK)) {
+                        return;
+                    }
+                    String texto = closeEvent.getValue("textoCorrecao");
+                    NfeCartaCorrecaoService.ResultadoCorrecao resultado = nfeCartaCorrecaoService.corrigirPorChave(chave, texto);
+                    if (resultado.sucesso()) {
+                        dialogs.createMessageDialog()
+                                .withHeader(messageBundle.getMessage("notaSaidaListView.emitirCce.sucesso.header"))
+                                .withText(messageBundle.formatMessage("notaSaidaListView.emitirCce.sucesso.text",
+                                        resultado.numeroSequencial(), resultado.motivo()))
+                                .open();
+                    } else {
+                        dialogs.createMessageDialog()
+                                .withHeader(messageBundle.getMessage("notaSaidaListView.emitirCce.erro.header"))
+                                .withText(messageBundle.formatMessage("notaSaidaListView.emitirCce.erro.text", resultado.motivo()))
                                 .open();
                     }
                 })

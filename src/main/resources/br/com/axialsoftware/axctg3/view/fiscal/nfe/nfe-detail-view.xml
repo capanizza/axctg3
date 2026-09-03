@@ -10,12 +10,14 @@
                 <property name="duplicatas" fetchPlan="_base"/>
                 <property name="pagamentos" fetchPlan="_base"/>
                 <property name="volumes" fetchPlan="_base"/>
+                <property name="cartasCorrecao" fetchPlan="_base"/>
             </fetchPlan>
             <loader id="nfeDl"/>
             <collection id="itensDc" property="itens"/>
             <collection id="duplicatasDc" property="duplicatas"/>
             <collection id="pagamentosDc" property="pagamentos"/>
             <collection id="volumesDc" property="volumes"/>
+            <collection id="cartasCorrecaoDc" property="cartasCorrecao"/>
         </instance>
     </data>
     <facets>
@@ -346,6 +348,26 @@
                     <hbox width="100%">
                         <textField id="protXMotivoField" property="protXMotivo" dataContainer="nfeDc" width="100%" themeNames="small" maxLength="255" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.protXMotivo"/>
                     </hbox>
+                </vbox>
+            </tab>
+            <tab id="cartasCorrecaoTab" label="Carta de Correção">
+                <vbox width="100%">
+                    <hbox id="cartasCorrecaoButtonsPanel" classNames="buttons-panel">
+                        <button id="imprimirCceButton" action="nfeCartasCorrecaoDataGrid.imprimirCceAction" themeNames="small"/>
+                    </hbox>
+                    <dataGrid id="nfeCartasCorrecaoDataGrid" dataContainer="cartasCorrecaoDc" width="100%" minHeight="20em" themeNames="small">
+                        <actions>
+                            <action id="imprimirCceAction" text="msg://nfeDetailView.imprimirCceAction.text" icon="vaadin:print"/>
+                        </actions>
+                        <columns resizable="true">
+                            <column property="numeroSequencial" width="10%" textAlign="CENTER"/>
+                            <column property="textoCorrecao" width="35%"/>
+                            <column property="cceCStat" width="8%" textAlign="CENTER"/>
+                            <column property="cceXMotivo" width="20%"/>
+                            <column property="cceNProt" width="14%"/>
+                            <column property="cceDhRegEvento" width="13%"/>
+                        </columns>
+                    </dataGrid>
                 </vbox>
             </tab>
             <tab id="xmlTab" label="XML">

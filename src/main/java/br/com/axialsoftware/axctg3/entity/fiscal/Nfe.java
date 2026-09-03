@@ -592,6 +592,15 @@ public class Nfe {
     @OneToMany(mappedBy = "nfe")
     private List<NfeDuplicata> duplicatas;
 
+    // Cartas de Correção Eletrônica (tpEvento 110110) já emitidas pra esta NFe — pode haver
+    // várias (SEFAZ permite até 20), cada uma com numeroSequencial incremental; ver
+    // service/fiscal/NfeCartaCorrecaoService.
+    @OnDelete(DeletePolicy.CASCADE)
+    @Composition
+    @OrderBy("numeroSequencial")
+    @OneToMany(mappedBy = "nfe")
+    private List<NfeCartaCorrecao> cartasCorrecao;
+
     @OnDelete(DeletePolicy.CASCADE)
     @Composition
     @OneToMany(mappedBy = "nfe")
@@ -624,6 +633,14 @@ public class Nfe {
 
     public void setDuplicatas(List<NfeDuplicata> duplicatas) {
         this.duplicatas = duplicatas;
+    }
+
+    public List<NfeCartaCorrecao> getCartasCorrecao() {
+        return cartasCorrecao;
+    }
+
+    public void setCartasCorrecao(List<NfeCartaCorrecao> cartasCorrecao) {
+        this.cartasCorrecao = cartasCorrecao;
     }
 
     public List<NfeItem> getItens() {

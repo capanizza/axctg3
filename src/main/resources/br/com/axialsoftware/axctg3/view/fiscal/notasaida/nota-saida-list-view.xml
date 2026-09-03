@@ -42,6 +42,7 @@
                         <actionItem id="emitirNfeItem" ref="notaSaidasDataGrid.emitirNfeAction"/>
                         <actionItem id="emitirDanfeItem" ref="notaSaidasDataGrid.emitirDanfeAction"/>
                         <actionItem id="cancelarNfeItem" ref="notaSaidasDataGrid.cancelarNfeAction"/>
+                        <actionItem id="emitirCceItem" ref="notaSaidasDataGrid.emitirCceAction"/>
                         <actionItem id="consultarNfeItem" ref="notaSaidasDataGrid.consultarNfeAction"/>
                         <actionItem id="verificarStatusServicoItem" ref="notaSaidasDataGrid.verificarStatusServicoAction"/>
                         <separator/>
@@ -67,6 +68,7 @@
                 <action id="emitirNfeAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.emitirNfeAction.text" icon="vaadin:paperplane"/>
                 <action id="emitirDanfeAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.emitirDanfeAction.text" icon="vaadin:print"/>
                 <action id="cancelarNfeAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.cancelarNfeAction.text" icon="vaadin:ban"/>
+                <action id="emitirCceAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.emitirCceAction.text" icon="vaadin:file-text"/>
                 <action id="consultarNfeAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.consultarNfeAction.text" icon="vaadin:search"/>
                 <action id="verificarStatusServicoAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.verificarStatusServicoAction.text" icon="vaadin:signal"/>
                 <action id="alternarAmbienteAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.alternarAmbienteAction.text" icon="vaadin:exchange"/>

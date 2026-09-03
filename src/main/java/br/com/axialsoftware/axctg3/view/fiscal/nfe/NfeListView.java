@@ -6,6 +6,7 @@ import br.com.axialsoftware.axctg3.entity.enums.AmbienteNfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.Nfe;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeCancelamentoService;
+import br.com.axialsoftware.axctg3.service.fiscal.NfeCartaCorrecaoService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeDanfeService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeImportService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeInutilizacaoService;
@@ -82,6 +83,8 @@ public class NfeListView extends StandardListView<Nfe> {
     private NfeDanfeService nfeDanfeService;
     @Autowired
     private NfeCancelamentoService nfeCancelamentoService;
+    @Autowired
+    private NfeCartaCorrecaoService nfeCartaCorrecaoService;
     @Autowired
     private NfeInutilizacaoService nfeInutilizacaoService;
     @Autowired
@@ -211,6 +214,67 @@ public class NfeListView extends StandardListView<Nfe> {
                         dialogs.createMessageDialog()
                                 .withHeader(messageBundle.getMessage("nfeListView.cancelarNfe.erro.header"))
                                 .withText(messageBundle.formatMessage("nfeListView.cancelarNfe.erro.text", resultado.motivo()))
+                                .open();
+                    }
+                })
+                .open();
+    }
+
+    @Subscribe("nfesDataGrid.emitirCceAction")
+    public void onNfesDataGridEmitirCceAction(final ActionPerformedEvent event) {
+        Nfe selecionada = nfesDataGrid.getSingleSelectedItem();
+        if (selecionada == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("nfeListView.emitirCceAction.text"))
+                    .withText(messageBundle.getMessage("nfeListView.emitirCce.naoSelecionado"))
+                    .open();
+            return;
+        }
+        pedirTextoEEmitirCce(selecionada.getId());
+    }
+
+    /**
+     * Diferente de {@link #pedirJustificativaECancelar}, aqui o texto é sempre obrigatório —
+     * uma CC-e sem correção real não faz sentido, então não há desculpa padrão pra texto em
+     * branco. Também não pré-preenche com {@code ConfigRel} (decisão consciente: cada
+     * correção é sobre um erro diferente, reaproveitar o texto anterior seria um risco real de
+     * o operador esquecer de trocar). O check de "só corrige NFe autorizada (cStat=100)" e do
+     * limite de 20 CC-e's por NFe acontece em {@code NfeCartaCorrecaoService}.
+     */
+    private void pedirTextoEEmitirCce(UUID nfeId) {
+        dialogs.createInputDialog(UiComponentUtils.getCurrentView())
+                .withHeader(messageBundle.getMessage("nfeListView.emitirCceAction.text"))
+                .withParameters(
+                        stringParameter("textoCorrecao")
+                                .withLabel(messageBundle.getMessage("nfeListView.emitirCce.textoCorrecao.label"))
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withValidator(context -> {
+                    String texto = context.getValue("textoCorrecao");
+                    if (texto == null || texto.isBlank()) {
+                        return ValidationErrors.of(messageBundle.getMessage("nfeListView.emitirCce.textoCorrecao.obrigatorio"));
+                    }
+                    if (texto.trim().length() < 15) {
+                        return ValidationErrors.of(messageBundle.getMessage("nfeListView.emitirCce.textoCorrecao.minima"));
+                    }
+                    return ValidationErrors.none();
+                })
+                .withCloseListener(closeEvent -> {
+                    if (!closeEvent.closedWith(DialogOutcome.OK)) {
+                        return;
+                    }
+                    String texto = closeEvent.getValue("textoCorrecao");
+                    NfeCartaCorrecaoService.ResultadoCorrecao resultado = nfeCartaCorrecaoService.corrigir(nfeId, texto);
+                    if (resultado.sucesso()) {
+                        dialogs.createMessageDialog()
+                                .withHeader(messageBundle.getMessage("nfeListView.emitirCce.sucesso.header"))
+                                .withText(messageBundle.formatMessage("nfeListView.emitirCce.sucesso.text",
+                                        resultado.numeroSequencial(), resultado.motivo()))
+                                .open();
+                    } else {
+                        dialogs.createMessageDialog()
+                                .withHeader(messageBundle.getMessage("nfeListView.emitirCce.erro.header"))
+                                .withText(messageBundle.formatMessage("nfeListView.emitirCce.erro.text", resultado.motivo()))
                                 .open();
                     }
                 })

@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Comprovante de Carta de Correção Eletrônica (CC-e, tpEvento 110110) — não existe leiaute
+     oficial da SEFAZ pra esse documento (diferente do DANFE, regido pelo MOC Anexo II): é só
+     um registro legível do que foi enviado/homologado, pra arquivo da empresa. Uma folha só,
+     sem tabela de itens — preenchida via JREmptyDataSource (ver
+     NfeCartaCorrecaoComprovanteService), mesmo padrão de ComprovanteInutilizacao.jrxml. Fonte
+     DejaVu Sans Mono, a mais usada no projeto (ver relatorios/*.jrxml). -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ComprovanteCartaCorrecao" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="c3d4e5f6-0001-0001-0001-000000000001">
+
+    <parameter name="LOGO" class="java.lang.String"/>
+    <parameter name="NOME_EMPRESA" class="java.lang.String"/>
+    <parameter name="CNPJ_EMPRESA" class="java.lang.String"/>
+    <parameter name="AMBIENTE_DESC" class="java.lang.String"/>
+    <parameter name="CHAVE" class="java.lang.String"/>
+    <parameter name="NUMERO_NF" class="java.lang.Integer"/>
+    <parameter name="SERIE" class="java.lang.Integer"/>
+    <parameter name="DEST_NOME" class="java.lang.String"/>
+    <parameter name="NUM_SEQ_EVENTO" class="java.lang.Integer"/>
+    <parameter name="TEXTO_CORRECAO" class="java.lang.String"/>
+    <parameter name="PROTOCOLO" class="java.lang.String"/>
+    <parameter name="DH_REGISTRO" class="java.lang.String"/>
+    <parameter name="STATUS_DESC" class="java.lang.String"/>
+    <parameter name="CONDICOES_USO" class="java.lang.String"/>
+    <parameter name="DATA_EMISSAO" class="java.lang.String"/>
+
+    <queryString>
+        <![CDATA[]]>
+    </queryString>
+
+    <background>
+        <band splitType="Stretch"/>
+    </background>
+
+    <pageHeader>
+        <band height="95" splitType="Stretch">
+            <image scaleImage="FillFrame">
+                <reportElement x="0" y="0" width="60" height="45" uuid="c3d4e5f6-0002-0001-0001-000000000001">
+                    <printWhenExpression><![CDATA[$P{LOGO} != null]]></printWhenExpression>
+                </reportElement>
+                <imageExpression><![CDATA[$P{LOGO}]]></imageExpression>
+            </image>
+            <textField>
+                <reportElement x="65" y="0" width="350" height="18" uuid="c3d4e5f6-0002-0001-0001-000000000002"/>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="11" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{NOME_EMPRESA}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="65" y="18" width="350" height="14" uuid="c3d4e5f6-0002-0001-0001-000000000003"/>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="8"/></textElement>
+                <textFieldExpression><![CDATA["CNPJ: " + $P{CNPJ_EMPRESA}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="415" y="0" width="140" height="32" uuid="c3d4e5f6-0002-0001-0001-000000000004"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="9" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["Ambiente: " + $P{AMBIENTE_DESC}]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement x="0" y="50" width="555" height="30" uuid="c3d4e5f6-0002-0001-0001-000000000005"/>
+                    <box>
+                        <topPen lineWidth="0.75"/>
+                        <leftPen lineWidth="0.75"/>
+                        <bottomPen lineWidth="0.75"/>
+                        <rightPen lineWidth="0.75"/>
+                    </box>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="12" isBold="true"/></textElement>
+                <text><![CDATA[CARTA DE CORREÇÃO ELETRÔNICA - CC-e]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="0" y="80" width="555" height="15" uuid="c3d4e5f6-0002-0001-0001-000000000006"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="8" isItalic="true"/></textElement>
+                <text><![CDATA[Evento NF-e, tpEvento 110110, versão 1.00]]></text>
+            </staticText>
+        </band>
+    </pageHeader>
+
+    <detail>
+        <band height="380" splitType="Stretch">
+            <textField>
+                <reportElement x="0" y="0" width="555" height="22" uuid="c3d4e5f6-0003-0001-0001-000000000001"/>
+                    <box leftPadding="4" rightPadding="4">
+                        <topPen lineWidth="0.5"/>
+                        <leftPen lineWidth="0.5"/>
+                        <bottomPen lineWidth="0.5"/>
+                        <rightPen lineWidth="0.5"/>
+                    </box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="9"/></textElement>
+                <textFieldExpression><![CDATA["Chave de acesso: " + $P{CHAVE}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="0" y="22" width="180" height="22" uuid="c3d4e5f6-0003-0001-0001-000000000002"/>
+                    <box leftPadding="4" rightPadding="4">
+                        <topPen lineWidth="0.0"/>
+                        <leftPen lineWidth="0.5"/>
+                        <bottomPen lineWidth="0.5"/>
+                        <rightPen lineWidth="0.5"/>
+                    </box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="9"/></textElement>
+                <textFieldExpression><![CDATA["NF-e: " + $P{NUMERO_NF} + "/" + $P{SERIE}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="180" y="22" width="375" height="22" uuid="c3d4e5f6-0003-0001-0001-000000000003"/>
+                    <box leftPadding="4" rightPadding="4">
+                        <topPen lineWidth="0.0"/>
+                        <leftPen lineWidth="0.0"/>
+                        <bottomPen lineWidth="0.5"/>
+                        <rightPen lineWidth="0.5"/>
+                    </box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="9"/></textElement>
+                <textFieldExpression><![CDATA["Destinatário: " + $P{DEST_NOME}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="0" y="44" width="150" height="22" uuid="c3d4e5f6-0003-0001-0001-000000000004"/>
+                    <box leftPadding="4" rightPadding="4">
+                        <topPen lineWidth="0.0"/>
+                        <leftPen lineWidth="0.5"/>
+                        <bottomPen lineWidth="0.5"/>
+                        <rightPen lineWidth="0.5"/>
+                    </box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="9"/></textElement>
+                <textFieldExpression><![CDATA["Sequência: " + String.format("%02d", $P{NUM_SEQ_EVENTO})]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="150" y="44" width="180" height="22" uuid="c3d4e5f6-0003-0001-0001-000000000005"/>
+                    <box leftPadding="4" rightPadding="4">
+                        <topPen lineWidth="0.0"/>
+                        <leftPen lineWidth="0.0"/>
+                        <bottomPen lineWidth="0.5"/>
+                        <rightPen lineWidth="0.5"/>
+                    </box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="9"/></textElement>
+                <textFieldExpression><![CDATA["Protocolo: " + $P{PROTOCOLO}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement x="330" y="44" width="225" height="22" uuid="c3d4e5f6-0003-0001-0001-000000000006"/>
+                    <box leftPadding="4" rightPadding="4">
+                        <topPen lineWidth="0.0"/>
+                        <leftPen lineWidth="0.0"/>
+                        <bottomPen lineWidth="0.5"/>
+                        <rightPen lineWidth="0.5"/>
+                    </box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="9"/></textElement>
+                <textFieldExpression><![CDATA["Registrado em: " + $P{DH_REGISTRO}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="0" y="66" width="555" height="22" uuid="c3d4e5f6-0003-0001-0001-000000000007"/>
+                    <box leftPadding="4" rightPadding="4">
+                        <topPen lineWidth="0.0"/>
+                        <leftPen lineWidth="0.5"/>
+                        <bottomPen lineWidth="0.5"/>
+                        <rightPen lineWidth="0.5"/>
+                    </box>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="9" isBold="true"/></textElement>
+                <textFieldExpression><![CDATA["Situação: " + $P{STATUS_DESC}]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement x="0" y="96" width="555" height="14" uuid="c3d4e5f6-0003-0001-0001-000000000008"/>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="8" isBold="true"/></textElement>
+                <text><![CDATA[Texto da correção]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="0" y="110" width="555" height="80" uuid="c3d4e5f6-0003-0001-0001-000000000009"/>
+                    <box leftPadding="4" rightPadding="4" topPadding="2">
+                        <topPen lineWidth="0.5"/>
+                        <leftPen lineWidth="0.5"/>
+                        <bottomPen lineWidth="0.5"/>
+                        <rightPen lineWidth="0.5"/>
+                    </box>
+                <textElement verticalAlignment="Top"><font fontName="DejaVu Sans Mono" size="9"/></textElement>
+                <textFieldExpression><![CDATA[$P{TEXTO_CORRECAO}]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement x="0" y="200" width="555" height="14" uuid="c3d4e5f6-0003-0001-0001-00000000000a"/>
+                <textElement verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="8" isBold="true"/></textElement>
+                <text><![CDATA[Condições de uso]]></text>
+            </staticText>
+            <textField>
+                <reportElement x="0" y="214" width="555" height="110" uuid="c3d4e5f6-0003-0001-0001-00000000000b"/>
+                    <box leftPadding="4" rightPadding="4" topPadding="2">
+                        <topPen lineWidth="0.5"/>
+                        <leftPen lineWidth="0.5"/>
+                        <bottomPen lineWidth="0.5"/>
+                        <rightPen lineWidth="0.5"/>
+                    </box>
+                <textElement verticalAlignment="Top"><font fontName="DejaVu Sans Mono" size="7" isItalic="true"/></textElement>
+                <textFieldExpression><![CDATA[$P{CONDICOES_USO}]]></textFieldExpression>
+            </textField>
+
+            <textField>
+                <reportElement x="0" y="340" width="555" height="24" uuid="c3d4e5f6-0003-0001-0001-00000000000c"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="7" isItalic="true"/></textElement>
+                <textFieldExpression><![CDATA["Documento gerado pelo sistema em " + $P{DATA_EMISSAO} + " — sem leiaute oficial definido pela SEFAZ; o protocolo acima é o único comprovante de homologação."]]></textFieldExpression>
+            </textField>
+        </band>
+    </detail>
+</jasperReport>
