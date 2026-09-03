@@ -93,6 +93,17 @@ relacionar com NFe. Reverte a decisão de 2026-08-09 documentada em `Nfe.java`
   `cStat=107 "Serviço em Operação"` contra homologação SP — certificado, mTLS e
   conectividade validados de ponta a ponta. Falta validar o fluxo completo de emissão
   (`NfeXmlBuilder`/assinatura/`NFeAutorizacao4`), que ainda não foi exercitado.
+- **`xProd` com espaço em branco à direita** — `cStat=225` genérico, confirmado 2026-09-03
+  testando a primeira NFe complementar em homologação. `Produto.descricao` pode chegar com
+  espaços de sobra (dado migrado do legado, coluna CHAR de largura fixa no Firebird); o
+  schema da NFe proíbe isso em `xProd`. Corrigido com `.trim()` em `NfeXmlBuilder.
+  construirDet` — não é bug específico de complementar, qualquer nota usando um produto
+  assim teria o mesmo problema, só não tinha aparecido ainda. Achado validando o XML exato
+  contra o XSD oficial baixado de `github.com/nfephp-org/sped-nfe` (mesma técnica de
+  antes) — nessa mesma checagem, `IBSCBS`/`vItem`/`IBSCBSTot` também acusaram erro, mas
+  confirmado que esse mirror específico do XSD não conhece o grupo `IBSCBS` (zero
+  ocorrências no arquivo) — falso positivo de schema desatualizado pra Reforma Tributária,
+  não bug real (produção já validou essa estrutura contra 176 notas reais antes).
 - **Endpoints SP** conferidos ao vivo em 2026-08-17 (emissão) e 2026-09-01
   (`NFeRecepcaoEvento4`, cancelamento), mas SEFAZ muda URL ocasionalmente — reconferir
   se a conexão falhar com erro de rede antes de suspeitar de outra coisa.
