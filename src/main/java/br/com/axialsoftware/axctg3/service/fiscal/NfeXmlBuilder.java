@@ -349,7 +349,13 @@ public class NfeXmlBuilder {
         Element prod = doc.createElementNS(NS_NFE, "prod");
         text(doc, prod, "cProd", item.getProduto().getCodigo());
         text(doc, prod, "cEAN", "SEM GTIN");
-        text(doc, prod, "xProd", item.getProduto().getDescricao());
+        // trim: o schema rejeita xProd com espaço em branco à frente/atrás (padrão
+        // "[!-ÿ]{1}[ -ÿ]*[!-ÿ]{1}|[!-ÿ]{1}" — tem que começar/terminar com caractere
+        // não-espaço). Produto.descricao pode chegar com espaços de sobra (dado migrado
+        // do legado, coluna CHAR de largura fixa no Firebird) — cStat=225 genérico
+        // confirmado em homologação 2026-09-03, achado validando o XML contra o XSD
+        // oficial (mesma técnica de [[emissao-nfe-propria]]).
+        text(doc, prod, "xProd", item.getProduto().getDescricao().trim());
         text(doc, prod, "NCM", item.getProduto().getClassificacaoFiscal() != null
                 ? item.getProduto().getClassificacaoFiscal().getCodNcm() : "00000000");
         // cBenef fica em prod, não em imposto/ICMS, apesar de depender do CST do ICMS —
