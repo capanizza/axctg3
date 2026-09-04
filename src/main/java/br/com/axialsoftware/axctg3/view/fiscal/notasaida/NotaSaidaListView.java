@@ -419,15 +419,19 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
     }
 
     /**
-     * Abre {@code NotaSaidaDetailView} já em modo de criação, pré-preenchida com a
-     * finalidade "Complementar" e a chave da nota original — usado quando o erro está em
-     * VALOR (base de cálculo, alíquota, diferença de preço, quantidade), algo que a CC-e
-     * explicitamente não pode corrigir (ver {@code NfeCartaCorrecaoService.X_COND_USO}).
-     * Itens ficam vazios de propósito: só o operador sabe qual é a diferença de valor a
-     * lançar, nenhum cálculo automático (arriscado e não pedido). Depois de preencher os
-     * itens e salvar, a emissão de verdade acontece pelo botão "Emitir NFe" já existente —
-     * {@code NfeEmissaoService} não ganha um fluxo novo, só passa a montar
-     * {@code finNFe}/{@code NFref} corretos porque a nota carrega esses dados agora.
+     * Abre {@code NotaSaidaComplementarDetailView} já em modo de criação, pré-preenchida
+     * com a finalidade "Complementar" e a chave da nota original — usado quando o erro
+     * está em VALOR (base de cálculo, alíquota, diferença de preço, quantidade), algo que
+     * a CC-e explicitamente não pode corrigir (ver {@code
+     * NfeCartaCorrecaoService.X_COND_USO}). Natureza/classTrib/cliente vêm travados nessa
+     * tela dedicada (herdados da nota original, o operador não edita); itens ficam vazios
+     * de propósito: só o operador sabe qual é a diferença de valor a lançar, nenhum
+     * cálculo automático de item aqui (arriscado e não pedido) — o pseudo item nasce
+     * sozinho na hora de emitir, ver {@code NfeEmissaoService.gerarItemComplementar}.
+     * Depois de preencher os valores e salvar, a emissão de verdade acontece pelo botão
+     * "Emitir NFe" já existente — {@code NfeEmissaoService} não ganha um fluxo novo, só
+     * passa a montar {@code finNFe}/{@code NFref} corretos porque a nota carrega esses
+     * dados agora.
      */
     @Subscribe("notaSaidasDataGrid.emitirNfeComplementarAction")
     public void onNotaSaidasDataGridEmitirNfeComplementarAction(final ActionPerformedEvent event) {
@@ -447,13 +451,14 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
             return;
         }
         dialogWindows.detail(this, NotaSaida.class)
-                .withViewClass(NotaSaidaDetailView.class)
+                .withViewClass(NotaSaidaComplementarDetailView.class)
                 .newEntity()
                 .withInitializer(nova -> {
                     nova.setFinNfe(FinNfe.COMPLEMENTAR);
                     nova.setChaveNotaOriginal(original.getChave());
                     nova.setParceiro(original.getParceiro());
                     nova.setNatureza(original.getNatureza());
+                    nova.setClassTrib(original.getClassTrib());
                     nova.setEspecie(original.getEspecie());
                     nova.setSerie(original.getSerie());
                     nova.setDataEmissao(LocalDate.now());

@@ -9,6 +9,7 @@
             <fetchPlan extends="_base">
                 <property name="parceiro" fetchPlan="_instance_name"/>
                 <property name="natureza" fetchPlan="_instance_name"/>
+                <property name="classTrib" fetchPlan="_base"/>
             </fetchPlan>
             <loader id="notaSaidasDl" readOnly="true">
                 <query>

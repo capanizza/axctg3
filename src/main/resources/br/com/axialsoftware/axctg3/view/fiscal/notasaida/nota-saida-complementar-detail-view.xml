@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://notaSaidaComplementarDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="notaSaidaDc"
+                  class="br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida">
+            <fetchPlan extends="_base">
+                <property name="parceiro" fetchPlan="_instance_name"/>
+                <property name="natureza" fetchPlan="_instance_name"/>
+                <property name="classTrib" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="notaSaidaDl"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <vbox id="form" width="100%" spacing="true">
+            <!-- número/data ficam fora do bloco travado: número só existe depois do save
+                 (Sequence por empresa, ver NotaSaidaEventListener), data de emissão é o
+                 único campo do cabeçalho que o operador ainda pode ajustar -->
+            <hbox width="100%">
+                <integerField id="numeroField"
+                              property="numero"
+                              dataContainer="notaSaidaDc"
+                              width="12%" themeNames="small"
+                              readOnly="true"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.numero"/>
+                <datePicker id="dataEmissaoField"
+                            property="dataEmissao"
+                            dataContainer="notaSaidaDc"
+                            width="18%" themeNames="small"
+                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.dataEmissao"/>
+            </hbox>
+            <!-- herdados da nota original, travados — só a NotaSaidaListView que preenche
+                 (onNotaSaidasDataGridEmitirNfeComplementarAction) -->
+            <hbox width="100%" expand="parceiroField">
+                <entityPicker id="naturezaField"
+                              property="natureza"
+                              dataContainer="notaSaidaDc" themeNames="small"
+                              readOnly="true"
+                              width="30%"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.natureza"/>
+                <entityPicker id="classTribField"
+                              property="classTrib"
+                              dataContainer="notaSaidaDc" themeNames="small"
+                              readOnly="true"
+                              width="30%"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.classTrib"/>
+                <entityPicker id="parceiroField"
+                              property="parceiro"
+                              dataContainer="notaSaidaDc" themeNames="small"
+                              readOnly="true"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.parceiro"/>
+            </hbox>
+            <!-- valores da complementar — mesmos campos de "Valores calculados" +
+                 frete/seguro/desconto/despesas de "Complementos" em NotaSaidaDetailView;
+                 baseIpi/valorIpi/baseIcms/valorIcms alimentam o pseudo item automático
+                 (NfeEmissaoService.gerarItemComplementar) -->
+            <hbox width="100%">
+                <bigDecimalField id="valorField"
+                                 property="valor"
+                                 dataContainer="notaSaidaDc"
+                                 width="25%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.valor"/>
+                <bigDecimalField id="valorMercadoriaField"
+                                 property="valorMercadoria"
+                                 dataContainer="notaSaidaDc"
+                                 width="25%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.valorMercadoria"/>
+                <bigDecimalField id="baseIcmsField"
+                                 property="baseIcms"
+                                 dataContainer="notaSaidaDc"
+                                 width="25%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.baseIcms"/>
+                <bigDecimalField id="valorIcmsField"
+                                 property="valorIcms"
+                                 dataContainer="notaSaidaDc"
+                                 width="25%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.valorIcms"/>
+            </hbox>
+            <hbox width="100%">
+                <bigDecimalField id="baseStField"
+                                 property="baseSt"
+                                 dataContainer="notaSaidaDc"
+                                 width="25%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.baseSt"/>
+                <bigDecimalField id="valorStField"
+                                 property="valorSt"
+                                 dataContainer="notaSaidaDc"
+                                 width="25%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.valorSt"/>
+                <bigDecimalField id="baseIpiField"
+                                 property="baseIpi"
+                                 dataContainer="notaSaidaDc"
+                                 width="25%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.baseIpi"/>
+                <bigDecimalField id="valorIpiField"
+                                 property="valorIpi"
+                                 dataContainer="notaSaidaDc"
+                                 width="25%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.valorIpi"/>
+            </hbox>
+            <hbox width="100%">
+                <bigDecimalField id="freteField"
+                                 property="frete"
+                                 dataContainer="notaSaidaDc"
+                                 width="25%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.frete"/>
+                <bigDecimalField id="seguroField"
+                                 property="seguro"
+                                 dataContainer="notaSaidaDc"
+                                 width="25%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.seguro"/>
+                <bigDecimalField id="descontoField"
+                                 property="desconto"
+                                 dataContainer="notaSaidaDc"
+                                 width="25%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.desconto"/>
+                <bigDecimalField id="despesasField"
+                                 property="despesas"
+                                 dataContainer="notaSaidaDc"
+                                 width="25%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.despesas"/>
+            </hbox>
+        </vbox>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>
