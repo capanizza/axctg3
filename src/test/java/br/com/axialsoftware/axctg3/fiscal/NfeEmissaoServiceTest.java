@@ -233,9 +233,11 @@ class NfeEmissaoServiceTest {
         assertThat(itensDaNota(notaSaida)).isEmpty();
     }
 
-    /** Complemento só de imposto (valorMercadoria=0) — item nasce com quantidade/valor zerados. */
+    /** Complemento só de imposto (valorMercadoria=0) — item nasce com quantidade=1/valor
+     * zerado, nunca quantidade=0 (achado 2026-09-06: SEFAZ rejeita qCom=0 como "Falha no
+     * Schema XML", mesmo com vUnCom/vProd zerados — ver [[axctg3-nfe-complementar-cstat225]]). */
     @Test
-    void complementarSoDeIcmsGeraItemComQuantidadeZerada() {
+    void complementarSoDeIcmsGeraItemComQuantidadeUmEValorZerado() {
         Produto placeholder = criarProdutoPlaceholder();
         criarEmpresa(placeholder);
         NotaSaida notaSaida = criarNotaSaida(FinNfe.COMPLEMENTAR, CHAVE_ORIGINAL_VALIDA,
@@ -248,12 +250,40 @@ class NfeEmissaoServiceTest {
         ItemNotaSaida item = itens.get(0);
         assertThat(item.getProduto().getId()).isEqualTo(placeholder.getId());
         assertThat(item.getCfop()).isEqualTo(5102);
-        assertThat(item.getQuantidade()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(item.getQuantidade()).isEqualByComparingTo(BigDecimal.ONE);
         assertThat(item.getValorUnitario()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(item.getBaseIcms()).isEqualByComparingTo(new BigDecimal("100.00"));
         assertThat(item.getValorIcms()).isEqualByComparingTo(new BigDecimal("18.00"));
         assertThat(item.getAliqIcms()).isEqualByComparingTo(new BigDecimal("18.00"));
         assertThat(item.getCst()).isEqualTo("00");
+        // 410029 "Operações acobertadas somente pelo ICMS" (CST 410, "Sem alíquota") — não
+        // o classTrib "Padrão" genérico, que exige o grupo gIBSCBS preenchido com valores
+        // reais (ver comentário em gerarItemComplementar).
+        assertThat(item.getCodClassTrib()).isEqualTo(410029);
+    }
+
+    /** Complemento de ICMS-ST (baseSt/valorSt preenchidos no cabeçalho) — item nasce com
+     * CST 10, não 00 (achado 2026-09-06, ver [[axctg3-nfe-complementar-cstat225]]). */
+    @Test
+    void complementarComBaseStGeraItemComCst10() {
+        Produto placeholder = criarProdutoPlaceholder();
+        criarEmpresa(placeholder);
+        NotaSaida notaSaida = criarNotaSaida(FinNfe.COMPLEMENTAR, CHAVE_ORIGINAL_VALIDA,
+                BigDecimal.ZERO, new BigDecimal("100.00"), new BigDecimal("18.00"));
+        notaSaida.setBaseSt(new BigDecimal("50.00"));
+        notaSaida.setValorSt(new BigDecimal("9.00"));
+        dataManager.save(notaSaida);
+
+        nfeEmissaoService.emitir(notaSaida.getId());
+
+        List<ItemNotaSaida> itens = itensDaNota(notaSaida);
+        assertThat(itens).hasSize(1);
+        ItemNotaSaida item = itens.get(0);
+        assertThat(item.getCst()).isEqualTo("10");
+        assertThat(item.getBaseSt()).isEqualByComparingTo(new BigDecimal("50.00"));
+        assertThat(item.getValorSt()).isEqualByComparingTo(new BigDecimal("9.00"));
+        assertThat(item.getBaseIcms()).isEqualByComparingTo(new BigDecimal("100.00"));
+        assertThat(item.getValorIcms()).isEqualByComparingTo(new BigDecimal("18.00"));
     }
 
     /** Complemento de preço (valorMercadoria != 0) — item nasce com quantidade=1/valorUnitario=diferença. */

@@ -516,8 +516,10 @@ public class NfeXmlBuilder {
                     // abaixo, que só cobre o ICMS próprio, sem ST nenhum). Estrutura e
                     // modBCST=4 conferidos contra 14/14 ocorrências reais de ICMS10 nas 176
                     // notas de referência ([[nfe-xmls-reais-teste]]); pICMSST=pICMS em
-                    // 14/14 delas também. pMVAST não é campo próprio de ItemNotaSaida —
-                    // derivado de vBCST/vBC (a margem que já gerou o baseSt gravado).
+                    // 14/14 delas também (mesmo quando vICMSST/vBCST não bate exatamente com
+                    // esse percentual — o ICMS-ST real é líquido do próprio, SEFAZ tolera).
+                    // pMVAST não é campo próprio de ItemNotaSaida — derivado de vBCST/vBC (a
+                    // margem que já gerou o baseSt gravado).
                     text(doc, variante, "modBC", 3);
                     text(doc, variante, "vBC", dec(item.getBaseIcms(), 2));
                     text(doc, variante, "pICMS", dec(item.getAliqIcms(), 2));
@@ -525,7 +527,7 @@ public class NfeXmlBuilder {
                     text(doc, variante, "modBCST", 4);
                     text(doc, variante, "pMVAST", dec(mvaSt(item), 4));
                     text(doc, variante, "vBCST", dec(item.getBaseSt(), 2));
-                    text(doc, variante, "pICMSST", dec(item.getAliqIcms(), 2));
+                    text(doc, variante, "pICMSST", dec(aliqIcmsStEfetiva(item), 2));
                     text(doc, variante, "vICMSST", dec(item.getValorSt(), 2));
                     break;
                 case "60":
@@ -557,6 +559,28 @@ public class NfeXmlBuilder {
             return BigDecimal.ZERO;
         }
         return vBcSt.divide(vBc, 6, RoundingMode.HALF_UP).subtract(BigDecimal.ONE).multiply(new BigDecimal(100));
+    }
+
+    /** Alíquota efetiva do ICMS-ST ({@code pICMSST}): normalmente igual a {@code
+     * item.getAliqIcms()} (a alíquota do ICMS próprio — mesmo padrão validado contra 14/14
+     * ICMS10 reais em [[nfe-xmls-reais-teste]]). Mas numa complementar que ajusta SÓ o valor
+     * de ST (baseIcms/valorIcms zerados de propósito, ver {@code
+     * NfeEmissaoService.gerarItemComplementar}), {@code aliqIcms} também zera — declarar
+     * {@code pICMSST=0} junto de um {@code vICMSST} diferente de zero é uma contradição
+     * (0% de qualquer base não produz valor), rejeitada como "Falha no Schema XML"
+     * (confirmado 2026-09-06, ver [[axctg3-nfe-complementar-cstat225]]). Nesse caso, deriva
+     * de {@code valorSt}/{@code baseSt} em vez de herdar o zero do ICMS próprio. */
+    private BigDecimal aliqIcmsStEfetiva(ItemNotaSaida item) {
+        BigDecimal aliqIcms = item.getAliqIcms();
+        if (aliqIcms != null && aliqIcms.compareTo(BigDecimal.ZERO) != 0) {
+            return aliqIcms;
+        }
+        BigDecimal baseSt = item.getBaseSt();
+        BigDecimal valorSt = item.getValorSt();
+        if (baseSt == null || baseSt.compareTo(BigDecimal.ZERO) == 0 || valorSt == null) {
+            return BigDecimal.ZERO;
+        }
+        return valorSt.multiply(new BigDecimal(100)).divide(baseSt, 2, RoundingMode.HALF_UP);
     }
 
     private Element construirIpi(Document doc, ItemNotaSaida item) {
@@ -681,6 +705,18 @@ public class NfeXmlBuilder {
         text(doc, ibsCbs, "CST", cst);
         text(doc, ibsCbs, "cClassTrib", String.format("%06d",
                 item.getCodClassTrib() != null ? item.getCodClassTrib() : 1));
+
+        // ClassTrib.tipoAliquota "Sem alíquota" (CST 4xx/5xx/8xx — imunidade, não
+        // incidência, suspensão etc., ver class_trib_seed.csv) não preenche gIBSCBS: o
+        // XML oficial pra esse grupo de CST é só CST+cClassTrib, sem base/percentual/valor
+        // (confirmado 2026-09-06 investigando o cStat=225 — mandar gIBSCBS zerado junto de
+        // CST 000/"Padrão" foi rejeitado como "Falha no Schema XML"; o cClassTrib correto
+        // pra "tributação só de ICMS" é 410029, tipoAliquota "Sem alíquota", ver
+        // NfeEmissaoService.gerarItemComplementar). "Padrão" continua preenchendo o grupo
+        // inteiro, igual sempre foi.
+        if (classTrib != null && "Sem alíquota".equals(classTrib.getTipoAliquota())) {
+            return ibsCbs;
+        }
 
         Element gIbsCbs = doc.createElementNS(NS_NFE, "gIBSCBS");
         BigDecimal base = item.getSubTotal() == null ? BigDecimal.ZERO : item.getSubTotal();
