@@ -253,8 +253,17 @@ public class NfeXmlBuilder {
         FinNfe finNfe = notaSaida.getFinNfe() != null ? notaSaida.getFinNfe() : FinNfe.NORMAL;
         text(doc, ide, "finNFe", finNfe.getId());
         text(doc, ide, "indFinal", 0);
-        text(doc, ide, "indPres", 9);
-        text(doc, ide, "indIntermed", 0);
+        // indPres=0 ("Não se aplica") é o valor exigido pra NFe complementar — é a própria
+        // nota oficial do schema pra esse código ("...Nota Fiscal complementar ou de
+        // ajuste..."), confirmado contra 7/7 complementares reais aceitas (finNFe=2,
+        // verAplic SP_NFE_PL009_V4) em 2026-09-06: nenhuma delas tem indPres=9 nem
+        // indIntermed — o grupo indIntermed (venda via marketplace) não se aplica quando a
+        // operação em si "não se aplica" (indPres=0), por isso só emite pra nota normal.
+        boolean complementar = finNfe == FinNfe.COMPLEMENTAR;
+        text(doc, ide, "indPres", complementar ? 0 : 9);
+        if (!complementar) {
+            text(doc, ide, "indIntermed", 0);
+        }
         text(doc, ide, "procEmi", 0);
         text(doc, ide, "verProc", "axctg3");
         // NFref/refNFe — chave da NFe original que esta nota complementa/ajusta/devolve.
