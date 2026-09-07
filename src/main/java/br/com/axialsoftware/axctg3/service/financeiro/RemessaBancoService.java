@@ -11,7 +11,11 @@ import io.jmix.flowui.download.DownloadFormat;
 import io.jmix.flowui.download.Downloader;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -54,11 +58,21 @@ public class RemessaBancoService {
     }
 
     /**
-     * Gera a remessa dos títulos informados (todos precisam ser do mesmo {@link Banco}),
-     * grava {@code numRemessa}/{@code numBanco} nos títulos e {@code nossoNumAtual} no
-     * banco, audita em {@link RemessaBanco} e baixa o arquivo pro navegador.
+     * Gera a remessa dos títulos informados e baixa o arquivo pro navegador. Ver
+     * {@link #gerarRemessa(List, String)}.
      */
     public RemessaBanco gerarRemessa(List<TituloReceber> titulos) {
+        return gerarRemessa(titulos, null);
+    }
+
+    /**
+     * Gera a remessa dos títulos informados (todos precisam ser do mesmo {@link Banco}),
+     * grava {@code numRemessa}/{@code numBanco} nos títulos e {@code nossoNumAtual} no
+     * banco, audita em {@link RemessaBanco} e entrega o arquivo — em {@code pastaDestino}
+     * (gravado direto em disco, mesmo padrão de {@code MenuBean.GerarSpedEcdTask}) se
+     * informada, senão pelo {@link Downloader} pro navegador.
+     */
+    public RemessaBanco gerarRemessa(List<TituloReceber> titulos, String pastaDestino) {
         if (titulos.isEmpty()) {
             throw new IllegalArgumentException("Nenhum título selecionado");
         }
@@ -98,7 +112,18 @@ public class RemessaBancoService {
 
         String nomeArquivo = "REM" + DateTimeFormatter.ofPattern("yyyyMMdd").format(LocalDate.now())
                 + String.format("%03d", banco.getCodGeral()) + ".txt";
-        downloader.download(arquivo, nomeArquivo, DownloadFormat.TEXT);
+        if (pastaDestino != null && !pastaDestino.isBlank()) {
+            try {
+                Path pasta = Path.of(pastaDestino);
+                Files.createDirectories(pasta);
+                Files.write(pasta.resolve(nomeArquivo), arquivo);
+            } catch (IOException e) {
+                throw new UncheckedIOException(
+                        "Não foi possível gravar o arquivo em " + pastaDestino + ": " + e.getMessage(), e);
+            }
+        } else {
+            downloader.download(arquivo, nomeArquivo, DownloadFormat.TEXT);
+        }
 
         return remessaBanco;
     }

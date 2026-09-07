@@ -35,12 +35,12 @@
     <layout>
         <hbox id="buttonsPanel" wrap="true" width="100%">
             <startSlot>
-                <button id="delimitarButton" action="tituloRecebersDataGrid.delimitarAction" themeNames="small"/>
-                <button id="createButton" action="tituloRecebersDataGrid.createAction" themeNames="small"/>
-                <button id="editButton" action="tituloRecebersDataGrid.editAction" themeNames="small"/>
-                <button id="removeButton" action="tituloRecebersDataGrid.removeAction" themeNames="small"/>
+                <button id="delimitarButton" action="tituloRecebersDataGrid.delimitarAction" themeNames="xsmall"/>
+                <button id="createButton" action="tituloRecebersDataGrid.createAction" themeNames="xsmall"/>
+                <button id="editButton" action="tituloRecebersDataGrid.editAction" themeNames="xsmall"/>
+                <button id="removeButton" action="tituloRecebersDataGrid.removeAction" themeNames="xsmall"/>
                 <dropdownButton id="relatoriosSwitcher"
-                                text="Relatórios" icon="PRINT" themeNames="small"
+                                text="Relatórios" icon="PRINT" themeNames="xsmall"
                                 dropdownIndicatorVisible="true">
                     <items>
                         <actionItem id="emissaoItem">
@@ -53,10 +53,12 @@
                         </actionItem>
                     </items>
                 </dropdownButton>
-                <button id="gerarRemessaButton" action="tituloRecebersDataGrid.gerarRemessaAction" themeNames="small"/>
-                <button id="lerRetornoButton" text="msg://tituloReceberListView.lerRetornoButton.text" themeNames="small"/>
+                <button id="gerarRemessaButton" action="tituloRecebersDataGrid.gerarRemessaAction" themeNames="xsmall"/>
+                <button id="lerRetornoButton" text="msg://tituloReceberListView.lerRetornoButton.text"
+                        icon="vaadin:download" themeNames="xsmall"/>
                 <dropdownButton id="cobrancaBancariaDropdownButton"
-                                text="msg://tituloReceberListView.cobrancaBancariaDropdownButton.text" themeNames="small">
+                                text="msg://tituloReceberListView.cobrancaBancariaDropdownButton.text"
+                                icon="vaadin:invoice" themeNames="xsmall">
                     <items>
                         <actionItem id="verRemessasItem" ref="tituloRecebersDataGrid.verRemessasAction"/>
                         <actionItem id="verRetornosItem" ref="tituloRecebersDataGrid.verRetornosAction"/>
