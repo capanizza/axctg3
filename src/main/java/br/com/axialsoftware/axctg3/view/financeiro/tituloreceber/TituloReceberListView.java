@@ -11,7 +11,6 @@ import br.com.axialsoftware.axctg3.service.financeiro.NfcomImportService;
 import br.com.axialsoftware.axctg3.service.financeiro.RemessaBancoService;
 import br.com.axialsoftware.axctg3.service.financeiro.RetornoBancoService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
-import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -31,7 +30,6 @@ import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.checkbox.JmixCheckbox;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
-import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -228,8 +226,8 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
                 .open();
     }
 
-    @Subscribe(id = "lerRetornoButton", subject = "clickListener")
-    public void onLerRetornoButtonClick(final ClickEvent<JmixButton> event) {
+    @Subscribe("cobrancaBancariaDropdownButton.lerRetornoItem.lerRetornoAction")
+    public void onLerRetornoAction(final ActionPerformedEvent event) {
         dialogWindows.view(this, RetornoBancoImportView.class)
                 .withAfterCloseListener(closeEvent -> {
                     if (!closeEvent.closedWith(StandardOutcome.SAVE)) {
@@ -269,8 +267,8 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
         dialogWindows.view(this, RetornoBancoListView.class).open();
     }
 
-    @Subscribe(id = "importarNfcomButton", subject = "clickListener")
-    public void onImportarNfcomButtonClick(final ClickEvent<JmixButton> event) {
+    @Subscribe("cobrancaBancariaDropdownButton.importarNfcomItem.importarNfcomAction")
+    public void onImportarNfcomAction(final ActionPerformedEvent event) {
         dialogWindows.view(this, NfcomImportView.class)
                 .withAfterCloseListener(closeEvent -> {
                     if (!closeEvent.closedWith(StandardOutcome.SAVE)) {

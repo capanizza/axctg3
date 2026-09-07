@@ -53,15 +53,20 @@
                         </actionItem>
                     </items>
                 </dropdownButton>
-                <button id="gerarRemessaButton" action="tituloRecebersDataGrid.gerarRemessaAction" themeNames="xsmall"/>
-                <button id="lerRetornoButton" text="msg://tituloReceberListView.lerRetornoButton.text"
-                        icon="vaadin:download" themeNames="xsmall"/>
-                <button id="importarNfcomButton" text="msg://tituloReceberListView.importarNfcomButton.text"
-                        icon="vaadin:file-add" themeNames="xsmall"/>
                 <dropdownButton id="cobrancaBancariaDropdownButton"
                                 text="msg://tituloReceberListView.cobrancaBancariaDropdownButton.text"
-                                icon="vaadin:invoice" themeNames="xsmall">
+                                icon="vaadin:invoice" themeNames="xsmall"
+                                dropdownIndicatorVisible="true">
                     <items>
+                        <actionItem id="importarNfcomItem">
+                            <action id="importarNfcomAction" text="Importar XMLs" icon="vaadin:file-add"/>
+                        </actionItem>
+                        <actionItem id="gerarRemessaItem" ref="tituloRecebersDataGrid.gerarRemessaAction"/>
+                        <actionItem id="lerRetornoItem">
+                            <action id="lerRetornoAction"
+                                    text="msg://tituloReceberListView.lerRetornoButton.text" icon="vaadin:download"/>
+                        </actionItem>
+                        <separator/>
                         <actionItem id="verRemessasItem" ref="tituloRecebersDataGrid.verRemessasAction"/>
                         <actionItem id="verRetornosItem" ref="tituloRecebersDataGrid.verRetornosAction"/>
                     </items>
