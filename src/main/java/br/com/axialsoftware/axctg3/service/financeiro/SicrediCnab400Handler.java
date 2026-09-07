@@ -38,8 +38,10 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
     private static final DateTimeFormatter DATA_AAAAMMDD = DateTimeFormatter.ofPattern("yyyyMMdd");
     private static final DateTimeFormatter DATA_DDMMAA = DateTimeFormatter.ofPattern("ddMMyy");
     // "." fica liberado porque o campo "Versão do sistema" (391-394) exige o ponto
-    // literal ("2.00") — ver header().
-    private static final Pattern NAO_ALFANUMERICO_ESPACO = Pattern.compile("[^A-Z0-9 .]");
+    // literal ("2.00") — ver header(). "," fica liberado porque o endereço do sacado
+    // (275-314) usa vírgula como separador entre logradouro/número/bairro/cidade/UF — ver
+    // enderecoSacado().
+    private static final Pattern NAO_ALFANUMERICO_ESPACO = Pattern.compile("[^A-Z0-9 .,]");
     private static final Pattern NAO_DIGITO = Pattern.compile("\\D");
 
     @Override
@@ -109,10 +111,13 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
         l.filler(10);                                     // 007-016
         l.alfa("A", 1);                                   // 017 tipo moeda: Real
         l.alfa("A", 1);                                   // 018 tipo desconto: valor monetário
-        l.alfa("A", 1);                                   // 019 tipo juros: valor monetário
-        l.alfa("A", 1);                                   // 020 tipo multa: valor monetário
-        l.numerico("0", 8);                               // 021-028 data início juros: não usado
-        l.numerico("0", 8);                               // 029-036 data início multa: não usado
+        // 019-020 e 021-036: TituloReceber não tem campo de juros/multa — sempre isento,
+        // conferido contra remessa real (ValorMoraJuros/PercentualMulta sempre 0,00 no
+        // arquivo que o Axial manda pro ACBrMonitorPLUS).
+        l.alfa("B", 1);                                   // 019 tipo juros: isento
+        l.alfa(" ", 1);                                   // 020 tipo multa: não usado
+        l.filler(8);                                      // 021-028 data início juros: não usado
+        l.filler(8);                                      // 029-036 data início multa: não usado
         l.filler(11);                                     // 037-047
         l.alfa(nossoNumero, 9);                            // 048-056 nosso número
         l.filler(6);                                       // 057-062
@@ -126,13 +131,16 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
         l.filler(4);                                       // 079-082
         l.numerico("0", 10);                               // 083-092 desconto por antecipação: não usado
         l.numerico("0", 4);                                // 093-096 multa percentual: não usado
-        l.numerico("0", 12);                               // 097-108 multa valor: não usado
+        l.filler(12);                                       // 097-108 multa valor: não usado (isento, ver 020)
         l.numerico("01", 2);                               // 109-110 instrução: cadastro de título
         l.alfa(tituloReceber.getNumero(), 10);              // 111-120 seu número
         l.numerico(tituloReceber.getDataVencimento().format(DATA_DDMMAA), 6); // 121-126
         l.numerico(valorEmCentavos(tituloReceber.getValor()), 13);            // 127-139
         l.filler(9);                                        // 140-148
-        l.alfa("A", 1);                                     // 149 espécie: duplicata mercantil por indicação
+        // 149 espécie: DSI (Duplicata de Serviço por Indicação) — só emitimos cobrança de
+        // serviço até agora (o arquivo real de referência traz Especie=DSI em 100% dos
+        // títulos); quando entrar cliente que vende mercadoria, isso precisa virar campo.
+        l.alfa("J", 1);
         l.alfa("N", 1);                                     // 150 aceite
         l.numerico(tituloReceber.getDataEmissao().format(DATA_DDMMAA), 6);    // 151-156
         l.numerico("00", 2);                                // 157-158 protesto automático: não protestar
@@ -171,15 +179,24 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
         return l.fechar();
     }
 
+    /**
+     * Formato {@code LOGRADOURO,NUMERO,BAIRRO,CIDADE,UF} — conferido caractere a caractere
+     * contra o arquivo real que o Axial manda pro ACBrMonitorPLUS e a remessa real gerada a
+     * partir dele (ex.: {@code FERNAO DIAS,0,PIRES,EXTREMA,MG}). Truncado em 40 colunas pelo
+     * {@code alfa()} da {@link Linha}.
+     */
     private static String enderecoSacado(Parceiro sacado) {
-        StringBuilder endereco = new StringBuilder();
-        if (sacado.getLogradouro() != null) {
-            endereco.append(sacado.getLogradouro());
-        }
-        if (sacado.getNumero() != null && !sacado.getNumero().isBlank()) {
-            endereco.append(", ").append(sacado.getNumero());
-        }
-        return endereco.toString();
+        String cidade = sacado.getMunicipio() != null ? sacado.getMunicipio().getNome() : null;
+        return String.join(",",
+                nvl(sacado.getLogradouro()),
+                nvl(sacado.getNumero()),
+                nvl(sacado.getBairro()),
+                nvl(cidade),
+                nvl(sacado.getEstado()));
+    }
+
+    private static String nvl(String valor) {
+        return valor == null ? "" : valor;
     }
 
     private static String valorEmCentavos(BigDecimal valor) {
@@ -223,11 +240,14 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
      * código do cedente + ano + byte de geração + sequencial, 19 dígitos), pesos 2..9
      * ciclando da direita pra esquerda. Resto 0 ou 1 → DV = 0 (regra do manual).
      *
-     * <p><b>Atenção:</b> o manual traz um exemplo de entrada (Cooperativa 0165, Posto 02,
-     * Beneficiário 00623, Ano 07, Byte 2, Sequencial 00003) mas não o dígito resultante —
-     * a tabela do passo a passo não veio no texto extraído do PDF (provável imagem).
-     * Algoritmo implementado conforme a descrição textual do manual; pendente de
-     * conferência contra um caso real/homologação Sicredi.
+     * <p>"Posto" aqui é a nomenclatura do próprio manual — não é um Posto de Atendimento
+     * físico separado; na prática é o dígito verificador da agência/cooperativa (o mesmo
+     * número que o ACBrBoleto guarda em {@code DigitoAgencia} no cadastro de conta). Ver
+     * {@link Banco#getPosto()}.
+     *
+     * <p>Algoritmo confirmado em 2026-09-07 contra remessa real da Sicredi: Nosso Número
+     * {@code 262000369} (ano=26, byte=2, seq=00036) com agência 0738/posto 33/cedente 59622
+     * dá DV=9, batendo com o dígito real gerado pelo Axial/ACBr.
      */
     static int calcularDvNossoNumero(Banco banco, String ano, int byteGeracao, String sequencial) {
         String agencia = numerico(banco.getAgencia(), 4);

@@ -129,6 +129,10 @@ public class Banco {
     @Column(name = "CARTEIRA", length = 10)
     private String carteira;
 
+    // "Posto" na nomenclatura do manual Sicredi (usado no cálculo do DV do Nosso Número em
+    // SicrediCnab400Handler) — na prática é o dígito verificador da agência/cooperativa, o
+    // mesmo valor que o ACBrBoleto guarda como "DigitoAgencia" no cadastro de conta; não é
+    // um Posto de Atendimento físico separado.
     @Column(name = "POSTO", length = 2)
     private String posto;
 

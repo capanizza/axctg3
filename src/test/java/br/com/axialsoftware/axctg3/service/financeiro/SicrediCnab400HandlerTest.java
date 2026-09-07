@@ -82,13 +82,55 @@ class SicrediCnab400HandlerTest {
         assertThat(detalhe.substring(120, 126)).isEqualTo(titulo.getDataVencimento()
                 .format(java.time.format.DateTimeFormatter.ofPattern("ddMMyy")));
         assertThat(detalhe.substring(126, 139)).isEqualTo("0000000150075"); // valor em centavos
-        assertThat(detalhe.substring(148, 149)).isEqualTo("A"); // espécie: duplicata mercantil
+        assertThat(detalhe.substring(148, 149)).isEqualTo("J"); // espécie: DSI (duplicata de serviço)
         assertThat(detalhe.substring(149, 150)).isEqualTo("N"); // aceite
         assertThat(detalhe.substring(218, 219)).isEqualTo("2"); // CNPJ (14 dígitos)
         assertThat(detalhe.substring(220, 234)).isEqualTo("00000000000191");
         assertThat(detalhe.substring(234, 274).trim()).isEqualTo("CLIENTE DE TESTE");
         assertThat(detalhe.substring(326, 334)).isEqualTo("01310100"); // CEP
         assertThat(detalhe.substring(394, 400)).isEqualTo("000002"); // nº sequencial (header é 1)
+    }
+
+    @Test
+    void test_detalheTipo1_jurosEMultaSempreIsento() {
+        // TituloReceber não tem campo de juros/multa — conferido contra a remessa real da
+        // Radio, onde ValorMoraJuros/PercentualMulta sempre saem 0,00 (ver SicrediCnab400Handler).
+        Banco banco = criarBanco();
+        Empresa empresa = criarEmpresa();
+        TituloReceber titulo = criarTitulo("0000001", BigDecimal.TEN);
+        byte[] arquivo = handler.gerarRemessa(empresa, banco, List.of(titulo), 1);
+        String detalhe = separarLinhas(arquivo)[1];
+
+        assertThat(detalhe.substring(18, 19)).isEqualTo("B"); // tipo juros: isento
+        assertThat(detalhe.substring(19, 20)).isEqualTo(" "); // tipo multa: não usado
+        assertThat(detalhe.substring(20, 28)).isEqualTo("        "); // data início juros
+        assertThat(detalhe.substring(28, 36)).isEqualTo("        "); // data início multa
+        assertThat(detalhe.substring(96, 108)).isEqualTo("            "); // valor multa
+    }
+
+    @Test
+    void test_detalheTipo1_enderecoSacadoComBairroCidadeUf() {
+        // Mesmo título 1 da remessa real da Radio (Pousada Boa Vida) — conferido caractere a
+        // caractere contra o arquivo real: "FERNAO DIAS,0,PIRES,EXTREMA,MG".
+        Banco banco = criarBanco();
+        Empresa empresa = criarEmpresa();
+        Parceiro sacado = criarParceiro();
+        sacado.setLogradouro("Fernão Dias");
+        sacado.setNumero("0");
+        sacado.setBairro("Pires");
+        br.com.axialsoftware.axctg3.entity.tabelas.Municipio municipio =
+                new br.com.axialsoftware.axctg3.entity.tabelas.Municipio();
+        municipio.setNome("Extrema");
+        sacado.setMunicipio(municipio);
+        sacado.setEstado("MG");
+        TituloReceber titulo = criarTitulo("0000001", BigDecimal.TEN);
+        titulo.setParceiro(sacado);
+
+        byte[] arquivo = handler.gerarRemessa(empresa, banco, List.of(titulo), 1);
+        String detalhe = separarLinhas(arquivo)[1];
+
+        String esperado = "FERNAO DIAS,0,PIRES,EXTREMA,MG";
+        assertThat(detalhe.substring(274, 314)).isEqualTo(esperado + " ".repeat(40 - esperado.length()));
     }
 
     @Test
@@ -134,6 +176,24 @@ class SicrediCnab400HandlerTest {
         // caso real/homologação Sicredi quando possível.
         assertThat(dv1).isEqualTo(dv2);
         assertThat(dv1).isBetween(0, 9);
+    }
+
+    @Test
+    void test_calculoDvNossoNumero_confereContraRemessaRealDaRadio() {
+        // Nosso Número real gerado pelo Axial/ACBr numa remessa Sicredi de verdade:
+        // 262000369 (ano=26, byte=2, seq=00036, dv=9) — agência 0738, posto 33 (= dígito
+        // verificador da agência, ver Banco.getPosto()), cedente 59622.
+        Banco banco = new Banco();
+        banco.setCodigo(1);
+        banco.setCodGeral(748);
+        banco.setNome("Sicredi");
+        banco.setCodCedente("59622");
+        banco.setAgencia("0738");
+        banco.setPosto("33");
+
+        int dv = SicrediCnab400Handler.calcularDvNossoNumero(banco, "26", 2, "00036");
+
+        assertThat(dv).isEqualTo(9);
     }
 
     @Test
