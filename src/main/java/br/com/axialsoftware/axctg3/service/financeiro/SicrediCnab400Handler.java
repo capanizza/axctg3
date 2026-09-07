@@ -53,16 +53,17 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
 
     @Override
     public byte[] gerarRemessa(Empresa empresa, Banco banco, List<TituloReceber> titulos, int numeroRemessa) {
+        LocalDate dataRemessa = LocalDate.now();
         StringBuilder arquivo = new StringBuilder();
-        arquivo.append(header(empresa, banco, numeroRemessa)).append("\r\n");
+        arquivo.append(header(empresa, banco, numeroRemessa, dataRemessa)).append("\r\n");
 
         int sequencial = 2; // 1 é o header
-        int anoDoisDigitos = LocalDate.now().getYear() % 100;
+        int anoDoisDigitos = dataRemessa.getYear() % 100;
         for (TituloReceber tituloReceber : titulos) {
             int seqNossoNumero = proximoSequencialNossoNumero(banco);
             String nossoNumero = gerarNossoNumero(banco, anoDoisDigitos, seqNossoNumero);
             tituloReceber.setNumBanco(nossoNumero);
-            arquivo.append(detalheTipo1(tituloReceber, nossoNumero, sequencial)).append("\r\n");
+            arquivo.append(detalheTipo1(tituloReceber, nossoNumero, sequencial, dataRemessa)).append("\r\n");
             sequencial++;
         }
 
@@ -70,7 +71,7 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
         return arquivo.toString().getBytes(StandardCharsets.ISO_8859_1);
     }
 
-    private String header(Empresa empresa, Banco banco, int numeroRemessa) {
+    private String header(Empresa empresa, Banco banco, int numeroRemessa, LocalDate dataRemessa) {
         Linha l = new Linha();
         l.numerico("0", 1);                                    // 001-001 id. registro
         l.numerico("1", 1);                                    // 002-002 id. arquivo remessa
@@ -83,7 +84,7 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
         l.filler(31);                                            // 046-076
         l.numerico(String.valueOf(COD_GERAL_SICREDI), 3);        // 077-079
         l.alfa("SICREDI", 15);                                   // 080-094
-        l.numerico(LocalDate.now().format(DATA_AAAAMMDD), 8);    // 095-102
+        l.numerico(dataRemessa.format(DATA_AAAAMMDD), 8);        // 095-102
         l.filler(8);                                              // 103-110
         l.numerico(String.valueOf(numeroRemessa), 7);            // 111-117
         l.filler(273);                                            // 118-390
@@ -92,7 +93,8 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
         return l.fechar();
     }
 
-    private String detalheTipo1(TituloReceber tituloReceber, String nossoNumero, int numeroSequencial) {
+    private String detalheTipo1(TituloReceber tituloReceber, String nossoNumero, int numeroSequencial,
+                                 LocalDate dataRemessa) {
         Parceiro sacado = tituloReceber.getParceiro();
         String cnpjCpfSacado = soDigitos(sacado.getCnpj());
         boolean sacadoPessoaJuridica = cnpjCpfSacado.length() > 11;
@@ -114,7 +116,7 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
         l.filler(11);                                     // 037-047
         l.alfa(nossoNumero, 9);                            // 048-056 nosso número
         l.filler(6);                                       // 057-062
-        l.numerico(tituloReceber.getDataEmissao().format(DATA_AAAAMMDD), 8); // 063-070 data instrução
+        l.numerico(dataRemessa.format(DATA_AAAAMMDD), 8);   // 063-070 data instrução (data de geração da remessa)
         l.alfa(" ", 1);                                    // 071 (só usado com instrução 31)
         l.alfa("N", 1);                                    // 072 postagem: beneficiário posta
         l.filler(1);                                       // 073
