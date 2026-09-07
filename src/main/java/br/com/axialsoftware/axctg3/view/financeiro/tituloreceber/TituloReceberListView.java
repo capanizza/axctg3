@@ -7,6 +7,7 @@ import br.com.axialsoftware.axctg3.entity.financeiro.RemessaBanco;
 import br.com.axialsoftware.axctg3.entity.financeiro.RetornoBanco;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
+import br.com.axialsoftware.axctg3.service.financeiro.NfcomImportService;
 import br.com.axialsoftware.axctg3.service.financeiro.RemessaBancoService;
 import br.com.axialsoftware.axctg3.service.financeiro.RetornoBancoService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
@@ -24,6 +25,8 @@ import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.app.inputdialog.DialogActions;
 import io.jmix.flowui.app.inputdialog.DialogOutcome;
+import io.jmix.flowui.backgroundtask.BackgroundTask;
+import io.jmix.flowui.backgroundtask.TaskLifeCycle;
 import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.checkbox.JmixCheckbox;
 import io.jmix.flowui.component.grid.DataGrid;
@@ -37,8 +40,10 @@ import java.io.UncheckedIOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import static io.jmix.flowui.app.inputdialog.InputParameter.localDateParameter;
@@ -74,10 +79,14 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
     private RemessaBancoService remessaBancoService;
     @Autowired
     private RetornoBancoService retornoBancoService;
+    @Autowired
+    private NfcomImportService nfcomImportService;
     @ViewComponent
     private HorizontalLayout buttonsPanel;
     @ViewComponent
     private DataGrid<TituloReceber> tituloRecebersDataGrid;
+
+    private static final long TIMEOUT_IMPORTACAO_MINUTOS = 30;
 
     // Cache do intervalo em uso, pra getPageTitle() não precisar reconsultar o
     // ConfigRel (prepararConfigRel() não é memoizado) a cada chamada do Vaadin.
@@ -258,6 +267,107 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
     @Subscribe("tituloRecebersDataGrid.verRetornosAction")
     public void onTituloRecebersDataGridVerRetornosAction(final ActionPerformedEvent event) {
         dialogWindows.view(this, RetornoBancoListView.class).open();
+    }
+
+    @Subscribe(id = "importarNfcomButton", subject = "clickListener")
+    public void onImportarNfcomButtonClick(final ClickEvent<JmixButton> event) {
+        dialogWindows.view(this, NfcomImportView.class)
+                .withAfterCloseListener(closeEvent -> {
+                    if (!closeEvent.closedWith(StandardOutcome.SAVE)) {
+                        return;
+                    }
+                    Map<String, byte[]> arquivosXml = closeEvent.getView().getArquivosXml();
+                    if (arquivosXml.isEmpty()) {
+                        return;
+                    }
+                    dialogs.createBackgroundTaskDialog(new ImportarNfcomTask(arquivosXml))
+                            .withHeader("Importação de NFCom")
+                            .withText("Importando arquivos XML...")
+                            .withTotal(arquivosXml.size())
+                            .withShowProgressInPercentage(true)
+                            .withCancelAllowed(true)
+                            .open();
+                })
+                .open();
+    }
+
+    /**
+     * Um {@code NfcomImportService.importar} por iteração, publicando o progresso a cada
+     * arquivo — mesmo padrão de {@code NfeListView.ImportarXmlTask}.
+     */
+    protected class ImportarNfcomTask extends BackgroundTask<Integer, List<NfcomImportService.ImportResult>> {
+
+        private final Map<String, byte[]> arquivosXml;
+        private final List<NfcomImportService.ImportResult> resultados = new ArrayList<>();
+
+        protected ImportarNfcomTask(Map<String, byte[]> arquivosXml) {
+            super(TIMEOUT_IMPORTACAO_MINUTOS, TimeUnit.MINUTES, TituloReceberListView.this);
+            this.arquivosXml = arquivosXml;
+        }
+
+        @Override
+        public List<NfcomImportService.ImportResult> run(TaskLifeCycle<Integer> taskLifeCycle) throws Exception {
+            for (Map.Entry<String, byte[]> arquivo : arquivosXml.entrySet()) {
+                if (taskLifeCycle.isCancelled() || taskLifeCycle.isInterrupted()) {
+                    break;
+                }
+                resultados.add(nfcomImportService.importar(arquivo.getKey(), arquivo.getValue()));
+                taskLifeCycle.publish(resultados.size());
+            }
+            return resultados;
+        }
+
+        @Override
+        public void done(List<NfcomImportService.ImportResult> resultados) {
+            tituloRecebersDl.load();
+            dialogs.createMessageDialog()
+                    .withHeader("Importação de NFCom")
+                    .withText(resumoImportacaoNfcom(resultados))
+                    .open();
+        }
+
+        @Override
+        public void canceled() {
+            tituloRecebersDl.load();
+            dialogs.createMessageDialog()
+                    .withHeader("Importação de NFCom")
+                    .withText("Importação interrompida — " + resumoImportacaoNfcom(resultados))
+                    .open();
+        }
+    }
+
+    private String resumoImportacaoNfcom(List<NfcomImportService.ImportResult> resultados) {
+        StringBuilder texto = new StringBuilder();
+        for (NfcomImportService.Resultado resultado : NfcomImportService.Resultado.values()) {
+            long quantidade = resultados.stream().filter(r -> r.resultado() == resultado).count();
+            if (quantidade == 0) {
+                continue;
+            }
+            if (!texto.isEmpty()) {
+                texto.append(", ");
+            }
+            texto.append(quantidade).append(" ").append(descricaoResultadoNfcom(resultado));
+        }
+        List<String> mensagens = resultados.stream()
+                .filter(r -> r.resultado() == NfcomImportService.Resultado.ERRO
+                        || r.resultado() == NfcomImportService.Resultado.IGNORADA)
+                .map(NfcomImportService.ImportResult::mensagem)
+                .toList();
+        if (!mensagens.isEmpty()) {
+            texto.append("\n\n").append(String.join("\n", mensagens));
+        }
+        return texto.toString();
+    }
+
+    private String descricaoResultadoNfcom(NfcomImportService.Resultado resultado) {
+        return switch (resultado) {
+            case CRIADA -> "importada(s)";
+            case CANCELADA -> "cancelada(s)";
+            case DUPLICADA -> "já existente(s)";
+            case NAO_ENCONTRADA -> "não encontrada(s) pra cancelar";
+            case IGNORADA -> "ignorada(s)";
+            case ERRO -> "com erro";
+        };
     }
 
 }
