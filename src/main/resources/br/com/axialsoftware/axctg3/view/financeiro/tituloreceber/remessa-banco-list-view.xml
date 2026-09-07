@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://remessaBancoListView.title"
+      focusComponent="remessaBancosDataGrid">
+    <data>
+        <collection id="remessaBancosDc"
+                    class="br.com.axialsoftware.axctg3.entity.financeiro.RemessaBanco">
+            <fetchPlan extends="_base">
+                <property name="banco" fetchPlan="_instance_name"/>
+            </fetchPlan>
+            <loader id="remessaBancosDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from RemessaBanco e
+                    where e.codEmpresa = :codEmpresa
+                    order by e.dataGeracao desc, e.numRemessa desc]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="remessaBancosDl"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="remessaBancosDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="remessaBancosDc"
+                  columnReorderingAllowed="true" themeNames="small">
+            <columns resizable="true">
+                <column property="banco" filterable="true" flexGrow="3"/>
+                <column property="numRemessa" filterable="true"/>
+                <column property="dataGeracao" filterable="true"/>
+                <column property="quantidadeTitulos" filterable="true"/>
+                <column property="valorTotal" filterable="true" textAlign="END"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction" themeNames="small"/>
+            <button id="discardButton" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

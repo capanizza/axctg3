@@ -8,7 +8,7 @@
             <fetchPlan extends="_base">
                 <property name="itens" fetchPlan="_base"/>
                 <property name="parceiro" fetchPlan="_base"/>
-                <property name="banco" fetchPlan="_instance_name"/>
+                <property name="banco" fetchPlan="_base"/>
                 <property name="aberto"/>
                 <property name="contabilizadoEmissao"/>
             </fetchPlan>
@@ -53,6 +53,15 @@
                         </actionItem>
                     </items>
                 </dropdownButton>
+                <button id="gerarRemessaButton" action="tituloRecebersDataGrid.gerarRemessaAction" themeNames="small"/>
+                <button id="lerRetornoButton" text="msg://tituloReceberListView.lerRetornoButton.text" themeNames="small"/>
+                <dropdownButton id="cobrancaBancariaDropdownButton"
+                                text="msg://tituloReceberListView.cobrancaBancariaDropdownButton.text" themeNames="small">
+                    <items>
+                        <actionItem id="verRemessasItem" ref="tituloRecebersDataGrid.verRemessasAction"/>
+                        <actionItem id="verRetornosItem" ref="tituloRecebersDataGrid.verRetornosAction"/>
+                    </items>
+                </dropdownButton>
             </startSlot>
             <endSlot>
                 <simplePagination id="pagination" dataLoader="tituloRecebersDl"/>
@@ -70,6 +79,9 @@
                 <action id="editAction" type="list_edit"/>
                 <action id="removeAction" type="list_remove"/>
                 <action id="delimitarAction" text="Delimitar" icon="vaadin:calendar"/>
+                <action id="gerarRemessaAction" text="msg://tituloReceberListView.gerarRemessaAction.text" icon="vaadin:upload"/>
+                <action id="verRemessasAction" text="msg://tituloReceberListView.verRemessasAction.text"/>
+                <action id="verRetornosAction" text="msg://tituloReceberListView.verRetornosAction.text"/>
             </actions>
             <columns resizable="true">
                 <column property="numero" flexGrow="0" filterable="true"/>
@@ -81,6 +93,7 @@
                 <column property="aberto" flexGrow="0" textAlign="CENTER"/>
                 <column property="contabilizadoEmissao" flexGrow="0" textAlign="CENTER"/>
                 <column property="numBanco" filterable="true"/>
+                <column property="numRemessa" filterable="true"/>
             </columns>
         </dataGrid>
         <hbox id="lookupActions" visible="false">

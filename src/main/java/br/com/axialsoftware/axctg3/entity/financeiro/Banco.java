@@ -129,6 +129,16 @@ public class Banco {
     @Column(name = "CARTEIRA", length = 10)
     private String carteira;
 
+    @Column(name = "POSTO", length = 2)
+    private String posto;
+
+    // Byte de geração do Nosso Número (0-9; "1" é reservado pra títulos pré-impressos
+    // pela Cooperativa) — atribuído pelo banco no cadastro do cedente, usado no cálculo
+    // do DV por módulo 11 quando o boleto é emitido pelo beneficiário. Ver
+    // SicrediCnab400Handler.
+    @Column(name = "BYTE_GERACAO_NOSSO_NUMERO")
+    private Integer byteGeracaoNossoNumero;
+
     @Column(name = "CONVENIO", length = 10)
     private String convenio;
 
@@ -235,6 +245,22 @@ public class Banco {
 
     public void setCarteira(String carteira) {
         this.carteira = carteira;
+    }
+
+    public String getPosto() {
+        return posto;
+    }
+
+    public void setPosto(String posto) {
+        this.posto = posto;
+    }
+
+    public Integer getByteGeracaoNossoNumero() {
+        return byteGeracaoNossoNumero;
+    }
+
+    public void setByteGeracaoNossoNumero(Integer byteGeracaoNossoNumero) {
+        this.byteGeracaoNossoNumero = byteGeracaoNossoNumero;
     }
 
     public Integer getDiasProtesto() {

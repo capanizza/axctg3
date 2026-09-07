@@ -118,6 +118,11 @@ public class TituloReceber {
     @Column(name = "NUM_BANCO")
     private String numBanco;
 
+    // Número da remessa bancária em que o título foi enviado (null = nunca enviado). Ver
+    // RemessaBancoService.
+    @Column(name = "NUM_REMESSA")
+    private Integer numRemessa;
+
     @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
     @Column(name = "VALOR", nullable = false, precision = 19, scale = 2)
     @NotNull
@@ -163,6 +168,14 @@ public class TituloReceber {
 
     public void setNumBanco(String numBanco) {
         this.numBanco = numBanco;
+    }
+
+    public Integer getNumRemessa() {
+        return numRemessa;
+    }
+
+    public void setNumRemessa(Integer numRemessa) {
+        this.numRemessa = numRemessa;
     }
 
     public Banco getBanco() {

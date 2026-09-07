@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://retornoBancoListView.title"
+      focusComponent="retornoBancosDataGrid">
+    <data>
+        <collection id="retornoBancosDc"
+                    class="br.com.axialsoftware.axctg3.entity.financeiro.RetornoBanco">
+            <fetchPlan extends="_base">
+                <property name="banco" fetchPlan="_instance_name"/>
+            </fetchPlan>
+            <loader id="retornoBancosDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from RetornoBanco e
+                    where e.codEmpresa = :codEmpresa
+                    order by e.dataProcessamento desc]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="retornoBancosDl"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="retornoBancosDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="retornoBancosDc"
+                  columnReorderingAllowed="true" themeNames="small">
+            <columns resizable="true">
+                <column property="banco" filterable="true" flexGrow="3"/>
+                <column property="dataProcessamento" filterable="true"/>
+                <column property="nomeArquivo" filterable="true" flexGrow="3"/>
+                <column property="quantidadeConfirmados" filterable="true"/>
+                <column property="quantidadeBaixados" filterable="true"/>
+                <column property="quantidadeRejeitados" filterable="true"/>
+                <column property="quantidadeNaoEncontrados" filterable="true"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction" themeNames="small"/>
+            <button id="discardButton" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>
