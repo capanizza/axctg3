@@ -59,7 +59,8 @@
                                 dropdownIndicatorVisible="true">
                     <items>
                         <actionItem id="importarNfcomItem">
-                            <action id="importarNfcomAction" text="Importar XMLs" icon="vaadin:file-add"/>
+                            <action id="importarNfcomAction"
+                                    text="msg://tituloReceberListView.importarNfcomAction.text" icon="vaadin:file-add"/>
                         </actionItem>
                         <actionItem id="gerarRemessaItem" ref="tituloRecebersDataGrid.gerarRemessaAction"/>
                         <actionItem id="lerRetornoItem">
