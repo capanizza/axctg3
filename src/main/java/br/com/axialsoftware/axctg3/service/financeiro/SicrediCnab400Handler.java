@@ -126,8 +126,10 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
         l.alfa("N", 1);                                    // 072 postagem: beneficiário posta
         l.filler(1);                                       // 073
         l.alfa("B", 1);                                    // 074 impressão: beneficiário/cedente
-        l.numerico("0", 2);                                // 075-076 nº parcela carnê: não usado
-        l.numerico("0", 2);                                // 077-078 nº total parcelas carnê: não usado
+        // 075-078: numérico no manual, mas o Axial (via ACBrMonitorPLUS, aceito pelo banco
+        // na prática) deixa em branco quando não é carnê — mantido igual ao Axial.
+        l.filler(2);                                       // 075-076 nº parcela carnê: não usado
+        l.filler(2);                                       // 077-078 nº total parcelas carnê: não usado
         l.filler(4);                                       // 079-082
         l.numerico("0", 10);                               // 083-092 desconto por antecipação: não usado
         l.numerico("0", 4);                                // 093-096 multa percentual: não usado
@@ -150,7 +152,7 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
         l.numerico("0", 13);                                // 180-192 desconto: não usado
         l.numerico("00", 2);                                // 193-194 negativação automática: não negativar
         l.numerico("00", 2);                                // 195-196 dias pra negativação
-        l.filler(9);                                        // 197-205
+        l.numerico("0", 9);                                 // 197-205 (manual e Axial preenchem com zeros)
         l.numerico("0", 13);                                // 206-218 abatimento: não usado
         l.numerico(sacadoPessoaJuridica ? "2" : "1", 1);    // 219 tipo inscrição sacado
         l.numerico("0", 1);                                 // 220
