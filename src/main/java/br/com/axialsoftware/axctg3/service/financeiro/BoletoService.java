@@ -131,7 +131,7 @@ public class BoletoService {
         dto.setAceite("N");
         dto.setCodigoBancoComDv(banco.getCodGeral() + "-" + handler.getDigitoVerificadorBanco());
         dto.setLocalPagamento(banco.getLocalPagamento());
-        dto.setNossoNumeroFormatado(handler.formatarNossoNumero(tituloReceber.getNumBanco()));
+        dto.setNossoNumeroFormatado(handler.formatarNossoNumero(banco, tituloReceber));
         dto.setAgenciaCodigoBeneficiario(handler.formatarAgenciaCodigoBeneficiario(banco));
         dto.setNomeBeneficiario(empresa.getNome());
         dto.setCnpjBeneficiario(formatarCnpj(empresa.getCnpj()));

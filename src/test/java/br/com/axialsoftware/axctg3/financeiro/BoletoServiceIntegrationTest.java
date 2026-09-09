@@ -182,18 +182,21 @@ class BoletoServiceIntegrationTest {
     }
 
     @Test
-    void test_emitirBoletosComNumBancoCurtoDoLegadoLancaExcecao() {
+    void test_emitirBoletosComNumBancoCurtoDoLegadoGeraPdfReal() {
         // Título importado do legado com só o sequencial cru em numBanco (sem o prefixo
-        // ano+byte que RemessaBancoService.gerarRemessa geraria) — caso real encontrado em
-        // 2026-09-09 testando contra a Radio. Ver SicrediCnab400HandlerTest.
+        // ano+byte) — é o formato NORMAL de armazenamento, confirmado com o usuário
+        // 2026-09-09: só o sequencial fica gravado, ano/byte/DV são recompostos na hora.
+        // Caso real: título 000313 da Radio, numBanco="00036" (Nosso Número real
+        // histórico era 26/200036-9). Ver SicrediCnab400HandlerTest.
         TituloReceber titulo = criarTitulo("0000313", new BigDecimal("1300.00"));
         titulo.setNumBanco("00036");
         titulo = dataManager.save(titulo);
 
-        List<TituloReceber> titulos = List.of(titulo);
-        assertThatThrownBy(() -> boletoService.emitirBoletos(titulos))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("0000313");
+        boletoService.emitirBoletos(List.of(titulo));
+
+        ArgumentCaptor<byte[]> pdfCaptor = ArgumentCaptor.forClass(byte[].class);
+        verify(downloader).download(pdfCaptor.capture(), eq("Boleto 0000313.pdf"), eq(DownloadFormat.PDF));
+        assertThat(new String(pdfCaptor.getValue(), 0, 4, StandardCharsets.US_ASCII)).isEqualTo("%PDF");
     }
 
     private TituloReceber criarTitulo(String numero, BigDecimal valor) {

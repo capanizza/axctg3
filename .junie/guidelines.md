@@ -144,9 +144,25 @@ bank present, and resolves the template as `"boleto" + codGeral + ".jasper"` —
 per bank**, not a shared one, because Febraban only standardizes the barcode's outer shape
 (banco+moeda+DV+fator de vencimento+valor); the 25-digit "campo livre" inside it and the
 printed layout are bank-specific. Requires `TituloReceber.getNumBanco()` (Nosso Número)
-already set — i.e. the título has to have gone through `RemessaBancoService.gerarRemessa`
-first; `BoletoService` throws `IllegalArgumentException` otherwise, and
+already set — either via `RemessaBancoService.gerarRemessa`, or carried over from a legacy
+import (see below); `BoletoService` throws `IllegalArgumentException` when it's blank, and
 `TituloReceberListView` pre-checks it too for a friendlier dialog.
+
+**`TituloReceber.numBanco` only ever stores the bare 5-digit sequential, never the full
+9-digit Nosso Número** (Sicredi format `AABXXXXXD`: ano+byte+sequencial+DV) — confirmed
+against the legacy system 2026-09-09. The ano/byte/DV get recomposed from scratch every
+time the full number is needed (`SicrediCnab400Handler.nossoNumeroCompleto`), using
+`Banco.byteGeracaoNossoNumero` and **the current date** at that moment — not the título's
+issue date, not whatever date the remessa was originally sent. So `gerarRemessa` and a
+boleto print months apart can legitimately embed a different `ano` for the same título;
+that's the legacy behavior being replicated, not a bug. Two consequences fall out of this:
+`gerarRemessa` reuses whatever's already in `numBanco` unchanged (a legacy-imported
+"00036" included) instead of pulling a fresh sequential off `Banco.nossoNumAtual` — it only
+generates+advances the counter when `numBanco` is blank; and both `gerarRemessa` and the
+boleto path stay backward-compatible with a título that already carries the full 9-digit
+value (persisted by an axctg3 build from before this decision) — `nossoNumeroCompleto`
+uses a stored value as-is when it's already 9+ digits, only reconstructing from a shorter
+one.
 
 `BancoCobrancaHandler` (the same interface `SicrediCnab400Handler` implements for
 remessa/retorno) also owns the bank-specific pieces: `montarCodigoBarras`,

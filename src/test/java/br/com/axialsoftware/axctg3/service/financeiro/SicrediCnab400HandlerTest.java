@@ -159,10 +159,29 @@ class SicrediCnab400HandlerTest {
 
         handler.gerarRemessa(empresa, banco, List.of(titulo1, titulo2), 1);
 
-        assertThat(titulo1.getNumBanco()).hasSize(9);
-        assertThat(titulo2.getNumBanco()).hasSize(9);
+        // Só o sequencial (5 dígitos) fica gravado agora — ano/byte/DV são recompostos na
+        // hora (remessa e boleto), não persistidos. Ver nossoNumeroCompleto.
+        assertThat(titulo1.getNumBanco()).hasSize(5);
+        assertThat(titulo2.getNumBanco()).hasSize(5);
         assertThat(titulo1.getNumBanco()).isNotEqualTo(titulo2.getNumBanco());
         assertThat(banco.getNossoNumAtual()).isEqualTo("00002");
+    }
+
+    @Test
+    void test_gerarRemessaReaproveitaNumBancoExistenteSemAvancarContador() {
+        // Decisão do usuário 2026-09-09: título que já tem numBanco (5 dígitos, ex.:
+        // importado do legado) não deve pegar um sequencial novo do NOSSO_NUM_ATUAL — só
+        // usa o que já está lá.
+        Banco banco = criarBanco();
+        banco.setNossoNumAtual("00010"); // próximo seria 11
+        Empresa empresa = criarEmpresa();
+        TituloReceber titulo = criarTitulo("0000313", BigDecimal.TEN);
+        titulo.setNumBanco("00036"); // já tem valor — do legado
+
+        handler.gerarRemessa(empresa, banco, List.of(titulo), 1);
+
+        assertThat(titulo.getNumBanco()).isEqualTo("00036"); // não sobrescreveu
+        assertThat(banco.getNossoNumAtual()).isEqualTo("00010"); // não avançou
     }
 
     @Test
@@ -232,18 +251,55 @@ class SicrediCnab400HandlerTest {
     }
 
     @Test
-    void test_montarCodigoBarras_numBancoCurtoLancaExcecao() {
-        // Bug real em 2026-09-09: título importado do legado com numBanco="00036" (só o
-        // sequencial, sem o prefixo ano+byte) gerava silenciosamente "00/000003-6" em vez
-        // do "26/200036-9" correto — numerico() zero-preenche pela esquerda sem avisar.
+    void test_nossoNumeroCompleto_reconstituiApartirDoSequencialCurto() {
+        // Confirmado com o usuário 2026-09-09: só o sequencial (5 dígitos) fica gravado
+        // em numBanco — o completo é sempre recomposto. "00036" tem que reconstituir pro
+        // mesmo 262000369 que o Axial/ACBr gerou de verdade (mesmo caso de
+        // test_calculoDvNossoNumero_confereContraRemessaRealDaRadio).
+        Banco banco = bancoRadio();
+
+        String completo = SicrediCnab400Handler.nossoNumeroCompleto(banco, "00036", LocalDate.of(2026, 3, 10));
+
+        assertThat(completo).isEqualTo("262000369");
+    }
+
+    @Test
+    void test_nossoNumeroCompleto_jaCompletoUsaComoEsta() {
+        // Compatibilidade com título já remessado antes dessa mudança (numBanco com os 9
+        // dígitos completos gravados) — não recompõe, usa direto.
+        Banco banco = bancoRadio();
+
+        String completo = SicrediCnab400Handler.nossoNumeroCompleto(banco, "262000458", LocalDate.of(2099, 1, 1));
+
+        assertThat(completo).isEqualTo("262000458");
+    }
+
+    @Test
+    void test_montarCodigoBarras_aceitaNumBancoCurtoDoLegado() {
+        // numBanco="00036" (só o sequencial) — formato real de título importado do
+        // legado. Reconstituição em si já testada isoladamente acima; aqui confere que o
+        // pipeline inteiro embute o Nosso Número recomposto no campo livre.
         Banco banco = bancoRadio();
         TituloReceber titulo = criarTitulo("0000313", new BigDecimal("1300.00"));
         titulo.setNumBanco("00036");
 
+        String codigoBarras = handler.montarCodigoBarras(banco, titulo);
+        String nossoNumeroEsperado = SicrediCnab400Handler.nossoNumeroCompleto(banco, "00036", LocalDate.now());
+
+        assertThat(codigoBarras).hasSize(44);
+        assertThat(codigoBarras.substring(19, 21)).isEqualTo("11"); // modalidade + carteira
+        assertThat(codigoBarras.substring(21, 30)).isEqualTo(nossoNumeroEsperado);
+    }
+
+    @Test
+    void test_montarCodigoBarras_numBancoEmBrancoLancaExcecao() {
+        Banco banco = bancoRadio();
+        TituloReceber titulo = criarTitulo("0000001", BigDecimal.TEN);
+        titulo.setNumBanco(null);
+
         assertThatThrownBy(() -> handler.montarCodigoBarras(banco, titulo))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("0000313")
-                .hasMessageContaining("00036");
+                .hasMessageContaining("0000001");
     }
 
     @Test
@@ -255,8 +311,29 @@ class SicrediCnab400HandlerTest {
 
     @Test
     void test_formatarNossoNumero() {
-        assertThat(handler.formatarNossoNumero("262000458")).isEqualTo("26/200045-8");
-        assertThat(handler.formatarNossoNumero("262000024")).isEqualTo("26/200002-4");
+        Banco banco = bancoRadio();
+        TituloReceber titulo1 = criarTitulo("0000191", BigDecimal.TEN);
+        titulo1.setNumBanco("262000458");
+        TituloReceber titulo2 = criarTitulo("0000193", BigDecimal.TEN);
+        titulo2.setNumBanco("262000024");
+
+        assertThat(handler.formatarNossoNumero(banco, titulo1)).isEqualTo("26/200045-8");
+        assertThat(handler.formatarNossoNumero(banco, titulo2)).isEqualTo("26/200002-4");
+    }
+
+    @Test
+    void test_formatarNossoNumero_reconstituiApartirDoSequencialCurto() {
+        // DV depende do ano (entra na soma do módulo 11), então não dá pra cravar um
+        // dígito fixo aqui — compara contra nossoNumeroCompleto, já testado isoladamente
+        // com data fixa em test_nossoNumeroCompleto_reconstituiApartirDoSequencialCurto.
+        Banco banco = bancoRadio();
+        TituloReceber titulo = criarTitulo("0000313", BigDecimal.TEN);
+        titulo.setNumBanco("00036");
+
+        String formatado = handler.formatarNossoNumero(banco, titulo);
+
+        String completo = SicrediCnab400Handler.nossoNumeroCompleto(banco, "00036", LocalDate.now());
+        assertThat(formatado).isEqualTo(completo.substring(0, 2) + "/" + completo.substring(2, 8) + "-" + completo.substring(8, 9));
     }
 
     @Test
@@ -278,6 +355,7 @@ class SicrediCnab400HandlerTest {
         banco.setCodCedente("59622");
         banco.setAgencia("0738");
         banco.setPosto("33");
+        banco.setByteGeracaoNossoNumero(2);
         return banco;
     }
 

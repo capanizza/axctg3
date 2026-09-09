@@ -41,8 +41,13 @@ public interface BancoCobrancaHandler {
     /** Dígito verificador Febraban do código do banco, ex.: {@code "X"} pro 748 (Sicredi). */
     String getDigitoVerificadorBanco();
 
-    /** Formata {@link TituloReceber#getNumBanco()} (Nosso Número cru) pro padrão impresso do banco. */
-    String formatarNossoNumero(String numBanco);
+    /**
+     * Formata o Nosso Número pro padrão impresso do banco — recebe {@link Banco} porque
+     * alguns bancos (Sicredi incluso) só persistem o sequencial em
+     * {@link TituloReceber#getNumBanco()}; o resto (ano/byte/DV) é recomposto a partir do
+     * cadastro do banco e da data atual, não fica gravado.
+     */
+    String formatarNossoNumero(Banco banco, TituloReceber tituloReceber);
 
     /** Formata agência/posto/código do cedente pro cabeçalho "Agência / Código Beneficiário" do boleto. */
     String formatarAgenciaCodigoBeneficiario(Banco banco);

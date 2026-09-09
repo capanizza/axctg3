@@ -73,11 +73,17 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
         arquivo.append(header(empresa, banco, numeroRemessa, dataRemessa)).append("\r\n");
 
         int sequencial = 2; // 1 é o header
-        int anoDoisDigitos = dataRemessa.getYear() % 100;
         for (TituloReceber tituloReceber : titulos) {
-            int seqNossoNumero = proximoSequencialNossoNumero(banco);
-            String nossoNumero = gerarNossoNumero(banco, anoDoisDigitos, seqNossoNumero);
-            tituloReceber.setNumBanco(nossoNumero);
+            // Título sem Nosso Número ainda (nunca remessado) → gera um sequencial novo,
+            // avançando o contador do banco. Título que já tem numBanco (5 dígitos,
+            // importado do legado, ou já remessado antes) → reaproveita como está, nunca
+            // sobrescreve — decisão do usuário 2026-09-09, confirmada contra o legado: só o
+            // sequencial fica gravado, ano/byte/DV são recompostos na hora (aqui e no
+            // boleto), não vêm do NOSSO_NUM_ATUAL do banco de novo.
+            if (tituloReceber.getNumBanco() == null || tituloReceber.getNumBanco().isBlank()) {
+                tituloReceber.setNumBanco(String.format("%05d", proximoSequencialNossoNumero(banco)));
+            }
+            String nossoNumero = nossoNumeroCompleto(banco, tituloReceber.getNumBanco(), dataRemessa);
             arquivo.append(detalheTipo1(tituloReceber, nossoNumero, sequencial, dataRemessa)).append("\r\n");
             sequencial++;
         }
@@ -251,6 +257,27 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
     }
 
     /**
+     * Nosso Número completo (9 dígitos), a partir do que está gravado em
+     * {@link TituloReceber#getNumBanco()}. Só o sequencial (5 dígitos) fica persistido —
+     * ano/byte/DV são recompostos toda vez que o número precisa aparecer em algum lugar
+     * (remessa ou boleto), usando o ano de {@code dataReferencia} e o byte de geração
+     * atual do cadastro do banco. Compatível com títulos remessados antes dessa mudança,
+     * que já têm os 9 dígitos completos gravados (usa como está, não recalcula).
+     */
+    static String nossoNumeroCompleto(Banco banco, String numBancoArmazenado, LocalDate dataReferencia) {
+        String digitos = soDigitos(numBancoArmazenado);
+        if (digitos.isEmpty()) {
+            throw new IllegalArgumentException("Nosso Número não informado");
+        }
+        if (digitos.length() >= 9) {
+            return digitos.length() == 9 ? digitos : digitos.substring(digitos.length() - 9);
+        }
+        int anoDoisDigitos = dataReferencia.getYear() % 100;
+        int sequencial = Integer.parseInt(numerico(digitos, 5));
+        return gerarNossoNumero(banco, anoDoisDigitos, sequencial);
+    }
+
+    /**
      * DV por módulo 11 sobre {@code aaaappcccccyybnnnnn} (agência/cooperativa + posto +
      * código do cedente + ano + byte de geração + sequencial, 19 dígitos), pesos 2..9
      * ciclando da direita pra esquerda. Resto 0 ou 1 → DV = 0 (regra do manual).
@@ -340,19 +367,15 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
      * de zero" — sempre 1 na prática) + filler "0" + DV do campo livre (1).
      */
     private static String montarCampoLivre(Banco banco, TituloReceber tituloReceber) {
-        String digitosNumBanco = soDigitos(tituloReceber.getNumBanco());
-        // numerico() silenciosamente zero-preenche pela esquerda — um Nosso Número mais
-        // curto que 9 dígitos (ex.: importado do legado como sequencial cru, sem o
-        // prefixo ano+byte) viraria um código de barras com ano/byte errados sem avisar
-        // ninguém. Bug real encontrado em 2026-09-09: título com numBanco="00036" (5
-        // dígitos) gerou "00/000003-6" em vez do "26/200036-9" correto.
-        if (digitosNumBanco.length() != 9) {
+        if (tituloReceber.getNumBanco() == null || tituloReceber.getNumBanco().isBlank()) {
             throw new IllegalArgumentException("Título " + tituloReceber.getNumero()
-                    + " tem Nosso Número \"" + tituloReceber.getNumBanco() + "\" fora do formato esperado "
-                    + "(9 dígitos: ano+byte+sequencial+DV) — provavelmente importado do legado sem o prefixo "
-                    + "ano/byte. Gere a remessa bancária de novo pra esse título antes de emitir o boleto.");
+                    + " ainda não tem Nosso Número — gere a remessa bancária primeiro.");
         }
-        String nossoNumero = numerico(digitosNumBanco, 9);
+        // Recompõe ano/byte/DV a partir do sequencial gravado (5 dígitos) e do contexto
+        // atual — ver Javadoc de nossoNumeroCompleto. "Hoje", não a data de emissão do
+        // título: é quando o boleto está sendo impresso que decide o ano usado, igual ao
+        // legado (confirmado com o usuário 2026-09-09).
+        String nossoNumero = nossoNumeroCompleto(banco, tituloReceber.getNumBanco(), LocalDate.now());
         String semDv = "1" + "1" + nossoNumero
                 + numerico(banco.getAgencia(), 4)
                 + numerico(banco.getPosto(), 2)
@@ -373,10 +396,13 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
         return String.format("%04d", fator);
     }
 
-    /** {@code AA/BXXXXX-D} a partir do Nosso Número {@code AABXXXXXD} (9 dígitos). */
+    /**
+     * {@code AA/BXXXXX-D} — recompõe o Nosso Número completo a partir do sequencial
+     * gravado (ver {@link #nossoNumeroCompleto}) e formata pro cabeçalho do boleto.
+     */
     @Override
-    public String formatarNossoNumero(String numBanco) {
-        String digitos = numerico(numBanco, 9);
+    public String formatarNossoNumero(Banco banco, TituloReceber tituloReceber) {
+        String digitos = nossoNumeroCompleto(banco, tituloReceber.getNumBanco(), LocalDate.now());
         return digitos.substring(0, 2) + "/" + digitos.substring(2, 8) + "-" + digitos.substring(8, 9);
     }
 
