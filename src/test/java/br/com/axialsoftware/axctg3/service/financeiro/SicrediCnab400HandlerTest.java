@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Teste puro (sem Spring) do leiaute CNAB400 Sicredi — as entidades são construídas com
@@ -228,6 +229,21 @@ class SicrediCnab400HandlerTest {
         String codigoBarras = handler.montarCodigoBarras(banco, titulo);
 
         assertThat(codigoBarras).isEqualTo("748" + "9" + "1" + "1381" + "0000055000" + "1126200002407383359622100");
+    }
+
+    @Test
+    void test_montarCodigoBarras_numBancoCurtoLancaExcecao() {
+        // Bug real em 2026-09-09: título importado do legado com numBanco="00036" (só o
+        // sequencial, sem o prefixo ano+byte) gerava silenciosamente "00/000003-6" em vez
+        // do "26/200036-9" correto — numerico() zero-preenche pela esquerda sem avisar.
+        Banco banco = bancoRadio();
+        TituloReceber titulo = criarTitulo("0000313", new BigDecimal("1300.00"));
+        titulo.setNumBanco("00036");
+
+        assertThatThrownBy(() -> handler.montarCodigoBarras(banco, titulo))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("0000313")
+                .hasMessageContaining("00036");
     }
 
     @Test

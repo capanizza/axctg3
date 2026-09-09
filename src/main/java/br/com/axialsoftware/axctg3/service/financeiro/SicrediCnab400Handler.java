@@ -340,7 +340,19 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
      * de zero" — sempre 1 na prática) + filler "0" + DV do campo livre (1).
      */
     private static String montarCampoLivre(Banco banco, TituloReceber tituloReceber) {
-        String nossoNumero = numerico(tituloReceber.getNumBanco(), 9);
+        String digitosNumBanco = soDigitos(tituloReceber.getNumBanco());
+        // numerico() silenciosamente zero-preenche pela esquerda — um Nosso Número mais
+        // curto que 9 dígitos (ex.: importado do legado como sequencial cru, sem o
+        // prefixo ano+byte) viraria um código de barras com ano/byte errados sem avisar
+        // ninguém. Bug real encontrado em 2026-09-09: título com numBanco="00036" (5
+        // dígitos) gerou "00/000003-6" em vez do "26/200036-9" correto.
+        if (digitosNumBanco.length() != 9) {
+            throw new IllegalArgumentException("Título " + tituloReceber.getNumero()
+                    + " tem Nosso Número \"" + tituloReceber.getNumBanco() + "\" fora do formato esperado "
+                    + "(9 dígitos: ano+byte+sequencial+DV) — provavelmente importado do legado sem o prefixo "
+                    + "ano/byte. Gere a remessa bancária de novo pra esse título antes de emitir o boleto.");
+        }
+        String nossoNumero = numerico(digitosNumBanco, 9);
         String semDv = "1" + "1" + nossoNumero
                 + numerico(banco.getAgencia(), 4)
                 + numerico(banco.getPosto(), 2)

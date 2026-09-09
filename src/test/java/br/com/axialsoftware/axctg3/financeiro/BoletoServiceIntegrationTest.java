@@ -181,6 +181,21 @@ class BoletoServiceIntegrationTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
+    @Test
+    void test_emitirBoletosComNumBancoCurtoDoLegadoLancaExcecao() {
+        // Título importado do legado com só o sequencial cru em numBanco (sem o prefixo
+        // ano+byte que RemessaBancoService.gerarRemessa geraria) — caso real encontrado em
+        // 2026-09-09 testando contra a Radio. Ver SicrediCnab400HandlerTest.
+        TituloReceber titulo = criarTitulo("0000313", new BigDecimal("1300.00"));
+        titulo.setNumBanco("00036");
+        titulo = dataManager.save(titulo);
+
+        List<TituloReceber> titulos = List.of(titulo);
+        assertThatThrownBy(() -> boletoService.emitirBoletos(titulos))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("0000313");
+    }
+
     private TituloReceber criarTitulo(String numero, BigDecimal valor) {
         TituloReceber tituloReceber = dataManager.create(TituloReceber.class);
         tituloReceber.setNumero(numero);
