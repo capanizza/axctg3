@@ -13,6 +13,7 @@ import java.text.Normalizer;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -34,6 +35,18 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
 
     private static final int COD_GERAL_SICREDI = 748;
     private static final int TAMANHO_LINHA = 400;
+
+    // Dígito verificador Febraban do código do banco (fixo, não depende do título) — sai
+    // impresso como "748-X" no canto do boleto (ver os PDFs reais de referência).
+    private static final String DIGITO_VERIFICADOR_BANCO = "X";
+
+    // Base do fator de vencimento (seção "Composição do Código de Barras" do manual) —
+    // fórmula e data-base conferidas contra o código-fonte do ACBrBoleto
+    // (TACBrBancoClass.CalcularFatorVencimento em ACBrBoleto.pas, o mesmo componente que
+    // gerou os PDFs de referência): fator = ((diasDesde03/07/2000) mod 9000) + 1000. Não é
+    // a data-base "22/02/2025" da nova regra Febraban por coincidência — o mod 9000 dessa
+    // fórmula mais antiga já cruza por 1000 exatamente nessa data.
+    private static final LocalDate BASE_FATOR_VENCIMENTO = LocalDate.of(2000, 7, 3);
 
     private static final DateTimeFormatter DATA_AAAAMMDD = DateTimeFormatter.ofPattern("yyyyMMdd");
     private static final DateTimeFormatter DATA_DDMMAA = DateTimeFormatter.ofPattern("ddMMyy");
@@ -256,6 +269,17 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
         String posto = numerico(banco.getPosto(), 2);
         String codCedente = numerico(banco.getCodCedente(), 5);
         String base = agencia + posto + codCedente + ano + byteGeracao + sequencial;
+        return dvModulo11RestoZeroUmViraZero(base);
+    }
+
+    /**
+     * Módulo 11 padrão (pesos 2..9 ciclando da direita pra esquerda), resto 0 ou 1 → DV 0 —
+     * regra usada tanto pro DV do Nosso Número quanto pro DV do campo livre do código de
+     * barras (confirmado contra {@code TACBrBancoSicredi.CalcularDigitoVerificador} e
+     * {@code TACBrBancoSicredi.MontarCodigoBarras} em ACBrBancoSicredi.pas — mesmo
+     * {@code Modulo.CalculoPadrao} nos dois casos).
+     */
+    private static int dvModulo11RestoZeroUmViraZero(String base) {
         int soma = 0;
         int peso = 2;
         for (int i = base.length() - 1; i >= 0; i--) {
@@ -265,6 +289,89 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
         int resto = soma % 11;
         int dv = 11 - resto;
         return (dv == 10 || dv == 11) ? 0 : dv;
+    }
+
+    /**
+     * Módulo 11 padrão do DV geral do código de barras (Febraban, todos os bancos) — mesmos
+     * pesos 2..9, mas resto 0 ou 1 → DV 1 (regra diferente da do Nosso Número/campo livre).
+     * Confirmado contra {@code TACBrBancoClass.CalcularDigitoCodigoBarras} em ACBrBoleto.pas
+     * e recalculado na mão contra um boleto real (748-9-<b>9</b>-1381-0000120000-...).
+     */
+    private static int dvModulo11RestoZeroUmViraUm(String base) {
+        int soma = 0;
+        int peso = 2;
+        for (int i = base.length() - 1; i >= 0; i--) {
+            soma += (base.charAt(i) - '0') * peso;
+            peso = peso == 9 ? 2 : peso + 1;
+        }
+        int resto = soma % 11;
+        int dv = 11 - resto;
+        return (dv == 10 || dv == 11) ? 1 : dv;
+    }
+
+    // ------------------------------------------------------------------------------
+    // Boleto — código de barras (44 dígitos) e campo livre (seção "Composição do Código
+    // de Barras" do manual Sicredi CNAB400.pdf, seção 4). Fórmula do campo livre e do
+    // fator de vencimento conferidas campo a campo contra ACBrBancoSicredi.pas/
+    // ACBrBoleto.pas e contra 2 boletos reais (ver SicrediCnab400HandlerTest).
+    // ------------------------------------------------------------------------------
+
+    @Override
+    public String getDigitoVerificadorBanco() {
+        return DIGITO_VERIFICADOR_BANCO;
+    }
+
+    @Override
+    public String montarCodigoBarras(Banco banco, TituloReceber tituloReceber) {
+        String campoLivre = montarCampoLivre(banco, tituloReceber);
+        String fatorVencimento = fatorVencimento(tituloReceber.getDataVencimento());
+        String valor = numerico(valorEmCentavos(tituloReceber.getValor()), 10);
+
+        String semDv = COD_GERAL_SICREDI + "9" + fatorVencimento + valor + campoLivre; // 43 dígitos
+        int dvGeral = dvModulo11RestoZeroUmViraUm(semDv);
+
+        return COD_GERAL_SICREDI + "9" + dvGeral + fatorVencimento + valor + campoLivre; // 44 dígitos
+    }
+
+    /**
+     * 25 dígitos: modalidade (1, fixo "com registro") + carteira (1, fixo "simples") +
+     * Nosso Número (9) + agência/cooperativa (4) + posto (2) + código do cedente (5) +
+     * filler "1" (documentado no ACBr como "será 1 quando valor do documento for diferente
+     * de zero" — sempre 1 na prática) + filler "0" + DV do campo livre (1).
+     */
+    private static String montarCampoLivre(Banco banco, TituloReceber tituloReceber) {
+        String nossoNumero = numerico(tituloReceber.getNumBanco(), 9);
+        String semDv = "1" + "1" + nossoNumero
+                + numerico(banco.getAgencia(), 4)
+                + numerico(banco.getPosto(), 2)
+                + numerico(banco.getCodCedente(), 5)
+                + "1" + "0"; // 24 dígitos
+        int dv = dvModulo11RestoZeroUmViraZero(semDv);
+        return semDv + dv; // 25 dígitos
+    }
+
+    /**
+     * {@code ((diasDesde03/07/2000) mod 9000) + 1000}, 4 dígitos. Confirmado contra
+     * {@code TACBrBancoClass.CalcularFatorVencimento} (ACBrBoleto.pas) e contra vencimento
+     * real 10/03/2026 → fator 1381.
+     */
+    static String fatorVencimento(LocalDate vencimento) {
+        long dias = ChronoUnit.DAYS.between(BASE_FATOR_VENCIMENTO, vencimento);
+        long fator = Math.floorMod(dias, 9000) + 1000;
+        return String.format("%04d", fator);
+    }
+
+    /** {@code AA/BXXXXX-D} a partir do Nosso Número {@code AABXXXXXD} (9 dígitos). */
+    @Override
+    public String formatarNossoNumero(String numBanco) {
+        String digitos = numerico(numBanco, 9);
+        return digitos.substring(0, 2) + "/" + digitos.substring(2, 8) + "-" + digitos.substring(8, 9);
+    }
+
+    /** {@code AAAA.PP.CCCCC} — agência (4) + posto (2) + código do cedente (5). */
+    @Override
+    public String formatarAgenciaCodigoBeneficiario(Banco banco) {
+        return numerico(banco.getAgencia(), 4) + "." + numerico(banco.getPosto(), 2) + "." + numerico(banco.getCodCedente(), 5);
     }
 
     // ------------------------------------------------------------------------------

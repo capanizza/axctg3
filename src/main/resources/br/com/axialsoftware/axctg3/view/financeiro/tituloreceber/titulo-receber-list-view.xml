@@ -63,6 +63,7 @@
                                     text="msg://tituloReceberListView.importarNfcomAction.text" icon="vaadin:file-add"/>
                         </actionItem>
                         <actionItem id="gerarRemessaItem" ref="tituloRecebersDataGrid.gerarRemessaAction"/>
+                        <actionItem id="emitirBoletoItem" ref="tituloRecebersDataGrid.emitirBoletoAction"/>
                         <actionItem id="lerRetornoItem">
                             <action id="lerRetornoAction"
                                     text="msg://tituloReceberListView.lerRetornoButton.text" icon="vaadin:download"/>
@@ -90,6 +91,7 @@
                 <action id="removeAction" type="list_remove"/>
                 <action id="delimitarAction" text="Delimitar" icon="vaadin:calendar"/>
                 <action id="gerarRemessaAction" text="msg://tituloReceberListView.gerarRemessaAction.text" icon="vaadin:upload"/>
+                <action id="emitirBoletoAction" text="msg://tituloReceberListView.emitirBoletoAction.text" icon="vaadin:print"/>
                 <action id="verRemessasAction" text="msg://tituloReceberListView.verRemessasAction.text"/>
                 <action id="verRetornosAction" text="msg://tituloReceberListView.verRetornosAction.text"/>
             </actions>

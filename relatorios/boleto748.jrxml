@@ -1,0 +1,630 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Boleto Sicredi (748) — Recibo do Pagador + Ficha de Compensação, leiaute padrão
+     Febraban. Campos/posições conferidos contra boletos reais em
+     c:/remessa/748/202603/pdf e contra o código-fonte ACBrBancoSicredi.pas/ACBrBoleto.pas
+     (ver SicrediCnab400Handler/BoletoService). Um registro (BoletoDto) = uma página — o
+     detail band ocupa a altura útil inteira da página.
+     Compilado manualmente pro .jasper (sem hot-compile no build.gradle) — ver skill/memory
+     "Compilar .jrxml→.jasper na mão". -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:c="http://jasperreports.sourceforge.net/jasperreports/components"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="boleto748" pageWidth="595" pageHeight="842" columnWidth="555"
+              leftMargin="20" rightMargin="20" topMargin="15" bottomMargin="15" uuid="b0117480-0001-0001-0001-000000000000">
+    <property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+
+    <parameter name="LOGO" class="java.lang.String"/>
+
+    <field name="numeroDocumento" class="java.lang.String"/>
+    <field name="dataDocumento" class="java.lang.String"/>
+    <field name="dataVencimento" class="java.lang.String"/>
+    <field name="dataProcessamento" class="java.lang.String"/>
+    <field name="valorDocumento" class="java.math.BigDecimal"/>
+    <field name="especieDoc" class="java.lang.String"/>
+    <field name="aceite" class="java.lang.String"/>
+    <field name="codigoBancoComDv" class="java.lang.String"/>
+    <field name="localPagamento" class="java.lang.String"/>
+    <field name="nossoNumeroFormatado" class="java.lang.String"/>
+    <field name="agenciaCodigoBeneficiario" class="java.lang.String"/>
+    <field name="nomeBeneficiario" class="java.lang.String"/>
+    <field name="cnpjBeneficiario" class="java.lang.String"/>
+    <field name="enderecoBeneficiario" class="java.lang.String"/>
+    <field name="nomePagador" class="java.lang.String"/>
+    <field name="cnpjCpfPagador" class="java.lang.String"/>
+    <field name="enderecoPagador" class="java.lang.String"/>
+    <field name="instrucoes" class="java.lang.String"/>
+    <field name="codigoBarras" class="java.lang.String"/>
+    <field name="linhaDigitavel" class="java.lang.String"/>
+
+    <detail>
+        <band height="812" splitType="Stretch">
+
+            <!-- ================= RECIBO DO PAGADOR (y 0-220) ================= -->
+            <frame>
+                <reportElement x="0" y="0" width="555" height="220" uuid="b0117480-0002-0001-0001-1"/>
+                <box><pen lineWidth="0.75"/></box>
+
+                <image scaleImage="RetainShape" hAlign="Left" vAlign="Middle">
+                    <reportElement x="3" y="2" width="80" height="24" uuid="b0117480-0002-0001-0001-2"/>
+                    <imageExpression><![CDATA[$P{LOGO}]]></imageExpression>
+                </image>
+                <textField>
+                    <reportElement x="85" y="2" width="90" height="24" uuid="b0117480-0002-0001-0001-3"/>
+                    <box rightPadding="4"><pen lineWidth="0.75"/><rightPen lineWidth="0.75"/></box>
+                    <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="16" isBold="true"/></textElement>
+                    <textFieldExpression><![CDATA[$F{codigoBancoComDv}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="380" y="2" width="172" height="24" uuid="b0117480-0002-0001-0001-4"/>
+                    <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="9" isBold="true"/></textElement>
+                    <text><![CDATA[Recibo do Pagador]]></text>
+                </staticText>
+                <line><reportElement x="0" y="26" width="555" height="1" uuid="b0117480-0002-0001-0001-5"/></line>
+
+                <staticText>
+                    <reportElement x="3" y="28" width="330" height="8" uuid="b0117480-0002-0001-0001-6"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Local de Pagamento]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="3" y="35" width="330" height="12" uuid="b0117480-0002-0001-0001-7"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                    <textFieldExpression><![CDATA[$F{localPagamento}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="335" y="28" width="217" height="8" uuid="b0117480-0002-0001-0001-8"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Vencimento]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="335" y="35" width="217" height="14" uuid="b0117480-0002-0001-0001-9"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement textAlignment="Right"><font fontName="DejaVu Serif Condensed" size="11" isBold="true"/></textElement>
+                    <textFieldExpression><![CDATA[$F{dataVencimento}]]></textFieldExpression>
+                </textField>
+                <line><reportElement x="0" y="50" width="555" height="1" uuid="b0117480-0002-0001-0001-10"/></line>
+
+                <staticText>
+                    <reportElement x="3" y="52" width="60" height="8" uuid="b0117480-0002-0001-0001-11"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Beneficiário]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="63" y="52" width="269" height="10" uuid="b0117480-0002-0001-0001-12"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6" isBold="true"/></textElement>
+                    <textFieldExpression><![CDATA[$F{nomeBeneficiario} + " - CNPJ: " + $F{cnpjBeneficiario}]]></textFieldExpression>
+                </textField>
+                <textField>
+                    <reportElement x="63" y="62" width="269" height="14" uuid="b0117480-0002-0001-0001-13"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5.5"/></textElement>
+                    <textFieldExpression><![CDATA[$F{enderecoBeneficiario}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="335" y="52" width="217" height="8" uuid="b0117480-0002-0001-0001-14"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Agência / Código Beneficiário]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="335" y="60" width="217" height="14" uuid="b0117480-0002-0001-0001-15"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement textAlignment="Right"><font fontName="DejaVu Sans Mono" size="8" isBold="true"/></textElement>
+                    <textFieldExpression><![CDATA[$F{agenciaCodigoBeneficiario}]]></textFieldExpression>
+                </textField>
+                <line><reportElement x="0" y="77" width="555" height="1" uuid="b0117480-0002-0001-0001-16"/></line>
+
+                <staticText>
+                    <reportElement x="3" y="78" width="65" height="7" uuid="b0117480-0002-0001-0001-17"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Data do Documento]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="3" y="85" width="65" height="10" uuid="b0117480-0002-0001-0001-18"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6.5"/></textElement>
+                    <textFieldExpression><![CDATA[$F{dataDocumento}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="65" y="78" width="65" height="7" uuid="b0117480-0002-0001-0001-19"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Número do Documento]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="65" y="85" width="65" height="10" uuid="b0117480-0002-0001-0001-20"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6.5"/></textElement>
+                    <textFieldExpression><![CDATA[$F{numeroDocumento}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="130" y="78" width="55" height="7" uuid="b0117480-0002-0001-0001-21"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Espécie Doc.]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="130" y="85" width="55" height="10" uuid="b0117480-0002-0001-0001-22"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6.5"/></textElement>
+                    <textFieldExpression><![CDATA[$F{especieDoc}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="185" y="78" width="35" height="7" uuid="b0117480-0002-0001-0001-23"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Aceite]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="185" y="85" width="35" height="10" uuid="b0117480-0002-0001-0001-24"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6.5"/></textElement>
+                    <textFieldExpression><![CDATA[$F{aceite}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="220" y="78" width="112" height="7" uuid="b0117480-0002-0001-0001-25"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Data do Processamento]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="220" y="85" width="112" height="10" uuid="b0117480-0002-0001-0001-26"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6.5"/></textElement>
+                    <textFieldExpression><![CDATA[$F{dataProcessamento}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="335" y="78" width="217" height="7" uuid="b0117480-0002-0001-0001-27"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Nosso Número]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="335" y="85" width="217" height="10" uuid="b0117480-0002-0001-0001-28"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement textAlignment="Right"><font fontName="DejaVu Sans Mono" size="7" isBold="true"/></textElement>
+                    <textFieldExpression><![CDATA[$F{nossoNumeroFormatado}]]></textFieldExpression>
+                </textField>
+                <line><reportElement x="0" y="95" width="555" height="1" uuid="b0117480-0002-0001-0001-29"/></line>
+
+                <staticText>
+                    <reportElement x="3" y="97" width="80" height="7" uuid="b0117480-0002-0001-0001-30"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Uso do Banco]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="80" y="97" width="80" height="7" uuid="b0117480-0002-0001-0001-31"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Carteira]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="160" y="97" width="80" height="7" uuid="b0117480-0002-0001-0001-32"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Espécie Moeda]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="240" y="97" width="92" height="7" uuid="b0117480-0002-0001-0001-33"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Quantidade]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="160" y="104" width="80" height="10" uuid="b0117480-0002-0001-0001-34"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6.5"/></textElement>
+                    <text><![CDATA[R$]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="3" y="114" width="145" height="8" uuid="b0117480-0002-0001-0001-35"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Instruções (Texto de responsabilidade do beneficiário.)]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="3" y="122" width="329" height="45" uuid="b0117480-0002-0001-0001-36"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6.5"/></textElement>
+                    <textFieldExpression><![CDATA[$F{instrucoes}]]></textFieldExpression>
+                </textField>
+
+                <staticText>
+                    <reportElement x="335" y="97" width="217" height="7" uuid="b0117480-0002-0001-0001-37"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[( = ) Valor do Documento]]></text>
+                </staticText>
+                <textField pattern="###,###,##0.00">
+                    <reportElement x="335" y="104" width="217" height="12" uuid="b0117480-0002-0001-0001-38"/>
+                    <box leftPadding="4" rightPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement textAlignment="Right"><font fontName="DejaVu Serif Condensed" size="9" isBold="true"/></textElement>
+                    <textFieldExpression><![CDATA[$F{valorDocumento}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="335" y="116" width="217" height="10" uuid="b0117480-0002-0001-0001-39"/>
+                    <box leftPadding="4"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5" lineStyle="Dotted"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[( - ) Desconto]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="335" y="126" width="217" height="10" uuid="b0117480-0002-0001-0001-40"/>
+                    <box leftPadding="4"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5" lineStyle="Dotted"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[( - ) Outras Deducoes / Abatimento]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="335" y="136" width="217" height="10" uuid="b0117480-0002-0001-0001-41"/>
+                    <box leftPadding="4"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5" lineStyle="Dotted"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[( + ) Mora / Multa / Juros]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="335" y="146" width="217" height="10" uuid="b0117480-0002-0001-0001-42"/>
+                    <box leftPadding="4"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5" lineStyle="Dotted"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[( + ) Outros Acrescimos]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="335" y="156" width="217" height="11" uuid="b0117480-0002-0001-0001-43"/>
+                    <box leftPadding="4"><topPen lineWidth="0.75"/><leftPen lineWidth="0.75"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[( = ) Valor Cobrado]]></text>
+                </staticText>
+                <line><reportElement x="0" y="167" width="555" height="1" uuid="b0117480-0002-0001-0001-44"/></line>
+
+                <staticText>
+                    <reportElement x="3" y="169" width="35" height="10" uuid="b0117480-0002-0001-0001-45"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Pagador:]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="38" y="169" width="377" height="10" uuid="b0117480-0002-0001-0001-46"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6.5"/></textElement>
+                    <textFieldExpression><![CDATA[$F{nomePagador}]]></textFieldExpression>
+                </textField>
+                <textField>
+                    <reportElement x="38" y="179" width="377" height="10" uuid="b0117480-0002-0001-0001-47"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                    <textFieldExpression><![CDATA[$F{enderecoPagador}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="335" y="169" width="217" height="7" uuid="b0117480-0002-0001-0001-48"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[CPF / CNPJ]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="335" y="176" width="217" height="10" uuid="b0117480-0002-0001-0001-49"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement><font fontName="DejaVu Sans Mono" size="7" isBold="true"/></textElement>
+                    <textFieldExpression><![CDATA[$F{cnpjCpfPagador}]]></textFieldExpression>
+                </textField>
+                <line><reportElement x="0" y="191" width="555" height="1" uuid="b0117480-0002-0001-0001-50"/></line>
+
+                <staticText>
+                    <reportElement x="3" y="193" width="330" height="9" uuid="b0117480-0002-0001-0001-51"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Beneficiário]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="335" y="193" width="217" height="9" uuid="b0117480-0002-0001-0001-52"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Código de Baixa]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="3" y="203" width="330" height="10" uuid="b0117480-0002-0001-0001-53"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Final:]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="335" y="205" width="217" height="10" uuid="b0117480-0002-0001-0001-54"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement textAlignment="Right"><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Autenticação Mecânica]]></text>
+                </staticText>
+            </frame>
+
+            <!-- Linha de corte tracejada. -->
+            <staticText>
+                <reportElement x="0" y="223" width="555" height="6" uuid="b0117480-0002-0001-0001-55"/>
+                <textElement textAlignment="Center"><font fontName="DejaVu Sans Mono" size="7"/></textElement>
+                <text><![CDATA[- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -]]></text>
+            </staticText>
+
+            <!-- ================= FICHA DE COMPENSAÇÃO (y 234-509, com código de barras) ================= -->
+            <frame>
+                <reportElement x="0" y="234" width="555" height="220" uuid="b0117480-0002-0001-0001-101"/>
+                <box><pen lineWidth="0.75"/></box>
+
+                <image scaleImage="RetainShape" hAlign="Left" vAlign="Middle">
+                    <reportElement x="3" y="2" width="80" height="24" uuid="b0117480-0002-0001-0001-102"/>
+                    <imageExpression><![CDATA[$P{LOGO}]]></imageExpression>
+                </image>
+                <textField>
+                    <reportElement x="85" y="2" width="90" height="24" uuid="b0117480-0002-0001-0001-103"/>
+                    <box rightPadding="4"><pen lineWidth="0.75"/><rightPen lineWidth="0.75"/></box>
+                    <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="16" isBold="true"/></textElement>
+                    <textFieldExpression><![CDATA[$F{codigoBancoComDv}]]></textFieldExpression>
+                </textField>
+                <textField>
+                    <reportElement x="180" y="2" width="372" height="24" uuid="b0117480-0002-0001-0001-104"/>
+                    <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="10" isBold="true"/></textElement>
+                    <textFieldExpression><![CDATA[$F{linhaDigitavel}]]></textFieldExpression>
+                </textField>
+                <line><reportElement x="0" y="26" width="555" height="1" uuid="b0117480-0002-0001-0001-105"/></line>
+
+                <staticText>
+                    <reportElement x="3" y="28" width="330" height="8" uuid="b0117480-0002-0001-0001-106"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Local de Pagamento]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="3" y="35" width="330" height="12" uuid="b0117480-0002-0001-0001-107"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                    <textFieldExpression><![CDATA[$F{localPagamento}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="335" y="28" width="217" height="8" uuid="b0117480-0002-0001-0001-108"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Vencimento]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="335" y="35" width="217" height="14" uuid="b0117480-0002-0001-0001-109"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement textAlignment="Right"><font fontName="DejaVu Serif Condensed" size="11" isBold="true"/></textElement>
+                    <textFieldExpression><![CDATA[$F{dataVencimento}]]></textFieldExpression>
+                </textField>
+                <line><reportElement x="0" y="50" width="555" height="1" uuid="b0117480-0002-0001-0001-110"/></line>
+
+                <staticText>
+                    <reportElement x="3" y="52" width="60" height="8" uuid="b0117480-0002-0001-0001-111"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Beneficiário]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="63" y="52" width="269" height="10" uuid="b0117480-0002-0001-0001-112"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6" isBold="true"/></textElement>
+                    <textFieldExpression><![CDATA[$F{nomeBeneficiario} + " - CNPJ: " + $F{cnpjBeneficiario}]]></textFieldExpression>
+                </textField>
+                <textField>
+                    <reportElement x="63" y="62" width="269" height="14" uuid="b0117480-0002-0001-0001-113"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5.5"/></textElement>
+                    <textFieldExpression><![CDATA[$F{enderecoBeneficiario}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="335" y="52" width="217" height="8" uuid="b0117480-0002-0001-0001-114"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Agência / Código Beneficiário]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="335" y="60" width="217" height="14" uuid="b0117480-0002-0001-0001-115"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement textAlignment="Right"><font fontName="DejaVu Sans Mono" size="8" isBold="true"/></textElement>
+                    <textFieldExpression><![CDATA[$F{agenciaCodigoBeneficiario}]]></textFieldExpression>
+                </textField>
+                <line><reportElement x="0" y="77" width="555" height="1" uuid="b0117480-0002-0001-0001-116"/></line>
+
+                <staticText>
+                    <reportElement x="3" y="78" width="65" height="7" uuid="b0117480-0002-0001-0001-117"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Data do Documento]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="3" y="85" width="65" height="10" uuid="b0117480-0002-0001-0001-118"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6.5"/></textElement>
+                    <textFieldExpression><![CDATA[$F{dataDocumento}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="65" y="78" width="65" height="7" uuid="b0117480-0002-0001-0001-119"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Número do Documento]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="65" y="85" width="65" height="10" uuid="b0117480-0002-0001-0001-120"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6.5"/></textElement>
+                    <textFieldExpression><![CDATA[$F{numeroDocumento}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="130" y="78" width="55" height="7" uuid="b0117480-0002-0001-0001-121"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Espécie Doc.]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="130" y="85" width="55" height="10" uuid="b0117480-0002-0001-0001-122"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6.5"/></textElement>
+                    <textFieldExpression><![CDATA[$F{especieDoc}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="185" y="78" width="35" height="7" uuid="b0117480-0002-0001-0001-123"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Aceite]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="185" y="85" width="35" height="10" uuid="b0117480-0002-0001-0001-124"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6.5"/></textElement>
+                    <textFieldExpression><![CDATA[$F{aceite}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="220" y="78" width="112" height="7" uuid="b0117480-0002-0001-0001-125"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Data do Processamento]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="220" y="85" width="112" height="10" uuid="b0117480-0002-0001-0001-126"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6.5"/></textElement>
+                    <textFieldExpression><![CDATA[$F{dataProcessamento}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="335" y="78" width="217" height="7" uuid="b0117480-0002-0001-0001-127"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Nosso Número]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="335" y="85" width="217" height="10" uuid="b0117480-0002-0001-0001-128"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement textAlignment="Right"><font fontName="DejaVu Sans Mono" size="7" isBold="true"/></textElement>
+                    <textFieldExpression><![CDATA[$F{nossoNumeroFormatado}]]></textFieldExpression>
+                </textField>
+                <line><reportElement x="0" y="95" width="555" height="1" uuid="b0117480-0002-0001-0001-129"/></line>
+
+                <staticText>
+                    <reportElement x="3" y="97" width="80" height="7" uuid="b0117480-0002-0001-0001-130"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Uso do Banco]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="80" y="97" width="80" height="7" uuid="b0117480-0002-0001-0001-131"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Carteira]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="160" y="97" width="80" height="7" uuid="b0117480-0002-0001-0001-132"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Espécie]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="240" y="97" width="92" height="7" uuid="b0117480-0002-0001-0001-133"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Quantidade]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="160" y="104" width="80" height="10" uuid="b0117480-0002-0001-0001-134"/>
+                    <box leftPadding="3"><leftPen lineWidth="0.5"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6.5"/></textElement>
+                    <text><![CDATA[R$]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="3" y="114" width="145" height="8" uuid="b0117480-0002-0001-0001-135"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Instruções (Texto de responsabilidade do beneficiário.)]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="3" y="122" width="329" height="45" uuid="b0117480-0002-0001-0001-136"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6.5"/></textElement>
+                    <textFieldExpression><![CDATA[$F{instrucoes}]]></textFieldExpression>
+                </textField>
+
+                <staticText>
+                    <reportElement x="335" y="97" width="217" height="7" uuid="b0117480-0002-0001-0001-137"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[( = ) Valor do Documento]]></text>
+                </staticText>
+                <textField pattern="###,###,##0.00">
+                    <reportElement x="335" y="104" width="217" height="12" uuid="b0117480-0002-0001-0001-138"/>
+                    <box leftPadding="4" rightPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement textAlignment="Right"><font fontName="DejaVu Serif Condensed" size="9" isBold="true"/></textElement>
+                    <textFieldExpression><![CDATA[$F{valorDocumento}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="335" y="116" width="217" height="10" uuid="b0117480-0002-0001-0001-139"/>
+                    <box leftPadding="4"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5" lineStyle="Dotted"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[( - ) Desconto]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="335" y="126" width="217" height="10" uuid="b0117480-0002-0001-0001-140"/>
+                    <box leftPadding="4"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5" lineStyle="Dotted"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[( - ) Outras Deducoes / Abatimento]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="335" y="136" width="217" height="10" uuid="b0117480-0002-0001-0001-141"/>
+                    <box leftPadding="4"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5" lineStyle="Dotted"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[( + ) Mora / Multa / Juros]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="335" y="146" width="217" height="10" uuid="b0117480-0002-0001-0001-142"/>
+                    <box leftPadding="4"><topPen lineWidth="0.5"/><leftPen lineWidth="0.5" lineStyle="Dotted"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[( + ) Outros Acrescimos]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="335" y="156" width="217" height="11" uuid="b0117480-0002-0001-0001-143"/>
+                    <box leftPadding="4"><topPen lineWidth="0.75"/><leftPen lineWidth="0.75"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[( = ) Valor Cobrado]]></text>
+                </staticText>
+                <line><reportElement x="0" y="167" width="555" height="1" uuid="b0117480-0002-0001-0001-144"/></line>
+
+                <staticText>
+                    <reportElement x="3" y="169" width="35" height="10" uuid="b0117480-0002-0001-0001-145"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Pagador]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="38" y="169" width="377" height="10" uuid="b0117480-0002-0001-0001-146"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6.5"/></textElement>
+                    <textFieldExpression><![CDATA[$F{nomePagador}]]></textFieldExpression>
+                </textField>
+                <textField>
+                    <reportElement x="38" y="179" width="377" height="10" uuid="b0117480-0002-0001-0001-147"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="6"/></textElement>
+                    <textFieldExpression><![CDATA[$F{enderecoPagador}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement x="335" y="169" width="217" height="7" uuid="b0117480-0002-0001-0001-148"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[CPF / CNPJ]]></text>
+                </staticText>
+                <textField>
+                    <reportElement x="335" y="176" width="217" height="10" uuid="b0117480-0002-0001-0001-149"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement><font fontName="DejaVu Sans Mono" size="7" isBold="true"/></textElement>
+                    <textFieldExpression><![CDATA[$F{cnpjCpfPagador}]]></textFieldExpression>
+                </textField>
+                <line><reportElement x="0" y="191" width="555" height="1" uuid="b0117480-0002-0001-0001-150"/></line>
+
+                <staticText>
+                    <reportElement x="3" y="193" width="330" height="9" uuid="b0117480-0002-0001-0001-151"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Beneficiário]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="335" y="193" width="217" height="9" uuid="b0117480-0002-0001-0001-152"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Código de Baixa]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="3" y="203" width="330" height="10" uuid="b0117480-0002-0001-0001-153"/>
+                    <textElement><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Final:]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="335" y="205" width="217" height="10" uuid="b0117480-0002-0001-0001-154"/>
+                    <box leftPadding="4"><leftPen lineWidth="0.75"/></box>
+                    <textElement textAlignment="Right"><font fontName="DejaVu Serif Condensed" size="5" isItalic="true"/></textElement>
+                    <text><![CDATA[Autenticação Mecânica - Ficha de Compensação]]></text>
+                </staticText>
+            </frame>
+
+            <!-- Código de barras (Interleaved 2 of 5) — 44 dígitos, DV já embutido, por
+                 isso checksumMode="ignore" (senão o barcode4j calcularia e adicionaria um
+                 dígito de checagem próprio, quebrando a leitura). -->
+            <componentElement>
+                <reportElement x="0" y="465" width="280" height="38" uuid="b0117480-0002-0001-0001-200"/>
+                <c:Interleaved2Of5 xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd"
+                                    checksumMode="ignore" textPosition="none" moduleWidth="1.1" quietZone="2">
+                    <c:codeExpression><![CDATA[$F{codigoBarras}]]></c:codeExpression>
+                </c:Interleaved2Of5>
+            </componentElement>
+        </band>
+    </detail>
+</jasperReport>

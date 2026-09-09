@@ -197,6 +197,75 @@ class SicrediCnab400HandlerTest {
     }
 
     @Test
+    void test_montarCodigoBarras_confereContraBoletoRealDaRadio_000191() {
+        // boleto_000191.pdf (c:/remessa/748/202603/pdf): agência 0738/posto 33/cedente
+        // 59622, nosso número 262000458, vencimento 10/03/2026, valor 1.200,00. Linha
+        // digitável real impressa: "74891.12628 00045.807385 33596.221003 9 13810000120000".
+        Banco banco = bancoRadio();
+        TituloReceber titulo = criarTitulo("0000191", new BigDecimal("1200.00"));
+        titulo.setDataVencimento(LocalDate.of(2026, 3, 10));
+        titulo.setNumBanco("262000458");
+
+        String codigoBarras = handler.montarCodigoBarras(banco, titulo);
+
+        assertThat(codigoBarras).hasSize(44);
+        assertThat(codigoBarras.substring(0, 4)).isEqualTo("7489"); // banco 748 + moeda 9
+        assertThat(codigoBarras.substring(4, 5)).isEqualTo("9"); // DV geral
+        assertThat(codigoBarras.substring(5, 9)).isEqualTo("1381"); // fator de vencimento
+        assertThat(codigoBarras.substring(9, 19)).isEqualTo("0000120000"); // valor em centavos
+        assertThat(codigoBarras.substring(19, 44)).isEqualTo("1126200045807383359622100"); // campo livre
+    }
+
+    @Test
+    void test_montarCodigoBarras_confereContraBoletoRealDaRadio_000193() {
+        // boleto_000193.pdf: mesma agência/posto/cedente, nosso número 262000024, valor
+        // 550,00. Linha digitável real: "74891.12628 00002.407385 33596.221003 1 13810000055000".
+        Banco banco = bancoRadio();
+        TituloReceber titulo = criarTitulo("0000193", new BigDecimal("550.00"));
+        titulo.setDataVencimento(LocalDate.of(2026, 3, 10));
+        titulo.setNumBanco("262000024");
+
+        String codigoBarras = handler.montarCodigoBarras(banco, titulo);
+
+        assertThat(codigoBarras).isEqualTo("748" + "9" + "1" + "1381" + "0000055000" + "1126200002407383359622100");
+    }
+
+    @Test
+    void test_fatorVencimento_confereContraBoletoRealDaRadio() {
+        // Fórmula/data-base conferidas contra TACBrBancoClass.CalcularFatorVencimento
+        // (ACBrBoleto.pas) — mesmo componente que gerou os PDFs de referência.
+        assertThat(SicrediCnab400Handler.fatorVencimento(LocalDate.of(2026, 3, 10))).isEqualTo("1381");
+    }
+
+    @Test
+    void test_formatarNossoNumero() {
+        assertThat(handler.formatarNossoNumero("262000458")).isEqualTo("26/200045-8");
+        assertThat(handler.formatarNossoNumero("262000024")).isEqualTo("26/200002-4");
+    }
+
+    @Test
+    void test_formatarAgenciaCodigoBeneficiario() {
+        assertThat(handler.formatarAgenciaCodigoBeneficiario(bancoRadio())).isEqualTo("0738.33.59622");
+    }
+
+    @Test
+    void test_getDigitoVerificadorBanco() {
+        assertThat(handler.getDigitoVerificadorBanco()).isEqualTo("X"); // impresso "748-X" no boleto
+    }
+
+    /** Cedente real usado nos dois boletos de referência (ver PDFs em c:/remessa/748/202603/pdf). */
+    private static Banco bancoRadio() {
+        Banco banco = new Banco();
+        banco.setCodigo(1);
+        banco.setCodGeral(748);
+        banco.setNome("Sicredi");
+        banco.setCodCedente("59622");
+        banco.setAgencia("0738");
+        banco.setPosto("33");
+        return banco;
+    }
+
+    @Test
     void test_lerRetorno_entradaConfirmadaELiquidacao() {
         String linhaConfirmacao = linhaDetalheRetorno("02", "0000001", "250325200000123450",
                 "010125", "150125", new BigDecimal("500.00"), BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);

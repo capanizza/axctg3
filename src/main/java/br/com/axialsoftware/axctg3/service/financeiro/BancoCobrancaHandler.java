@@ -29,4 +29,21 @@ public interface BancoCobrancaHandler {
 
     /** Interpreta um arquivo de retorno, devolvendo um registro lido por linha de detalhe. */
     List<RetornoDetalheLido> lerRetorno(byte[] arquivo);
+
+    /**
+     * Monta os 44 dígitos do código de barras Febraban pro boleto do título — estrutura
+     * geral (banco+moeda+DV+fator vencimento+valor) é padrão Febraban, mas o "campo livre"
+     * (25 dígitos) é definido por cada banco. Requer {@link TituloReceber#getNumBanco()} já
+     * preenchido (nosso número, gerado em {@link #gerarRemessa}).
+     */
+    String montarCodigoBarras(Banco banco, TituloReceber tituloReceber);
+
+    /** Dígito verificador Febraban do código do banco, ex.: {@code "X"} pro 748 (Sicredi). */
+    String getDigitoVerificadorBanco();
+
+    /** Formata {@link TituloReceber#getNumBanco()} (Nosso Número cru) pro padrão impresso do banco. */
+    String formatarNossoNumero(String numBanco);
+
+    /** Formata agência/posto/código do cedente pro cabeçalho "Agência / Código Beneficiário" do boleto. */
+    String formatarAgenciaCodigoBeneficiario(Banco banco);
 }

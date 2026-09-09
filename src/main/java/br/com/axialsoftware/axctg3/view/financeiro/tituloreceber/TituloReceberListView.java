@@ -7,6 +7,7 @@ import br.com.axialsoftware.axctg3.entity.financeiro.RemessaBanco;
 import br.com.axialsoftware.axctg3.entity.financeiro.RetornoBanco;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
+import br.com.axialsoftware.axctg3.service.financeiro.BoletoService;
 import br.com.axialsoftware.axctg3.service.financeiro.NfcomImportService;
 import br.com.axialsoftware.axctg3.service.financeiro.RemessaBancoService;
 import br.com.axialsoftware.axctg3.service.financeiro.RetornoBancoService;
@@ -79,6 +80,8 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
     private RetornoBancoService retornoBancoService;
     @Autowired
     private NfcomImportService nfcomImportService;
+    @Autowired
+    private BoletoService boletoService;
     @ViewComponent
     private HorizontalLayout buttonsPanel;
     @ViewComponent
@@ -224,6 +227,38 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
                     }
                 })
                 .open();
+    }
+
+    @Subscribe("tituloRecebersDataGrid.emitirBoletoAction")
+    public void onTituloRecebersDataGridEmitirBoletoAction(final ActionPerformedEvent event) {
+        Set<TituloReceber> selecionados = tituloRecebersDataGrid.getSelectedItems();
+        List<TituloReceber> titulos = new ArrayList<>(selecionados);
+        if (titulos.isEmpty()) {
+            dialogs.createMessageDialog()
+                    .withHeader("Emissão de boleto")
+                    .withText("Nenhum título selecionado")
+                    .open();
+            return;
+        }
+        List<TituloReceber> semNossoNumero = titulos.stream()
+                .filter(t -> t.getNumBanco() == null || t.getNumBanco().isBlank())
+                .toList();
+        if (!semNossoNumero.isEmpty()) {
+            dialogs.createMessageDialog()
+                    .withHeader("Emissão de boleto")
+                    .withText(semNossoNumero.size() + " título(s) selecionado(s) ainda não têm Nosso Número — "
+                            + "gere a remessa bancária primeiro.")
+                    .open();
+            return;
+        }
+        try {
+            boletoService.emitirBoletos(titulos);
+        } catch (IllegalArgumentException ex) {
+            dialogs.createMessageDialog()
+                    .withHeader("Emissão de boleto")
+                    .withText(ex.getMessage())
+                    .open();
+        }
     }
 
     @Subscribe("cobrancaBancariaDropdownButton.lerRetornoItem.lerRetornoAction")
