@@ -133,6 +133,46 @@ The `*Dto` classes in `entity/contabil` (`BalanceteDto`, `RazaoDto`, `Lancamento
 @JmixGeneratedValue UUID id`. They serve double duty as Jasper beans and UI-bindable
 model.
 
+### Boleto emission: BancoCobrancaHandler → BoletoService → one JasperReports template per bank
+
+A sibling pipeline to the one above, not a variant of it — no `ConfigRel`/`InputDialog`,
+because there's no filter to remember: `TituloReceberListView`'s "Emitir boleto" (in the
+`cobrancaBancariaDropdownButton` dropdown) acts on whatever rows are multi-selected in the
+grid, same selection pattern as `gerarRemessaAction`. `BoletoService.emitirBoletos` groups
+the selection by `Banco.codGeral`, one `RelatorioService.emitirRelatorio` call (one PDF) per
+bank present, and resolves the template as `"boleto" + codGeral + ".jasper"` — a **template
+per bank**, not a shared one, because Febraban only standardizes the barcode's outer shape
+(banco+moeda+DV+fator de vencimento+valor); the 25-digit "campo livre" inside it and the
+printed layout are bank-specific. Requires `TituloReceber.getNumBanco()` (Nosso Número)
+already set — i.e. the título has to have gone through `RemessaBancoService.gerarRemessa`
+first; `BoletoService` throws `IllegalArgumentException` otherwise, and
+`TituloReceberListView` pre-checks it too for a friendlier dialog.
+
+`BancoCobrancaHandler` (the same interface `SicrediCnab400Handler` implements for
+remessa/retorno) also owns the bank-specific pieces: `montarCodigoBarras`,
+`getDigitoVerificadorBanco`, `formatarNossoNumero`, `formatarAgenciaCodigoBeneficiario`.
+Formatting the linha digitável from the 44-digit barcode (`BoletoService.formatarLinhaDigitavel`)
+is bank-agnostic Febraban standard, so it lives in `BoletoService`, not per-handler. The
+barcode itself renders via JasperReports' built-in `<c:Interleaved2Of5>` component (same
+`barcode4j`/`batik-bridge` dependency already pulled in for DANFE's `<c:Code128>`) with
+`checksumMode="ignore"` — the DV is already embedded in the 44 digits, so letting barcode4j
+compute and append its own would produce a 45-digit code and break the barcode.
+
+`boleto<codGeral>.jasper` is compiled manually like any other hand-edited `.jrxml` in this
+project (see "Compiling `.jrxml` to `.jasper` without Jaspersoft Studio" below) — there's no
+Jaspersoft Studio on this machine to hot-compile it. A bank's logo is a plain classpath resource at
+`src/main/resources/relatorios/logos/<codGeral>.png` (sourced from ACBrMonitorPLUS's
+`logos/` folder, file named by the Febraban code), materialized to a stable temp path the
+same way `UtilGeralService.getLogoEmpresa()` does for `Empresa.logo` — **not** copied via
+`build.gradle`'s `processResources` step like the `.jasper` templates, since it's a static
+asset already under `src/main/resources`, not something the Jaspersoft Studio workspace
+folder needs to hand off.
+
+No entity/schema change was needed to add this: `TituloReceber`/`Banco` already carried
+everything the boleto prints. There's no desconto/mora/multa/juros line on the boleto —
+those only exist on the baixa (`ItemReceber.juros`/`.desconto`), not on emission, matching
+the legacy boleto (those lines print blank there too).
+
 ### Accounting posting and balance rollup
 
 `LancamentoEventListener` is where the accounting rules live, not the view:
@@ -389,3 +429,19 @@ and `clean test` (an empty role class silently drops all its policies; an empty
   does **not** persist it — the detail view still needs Save. Skip Save and the field looks
   filled but `Empresa.logo` stays `null`; reports then render with a silently blank logo
   area (no exception — same `emitirRelatorio` swallow-everything behavior noted above).
+- **Compiling `.jrxml` to `.jasper` without Jaspersoft Studio:** run
+  `JasperCompileManager.compileReportToFile` yourself via `javac`/`java` from the Windows
+  JDK (`C:\Program Files\Eclipse Adoptium\jdk-21.0.9.10-hotspot`), against the project's
+  runtime classpath (dump it with a throwaway Gradle task —
+  `sourceSets.main.runtimeClasspath.asPath` — then delete the task again). Gotchas: strip
+  `\r` from that dumped classpath before using it (`cmd.exe`/Gradle write CRLF, and the
+  stray `\r` glued to the last jar quietly drops it from the classpath); a `libs\*` wildcard
+  works directly on a `javac`/`java` command line but not when the same text comes from an
+  `@argfile`; and in the `.jrxml` itself, `<box>` must be a **sibling** of `<reportElement>`,
+  never nested inside it (`cvc-complex-type.2.4.a` from the Digester otherwise), and inside
+  `<box>`, `topPen`/`leftPen`/`bottomPen`/`rightPen` must appear in that exact order or the
+  same schema-validation error fires on a different child element. To eyeball the result
+  without a PDF viewer, fill the report with a throwaway data source and export page 0
+  through `JRGraphics2DExporter` (`SimpleGraphics2DExporterOutput` has a no-arg constructor
+  — the `Graphics2D` goes in via `.setGraphics2D(g)`, not a constructor overload) onto a
+  `BufferedImage`, then `ImageIO.write(..., "png", file)`.
