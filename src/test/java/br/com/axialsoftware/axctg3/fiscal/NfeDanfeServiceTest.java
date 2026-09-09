@@ -164,6 +164,33 @@ class NfeDanfeServiceTest {
     }
 
     /**
+     * NFe cancelada ({@code protCStat} == 101, gravado por {@code NfeCancelamentoService})
+     * ganha a marca d'água "NF-e CANCELADA" (banda de background do {@code Danfe.jrxml},
+     * parâmetro {@code MARCA_CANCELADA}) na reimpressão via o mesmo botão "Emitir DANFE" —
+     * sem tela nova. Mesma limitação do resto da classe: só confirma que o pipeline Jasper
+     * roda até o fim com o parâmetro de imagem preenchido, não que o carimbo aparece no
+     * lugar certo (isso foi conferido visualmente durante o desenvolvimento).
+     */
+    @Test
+    void emitirDanfeNfeCanceladaGeraPdfComMarcaCancelada() throws IOException {
+        nfeImportService.importar("nfe_import_sample.xml", xmlAmostra());
+        Nfe nfe = dataManager.load(Nfe.class)
+                .query("select e from Nfe e where e.chave = :chave")
+                .parameter("chave", CHAVE)
+                .one();
+        nfe.setProtCStat(101);
+        dataManager.save(nfe);
+
+        nfeDanfeService.emitirDanfe(nfe.getId());
+
+        ArgumentCaptor<byte[]> pdfCaptor = ArgumentCaptor.forClass(byte[].class);
+        verify(downloader).download(pdfCaptor.capture(), eq("Danfe_" + CHAVE + ".pdf"), eq(DownloadFormat.PDF));
+        byte[] pdf = pdfCaptor.getValue();
+        assertThat(pdf).isNotEmpty();
+        assertThat(new String(pdf, 0, 4, StandardCharsets.US_ASCII)).isEqualTo("%PDF");
+    }
+
+    /**
      * Caso real reportado em produção: {@code NotaSaida.chave} preenchida (nota emitida antes
      * dessa tela existir, ou convertida do legado) sem {@link Nfe} correspondente na tabela —
      * antes disso, {@code emitirDanfePorChave} estourava {@code NoResultException} sem

@@ -64,4 +64,21 @@ class NfeChaveServiceTest {
 
         assertThat(cNf).isBetween(0, 99_999_999);
     }
+
+    /** Ida e volta: o cNF extraído de uma chave já calculada tem que ser exatamente o que entrou. */
+    @Test
+    void test_extrairCNf_bateComOValorUsadoEmGerarChave() {
+        LocalDate dataEmissao = LocalDate.of(2026, 8, 17);
+        String chave = service.gerarChave(35, dataEmissao, "12.345.678/0001-95", 55, 1, 123, 1, 12345678);
+
+        assertThat(service.extrairCNf(chave)).isEqualTo(12345678);
+    }
+
+    @Test
+    void test_extrairAamm_bateComOAnoMesDeGerarChave() {
+        LocalDate dataEmissao = LocalDate.of(2026, 8, 17);
+        String chave = service.gerarChave(35, dataEmissao, "12.345.678/0001-95", 55, 1, 123, 1, 12345678);
+
+        assertThat(service.extrairAamm(chave)).isEqualTo("2608");
+    }
 }

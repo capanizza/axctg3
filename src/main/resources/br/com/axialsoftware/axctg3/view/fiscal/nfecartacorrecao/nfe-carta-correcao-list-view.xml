@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
+      title="msg://nfeCartaCorrecaoListView.title"
+      focusComponent="nfeCartasCorrecaoDataGrid">
+    <data>
+        <collection id="nfeCartasCorrecaoDc"
+                    class="br.com.axialsoftware.axctg3.entity.fiscal.NfeCartaCorrecao">
+            <fetchPlan extends="_base"/>
+            <loader id="nfeCartasCorrecaoDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from NfeCartaCorrecao e
+                    where e.nfe.chave = :chave
+                    order by e.numeroSequencial]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <startSlot>
+                <button id="imprimirButton" action="nfeCartasCorrecaoDataGrid.imprimirAction" themeNames="small"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="nfeCartasCorrecaoDl"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="nfeCartasCorrecaoDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="nfeCartasCorrecaoDc"
+                  columnReorderingAllowed="true" themeNames="small">
+            <actions>
+                <action id="imprimirAction" text="msg://nfeCartaCorrecaoListView.imprimirAction.text" icon="vaadin:print"/>
+            </actions>
+            <columns resizable="true">
+                <column property="numeroSequencial" width="10%" textAlign="CENTER"/>
+                <column property="textoCorrecao" width="38%"/>
+                <column property="cceCStat" width="10%" textAlign="CENTER"/>
+                <column property="cceXMotivo" width="18%"/>
+                <column property="cceNProt" width="14%"/>
+                <column property="cceDhRegEvento" width="10%"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction" themeNames="small"/>
+            <button id="discardButton" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

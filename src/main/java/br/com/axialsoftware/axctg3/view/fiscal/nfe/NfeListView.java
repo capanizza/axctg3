@@ -6,9 +6,13 @@ import br.com.axialsoftware.axctg3.entity.enums.AmbienteNfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.Nfe;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeCancelamentoService;
+import br.com.axialsoftware.axctg3.service.fiscal.NfeCartaCorrecaoService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeDanfeService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeImportService;
+import br.com.axialsoftware.axctg3.service.fiscal.NfeInutilizacaoService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeWebserviceClient;
+import br.com.axialsoftware.axctg3.view.fiscal.nfecartacorrecao.NfeCartaCorrecaoListView;
+import br.com.axialsoftware.axctg3.view.fiscal.nfeinutilizacao.NfeInutilizacaoListView;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
 import com.vaadin.flow.component.ClickEvent;
@@ -21,12 +25,15 @@ import io.jmix.core.DataManager;
 import io.jmix.core.Messages;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.Dialogs;
+import io.jmix.flowui.UiComponents;
+import io.jmix.flowui.action.DialogAction;
 import io.jmix.flowui.app.inputdialog.DialogActions;
 import io.jmix.flowui.app.inputdialog.DialogOutcome;
 import io.jmix.flowui.backgroundtask.BackgroundTask;
 import io.jmix.flowui.backgroundtask.TaskLifeCycle;
 import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.grid.DataGrid;
+import io.jmix.flowui.component.textarea.JmixTextArea;
 import io.jmix.flowui.component.validation.ValidationErrors;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.component.button.JmixButton;
@@ -34,6 +41,7 @@ import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +49,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static io.jmix.flowui.app.inputdialog.InputParameter.enumParameter;
+import static io.jmix.flowui.app.inputdialog.InputParameter.intParameter;
 import static io.jmix.flowui.app.inputdialog.InputParameter.stringParameter;
 
 @Route(value = "nfes", layout = MainView.class)
@@ -78,9 +87,15 @@ public class NfeListView extends StandardListView<Nfe> {
     @Autowired
     private NfeCancelamentoService nfeCancelamentoService;
     @Autowired
+    private NfeCartaCorrecaoService nfeCartaCorrecaoService;
+    @Autowired
+    private NfeInutilizacaoService nfeInutilizacaoService;
+    @Autowired
     private NfeWebserviceClient nfeWebserviceClient;
     @Autowired
     private Messages messages;
+    @Autowired
+    private UiComponents uiComponents;
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
@@ -210,9 +225,132 @@ public class NfeListView extends StandardListView<Nfe> {
                 .open();
     }
 
+    @Subscribe("nfesDataGrid.emitirCceAction")
+    public void onNfesDataGridEmitirCceAction(final ActionPerformedEvent event) {
+        Nfe selecionada = nfesDataGrid.getSingleSelectedItem();
+        if (selecionada == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("nfeListView.emitirCceAction.text"))
+                    .withText(messageBundle.getMessage("nfeListView.emitirCce.naoSelecionado"))
+                    .open();
+            return;
+        }
+        pedirTextoEEmitirCce(selecionada.getId());
+    }
+
+    /**
+     * Diferente de {@link #pedirJustificativaECancelar}, aqui o texto é sempre obrigatório —
+     * uma CC-e sem correção real não faz sentido, então não há desculpa padrão pra texto em
+     * branco. Também não pré-preenche com {@code ConfigRel} (decisão consciente: cada
+     * correção é sobre um erro diferente, reaproveitar o texto anterior seria um risco real de
+     * o operador esquecer de trocar). O check de "só corrige NFe autorizada (cStat=100)" e do
+     * limite de 20 CC-e's por NFe acontece em {@code NfeCartaCorrecaoService}.
+     */
+    private void pedirTextoEEmitirCce(UUID nfeId) {
+        dialogs.createInputDialog(UiComponentUtils.getCurrentView())
+                .withHeader(messageBundle.getMessage("nfeListView.emitirCceAction.text"))
+                .withParameters(
+                        stringParameter("textoCorrecao")
+                                .withLabel(messageBundle.getMessage("nfeListView.emitirCce.textoCorrecao.label"))
+                                .withField(this::criarTextAreaCorrecao)
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withValidator(context -> {
+                    String texto = context.getValue("textoCorrecao");
+                    if (texto == null || texto.isBlank()) {
+                        return ValidationErrors.of(messageBundle.getMessage("nfeListView.emitirCce.textoCorrecao.obrigatorio"));
+                    }
+                    if (texto.trim().length() < 15) {
+                        return ValidationErrors.of(messageBundle.getMessage("nfeListView.emitirCce.textoCorrecao.minima"));
+                    }
+                    return ValidationErrors.none();
+                })
+                .withCloseListener(closeEvent -> {
+                    if (!closeEvent.closedWith(DialogOutcome.OK)) {
+                        return;
+                    }
+                    String texto = closeEvent.getValue("textoCorrecao");
+                    NfeCartaCorrecaoService.ResultadoCorrecao resultado = nfeCartaCorrecaoService.corrigir(nfeId, texto);
+                    if (resultado.sucesso()) {
+                        dialogs.createMessageDialog()
+                                .withHeader(messageBundle.getMessage("nfeListView.emitirCce.sucesso.header"))
+                                .withText(messageBundle.formatMessage("nfeListView.emitirCce.sucesso.text",
+                                        resultado.numeroSequencial(), resultado.cStat(), resultado.motivo()))
+                                .open();
+                    } else {
+                        dialogs.createMessageDialog()
+                                .withHeader(messageBundle.getMessage("nfeListView.emitirCce.erro.header"))
+                                .withText(messageBundle.formatMessage("nfeListView.emitirCce.erro.text", resultado.motivo()))
+                                .open();
+                    }
+                })
+                .open();
+    }
+
+    /**
+     * Campo de várias linhas pro texto da correção — o padrão do resto do projeto
+     * (justificativa de cancelamento/inutilização) usa {@code stringParameter} de uma linha
+     * só, mas o texto de uma CC-e costuma ser mais longo/estruturado que uma justificativa
+     * curta, então aqui vale o esforço extra de {@code withField} (ver Javadoc de
+     * {@code InputParameter.withField}: precisa de {@code uiComponents.create(...)}, não
+     * {@code new JmixTextArea()} — o componente depende de injeção Spring, feita em
+     * {@code afterPropertiesSet()}).
+     */
+    private JmixTextArea criarTextAreaCorrecao() {
+        JmixTextArea textArea = uiComponents.create(JmixTextArea.class);
+        textArea.setWidthFull();
+        textArea.setMinHeight("8em");
+        return textArea;
+    }
+
     @Subscribe("nfesDataGrid.consultarNfeAction")
     public void onNfesDataGridConsultarNfeAction(final ActionPerformedEvent event) {
-        mostrarEmDesenvolvimento("nfeListView.consultarNfeAction.text");
+        Nfe selecionada = nfesDataGrid.getSingleSelectedItem();
+        if (selecionada == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("nfeListView.consultarNfeAction.text"))
+                    .withText(messageBundle.getMessage("nfeListView.consultarNfe.naoSelecionado"))
+                    .open();
+            return;
+        }
+        consultarEExibir(selecionada.getChave());
+    }
+
+    /**
+     * {@code NFeConsultaProtocolo4} — situação oficial e atual de uma chave na SEFAZ
+     * (autorizada/cancelada/denegada/não localizada), independente do que está gravado
+     * localmente. Mesma checagem de config e mesmo texto de falha de rede de
+     * {@code onNfesDataGridVerificarStatusServicoAction} — não é um "sucesso/erro" de
+     * pedido, então uma única mensagem informativa (sem branch sucesso/erro), igual ao
+     * padrão de "Verificar status do serviço".
+     */
+    private void consultarEExibir(String chave) {
+        Empresa empresa = utilGeralService.getEmpresa();
+        if (empresa.getCrt() == null || empresa.getAmbienteNfe() == null
+                || empresa.getCertificadoArquivo() == null || empresa.getCertificadoSenha() == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("nfeListView.consultarNfeAction.text"))
+                    .withText(messageBundle.getMessage("nfeListView.verificarStatusServico.semConfig"))
+                    .open();
+            return;
+        }
+        try {
+            NfeWebserviceClient.RespostaConsulta resposta = nfeWebserviceClient.consultarProtocolo(chave, empresa);
+            String texto = resposta.nProt() == null
+                    ? messageBundle.formatMessage("nfeListView.consultarNfe.resultado.semProtocolo",
+                            resposta.cStat(), resposta.xMotivo())
+                    : messageBundle.formatMessage("nfeListView.consultarNfe.resultado.comProtocolo",
+                            resposta.cStat(), resposta.xMotivo(), resposta.nProt(), resposta.dhRecbto());
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("nfeListView.consultarNfeAction.text"))
+                    .withText(texto)
+                    .open();
+        } catch (Exception e) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("nfeListView.verificarStatusServico.falha.header"))
+                    .withText(messageBundle.formatMessage("nfeListView.verificarStatusServico.falha.text", e.getMessage()))
+                    .open();
+        }
     }
 
     /** Mesma lógica de {@code EmpresaDetailView.onTestarConexaoSefazButtonClick}. */
@@ -245,7 +383,137 @@ public class NfeListView extends StandardListView<Nfe> {
 
     @Subscribe("nfesDataGrid.inutilizarNumerosAction")
     public void onNfesDataGridInutilizarNumerosAction(final ActionPerformedEvent event) {
-        mostrarEmDesenvolvimento("nfeListView.inutilizarNumerosAction.text");
+        pedirFaixaEInutilizar();
+    }
+
+    /**
+     * Histórico das inutilizações já pedidas (ver {@link NfeInutilizacaoListView}) — tela de
+     * baixa importância pra ganhar item de menu próprio, então fica só a um clique daqui via
+     * dialog, mesmo padrão de {@code onImportXmlButtonClick} pra {@code NfeImportView}.
+     */
+    @Subscribe("nfesDataGrid.verInutilizacoesAction")
+    public void onNfesDataGridVerInutilizacoesAction(final ActionPerformedEvent event) {
+        dialogWindows.view(this, NfeInutilizacaoListView.class).open();
+    }
+
+    /**
+     * Mesmos dados já visíveis na aba "Carta de Correção" de {@code NfeDetailView} — atalho
+     * de um clique, mesmo motivo de {@link #onNfesDataGridVerInutilizacoesAction}. Configura
+     * o controller com {@code .build().getView().setChave(...)} antes de {@code open()},
+     * já que {@link NfeCartaCorrecaoListView} precisa saber qual NFe filtrar.
+     */
+    @Subscribe("nfesDataGrid.verCartasCorrecaoAction")
+    public void onNfesDataGridVerCartasCorrecaoAction(final ActionPerformedEvent event) {
+        Nfe selecionada = nfesDataGrid.getSingleSelectedItem();
+        if (selecionada == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("nfeListView.verCartasCorrecaoAction.text"))
+                    .withText(messageBundle.getMessage("nfeListView.verCartasCorrecao.naoSelecionado"))
+                    .open();
+            return;
+        }
+        DialogWindow<NfeCartaCorrecaoListView> dialogWindow = dialogWindows.view(this, NfeCartaCorrecaoListView.class).build();
+        dialogWindow.getView().setChave(selecionada.getChave());
+        dialogWindow.open();
+    }
+
+    /**
+     * Não depende de seleção na grid — a faixa inutilizada nunca teve {@code Nfe}
+     * correspondente pra selecionar (mesmo motivo de {@link NfeInutilizacaoService} gravar
+     * o resultado numa entidade própria em vez de atualizar uma linha existente). Mesmo
+     * padrão de {@code ConfigRel} pra lembrar a justificativa de
+     * {@link #pedirJustificativaECancelar}; ano/série/faixa não são lembrados — mudam a
+     * cada pedido.
+     */
+    private void pedirFaixaEInutilizar() {
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
+        dialogs.createInputDialog(UiComponentUtils.getCurrentView())
+                .withHeader(messageBundle.getMessage("nfeListView.inutilizarNumerosAction.text"))
+                .withParameters(
+                        intParameter("ano")
+                                .withLabel(messageBundle.getMessage("nfeListView.inutilizarNumeros.ano.label"))
+                                .withDefaultValue(Year.now().getValue()),
+                        intParameter("serie")
+                                .withLabel(messageBundle.getMessage("nfeListView.inutilizarNumeros.serie.label"))
+                                .withDefaultValue(1),
+                        intParameter("numeroInicial")
+                                .withLabel(messageBundle.getMessage("nfeListView.inutilizarNumeros.numeroInicial.label")),
+                        intParameter("numeroFinal")
+                                .withLabel(messageBundle.getMessage("nfeListView.inutilizarNumeros.numeroFinal.label")),
+                        stringParameter("justificativa")
+                                .withLabel(messageBundle.getMessage("nfeListView.inutilizarNumeros.justificativa.label"))
+                                .withDefaultValue(configRel.getJustificativaInutilizacaoNfe())
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withValidator(context -> {
+                    Integer numeroInicial = context.getValue("numeroInicial");
+                    Integer numeroFinal = context.getValue("numeroFinal");
+                    if (numeroInicial == null || numeroFinal == null) {
+                        return ValidationErrors.of(messageBundle.getMessage("nfeListView.inutilizarNumeros.faixaObrigatoria"));
+                    }
+                    if (numeroInicial < 1 || numeroFinal < 1) {
+                        return ValidationErrors.of(messageBundle.getMessage("nfeListView.inutilizarNumeros.faixaNaoPositiva"));
+                    }
+                    if (numeroInicial > numeroFinal) {
+                        return ValidationErrors.of(messageBundle.getMessage("nfeListView.inutilizarNumeros.faixaInvalida"));
+                    }
+                    String justificativa = context.getValue("justificativa");
+                    if (justificativa != null && !justificativa.isBlank() && justificativa.trim().length() < 15) {
+                        return ValidationErrors.of(messageBundle.getMessage("nfeListView.inutilizarNumeros.justificativa.minima"));
+                    }
+                    return ValidationErrors.none();
+                })
+                .withCloseListener(closeEvent -> {
+                    if (!closeEvent.closedWith(DialogOutcome.OK)) {
+                        return;
+                    }
+                    Integer ano = closeEvent.getValue("ano");
+                    Integer serie = closeEvent.getValue("serie");
+                    Integer numeroInicial = closeEvent.getValue("numeroInicial");
+                    Integer numeroFinal = closeEvent.getValue("numeroFinal");
+                    String justificativa = closeEvent.getValue("justificativa");
+                    pedirConfirmacaoEInutilizar(configRel, ano, serie, numeroInicial, numeroFinal, justificativa);
+                })
+                .open();
+    }
+
+    /**
+     * Envio à SEFAZ é irreversível (ao contrário de um cadastro comum, não dá pra "desfazer"
+     * uma inutilização homologada) — por isso um passo de confirmação a mais depois do
+     * {@code InputDialog}, mostrando quantos números da faixa serão de fato inutilizados
+     * antes de disparar {@link NfeInutilizacaoService#inutilizar}.
+     */
+    private void pedirConfirmacaoEInutilizar(ConfigRel configRel, Integer ano, Integer serie,
+                                              Integer numeroInicial, Integer numeroFinal, String justificativa) {
+        int quantidade = numeroFinal - numeroInicial + 1;
+        dialogs.createOptionDialog()
+                .withHeader(messageBundle.getMessage("nfeListView.inutilizarNumeros.confirmar.header"))
+                .withText(messageBundle.formatMessage("nfeListView.inutilizarNumeros.confirmar.text",
+                        quantidade, numeroInicial, numeroFinal, serie, ano))
+                .withActions(
+                        new DialogAction(DialogAction.Type.YES)
+                                .withText(messageBundle.getMessage("nfeListView.inutilizarNumeros.confirmar.sim"))
+                                .withHandler(e -> {
+                                    configRel.setJustificativaInutilizacaoNfe(justificativa);
+                                    dataManager.save(configRel);
+                                    NfeInutilizacaoService.ResultadoInutilizacao resultado = nfeInutilizacaoService.inutilizar(
+                                            utilGeralService.getCodEmpresa(), ano, serie, numeroInicial, numeroFinal, justificativa);
+                                    if (resultado.sucesso()) {
+                                        dialogs.createMessageDialog()
+                                                .withHeader(messageBundle.getMessage("nfeListView.inutilizarNumeros.sucesso.header"))
+                                                .withText(messageBundle.formatMessage("nfeListView.inutilizarNumeros.sucesso.text", resultado.motivo()))
+                                                .open();
+                                    } else {
+                                        dialogs.createMessageDialog()
+                                                .withHeader(messageBundle.getMessage("nfeListView.inutilizarNumeros.erro.header"))
+                                                .withText(messageBundle.formatMessage("nfeListView.inutilizarNumeros.erro.text", resultado.motivo()))
+                                                .open();
+                                    }
+                                }),
+                        new DialogAction(DialogAction.Type.NO)
+                                .withText(messageBundle.getMessage("nfeListView.inutilizarNumeros.confirmar.nao"))
+                )
+                .open();
     }
 
     @Subscribe("nfesDataGrid.alternarAmbienteAction")

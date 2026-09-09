@@ -53,6 +53,9 @@ relacionar com NFe. Reverte a decisão de 2026-08-09 documentada em `Nfe.java`
 | Teste isolado de certificado/mTLS | `NfeWebserviceClient.consultarStatusServico(Empresa)` — chama `NFeStatusServico4` (sem NFe nenhuma montada/assinada) — sugestão do usuário, mais simples que emitir de verdade e já confirma se cert+mTLS+conectividade funcionam. Botão "Testar conexão SEFAZ" na aba "Emissão NFe" do cadastro de Empresa (`EmpresaDetailView.java`) |
 | UI (emissão) | dropDownButton "Ações" em `NotaSaidaListView`/`NfeListView` — item "Emitir NFe" |
 | Cancelamento (evento `tpEvento` 110111) | `service/fiscal/NfeCancelamentoService.java` — monta/assina/transmite o evento via `NfeXmlSigner.assinarEvento`/`NfeWebserviceClient.enviarEvento` (endpoint `NFeRecepcaoEvento4`); grava protocolo/motivo do evento em campos novos de `Nfe` (`CANC_*`) preservando o protocolo de autorização original (`protNProt`), e atualiza `protCStat` pra 101. UI: item "Cancelar NFe" do mesmo dropDownButton, pede justificativa (mínimo 15 caracteres). **Validado em 2026-09-01** contra homologação SP: `cStat=135 "Evento registrado e vinculado a NF-e"` |
+| Inutilização de numeração (`inutNFe` v4.00 — leiaute/webservice próprio, **não** um `tpEvento`) | `service/fiscal/NfeInutilizacaoService.java` — monta/assina/transmite via `NfeXmlSigner.assinarInfInut`/`NfeWebserviceClient.enviarInutilizacao` (endpoint `NFeInutilizacao4`, sem envelope de lote, resposta síncrona). Diferente do cancelamento, a faixa nunca teve `Nfe` correspondente pra atualizar — resultado gravado numa entidade própria, `entity/fiscal/NfeInutilizacao.java`. UI: item "Inutilizar números de notas" do dropDownButton de `NfeListView` (só aqui — `NotaSaidaListView` continua placeholder), pede ano/série/faixa/justificativa (mínimo 15 caracteres, `ConfigRel.justificativaInutilizacaoNfe` lembra a última usada). **Validado em 2026-09-01** contra homologação SP: `cStat=102 "Inutilização de número homologado"`, protocolo `135260008131942` |
+| Carta de Correção Eletrônica (evento `tpEvento` 110110) | `service/fiscal/NfeCartaCorrecaoService.java` — mesma técnica do cancelamento (monta/assina/transmite via `NfeXmlSigner.assinarEvento`/`NfeWebserviceClient.enviarEvento`, endpoint `NFeRecepcaoEvento4`, sem alteração nos dois). Diferente do cancelamento (evento único por NFe), a mesma NFe pode receber várias CC-e's — até 20 por norma da SEFAZ — cada uma com `nSeqEvento` incremental; por isso vira filho de composição de `Nfe` (`entity/fiscal/NfeCartaCorrecao.java`, uma linha por sequencial), não campos soltos. Cada CC-e é independente: o texto digitado não repete automaticamente as correções anteriores (decisão consciente, mais simples). `xCondUso` (texto de condições de uso) é fixo, exigido pelo schema, não digitado pelo operador. UI: item "Emitir carta de correção" no dropDownButton de `NfeListView` e `NotaSaidaListView` (texto sempre obrigatório, mínimo 15 caracteres, sem lembrar o último valor via `ConfigRel` — cada correção é sobre um erro diferente); histórico + reimpressão do comprovante (`NfeCartaCorrecaoComprovanteService`, Jasper `ComprovanteCartaCorrecao.jasper`) tanto numa aba em `NfeDetailView` quanto numa tela dedicada (`NfeCartaCorrecaoListView`, item "Ver cartas de correção" no mesmo dropDownButton — atalho de um clique, mesmo padrão de "Ver inutilizações", adicionado depois que a aba sozinha se mostrou pouco descobrível). Campo de texto é um `textArea` multilinha (`JmixTextArea` via `InputParameter.withField`); `NfeCartaCorrecaoService.normalizarTexto` colapsa quebras de linha num único espaço antes de montar o XML — a SEFAZ rejeita `xCorrecao` com `\n`/`\r` literal (`cStat=493`, achado no primeiro teste com texto multilinha). **Validado em 2026-09-03** contra homologação SP: emissão inicial (`cStat=135`), depois texto multilinha confirmado funcionando após o fix de normalização. |
+| NFe Complementar (`finNFe=2`) | Diferente de CC-e/cancelamento — não é evento, é uma NFe nova de verdade referenciando a original via `<NFref><refNFe>`. `entity/enums/FinNfe.java` (NORMAL/COMPLEMENTAR/AJUSTE/DEVOLUCAO, códigos fixos do leiaute — só NORMAL/COMPLEMENTAR são emitidos/validados). `NotaSaida.finNfe`/`.chaveNotaOriginal` novos (aba "Complementos"); `NfeXmlBuilder.construirIde` monta `finNFe`/`NFref` a partir deles; `NfeEmissaoService` valida consistência antes de transmitir (complementar sem chave, ou normal com chave preenchida, bloqueiam sem chamar a SEFAZ). `Nfe.refNfe` novo, lido de volta pelo `NfeXmlParser` de qualquer NFe autorizada/importada (suporte parcial ao grupo `NFref`, só o primeiro `refNFe`). UI: item "Emitir NFe complementar" no dropDownButton de `NotaSaidaListView` (só aqui, mesmo motivo de "Emitir NFe" nunca ter existido em `NfeListView`) — abre uma tela dedicada, `NotaSaidaComplementarDetailView` (`DialogWindows.detail(...).newEntity().withInitializer(...)`, primeiro uso desse padrão no projeto), em vez do `NotaSaidaDetailView` genérico (2026-09-04: a tela genérica tem campos/abas demais pra esse caso de uso — natureza/classTrib/especie/serie/itens que não fazem sentido editar numa complementar). Vem pré-preenchida e com natureza/classTrib/cliente **travados** (herdados da nota original, `readOnly="true"` no XML); só data de emissão e os valores (mercadoria/ICMS/ST/IPI + frete/seguro/desconto/despesas) ficam editáveis — sem aba de itens, o pseudo item nasce sozinho na emissão (ver abaixo). Emissão de fato usa o botão "Emitir NFe" já existente, sem fluxo novo. **Item gerado automaticamente** (padrão do legado AxFat, `F_Complemento.pas`): o operador só edita o cabeçalho ("Valores calculados" — `valorMercadoria`/`baseIcms`/`valorIcms`/`baseIpi`/`valorIpi`), sem mexer na aba "Itens"; `NfeEmissaoService.gerarItemComplementar` monta o "pseudo item" sozinho na hora de emitir (não num listener de salvamento, pra nunca ficar desatentualizado se o cabeçalho for editado de novo depois) — `quantidade=1`/`valorUnitario=valorMercadoria` quando há diferença de preço, `0`/`0` quando é só imposto (matematicamente equivalente ao cabeçalho, porque `NfeXmlBuilder` usa `item.getSubTotal()` pra `vProd`, diferente do legado que pegava direto do cabeçalho). `Empresa.produtoNfeComplementar` (aba "Emissão NFe") é o placeholder usado como produto do item — sem configurar, emissão bloqueia com erro claro. Só ICMS e IPI são espelhados pro item (ICMS-ST fica de fora, CST fixo em "00" não lê `baseSt`/`valorSt`); item manual continua funcionando como alternativa (basta lançar antes de emitir, que o gerador automático só age se `itens` estiver vazio). **Ainda não confirmado em homologação com o gerador automático** — dois testes reais em 2026-09-03 (item lançado manualmente) já corrigiram dois bugs reais (inconsistência cabeçalho×item nos totais, depois `xProd` com espaço em branco), mas foram interrompidos antes de autorizar pra não arriscar bloqueio por consumo indevido; reteste fica pro usuário rodar quando quiser. |
 
 ## Simplificações desta primeira versão (além das já citadas)
 
@@ -60,8 +63,9 @@ relacionar com NFe. Reverte a decisão de 2026-08-09 documentada em `Nfe.java`
   ficam zerados; só a alíquota "cheia" de `NaturezaOperacao` é aplicada.
 - **Frete/transportador não modelados em `NotaSaida`** — `modFrete` fixo em 9 (sem
   transporte); sem grupo `transporta`/`veicTransp`.
-- **`finNFe` sempre 1** (normal) — devolução (que mudaria pra 4) não é tratada aqui,
-  mesma pendência já registrada em `docs/REFORMA-TRIBUTARIA-IBS-CBS.md`.
+- **`finNFe` varia entre 1 (normal) e 2 (complementar)** desde 2026-09 — devolução
+  (que usaria 4) continua não tratada, mesma pendência já registrada em
+  `docs/REFORMA-TRIBUTARIA-IBS-CBS.md`; ajuste (3) também não é emitido.
 - **IPI simplificado**: `CST 50` fixo quando há valor, `IPINT`/sem grupo quando zero —
   `ItemNotaSaida` não guarda um CST de IPI próprio.
 - **PIS/COFINS**: mesma lógica do Axial (alíquota zero, CST 01 se `NaturezaOperacao.venda`
@@ -89,14 +93,25 @@ relacionar com NFe. Reverte a decisão de 2026-08-09 documentada em `Nfe.java`
   `cStat=107 "Serviço em Operação"` contra homologação SP — certificado, mTLS e
   conectividade validados de ponta a ponta. Falta validar o fluxo completo de emissão
   (`NfeXmlBuilder`/assinatura/`NFeAutorizacao4`), que ainda não foi exercitado.
+- **`xProd` com espaço em branco à direita** — `cStat=225` genérico, confirmado 2026-09-03
+  testando a primeira NFe complementar em homologação. `Produto.descricao` pode chegar com
+  espaços de sobra (dado migrado do legado, coluna CHAR de largura fixa no Firebird); o
+  schema da NFe proíbe isso em `xProd`. Corrigido com `.trim()` em `NfeXmlBuilder.
+  construirDet` — não é bug específico de complementar, qualquer nota usando um produto
+  assim teria o mesmo problema, só não tinha aparecido ainda. Achado validando o XML exato
+  contra o XSD oficial baixado de `github.com/nfephp-org/sped-nfe` (mesma técnica de
+  antes) — nessa mesma checagem, `IBSCBS`/`vItem`/`IBSCBSTot` também acusaram erro, mas
+  confirmado que esse mirror específico do XSD não conhece o grupo `IBSCBS` (zero
+  ocorrências no arquivo) — falso positivo de schema desatualizado pra Reforma Tributária,
+  não bug real (produção já validou essa estrutura contra 176 notas reais antes).
 - **Endpoints SP** conferidos ao vivo em 2026-08-17 (emissão) e 2026-09-01
   (`NFeRecepcaoEvento4`, cancelamento), mas SEFAZ muda URL ocasionalmente — reconferir
   se a conexão falhar com erro de rede antes de suspeitar de outra coisa.
 - **Canonicalização da assinatura** — um espaço a mais invalida a assinatura; testar
   contra homologação antes de qualquer nota de produção. **Confirmado funcionando**
-  tanto pra `infNFe` (emissão, 2026-08-18) quanto pra `infEvento` (cancelamento,
-  2026-09-01 — `NfeXmlSigner.assinarEvento`, mesma técnica de assinatura, tag
-  diferente).
+  pra `infNFe` (emissão, 2026-08-18), `infEvento` (cancelamento, 2026-09-01) e `infInut`
+  (inutilização, 2026-09-01) — mesma técnica de assinatura em
+  `NfeXmlSigner.assinarElemento`, só muda a tag.
 - **`tpNF` sempre "1" (saída), independente do CFOP** (`NfeXmlBuilder.construirIde`) —
   bug real encontrado em 2026-09-01 testando uma nota de "Compra de energia elétrica"
   (CFOP 1252, que começa em "1" = entrada): a SEFAZ rejeitou com `cStat=770 "CFOP
@@ -109,8 +124,6 @@ relacionar com NFe. Reverte a decisão de 2026-08-09 documentada em `Nfe.java`
 
 ## O que falta (próximas rodadas)
 
-- Carta de correção, inutilização de numeração (cancelamento já implementado e validado
-  — ver tabela acima).
 - Validar/bloquear CFOP de entrada antes de montar o XML (ver "tpNF sempre 1" acima).
 - Outros UFs além de SP.
 - Crédito de ICMS do Simples de verdade (portar `calculacsosn` do Axial).

@@ -4,6 +4,7 @@ import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
 import br.com.axialsoftware.axctg3.entity.contabil.HistoricoContabil;
 import br.com.axialsoftware.axctg3.entity.enums.*;
 import br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro;
+import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
 import br.com.axialsoftware.axctg3.entity.tabelas.Municipio;
 import br.com.axialsoftware.axctg3.entity.tabelas.TipoLogradouro;
 import io.jmix.core.FileRef;
@@ -243,6 +244,16 @@ public class Empresa {
     @JoinColumn(name = "CONTA_CAIXA_ID")
     @ManyToOne(fetch = FetchType.LAZY)
     private ContaContabil contaCaixa;
+
+    // Produto placeholder usado por NfeEmissaoService.gerarItemComplementar pra montar o
+    // "pseudo item" de uma NFe Complementar sem itens lançados manualmente (o operador só
+    // preenche o cabeçalho da NotaSaida — valorMercadoria/baseIcms/valorIcms — e o item é
+    // gerado sozinho na hora de emitir). Nullable: sem configurar, a nota complementar
+    // simplesmente não gera o item automático (erro claro na hora de emitir, não trava o
+    // cadastro da empresa).
+    @JoinColumn(name = "PRODUTO_NFE_COMPLEMENTAR_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Produto produtoNfeComplementar;
 
     @JoinColumn(name = "CONTA_MOVIMENTO_BANCARIO_ID")
     @ManyToOne(fetch = FetchType.LAZY)
@@ -792,6 +803,14 @@ public class Empresa {
 
     public void setContaCaixa(ContaContabil contaCaixa) {
         this.contaCaixa = contaCaixa;
+    }
+
+    public Produto getProdutoNfeComplementar() {
+        return produtoNfeComplementar;
+    }
+
+    public void setProdutoNfeComplementar(Produto produtoNfeComplementar) {
+        this.produtoNfeComplementar = produtoNfeComplementar;
     }
 
     public ContaContabil getContaMovimentoBancario() {

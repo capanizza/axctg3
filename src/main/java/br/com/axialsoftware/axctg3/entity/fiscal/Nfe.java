@@ -33,8 +33,11 @@ import java.util.UUID;
  * depois da nota emitida sem que a NFe histórica deva mudar junto.
  *
  * <p><b>Escopo deliberadamente de fora</b> (grupos do leiaute pouco usados por uma
- * revenda/indústria genérica, não modelados aqui): {@code NFref} (notas referenciadas),
- * {@code retirada}/{@code entrega} (locais alternativos), {@code autXML},
+ * revenda/indústria genérica, não modelados aqui): {@code NFref} (notas referenciadas) —
+ * suporte <b>parcial</b> desde a NFe Complementar (2026-09): só o primeiro
+ * {@code refNFe} de referência simples é lido pra {@link #getRefNfe()}, os demais
+ * sub-grupos ({@code refNF}/{@code refNFP}/{@code refCTe}/{@code refECF}) continuam de
+ * fora — {@code retirada}/{@code entrega} (locais alternativos), {@code autXML},
  * {@code detExport}/{@code exporta} (exportação), {@code compra} (empenho público),
  * {@code cana} (agroindústria canavieira), {@code rastro}/{@code med}/{@code arma}/
  * {@code veicProd}/{@code comb} (rastreabilidade e produtos regulados específicos),
@@ -172,6 +175,12 @@ public class Nfe {
     // finalidade: 1=normal, 2=complementar, 3=ajuste, 4=devolução
     @Column(name = "FIN_NFE")
     private Integer finNfe;
+
+    // NFref/refNFe — chave da NFe referenciada (44 dígitos), preenchida quando finNfe !=
+    // normal (NFe Complementar é o único caso emitido/validado hoje, ver
+    // NfeEmissaoService). Só o primeiro NFref do XML é lido; ver Javadoc da classe.
+    @Column(name = "REF_NFE", length = 44)
+    private String refNfe;
 
     // indica operação com consumidor final: 0=não, 1=sim
     @Column(name = "IND_FINAL")
@@ -592,6 +601,15 @@ public class Nfe {
     @OneToMany(mappedBy = "nfe")
     private List<NfeDuplicata> duplicatas;
 
+    // Cartas de Correção Eletrônica (tpEvento 110110) já emitidas pra esta NFe — pode haver
+    // várias (SEFAZ permite até 20), cada uma com numeroSequencial incremental; ver
+    // service/fiscal/NfeCartaCorrecaoService.
+    @OnDelete(DeletePolicy.CASCADE)
+    @Composition
+    @OrderBy("numeroSequencial")
+    @OneToMany(mappedBy = "nfe")
+    private List<NfeCartaCorrecao> cartasCorrecao;
+
     @OnDelete(DeletePolicy.CASCADE)
     @Composition
     @OneToMany(mappedBy = "nfe")
@@ -624,6 +642,14 @@ public class Nfe {
 
     public void setDuplicatas(List<NfeDuplicata> duplicatas) {
         this.duplicatas = duplicatas;
+    }
+
+    public List<NfeCartaCorrecao> getCartasCorrecao() {
+        return cartasCorrecao;
+    }
+
+    public void setCartasCorrecao(List<NfeCartaCorrecao> cartasCorrecao) {
+        this.cartasCorrecao = cartasCorrecao;
     }
 
     public List<NfeItem> getItens() {
@@ -1456,6 +1482,14 @@ public class Nfe {
 
     public void setFinNfe(Integer finNfe) {
         this.finNfe = finNfe;
+    }
+
+    public String getRefNfe() {
+        return refNfe;
+    }
+
+    public void setRefNfe(String refNfe) {
+        this.refNfe = refNfe;
     }
 
     public Integer getTpAmb() {

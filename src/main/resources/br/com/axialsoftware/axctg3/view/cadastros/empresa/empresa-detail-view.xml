@@ -16,6 +16,7 @@
                 <property name="contaRevenda" fetchPlan="_base"/>
                 <property name="contaCaixa" fetchPlan="_base"/>
                 <property name="contaMovimentoBancario" fetchPlan="_base"/>
+                <property name="produtoNfeComplementar" fetchPlan="_base"/>
                 <property name="historicoGnreSaida" fetchPlan="_base"/>
                 <property name="historicoSubstituicaoSaida" fetchPlan="_base"/>
                 <property name="historicoRevenda" fetchPlan="_base"/>
@@ -433,6 +434,18 @@
                                                dataContainer="empresaDc"
                                                width="25%" themeNames="small"
                                                label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.certificadoSenha"/>
+                            </hbox>
+                            <hbox width="100%">
+                                <entityPicker id="produtoNfeComplementarField"
+                                              property="produtoNfeComplementar"
+                                              dataContainer="empresaDc"
+                                              width="50%" themeNames="small"
+                                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.produtoNfeComplementar">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityPicker>
                             </hbox>
                             <hbox width="100%">
                                 <button id="testarConexaoSefazButton"

@@ -74,6 +74,12 @@
     <parameter name="VALOR_IPI" class="java.lang.String"/>
     <parameter name="VALOR_NF" class="java.lang.String"/>
     <parameter name="INF_CPL" class="java.lang.String"/>
+    <!-- NfeDanfeService só preenche quando Nfe.protCStat == 101 (cancelada pelo evento
+         110111 — ver NfeCancelamentoService); null em qualquer outro status, e o printWhenExpression
+         abaixo faz a banda de background sumir nesse caso. Bitmap pré-rotacionado (Graphics2D em
+         Java), não rotation="Left/Right" do textElement — esse atributo só aceita múltiplos de 90°,
+         insuficiente pro carimbo diagonal. -->
+    <parameter name="MARCA_CANCELADA" class="java.awt.Image"/>
 
     <queryString>
         <![CDATA[]]>
@@ -92,6 +98,21 @@
     <field name="valorIcms" class="java.math.BigDecimal"/>
     <field name="valorIpi" class="java.math.BigDecimal"/>
     <field name="aliqIcms" class="java.math.BigDecimal"/>
+
+    <!-- Carimbo "NF-e CANCELADA" — banda de fundo (repete atrás de TODAS as páginas,
+         diferente de title/summary que só imprimem uma vez): igual à moldura da title band,
+         555x802 (columnWidth x altura útil da página). Nenhum quadro do DANFE usa mode="Opaque",
+         então o vermelho translúcido do bitmap atravessa por baixo de textos/bordas normalmente. -->
+    <background>
+        <band height="802">
+            <image scaleImage="RetainShape" hAlign="Center" vAlign="Middle">
+                <reportElement x="40" y="270" width="475" height="260" uuid="a1b2c3d4-000a-0001-0001-000000000001">
+                    <printWhenExpression><![CDATA[$P{MARCA_CANCELADA} != null]]></printWhenExpression>
+                </reportElement>
+                <imageExpression><![CDATA[$P{MARCA_CANCELADA}]]></imageExpression>
+            </image>
+        </band>
+    </background>
 
     <title>
         <band height="334" splitType="Stretch">

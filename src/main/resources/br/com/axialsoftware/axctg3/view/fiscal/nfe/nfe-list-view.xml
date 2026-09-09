@@ -37,9 +37,12 @@
                         <actionItem id="emitirNfeItem" ref="nfesDataGrid.emitirNfeAction"/>
                         <actionItem id="emitirDanfeItem" ref="nfesDataGrid.emitirDanfeAction"/>
                         <actionItem id="cancelarNfeItem" ref="nfesDataGrid.cancelarNfeAction"/>
+                        <actionItem id="emitirCceItem" ref="nfesDataGrid.emitirCceAction"/>
+                        <actionItem id="verCartasCorrecaoItem" ref="nfesDataGrid.verCartasCorrecaoAction"/>
                         <actionItem id="consultarNfeItem" ref="nfesDataGrid.consultarNfeAction"/>
                         <actionItem id="verificarStatusServicoItem" ref="nfesDataGrid.verificarStatusServicoAction"/>
                         <actionItem id="inutilizarNumerosItem" ref="nfesDataGrid.inutilizarNumerosAction"/>
+                        <actionItem id="verInutilizacoesItem" ref="nfesDataGrid.verInutilizacoesAction"/>
                         <separator/>
                         <actionItem id="alternarAmbienteItem" ref="nfesDataGrid.alternarAmbienteAction"/>
                     </items>
@@ -61,9 +64,12 @@
                 <action id="emitirNfeAction" text="msg://nfeListView.emitirNfeAction.text" icon="vaadin:paperplane"/>
                 <action id="emitirDanfeAction" text="msg://nfeListView.emitirDanfeAction.text" icon="vaadin:print"/>
                 <action id="cancelarNfeAction" text="msg://nfeListView.cancelarNfeAction.text" icon="vaadin:ban"/>
+                <action id="emitirCceAction" text="msg://nfeListView.emitirCceAction.text" icon="vaadin:file-text"/>
+                <action id="verCartasCorrecaoAction" text="msg://nfeListView.verCartasCorrecaoAction.text" icon="vaadin:list"/>
                 <action id="consultarNfeAction" text="msg://nfeListView.consultarNfeAction.text" icon="vaadin:search"/>
                 <action id="verificarStatusServicoAction" text="msg://nfeListView.verificarStatusServicoAction.text" icon="vaadin:signal"/>
                 <action id="inutilizarNumerosAction" text="msg://nfeListView.inutilizarNumerosAction.text" icon="vaadin:trash"/>
+                <action id="verInutilizacoesAction" text="msg://nfeListView.verInutilizacoesAction.text" icon="vaadin:list"/>
                 <action id="alternarAmbienteAction" text="msg://nfeListView.alternarAmbienteAction.text" icon="vaadin:exchange"/>
             </actions>
             <columns resizable="true">

@@ -4,6 +4,7 @@ import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
 import br.com.axialsoftware.axctg3.entity.enums.AmbienteNfe;
 import br.com.axialsoftware.axctg3.entity.enums.CodRegimeTributario;
+import br.com.axialsoftware.axctg3.entity.enums.FinNfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.ItemNotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
@@ -35,8 +36,10 @@ import java.util.List;
  * XML→entidade fazendo a mesma coisa em paralelo).
  *
  * <p>Mesmo recorte de escopo do {@code Nfe}/{@code NfeItem} (ver Javadoc deles): sem
- * NFref/retirada/entrega/autXML/detExport/compra/cana/rastro/med/arma/veicProd/comb/
- * ISSQNtot/infIntermed/infRespTec/reboque/vagao/balsa/NVE/DI. Simplificações adicionais
+ * retirada/entrega/autXML/detExport/compra/cana/rastro/med/arma/veicProd/comb/
+ * ISSQNtot/infIntermed/infRespTec/reboque/vagao/balsa/NVE/DI. {@code NFref} tem suporte
+ * parcial desde a NFe Complementar (2026-09): só {@code refNFe} de referência simples
+ * (ver {@code construirIde}), sem os demais sub-grupos. Simplificações adicionais
  * específicas da emissão própria (primeira versão, docs/EMISSAO-NFE.md tem a lista
  * completa): sem diferimento/devolução de tributo no bloco IBS/CBS (fica zerado), sem
  * crédito de ICMS do Simples (pCredSN/vCredICMSSN zerado), frete/transportador não
@@ -108,7 +111,6 @@ public class NfeXmlBuilder {
 
         Document doc = novoDocumento();
         Integer cUf = UfIbge.codigo(empresa.getMunicipio().getUf());
-        Integer cNf = chaveService.gerarCNf();
         Integer tpEmis = 1;
         // dhEmi é "agora" (momento real da transmissão pra SEFAZ, não a data de emissão
         // gravada na nota — que pode ser bem anterior, ver dhSaiEnt/dataSaida) — e o campo
@@ -119,6 +121,7 @@ public class NfeXmlBuilder {
         // repassado pra construirIde() em vez de cada um chamar OffsetDateTime.now() por
         // conta própria.
         OffsetDateTime dhEmi = OffsetDateTime.now(ZoneOffset.of("-03:00")).truncatedTo(java.time.temporal.ChronoUnit.SECONDS);
+        Integer cNf = resolverCNf(notaSaida, dhEmi);
         String chave = chaveService.gerarChave(cUf, dhEmi.toLocalDate(), empresa.getCnpj(),
                 55, serie, notaSaida.getNumero(), tpEmis, cNf);
         int cDv = Integer.parseInt(chave.substring(43));
@@ -179,6 +182,29 @@ public class NfeXmlBuilder {
         return new Resultado(doc, chave);
     }
 
+    /**
+     * Reaproveita o {@code cNF} de uma tentativa de emissão anterior não confirmada
+     * ({@code NotaSaida.chaveTentativa}, gravada por {@code NfeEmissaoService} antes de
+     * assinar/transmitir) em vez de sortear outro — mesma chave numa reemissão evita
+     * duplicidade quando a tentativa anterior tinha sido autorizada e só a resposta da
+     * SEFAZ se perdeu (a SEFAZ rejeita o reenvio da MESMA chave como cStat=539
+     * "Duplicidade de NF-e", em vez de autorizar duas NFe pro mesmo número). Só reaproveita
+     * se o AAMM da chave antiga ainda bate com o mês/ano de {@code dhEmi} agora — chave de
+     * mês anterior geraria a mesma inconsistência do cStat=502 já corrigido (chave e
+     * {@code dhEmi} têm que concordar); nesse caso, sorteia um {@code cNF} novo (tentativa
+     * antiga presumida resolvida ou abandonada há tempo demais pra ainda fazer sentido).
+     */
+    private Integer resolverCNf(NotaSaida notaSaida, OffsetDateTime dhEmi) {
+        String chaveTentativa = notaSaida.getChaveTentativa();
+        if (chaveTentativa != null && chaveTentativa.length() == 44) {
+            String aammAtual = String.format("%02d%02d", dhEmi.getYear() % 100, dhEmi.getMonthValue());
+            if (chaveService.extrairAamm(chaveTentativa).equals(aammAtual)) {
+                return chaveService.extrairCNf(chaveTentativa);
+            }
+        }
+        return chaveService.gerarCNf();
+    }
+
     // ---- empresa/emitente ----
 
     private Empresa buscarEmpresa(NotaSaida notaSaida) {
@@ -224,12 +250,33 @@ public class NfeXmlBuilder {
         text(doc, ide, "tpEmis", tpEmis);
         text(doc, ide, "cDV", cDv);
         text(doc, ide, "tpAmb", empresa.getAmbienteNfe().getId());
-        text(doc, ide, "finNFe", 1);
+        FinNfe finNfe = notaSaida.getFinNfe() != null ? notaSaida.getFinNfe() : FinNfe.NORMAL;
+        text(doc, ide, "finNFe", finNfe.getId());
         text(doc, ide, "indFinal", 0);
-        text(doc, ide, "indPres", 9);
-        text(doc, ide, "indIntermed", 0);
+        // indPres=0 ("Não se aplica") é o valor exigido pra NFe complementar — é a própria
+        // nota oficial do schema pra esse código ("...Nota Fiscal complementar ou de
+        // ajuste..."), confirmado contra 7/7 complementares reais aceitas (finNFe=2,
+        // verAplic SP_NFE_PL009_V4) em 2026-09-06: nenhuma delas tem indPres=9 nem
+        // indIntermed — o grupo indIntermed (venda via marketplace) não se aplica quando a
+        // operação em si "não se aplica" (indPres=0), por isso só emite pra nota normal.
+        boolean complementar = finNfe == FinNfe.COMPLEMENTAR;
+        text(doc, ide, "indPres", complementar ? 0 : 9);
+        if (!complementar) {
+            text(doc, ide, "indIntermed", 0);
+        }
         text(doc, ide, "procEmi", 0);
         text(doc, ide, "verProc", "axctg3");
+        // NFref/refNFe — chave da NFe original que esta nota complementa/ajusta/devolve.
+        // Não amarrado a um finNfe específico (o schema aceita NFref com finNFe 2/3/4);
+        // genérico o bastante pra servir qualquer finalidade futura sem mudar de novo.
+        // Posição no schema: último grupo dentro de <ide>, depois de verProc/dhCont/xJust
+        // (os dois últimos não usados aqui — só emissão normal/complementar, sem
+        // contingência).
+        if (notaSaida.getChaveNotaOriginal() != null && !notaSaida.getChaveNotaOriginal().isBlank()) {
+            Element nfRef = doc.createElementNS(NS_NFE, "NFref");
+            text(doc, nfRef, "refNFe", notaSaida.getChaveNotaOriginal().trim());
+            ide.appendChild(nfRef);
+        }
         return ide;
     }
 
@@ -311,7 +358,13 @@ public class NfeXmlBuilder {
         Element prod = doc.createElementNS(NS_NFE, "prod");
         text(doc, prod, "cProd", item.getProduto().getCodigo());
         text(doc, prod, "cEAN", "SEM GTIN");
-        text(doc, prod, "xProd", item.getProduto().getDescricao());
+        // trim: o schema rejeita xProd com espaço em branco à frente/atrás (padrão
+        // "[!-ÿ]{1}[ -ÿ]*[!-ÿ]{1}|[!-ÿ]{1}" — tem que começar/terminar com caractere
+        // não-espaço). Produto.descricao pode chegar com espaços de sobra (dado migrado
+        // do legado, coluna CHAR de largura fixa no Firebird) — cStat=225 genérico
+        // confirmado em homologação 2026-09-03, achado validando o XML contra o XSD
+        // oficial (mesma técnica de [[emissao-nfe-propria]]).
+        text(doc, prod, "xProd", item.getProduto().getDescricao().trim());
         text(doc, prod, "NCM", item.getProduto().getClassificacaoFiscal() != null
                 ? item.getProduto().getClassificacaoFiscal().getCodNcm() : "00000000");
         // cBenef fica em prod, não em imposto/ICMS, apesar de depender do CST do ICMS —
@@ -463,8 +516,10 @@ public class NfeXmlBuilder {
                     // abaixo, que só cobre o ICMS próprio, sem ST nenhum). Estrutura e
                     // modBCST=4 conferidos contra 14/14 ocorrências reais de ICMS10 nas 176
                     // notas de referência ([[nfe-xmls-reais-teste]]); pICMSST=pICMS em
-                    // 14/14 delas também. pMVAST não é campo próprio de ItemNotaSaida —
-                    // derivado de vBCST/vBC (a margem que já gerou o baseSt gravado).
+                    // 14/14 delas também (mesmo quando vICMSST/vBCST não bate exatamente com
+                    // esse percentual — o ICMS-ST real é líquido do próprio, SEFAZ tolera).
+                    // pMVAST não é campo próprio de ItemNotaSaida — derivado de vBCST/vBC (a
+                    // margem que já gerou o baseSt gravado).
                     text(doc, variante, "modBC", 3);
                     text(doc, variante, "vBC", dec(item.getBaseIcms(), 2));
                     text(doc, variante, "pICMS", dec(item.getAliqIcms(), 2));
@@ -472,7 +527,7 @@ public class NfeXmlBuilder {
                     text(doc, variante, "modBCST", 4);
                     text(doc, variante, "pMVAST", dec(mvaSt(item), 4));
                     text(doc, variante, "vBCST", dec(item.getBaseSt(), 2));
-                    text(doc, variante, "pICMSST", dec(item.getAliqIcms(), 2));
+                    text(doc, variante, "pICMSST", dec(aliqIcmsStEfetiva(item), 2));
                     text(doc, variante, "vICMSST", dec(item.getValorSt(), 2));
                     break;
                 case "60":
@@ -504,6 +559,28 @@ public class NfeXmlBuilder {
             return BigDecimal.ZERO;
         }
         return vBcSt.divide(vBc, 6, RoundingMode.HALF_UP).subtract(BigDecimal.ONE).multiply(new BigDecimal(100));
+    }
+
+    /** Alíquota efetiva do ICMS-ST ({@code pICMSST}): normalmente igual a {@code
+     * item.getAliqIcms()} (a alíquota do ICMS próprio — mesmo padrão validado contra 14/14
+     * ICMS10 reais em [[nfe-xmls-reais-teste]]). Mas numa complementar que ajusta SÓ o valor
+     * de ST (baseIcms/valorIcms zerados de propósito, ver {@code
+     * NfeEmissaoService.gerarItemComplementar}), {@code aliqIcms} também zera — declarar
+     * {@code pICMSST=0} junto de um {@code vICMSST} diferente de zero é uma contradição
+     * (0% de qualquer base não produz valor), rejeitada como "Falha no Schema XML"
+     * (confirmado 2026-09-06, ver [[axctg3-nfe-complementar-cstat225]]). Nesse caso, deriva
+     * de {@code valorSt}/{@code baseSt} em vez de herdar o zero do ICMS próprio. */
+    private BigDecimal aliqIcmsStEfetiva(ItemNotaSaida item) {
+        BigDecimal aliqIcms = item.getAliqIcms();
+        if (aliqIcms != null && aliqIcms.compareTo(BigDecimal.ZERO) != 0) {
+            return aliqIcms;
+        }
+        BigDecimal baseSt = item.getBaseSt();
+        BigDecimal valorSt = item.getValorSt();
+        if (baseSt == null || baseSt.compareTo(BigDecimal.ZERO) == 0 || valorSt == null) {
+            return BigDecimal.ZERO;
+        }
+        return valorSt.multiply(new BigDecimal(100)).divide(baseSt, 2, RoundingMode.HALF_UP);
     }
 
     private Element construirIpi(Document doc, ItemNotaSaida item) {
@@ -628,6 +705,18 @@ public class NfeXmlBuilder {
         text(doc, ibsCbs, "CST", cst);
         text(doc, ibsCbs, "cClassTrib", String.format("%06d",
                 item.getCodClassTrib() != null ? item.getCodClassTrib() : 1));
+
+        // ClassTrib.tipoAliquota "Sem alíquota" (CST 4xx/5xx/8xx — imunidade, não
+        // incidência, suspensão etc., ver class_trib_seed.csv) não preenche gIBSCBS: o
+        // XML oficial pra esse grupo de CST é só CST+cClassTrib, sem base/percentual/valor
+        // (confirmado 2026-09-06 investigando o cStat=225 — mandar gIBSCBS zerado junto de
+        // CST 000/"Padrão" foi rejeitado como "Falha no Schema XML"; o cClassTrib correto
+        // pra "tributação só de ICMS" é 410029, tipoAliquota "Sem alíquota", ver
+        // NfeEmissaoService.gerarItemComplementar). "Padrão" continua preenchendo o grupo
+        // inteiro, igual sempre foi.
+        if (classTrib != null && "Sem alíquota".equals(classTrib.getTipoAliquota())) {
+            return ibsCbs;
+        }
 
         Element gIbsCbs = doc.createElementNS(NS_NFE, "gIBSCBS");
         BigDecimal base = item.getSubTotal() == null ? BigDecimal.ZERO : item.getSubTotal();

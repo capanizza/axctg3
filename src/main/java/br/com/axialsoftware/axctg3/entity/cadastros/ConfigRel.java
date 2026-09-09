@@ -206,11 +206,21 @@ public class ConfigRel {
     @Column(name = "pasta_sped_ecd")
     private String pastaSpedEcd;
 
+    // Última pasta usada pra gravar o arquivo de remessa bancária (TituloReceberListView),
+    // mesmo raciocínio de prefill de pastaSpedEcd acima.
+    @Column(name = "pasta_remessa")
+    private String pastaRemessa;
+
     // Último texto de justificativa usado ao cancelar uma NFe (service/fiscal/
     // NfeCancelamentoService) — prefill no diálogo de NfeListView/NotaSaidaListView, mesmo
     // padrão de reaproveitar o último valor já usado nos outros filtros deste registro.
     @Column(name = "justificativa_cancelamento_nfe")
     private String justificativaCancelamentoNfe;
+
+    // Último texto de justificativa usado ao inutilizar uma faixa de numeração de NFe
+    // (service/fiscal/NfeInutilizacaoService) — mesmo padrão do campo acima.
+    @Column(name = "justificativa_inutilizacao_nfe")
+    private String justificativaInutilizacaoNfe;
 
     public UUID getId() {
         return id;
@@ -708,11 +718,27 @@ public class ConfigRel {
         this.pastaSpedEcd = pastaSpedEcd;
     }
 
+    public String getPastaRemessa() {
+        return pastaRemessa;
+    }
+
+    public void setPastaRemessa(String pastaRemessa) {
+        this.pastaRemessa = pastaRemessa;
+    }
+
     public String getJustificativaCancelamentoNfe() {
         return justificativaCancelamentoNfe;
     }
 
     public void setJustificativaCancelamentoNfe(String justificativaCancelamentoNfe) {
         this.justificativaCancelamentoNfe = justificativaCancelamentoNfe;
+    }
+
+    public String getJustificativaInutilizacaoNfe() {
+        return justificativaInutilizacaoNfe;
+    }
+
+    public void setJustificativaInutilizacaoNfe(String justificativaInutilizacaoNfe) {
+        this.justificativaInutilizacaoNfe = justificativaInutilizacaoNfe;
     }
 }

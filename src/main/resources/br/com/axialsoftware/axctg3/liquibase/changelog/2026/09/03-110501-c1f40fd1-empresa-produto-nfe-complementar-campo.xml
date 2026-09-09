@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/09/03-110501-c1f40fd1-empresa-produto-nfe-complementar-campo.xml">
+
+    <changeSet id="1" author="axctg3">
+        <addColumn tableName="EMPRESA">
+            <column name="PRODUTO_NFE_COMPLEMENTAR_ID" type="UUID"/>
+        </addColumn>
+    </changeSet>
+    <changeSet id="2" author="axctg3">
+        <createIndex indexName="IDX_EMPRESA_PRODUTO_NFE_COMPLEMENTAR" tableName="EMPRESA">
+            <column name="PRODUTO_NFE_COMPLEMENTAR_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="PRODUTO_NFE_COMPLEMENTAR_ID" baseTableName="EMPRESA"
+                                 constraintName="FK_EMPRESA_ON_PRODUTO_NFE_COMPLEMENTAR" referencedColumnNames="ID"
+                                 referencedTableName="PRODUTO"/>
+    </changeSet>
+</databaseChangeLog>

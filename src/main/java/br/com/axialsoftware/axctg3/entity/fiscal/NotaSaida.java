@@ -5,6 +5,7 @@ import br.com.axialsoftware.axctg3.entity.cadastros.Mensagem;
 import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
 import br.com.axialsoftware.axctg3.entity.cadastros.Transportadora;
 import br.com.axialsoftware.axctg3.entity.cadastros.Vendedor;
+import br.com.axialsoftware.axctg3.entity.enums.FinNfe;
 import br.com.axialsoftware.axctg3.entity.financeiro.Banco;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
 import io.jmix.core.DeletePolicy;
@@ -223,6 +224,30 @@ public class NotaSaida {
     @Column(name = "CHAVE", length = 50)
     private String chave;
 
+    // Chave calculada na última tentativa de emissão (NfeEmissaoService), gravada ANTES de
+    // assinar/transmitir — sobrevive a erro de comunicação/timeout, quando a SEFAZ pode ter
+    // autorizado mesmo sem a resposta ter chegado. Reaproveitada (mesmo cNF, não uma chave
+    // nova) numa reemissão, pra evitar duas NFe autorizadas com o mesmo número — e serve de
+    // reserva pra "Consultar NFe" quando `chave` ainda está vazia. Zerada assim que `chave`
+    // é confirmada (nota já autorizada, não precisa mais de tentativa pendente).
+    @Column(name = "CHAVE_TENTATIVA", length = 50)
+    private String chaveTentativa;
+
+    // finNFe do leiaute — 1=normal (default), 2=complementar, 3=ajuste, 4=devolução (os
+    // dois últimos modelados só por completude, não emitidos/validados nesta versão, ver
+    // Javadoc de FinNfe). Nunca null: NfeXmlBuilder cai pra NORMAL se vier null, mas o
+    // default aqui evita essa checagem em todo consumidor do campo.
+    @Column(name = "FIN_NFE", nullable = false)
+    @NotNull
+    private Integer finNfe = 1;
+
+    // chave da NFe original (44 dígitos) que esta nota complementa/ajusta/devolve — grupo
+    // NFref/refNFe no XML (NfeXmlBuilder). Só preenchida quando finNfe != NORMAL; validado
+    // em NfeEmissaoService antes de transmitir (obrigatoriedade condicional, não dá pra
+    // expressar com @NotNull direto no campo).
+    @Column(name = "CHAVE_NOTA_ORIGINAL", length = 44)
+    private String chaveNotaOriginal;
+
     @OnDelete(DeletePolicy.CASCADE)
     @Composition
     @OrderBy("item")
@@ -243,6 +268,30 @@ public class NotaSaida {
 
     public void setChave(String chave) {
         this.chave = chave;
+    }
+
+    public String getChaveTentativa() {
+        return chaveTentativa;
+    }
+
+    public void setChaveTentativa(String chaveTentativa) {
+        this.chaveTentativa = chaveTentativa;
+    }
+
+    public FinNfe getFinNfe() {
+        return finNfe == null ? null : FinNfe.fromId(finNfe);
+    }
+
+    public void setFinNfe(FinNfe finNfe) {
+        this.finNfe = finNfe == null ? null : finNfe.getId();
+    }
+
+    public String getChaveNotaOriginal() {
+        return chaveNotaOriginal;
+    }
+
+    public void setChaveNotaOriginal(String chaveNotaOriginal) {
+        this.chaveNotaOriginal = chaveNotaOriginal;
     }
 
     public BigDecimal getPesoBruto() {

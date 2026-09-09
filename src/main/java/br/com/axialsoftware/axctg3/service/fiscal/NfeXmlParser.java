@@ -127,6 +127,11 @@ public class NfeXmlParser {
         nfe.setCodDv(integer(ide, "cDV"));
         nfe.setTpAmb(integer(ide, "tpAmb"));
         nfe.setFinNfe(integer(ide, "finNFe"));
+        // NFref pode aparecer várias vezes no schema (uma NFe complementar referenciando
+        // mais de uma nota, por exemplo) — só o primeiro é lido pra Nfe.refNfe, ver Javadoc
+        // da classe/de Nfe sobre o suporte parcial.
+        Element nfRef = child(ide, "NFref");
+        nfe.setRefNfe(nfRef != null ? text(nfRef, "refNFe") : null);
         nfe.setIndFinal(integer(ide, "indFinal"));
         nfe.setIndPres(integer(ide, "indPres"));
         nfe.setProcEmi(integer(ide, "procEmi"));

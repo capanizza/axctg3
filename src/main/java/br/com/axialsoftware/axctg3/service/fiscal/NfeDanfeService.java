@@ -14,6 +14,12 @@ import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.stereotype.Service;
 
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -51,11 +57,58 @@ public class NfeDanfeService {
     // concatenado, cai no BigDecimal.toString() puro (ponto decimal, sem separador de milhar).
     private static final DecimalFormatSymbols SIMBOLOS_BR = criarSimbolosBr();
 
+    // Código canônico de "NFe cancelada" gravado em Nfe.protCStat por NfeCancelamentoService —
+    // mesmo valor documentado no Javadoc de Nfe.protCStat ("100=autorizada, 101/151=cancelada...");
+    // só 101 é produzido por este sistema (151 é um código de retorno da SEFAZ que não geramos).
+    private static final int PROT_C_STAT_CANCELADA = 101;
+
+    // Carimbo "NF-e CANCELADA" do parâmetro MARCA_CANCELADA do Danfe.jrxml (banda de
+    // background) — sempre o mesmo bitmap, texto fixo, então gerado uma vez por classe em vez
+    // de recriar a cada emissão de DANFE.
+    private static final java.awt.Image MARCA_CANCELADA = criarMarcaCancelada();
+
     private static DecimalFormatSymbols criarSimbolosBr() {
         DecimalFormatSymbols simbolos = new DecimalFormatSymbols();
         simbolos.setDecimalSeparator(',');
         simbolos.setGroupingSeparator('.');
         return simbolos;
+    }
+
+    /**
+     * Desenha "NF-e CANCELADA" rotacionado num {@link BufferedImage} com fundo transparente —
+     * o {@code rotation} do {@code textElement} do JasperReports só aceita múltiplos de 90°
+     * (None/Left/Right/UpsideDown), insuficiente pro carimbo diagonal de marca d'água. O
+     * canvas é dimensionado a partir da largura/altura real do texto medida via
+     * {@link FontMetrics} (não um tamanho "no chute"), pra não cortar as pontas do texto depois
+     * de rotacionado.
+     */
+    private static java.awt.Image criarMarcaCancelada() {
+        String texto = "NF-e CANCELADA";
+        double anguloGraus = -28;
+        Font fonte = new Font("SansSerif", Font.BOLD, 54);
+
+        BufferedImage medicao = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D gMedicao = medicao.createGraphics();
+        gMedicao.setFont(fonte);
+        FontMetrics fm = gMedicao.getFontMetrics();
+        int textoLargura = fm.stringWidth(texto);
+        int textoAltura = fm.getAscent() + fm.getDescent();
+        gMedicao.dispose();
+
+        double rad = Math.toRadians(Math.abs(anguloGraus));
+        int largura = (int) Math.ceil(textoLargura * Math.cos(rad) + textoAltura * Math.sin(rad)) + 40;
+        int altura = (int) Math.ceil(textoLargura * Math.sin(rad) + textoAltura * Math.cos(rad)) + 40;
+
+        BufferedImage img = new BufferedImage(largura, altura, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = img.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g.setFont(fonte);
+        g.setColor(new Color(190, 0, 0, 100));
+        g.rotate(Math.toRadians(anguloGraus), largura / 2.0, altura / 2.0);
+        g.drawString(texto, (largura - textoLargura) / 2f, altura / 2f + textoAltura / 3f);
+        g.dispose();
+        return img;
     }
 
     private final DataManager dataManager;
@@ -171,6 +224,9 @@ public class NfeDanfeService {
         parametros.put("VALOR_NF", formatarValor(nfe.getValorNf()));
 
         parametros.put("INF_CPL", nvl(nfe.getInfCpl()));
+
+        boolean cancelada = nfe.getProtCStat() != null && nfe.getProtCStat() == PROT_C_STAT_CANCELADA;
+        parametros.put("MARCA_CANCELADA", cancelada ? MARCA_CANCELADA : null);
 
         return parametros;
     }
