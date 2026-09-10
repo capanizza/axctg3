@@ -132,6 +132,7 @@ class RemessaBancoServiceTest {
         Path arquivo = arquivoRemessaGravado();
         assertThat(arquivo).exists();
         assertThat(arquivo.getFileName().toString()).matches("00623[0-9A-Z]\\d{2}\\.001");
+        assertThat(remessaBanco.getCaminhoArquivo()).isEqualTo(arquivo.toString());
     }
 
     @Test

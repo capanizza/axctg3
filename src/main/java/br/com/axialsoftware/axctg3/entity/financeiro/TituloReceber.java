@@ -123,6 +123,12 @@ public class TituloReceber {
     @Column(name = "NUM_REMESSA")
     private Integer numRemessa;
 
+    // Caminho completo do último PDF de boleto gerado pra este título (null = nunca
+    // emitido). Sobrescrito a cada nova emissão — ver BoletoService.emitirBoletos, mesmo
+    // espírito de RemessaBanco.caminhoArquivo.
+    @Column(name = "CAMINHO_BOLETO_PDF", length = 255)
+    private String caminhoBoletoPdf;
+
     @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
     @Column(name = "VALOR", nullable = false, precision = 19, scale = 2)
     @NotNull
@@ -176,6 +182,14 @@ public class TituloReceber {
 
     public void setNumRemessa(Integer numRemessa) {
         this.numRemessa = numRemessa;
+    }
+
+    public String getCaminhoBoletoPdf() {
+        return caminhoBoletoPdf;
+    }
+
+    public void setCaminhoBoletoPdf(String caminhoBoletoPdf) {
+        this.caminhoBoletoPdf = caminhoBoletoPdf;
     }
 
     public Banco getBanco() {

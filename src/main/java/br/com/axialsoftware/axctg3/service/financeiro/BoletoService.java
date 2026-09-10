@@ -7,6 +7,7 @@ import br.com.axialsoftware.axctg3.entity.financeiro.BoletoDto;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber;
 import br.com.axialsoftware.axctg3.service.RelatorioService;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
+import io.jmix.core.DataManager;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.stereotype.Service;
 
@@ -44,16 +45,18 @@ public class BoletoService {
 
     private final RelatorioService relatorioService;
     private final UtilGeralService utilGeralService;
+    private final DataManager dataManager;
     private final List<BancoCobrancaHandler> handlers;
 
     // Data já formatada "dd/MM/yyyy" — o atributo pattern do JasperReports não formata
     // campo java.time.LocalDate como esperado nesse projeto (ver Javadoc de BoletoDto).
     private static final DateTimeFormatter DATA_BR = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-    public BoletoService(RelatorioService relatorioService, UtilGeralService utilGeralService,
+    public BoletoService(RelatorioService relatorioService, UtilGeralService utilGeralService, DataManager dataManager,
                           List<BancoCobrancaHandler> handlers) {
         this.relatorioService = relatorioService;
         this.utilGeralService = utilGeralService;
+        this.dataManager = dataManager;
         this.handlers = handlers;
     }
 
@@ -72,7 +75,8 @@ public class BoletoService {
      * ({@code aaaamm}) é o de emissão de cada título, não o do dia da emissão do boleto (ver
      * {@link PastaCobrancaBanco}), então títulos de meses diferentes numa mesma seleção
      * caem em pastas diferentes — sem problema aqui, ao contrário da remessa, porque cada
-     * boleto já é um arquivo isolado.
+     * boleto já é um arquivo isolado. O caminho completo fica gravado em
+     * {@link TituloReceber#getCaminhoBoletoPdf()} — sobrescrito a cada reemissão.
      */
     public void emitirBoletos(List<TituloReceber> titulos) {
         Empresa empresa = utilGeralService.getEmpresa();
@@ -102,12 +106,16 @@ public class BoletoService {
                 BoletoDto boleto = montarDto(empresa, tituloReceber, handler);
                 byte[] pdf = relatorioService.gerarRelatorioPdf(template, new JRBeanCollectionDataSource(List.of(boleto)), parametros);
                 String nomeArquivo = "Boleto " + boleto.getNumeroDocumento() + ".pdf";
+                Path caminhoArquivo = pastaPdf.resolve(nomeArquivo);
                 try {
-                    Files.write(pastaPdf.resolve(nomeArquivo), pdf);
+                    Files.write(caminhoArquivo, pdf);
                 } catch (IOException e) {
                     throw new UncheckedIOException(
                             "Não foi possível gravar " + nomeArquivo + " em " + pastaPdf + ": " + e.getMessage(), e);
                 }
+
+                tituloReceber.setCaminhoBoletoPdf(caminhoArquivo.toString());
+                dataManager.save(tituloReceber);
             }
         }
     }

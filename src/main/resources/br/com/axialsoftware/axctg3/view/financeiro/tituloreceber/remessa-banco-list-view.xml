@@ -44,6 +44,7 @@
                 <column property="dataGeracao" filterable="true"/>
                 <column property="quantidadeTitulos" filterable="true"/>
                 <column property="valorTotal" filterable="true" textAlign="END"/>
+                <column property="caminhoArquivo" filterable="true" flexGrow="4"/>
             </columns>
         </dataGrid>
         <hbox id="lookupActions" visible="false">

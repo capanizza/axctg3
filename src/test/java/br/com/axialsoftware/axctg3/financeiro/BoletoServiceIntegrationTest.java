@@ -130,9 +130,13 @@ class BoletoServiceIntegrationTest {
 
         boletoService.emitirBoletos(List.of(titulo));
 
-        byte[] pdf = Files.readAllBytes(pastaPdf().resolve("Boleto 0000191.pdf"));
+        Path arquivo = pastaPdf().resolve("Boleto 0000191.pdf");
+        byte[] pdf = Files.readAllBytes(arquivo);
         assertThat(pdf).isNotEmpty();
         assertThat(new String(pdf, 0, 4, StandardCharsets.US_ASCII)).isEqualTo("%PDF");
+
+        TituloReceber recarregado = dataManager.load(TituloReceber.class).id(titulo.getId()).one();
+        assertThat(recarregado.getCaminhoBoletoPdf()).isEqualTo(arquivo.toString());
     }
 
     @Test

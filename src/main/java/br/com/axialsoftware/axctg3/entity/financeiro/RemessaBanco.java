@@ -85,6 +85,13 @@ public class RemessaBanco {
     @NotNull
     private Integer numRemessa;
 
+    // Caminho completo (pasta + nome do arquivo) onde a remessa foi gravada em disco —
+    // RemessaBancoService.gerarRemessa monta com PastaCobrancaBanco +
+    // BancoCobrancaHandler.nomeArquivoRemessa. Diferente de RetornoBanco.nomeArquivo (só o
+    // nome, porque ali o arquivo vem de upload do navegador, sem caminho fixo em disco).
+    @Column(name = "CAMINHO_ARQUIVO", length = 255)
+    private String caminhoArquivo;
+
     @NumberFormat(pattern = "##0")
     @Column(name = "QUANTIDADE_TITULOS", nullable = false)
     @NotNull
@@ -109,6 +116,14 @@ public class RemessaBanco {
 
     public void setBanco(Banco banco) {
         this.banco = banco;
+    }
+
+    public String getCaminhoArquivo() {
+        return caminhoArquivo;
+    }
+
+    public void setCaminhoArquivo(String caminhoArquivo) {
+        this.caminhoArquivo = caminhoArquivo;
     }
 
     public LocalDate getDataGeracao() {

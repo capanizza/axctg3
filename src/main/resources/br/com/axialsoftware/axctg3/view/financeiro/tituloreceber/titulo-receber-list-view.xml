@@ -106,6 +106,7 @@
                 <column property="contabilizadoEmissao" flexGrow="0" textAlign="CENTER"/>
                 <column property="numBanco" filterable="true"/>
                 <column property="numRemessa" filterable="true"/>
+                <column property="caminhoBoletoPdf" filterable="true" flexGrow="4"/>
             </columns>
         </dataGrid>
         <hbox id="lookupActions" visible="false">

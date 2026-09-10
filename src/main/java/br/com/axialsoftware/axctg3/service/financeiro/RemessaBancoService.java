@@ -88,6 +88,8 @@ public class RemessaBancoService {
         Empresa empresa = utilGeralService.getEmpresa();
         int numeroRemessa = (banco.getNumRemessa() == null ? 0 : banco.getNumRemessa()) + 1;
         byte[] arquivo = handler.gerarRemessa(empresa, banco, titulos, numeroRemessa);
+        String nomeArquivo = handler.nomeArquivoRemessa(banco, dataRemessa, numeroRemessa);
+        Path caminhoArquivo = pasta.resolve(nomeArquivo);
 
         BigDecimal valorTotal = BigDecimal.ZERO;
         SaveContext saveContext = new SaveContext();
@@ -106,14 +108,14 @@ public class RemessaBancoService {
         remessaBanco.setNumRemessa(numeroRemessa);
         remessaBanco.setQuantidadeTitulos(titulos.size());
         remessaBanco.setValorTotal(valorTotal);
+        remessaBanco.setCaminhoArquivo(caminhoArquivo.toString());
         saveContext.saving(remessaBanco);
 
         dataManager.save(saveContext);
 
-        String nomeArquivo = handler.nomeArquivoRemessa(banco, dataRemessa, numeroRemessa);
         try {
             Files.createDirectories(pasta);
-            Files.write(pasta.resolve(nomeArquivo), arquivo);
+            Files.write(caminhoArquivo, arquivo);
         } catch (IOException e) {
             throw new UncheckedIOException(
                     "Não foi possível gravar o arquivo em " + pasta + ": " + e.getMessage(), e);
