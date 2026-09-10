@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/09/10-092724-c1f40fd1-banco-pastas-ampliar.xml">
+    <changeSet id="1" author="axctg3">
+        <modifyDataType columnName="pasta_remessa" newDataType="VARCHAR(255)" tableName="BANCO"/>
+    </changeSet>
+    <changeSet id="2" author="axctg3">
+        <modifyDataType columnName="pasta_retorno" newDataType="VARCHAR(255)" tableName="BANCO"/>
+    </changeSet>
+</databaseChangeLog>

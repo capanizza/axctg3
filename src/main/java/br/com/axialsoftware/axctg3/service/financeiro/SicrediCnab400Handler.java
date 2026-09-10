@@ -48,6 +48,11 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
     // fórmula mais antiga já cruza por 1000 exatamente nessa data.
     private static final LocalDate BASE_FATOR_VENCIMENTO = LocalDate.of(2000, 7, 3);
 
+    // Codificação dos meses pro nome do arquivo de remessa (manual, seção 6.2) — só outubro,
+    // novembro e dezembro usam letra (índice 9/10/11 = mês 10/11/12); os demais usam o
+    // próprio número do mês.
+    private static final String[] CODIGO_MES = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "O", "N", "D"};
+
     private static final DateTimeFormatter DATA_AAAAMMDD = DateTimeFormatter.ofPattern("yyyyMMdd");
     private static final DateTimeFormatter DATA_DDMMAA = DateTimeFormatter.ofPattern("ddMMyy");
     // "." fica liberado porque o campo "Versão do sistema" (391-394) exige o ponto
@@ -410,6 +415,21 @@ public class SicrediCnab400Handler implements BancoCobrancaHandler {
     @Override
     public String formatarAgenciaCodigoBeneficiario(Banco banco) {
         return numerico(banco.getAgencia(), 4) + "." + numerico(banco.getPosto(), 2) + "." + numerico(banco.getCodCedente(), 5);
+    }
+
+    /**
+     * {@code CCCCCMDD.XXX} (manual, seção 6.1): CCCCC = código do beneficiário/cedente (5
+     * dígitos), M = mês codificado ({@link #CODIGO_MES}, seção 6.2), DD = dia da geração. A
+     * extensão XXX é de uso livre — a única regra é não repetir no mesmo dia e não usar as
+     * extensões reservadas ao retorno (CRT, R01, R02...); aqui é o número da remessa
+     * (sequencial do banco, nunca se repete).
+     */
+    @Override
+    public String nomeArquivoRemessa(Banco banco, LocalDate dataRemessa, int numeroRemessa) {
+        String codigoBeneficiario = numerico(banco.getCodCedente(), 5);
+        String mes = CODIGO_MES[dataRemessa.getMonthValue() - 1];
+        String dia = numerico(String.valueOf(dataRemessa.getDayOfMonth()), 2);
+        return codigoBeneficiario + mes + dia + "." + String.format("%03d", numeroRemessa);
     }
 
     // ------------------------------------------------------------------------------

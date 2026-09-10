@@ -53,6 +53,22 @@ public class RelatorioService {
         }
     }
 
+    /**
+     * Igual a {@link #emitirRelatorio}, mas devolve os bytes do PDF em vez de baixar pro
+     * navegador — pra quem grava o resultado em disco (ex.: {@code BoletoService}, um PDF
+     * por título na pasta de cobrança do banco). Diferente de {@code emitirRelatorio}, não
+     * engole a exceção: quem grava em disco precisa saber se a geração falhou, já que não
+     * há "confira sua pasta de downloads" pra disfarçar o silêncio.
+     */
+    public byte[] gerarRelatorioPdf(String nomeRelatorio, JRDataSource dataSource, HashMap<String, Object> parametros) {
+        try (InputStream is = abrirTemplate(nomeRelatorio)) {
+            JasperPrint jasperPrint = JasperFillManager.fillReport(is, parametros, dataSource);
+            return JasperExportManager.exportReportToPdf(jasperPrint);
+        } catch (Exception e) {
+            throw new RuntimeException("Falha ao gerar relatório " + nomeRelatorio + ": " + e.getMessage(), e);
+        }
+    }
+
     public void emitirRelatorio2(String nomeRelatorio,
                                  HashMap<String, Object> parametros,
                                  String nomeSaida) {

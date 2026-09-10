@@ -12,38 +12,36 @@ import io.jmix.core.DataManager;
 import io.jmix.core.SaveContext;
 import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.data.PersistenceHints;
-import io.jmix.flowui.download.DownloadFormat;
-import io.jmix.flowui.download.Downloader;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
 
 /**
  * Cobre {@link BoletoService} ponta a ponta contra o template real {@code boleto748.jasper}
  * — a composição do código de barras em si já é testada em
  * {@code SicrediCnab400HandlerTest}, e a formatação da linha digitável em
- * {@code BoletoServiceTest} (unitário, sem Spring). {@link Downloader} é substituído por
- * dublê porque não há UI Vaadin ativa no teste (mesmo padrão de {@code NfeDanfeServiceTest}/
- * {@code RemessaBancoServiceTest}) — prova que {@code JasperFillManager.fillReport} +
- * {@code JasperExportManager.exportReportToPdf} rodam sem exceção contra o
- * {@code boleto748.jrxml} de verdade, não só contra a fórmula do código de barras.
+ * {@code BoletoServiceTest} (unitário, sem Spring). Prova que
+ * {@code JasperFillManager.fillReport} + {@code JasperExportManager.exportReportToPdf}
+ * rodam sem exceção contra o {@code boleto748.jrxml} de verdade — e que o PDF de cada
+ * título é gravado, de verdade, num {@code @TempDir} (mesma pasta cadastrada no
+ * {@link Banco}), não baixado.
  */
 @SpringBootTest
 @ExtendWith(AuthenticatedAsAdmin.class)
@@ -61,8 +59,8 @@ class BoletoServiceIntegrationTest {
     @Autowired
     BoletoService boletoService;
 
-    @MockitoBean
-    Downloader downloader;
+    @TempDir
+    Path tempDir;
 
     private Parceiro parceiro;
     private Banco bancoSicredi;
@@ -105,6 +103,7 @@ class BoletoServiceIntegrationTest {
         bancoSicredi.setByteGeracaoNossoNumero(2);
         bancoSicredi.setLocalPagamento("Cooperativas de crédito do Sicredi"); // LOCAL_PAGAMENTO length=50
         bancoSicredi.setMensagem("Não receber após 10 dias do vencimento.");
+        bancoSicredi.setPastaRemessa(tempDir.toString());
         bancoSicredi = dataManager.save(bancoSicredi);
 
         // TituloReceberEventListener exige um HistoricoFinanceiro codigo=1 (emissão) pra
@@ -123,7 +122,7 @@ class BoletoServiceIntegrationTest {
     }
 
     @Test
-    void test_emitirBoletosGeraPdfRealComNomeDoTitulo() {
+    void test_emitirBoletosGeraPdfRealComNomeDoTitulo() throws IOException {
         TituloReceber titulo = criarTitulo("0000191", new BigDecimal("1200.00"));
         titulo.setDataVencimento(LocalDate.of(2026, 3, 10));
         titulo.setNumBanco("262000458"); // normalmente preenchido por RemessaBancoService.gerarRemessa
@@ -131,15 +130,13 @@ class BoletoServiceIntegrationTest {
 
         boletoService.emitirBoletos(List.of(titulo));
 
-        ArgumentCaptor<byte[]> pdfCaptor = ArgumentCaptor.forClass(byte[].class);
-        verify(downloader).download(pdfCaptor.capture(), eq("Boleto 0000191.pdf"), eq(DownloadFormat.PDF));
-        byte[] pdf = pdfCaptor.getValue();
+        byte[] pdf = Files.readAllBytes(pastaPdf().resolve("Boleto 0000191.pdf"));
         assertThat(pdf).isNotEmpty();
         assertThat(new String(pdf, 0, 4, StandardCharsets.US_ASCII)).isEqualTo("%PDF");
     }
 
     @Test
-    void test_emitirBoletosVariosTitulosMesmoBancoGeraUmUnicoPdf() {
+    void test_emitirBoletosVariosTitulosMesmoBancoGeraUmPdfPorTitulo() throws IOException {
         TituloReceber titulo1 = criarTitulo("0000191", new BigDecimal("1200.00"));
         titulo1.setNumBanco("262000458");
         titulo1 = dataManager.save(titulo1);
@@ -149,7 +146,8 @@ class BoletoServiceIntegrationTest {
 
         boletoService.emitirBoletos(List.of(titulo1, titulo2));
 
-        verify(downloader).download(any(byte[].class), eq("Boletos.pdf"), eq(DownloadFormat.PDF));
+        assertThat(pastaPdf().resolve("Boleto 0000191.pdf")).exists();
+        assertThat(pastaPdf().resolve("Boleto 0000193.pdf")).exists();
     }
 
     @Test
@@ -182,7 +180,7 @@ class BoletoServiceIntegrationTest {
     }
 
     @Test
-    void test_emitirBoletosComNumBancoCurtoDoLegadoGeraPdfReal() {
+    void test_emitirBoletosComNumBancoCurtoDoLegadoGeraPdfReal() throws IOException {
         // Título importado do legado com só o sequencial cru em numBanco (sem o prefixo
         // ano+byte) — é o formato NORMAL de armazenamento, confirmado com o usuário
         // 2026-09-09: só o sequencial fica gravado, ano/byte/DV são recompostos na hora.
@@ -194,9 +192,15 @@ class BoletoServiceIntegrationTest {
 
         boletoService.emitirBoletos(List.of(titulo));
 
-        ArgumentCaptor<byte[]> pdfCaptor = ArgumentCaptor.forClass(byte[].class);
-        verify(downloader).download(pdfCaptor.capture(), eq("Boleto 0000313.pdf"), eq(DownloadFormat.PDF));
-        assertThat(new String(pdfCaptor.getValue(), 0, 4, StandardCharsets.US_ASCII)).isEqualTo("%PDF");
+        byte[] pdf = Files.readAllBytes(pastaPdf().resolve("Boleto 0000313.pdf"));
+        assertThat(new String(pdf, 0, 4, StandardCharsets.US_ASCII)).isEqualTo("%PDF");
+    }
+
+    /** {@code <tempDir>/748/<aaaamm atual>/pdf} — mesma resolução de {@code PastaCobrancaBanco}. */
+    private Path pastaPdf() {
+        return tempDir.resolve("748")
+                .resolve(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM")))
+                .resolve("pdf");
     }
 
     private TituloReceber criarTitulo(String numero, BigDecimal valor) {
