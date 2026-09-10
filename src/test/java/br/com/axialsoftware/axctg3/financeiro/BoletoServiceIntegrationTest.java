@@ -196,10 +196,14 @@ class BoletoServiceIntegrationTest {
         assertThat(new String(pdf, 0, 4, StandardCharsets.US_ASCII)).isEqualTo("%PDF");
     }
 
-    /** {@code <tempDir>/748/<aaaamm atual>/pdf} — mesma resolução de {@code PastaCobrancaBanco}. */
+    /**
+     * {@code <tempDir>/748/<aaaamm de emissão>/pdf} — mesma resolução de
+     * {@code PastaCobrancaBanco}; {@code criarTitulo} sempre grava emissão em 2026-03, não a
+     * data de hoje — a pasta é pela competência do título, não pelo dia da emissão do PDF.
+     */
     private Path pastaPdf() {
         return tempDir.resolve("748")
-                .resolve(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM")))
+                .resolve(LocalDate.of(2026, 3, 1).format(DateTimeFormatter.ofPattern("yyyyMM")))
                 .resolve("pdf");
     }
 

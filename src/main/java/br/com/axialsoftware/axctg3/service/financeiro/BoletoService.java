@@ -68,8 +68,11 @@ public class BoletoService {
 
     /**
      * Um PDF por título (cada banco presente na seleção usa seu próprio template), gravado
-     * na pasta {@code pdf} cadastrada no {@link Banco}. Todos os títulos de um mesmo banco
-     * compartilham a pasta {@code <aaaamm>} do dia da emissão.
+     * na subpasta {@code pdf} da pasta cadastrada no {@link Banco} — o mês/ano
+     * ({@code aaaamm}) é o de emissão de cada título, não o do dia da emissão do boleto (ver
+     * {@link PastaCobrancaBanco}), então títulos de meses diferentes numa mesma seleção
+     * caem em pastas diferentes — sem problema aqui, ao contrário da remessa, porque cada
+     * boleto já é um arquivo isolado.
      */
     public void emitirBoletos(List<TituloReceber> titulos) {
         Empresa empresa = utilGeralService.getEmpresa();
@@ -84,18 +87,18 @@ public class BoletoService {
             List<TituloReceber> titulosDoBanco = entry.getValue();
             Banco banco = titulosDoBanco.get(0).getBanco();
 
-            Path pastaPdf = PastaCobrancaBanco.resolver(banco, LocalDate.now()).resolve("pdf");
-            try {
-                Files.createDirectories(pastaPdf);
-            } catch (IOException e) {
-                throw new UncheckedIOException("Não foi possível criar a pasta " + pastaPdf + ": " + e.getMessage(), e);
-            }
-
             String template = "boleto" + codGeral + ".jasper";
             HashMap<String, Object> parametros = new HashMap<>();
             parametros.put("LOGO", logoBanco(codGeral));
 
             for (TituloReceber tituloReceber : titulosDoBanco) {
+                Path pastaPdf = PastaCobrancaBanco.resolver(banco, tituloReceber.getDataEmissao()).resolve("pdf");
+                try {
+                    Files.createDirectories(pastaPdf);
+                } catch (IOException e) {
+                    throw new UncheckedIOException("Não foi possível criar a pasta " + pastaPdf + ": " + e.getMessage(), e);
+                }
+
                 BoletoDto boleto = montarDto(empresa, tituloReceber, handler);
                 byte[] pdf = relatorioService.gerarRelatorioPdf(template, new JRBeanCollectionDataSource(List.of(boleto)), parametros);
                 String nomeArquivo = "Boleto " + boleto.getNumeroDocumento() + ".pdf";

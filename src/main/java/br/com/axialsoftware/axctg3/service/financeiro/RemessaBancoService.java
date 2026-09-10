@@ -53,26 +53,37 @@ public class RemessaBancoService {
     }
 
     /**
-     * Gera a remessa dos títulos informados (todos precisam ser do mesmo {@link Banco}),
-     * grava {@code numRemessa}/{@code numBanco} nos títulos e {@code nossoNumAtual} no
-     * banco, audita em {@link RemessaBanco} e grava o arquivo em disco na pasta cadastrada
-     * no banco: {@code <pastaRemessa>/<codGeral>/<aaaamm>/<nome padrão do banco>} — ver
-     * {@link PastaCobrancaBanco} e {@link BancoCobrancaHandler#nomeArquivoRemessa}.
+     * Gera a remessa dos títulos informados (todos precisam ser do mesmo {@link Banco} e do
+     * mesmo mês/ano de emissão — o arquivo é um só, com um único header/trailer, então não
+     * dá pra ter dois meses na mesma pasta {@code aaaamm}), grava {@code numRemessa}/
+     * {@code numBanco} nos títulos e {@code nossoNumAtual} no banco, audita em
+     * {@link RemessaBanco} e grava o arquivo em disco na pasta cadastrada no banco:
+     * {@code <pastaRemessa>/<codGeral>/<aaaamm>/<nome padrão do banco>} — {@code aaaamm} é o
+     * mês/ano de <b>emissão dos títulos</b>, não o dia em que a remessa foi gerada (ver
+     * {@link PastaCobrancaBanco}); já o nome do arquivo em si usa a data de geração, porque é
+     * isso que a seção 6.1 do manual do banco define (ver
+     * {@link BancoCobrancaHandler#nomeArquivoRemessa}).
      */
     public RemessaBanco gerarRemessa(List<TituloReceber> titulos) {
         if (titulos.isEmpty()) {
             throw new IllegalArgumentException("Nenhum título selecionado");
         }
         Banco banco = titulos.get(0).getBanco();
+        LocalDate dataEmissao = titulos.get(0).getDataEmissao();
         for (TituloReceber tituloReceber : titulos) {
             if (!banco.getId().equals(tituloReceber.getBanco().getId())) {
                 throw new IllegalArgumentException("Todos os títulos selecionados precisam ser do mesmo banco");
+            }
+            if (tituloReceber.getDataEmissao().getYear() != dataEmissao.getYear()
+                    || tituloReceber.getDataEmissao().getMonthValue() != dataEmissao.getMonthValue()) {
+                throw new IllegalArgumentException(
+                        "Todos os títulos selecionados precisam ter a mesma data de emissão (mês/ano)");
             }
         }
 
         BancoCobrancaHandler handler = resolverHandler(banco.getCodGeral());
         LocalDate dataRemessa = LocalDate.now();
-        Path pasta = PastaCobrancaBanco.resolver(banco, dataRemessa);
+        Path pasta = PastaCobrancaBanco.resolver(banco, dataEmissao);
 
         Empresa empresa = utilGeralService.getEmpresa();
         int numeroRemessa = (banco.getNumRemessa() == null ? 0 : banco.getNumRemessa()) + 1;

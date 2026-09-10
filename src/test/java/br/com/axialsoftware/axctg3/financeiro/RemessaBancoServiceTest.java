@@ -166,6 +166,18 @@ class RemessaBancoServiceTest {
     }
 
     @Test
+    void test_titulosComMesEmissaoDiferenteLancaExcecao() {
+        TituloReceber titulo1 = criarTitulo("0000001", BigDecimal.TEN);
+        TituloReceber titulo2 = criarTitulo("0000002", BigDecimal.ONE);
+        titulo2.setDataEmissao(LocalDate.of(ANO, MES + 1, 5));
+        titulo2 = dataManager.save(titulo2);
+
+        List<TituloReceber> titulos = List.of(titulo1, titulo2);
+        assertThatThrownBy(() -> remessaBancoService.gerarRemessa(titulos))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void test_bancoSemHandlerLancaExcecao() {
         Banco bancoNaoSuportado = dataManager.create(Banco.class);
         bancoNaoSuportado.setCodigo(9303);
@@ -203,9 +215,13 @@ class RemessaBancoServiceTest {
         return dataManager.load(TituloReceber.class).id(tituloReceber.getId()).one();
     }
 
-    /** {@code <tempDir>/748/<aaaamm atual>} — mesma resolução de {@code PastaCobrancaBanco}. */
+    /**
+     * {@code <tempDir>/748/<aaaamm de emissão dos títulos>} — mesma resolução de
+     * {@code PastaCobrancaBanco}; usa {@code ANO}/{@code MES} (data de emissão gravada por
+     * {@code criarTitulo}), não a data de hoje — a pasta é pela competência do título.
+     */
     private Path pastaAaaamm() {
-        return tempDir.resolve("748").resolve(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM")));
+        return tempDir.resolve("748").resolve(LocalDate.of(ANO, MES, 1).format(DateTimeFormatter.ofPattern("yyyyMM")));
     }
 
     private Path arquivoRemessaGravado() throws IOException {
