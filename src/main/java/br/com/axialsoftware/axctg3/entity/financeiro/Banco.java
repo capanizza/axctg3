@@ -155,10 +155,13 @@ public class Banco {
     @Column(name = "NOSSO_NUM_ATUAL", length = 10)
     private String nossoNumAtual;
 
-    @Column(name = "PASTA_REMESSA",  length = 50)
+    // length=255 (não 50, do changelog original) — pastas de rede/Windows reais (ex.:
+    // \\SERVIDOR\Compartilhado\Sistemas\Axial\Cobranca\Remessas) estouram 50 fácil. Ver
+    // changelog 2026/09/10-*-banco-pastas-ampliar.xml.
+    @Column(name = "PASTA_REMESSA", length = 255)
     private String pastaRemessa;
 
-    @Column(name = "PASTA_RETORNO",  length = 50)
+    @Column(name = "PASTA_RETORNO", length = 255)
     private String pastaRetorno;
 
     @Column(name = "NUM_REMESSA")

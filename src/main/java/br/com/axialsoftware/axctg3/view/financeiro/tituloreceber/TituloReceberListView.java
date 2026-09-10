@@ -46,7 +46,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import static io.jmix.flowui.app.inputdialog.InputParameter.localDateParameter;
-import static io.jmix.flowui.app.inputdialog.InputParameter.stringParameter;
 
 /**
  * Só a listagem/edição de emissão. Não tem botão "Lançamentos" — o lançamento contábil
@@ -191,42 +190,21 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
             return;
         }
 
-        ConfigRel configRel = utilGeralService.prepararConfigRel();
-        dialogs.createInputDialog(this)
-                .withHeader("Remessa bancária (" + titulos.size() + " título(s) selecionado(s))")
-                .withParameters(
-                        stringParameter("pasta")
-                                .withLabel("Pasta de destino")
-                                .withDefaultValue(configRel.getPastaRemessa())
-                                .withRequired(true)
-                )
-                .withActions(DialogActions.OK_CANCEL)
-                .withCloseListener(closeEvent -> {
-                    if (!closeEvent.closedWith(DialogOutcome.OK)) {
-                        return;
-                    }
-                    String pasta = closeEvent.getValue("pasta");
-                    configRel.setPastaRemessa(pasta);
-                    SaveContext saveContext = new SaveContext();
-                    saveContext.saving(configRel);
-                    dataManager.save(saveContext);
-
-                    try {
-                        RemessaBanco remessaBanco = remessaBancoService.gerarRemessa(titulos, pasta);
-                        tituloRecebersDl.load();
-                        dialogs.createMessageDialog()
-                                .withHeader("Remessa bancária")
-                                .withText("Remessa nº " + remessaBanco.getNumRemessa() + " gerada com "
-                                        + remessaBanco.getQuantidadeTitulos() + " título(s) em " + pasta)
-                                .open();
-                    } catch (IllegalArgumentException | UncheckedIOException ex) {
-                        dialogs.createMessageDialog()
-                                .withHeader("Remessa bancária")
-                                .withText(ex.getMessage())
-                                .open();
-                    }
-                })
-                .open();
+        try {
+            RemessaBanco remessaBanco = remessaBancoService.gerarRemessa(titulos);
+            tituloRecebersDl.load();
+            dialogs.createMessageDialog()
+                    .withHeader("Remessa bancária")
+                    .withText("Remessa nº " + remessaBanco.getNumRemessa() + " gerada com "
+                            + remessaBanco.getQuantidadeTitulos() + " título(s) em "
+                            + remessaBanco.getBanco().getPastaRemessa())
+                    .open();
+        } catch (IllegalArgumentException | UncheckedIOException ex) {
+            dialogs.createMessageDialog()
+                    .withHeader("Remessa bancária")
+                    .withText(ex.getMessage())
+                    .open();
+        }
     }
 
     @Subscribe("tituloRecebersDataGrid.emitirBoletoAction")
@@ -253,7 +231,12 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
         }
         try {
             boletoService.emitirBoletos(titulos);
-        } catch (IllegalArgumentException ex) {
+            dialogs.createMessageDialog()
+                    .withHeader("Emissão de boleto")
+                    .withText(titulos.size() + " boleto(s) gerado(s) na subpasta \"pdf\" da pasta de gravação "
+                            + "cadastrada no(s) banco(s) dos títulos selecionados.")
+                    .open();
+        } catch (IllegalArgumentException | UncheckedIOException ex) {
             dialogs.createMessageDialog()
                     .withHeader("Emissão de boleto")
                     .withText(ex.getMessage())

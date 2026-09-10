@@ -7,8 +7,6 @@ import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import io.jmix.core.DataManager;
 import io.jmix.core.SaveContext;
-import io.jmix.flowui.download.DownloadFormat;
-import io.jmix.flowui.download.Downloader;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -17,7 +15,6 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
@@ -32,14 +29,12 @@ public class RemessaBancoService {
 
     private final DataManager dataManager;
     private final UtilGeralService utilGeralService;
-    private final Downloader downloader;
     private final List<BancoCobrancaHandler> handlers;
 
-    public RemessaBancoService(DataManager dataManager, UtilGeralService utilGeralService, Downloader downloader,
+    public RemessaBancoService(DataManager dataManager, UtilGeralService utilGeralService,
                                 List<BancoCobrancaHandler> handlers) {
         this.dataManager = dataManager;
         this.utilGeralService = utilGeralService;
-        this.downloader = downloader;
         this.handlers = handlers;
     }
 
@@ -58,21 +53,13 @@ public class RemessaBancoService {
     }
 
     /**
-     * Gera a remessa dos títulos informados e baixa o arquivo pro navegador. Ver
-     * {@link #gerarRemessa(List, String)}.
-     */
-    public RemessaBanco gerarRemessa(List<TituloReceber> titulos) {
-        return gerarRemessa(titulos, null);
-    }
-
-    /**
      * Gera a remessa dos títulos informados (todos precisam ser do mesmo {@link Banco}),
      * grava {@code numRemessa}/{@code numBanco} nos títulos e {@code nossoNumAtual} no
-     * banco, audita em {@link RemessaBanco} e entrega o arquivo — em {@code pastaDestino}
-     * (gravado direto em disco, mesmo padrão de {@code MenuBean.GerarSpedEcdTask}) se
-     * informada, senão pelo {@link Downloader} pro navegador.
+     * banco, audita em {@link RemessaBanco} e grava o arquivo em disco na pasta cadastrada
+     * no banco: {@code <pastaRemessa>/<codGeral>/<aaaamm>/<nome padrão do banco>} — ver
+     * {@link PastaCobrancaBanco} e {@link BancoCobrancaHandler#nomeArquivoRemessa}.
      */
-    public RemessaBanco gerarRemessa(List<TituloReceber> titulos, String pastaDestino) {
+    public RemessaBanco gerarRemessa(List<TituloReceber> titulos) {
         if (titulos.isEmpty()) {
             throw new IllegalArgumentException("Nenhum título selecionado");
         }
@@ -84,6 +71,8 @@ public class RemessaBancoService {
         }
 
         BancoCobrancaHandler handler = resolverHandler(banco.getCodGeral());
+        LocalDate dataRemessa = LocalDate.now();
+        Path pasta = PastaCobrancaBanco.resolver(banco, dataRemessa);
 
         Empresa empresa = utilGeralService.getEmpresa();
         int numeroRemessa = (banco.getNumRemessa() == null ? 0 : banco.getNumRemessa()) + 1;
@@ -102,7 +91,7 @@ public class RemessaBancoService {
         RemessaBanco remessaBanco = dataManager.create(RemessaBanco.class);
         remessaBanco.setCodEmpresa(utilGeralService.getCodEmpresa());
         remessaBanco.setBanco(banco);
-        remessaBanco.setDataGeracao(LocalDate.now());
+        remessaBanco.setDataGeracao(dataRemessa);
         remessaBanco.setNumRemessa(numeroRemessa);
         remessaBanco.setQuantidadeTitulos(titulos.size());
         remessaBanco.setValorTotal(valorTotal);
@@ -110,19 +99,13 @@ public class RemessaBancoService {
 
         dataManager.save(saveContext);
 
-        String nomeArquivo = "REM" + DateTimeFormatter.ofPattern("yyyyMMdd").format(LocalDate.now())
-                + String.format("%03d", banco.getCodGeral()) + ".txt";
-        if (pastaDestino != null && !pastaDestino.isBlank()) {
-            try {
-                Path pasta = Path.of(pastaDestino);
-                Files.createDirectories(pasta);
-                Files.write(pasta.resolve(nomeArquivo), arquivo);
-            } catch (IOException e) {
-                throw new UncheckedIOException(
-                        "Não foi possível gravar o arquivo em " + pastaDestino + ": " + e.getMessage(), e);
-            }
-        } else {
-            downloader.download(arquivo, nomeArquivo, DownloadFormat.TEXT);
+        String nomeArquivo = handler.nomeArquivoRemessa(banco, dataRemessa, numeroRemessa);
+        try {
+            Files.createDirectories(pasta);
+            Files.write(pasta.resolve(nomeArquivo), arquivo);
+        } catch (IOException e) {
+            throw new UncheckedIOException(
+                    "Não foi possível gravar o arquivo em " + pasta + ": " + e.getMessage(), e);
         }
 
         return remessaBanco;

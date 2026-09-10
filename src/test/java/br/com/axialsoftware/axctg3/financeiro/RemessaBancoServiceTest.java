@@ -13,28 +13,32 @@ import io.jmix.core.DataManager;
 import io.jmix.core.SaveContext;
 import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.data.PersistenceHints;
-import io.jmix.flowui.download.Downloader;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Cobre a orquestração bank-agnostic de {@link RemessaBancoService} — a codificação CNAB
- * em si já é testada em {@code SicrediCnab400HandlerTest}. {@link Downloader} é
- * substituído por dublê porque não há UI Vaadin ativa no teste (mesmo padrão de
- * {@code NfeDanfeServiceTest}).
+ * Cobre a orquestração bank-agnostic de {@link RemessaBancoService} — a codificação CNAB e o
+ * nome do arquivo em si já são testados em {@code SicrediCnab400HandlerTest}. O arquivo é
+ * gravado de verdade num {@code @TempDir} (mesma pasta cadastrada no {@link Banco}), não
+ * baixado — não há mais {@code Downloader} envolvido nesse fluxo.
  */
 @SpringBootTest
 @ExtendWith(AuthenticatedAsAdmin.class)
@@ -54,8 +58,8 @@ class RemessaBancoServiceTest {
     @Autowired
     RemessaBancoService remessaBancoService;
 
-    @MockitoBean
-    Downloader downloader;
+    @TempDir
+    Path tempDir;
 
     private Parceiro parceiro;
     private Banco bancoSicredi;
@@ -94,6 +98,7 @@ class RemessaBancoServiceTest {
         bancoSicredi.setAgencia("165");
         bancoSicredi.setPosto("2");
         bancoSicredi.setByteGeracaoNossoNumero(2);
+        bancoSicredi.setPastaRemessa(tempDir.toString());
         bancoSicredi = dataManager.save(bancoSicredi);
 
         // TituloReceberEventListener exige um HistoricoFinanceiro codigo=1 (emissão) pra
@@ -107,7 +112,7 @@ class RemessaBancoServiceTest {
     }
 
     @Test
-    void test_gerarRemessaIncrementaNumeroEGravaNosTitulos() {
+    void test_gerarRemessaIncrementaNumeroEGravaNosTitulos() throws IOException {
         TituloReceber titulo1 = criarTitulo("0000001", new BigDecimal("500.00"));
         TituloReceber titulo2 = criarTitulo("0000002", new BigDecimal("300.50"));
 
@@ -123,14 +128,22 @@ class RemessaBancoServiceTest {
 
         Banco bancoRecarregado = dataManager.load(Banco.class).id(bancoSicredi.getId()).one();
         assertThat(bancoRecarregado.getNumRemessa()).isEqualTo(1);
+
+        Path arquivo = arquivoRemessaGravado();
+        assertThat(arquivo).exists();
+        assertThat(arquivo.getFileName().toString()).matches("00623[0-9A-Z]\\d{2}\\.001");
     }
 
     @Test
-    void test_segundaRemessaIncrementaNumero() {
+    void test_segundaRemessaIncrementaNumero() throws IOException {
         remessaBancoService.gerarRemessa(List.of(criarTitulo("0000001", BigDecimal.TEN)));
         RemessaBanco segunda = remessaBancoService.gerarRemessa(List.of(criarTitulo("0000002", BigDecimal.ONE)));
 
         assertThat(segunda.getNumRemessa()).isEqualTo(2);
+        // duas remessas no mesmo dia: dois arquivos na pasta aaaamm, extensão (nº da
+        // remessa) é o que garante não colidir — ver seção 6.1 do manual.
+        assertThat(pastaAaaamm()).isDirectoryContaining(p -> p.getFileName().toString().endsWith(".001"))
+                .isDirectoryContaining(p -> p.getFileName().toString().endsWith(".002"));
     }
 
     @Test
@@ -188,6 +201,19 @@ class RemessaBancoServiceTest {
 
     private TituloReceber recarregar(TituloReceber tituloReceber) {
         return dataManager.load(TituloReceber.class).id(tituloReceber.getId()).one();
+    }
+
+    /** {@code <tempDir>/748/<aaaamm atual>} — mesma resolução de {@code PastaCobrancaBanco}. */
+    private Path pastaAaaamm() {
+        return tempDir.resolve("748").resolve(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM")));
+    }
+
+    private Path arquivoRemessaGravado() throws IOException {
+        try (Stream<Path> arquivos = Files.list(pastaAaaamm())) {
+            return arquivos.filter(p -> p.getFileName().toString().startsWith("00623"))
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("Nenhum arquivo de remessa encontrado em " + pastaAaaamm()));
+        }
     }
 
     private void limparDadosDaEmpresa() {

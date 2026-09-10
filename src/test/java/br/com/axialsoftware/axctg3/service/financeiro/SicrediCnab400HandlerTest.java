@@ -346,6 +346,38 @@ class SicrediCnab400HandlerTest {
         assertThat(handler.getDigitoVerificadorBanco()).isEqualTo("X"); // impresso "748-X" no boleto
     }
 
+    // ------------------------------------------------------------------------------
+    // Nome do arquivo de remessa — manual, seção 6.1: CCCCCMDD.XXX
+    // ------------------------------------------------------------------------------
+
+    @Test
+    void test_nomeArquivoRemessa_mesNumerico() {
+        Banco banco = criarBanco(); // codCedente "623" -> "00623"
+        String nome = handler.nomeArquivoRemessa(banco, LocalDate.of(2026, 9, 9), 1);
+        assertThat(nome).isEqualTo("00623909.001");
+    }
+
+    @Test
+    void test_nomeArquivoRemessa_outubroUsaLetraO() {
+        Banco banco = criarBanco();
+        String nome = handler.nomeArquivoRemessa(banco, LocalDate.of(2026, 10, 15), 42);
+        assertThat(nome).isEqualTo("00623O15.042");
+    }
+
+    @Test
+    void test_nomeArquivoRemessa_novembroUsaLetraN() {
+        Banco banco = criarBanco();
+        String nome = handler.nomeArquivoRemessa(banco, LocalDate.of(2026, 11, 1), 999);
+        assertThat(nome).isEqualTo("00623N01.999");
+    }
+
+    @Test
+    void test_nomeArquivoRemessa_dezembroUsaLetraD() {
+        Banco banco = criarBanco();
+        String nome = handler.nomeArquivoRemessa(banco, LocalDate.of(2026, 12, 25), 7);
+        assertThat(nome).isEqualTo("00623D25.007");
+    }
+
     /** Cedente real usado nos dois boletos de referência (ver PDFs em c:/remessa/748/202603/pdf). */
     private static Banco bancoRadio() {
         Banco banco = new Banco();

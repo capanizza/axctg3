@@ -34,6 +34,10 @@ import java.util.Map;
  * {@link BancoCobrancaHandler}, e escolhe o template {@code boleto<codGeral>.jasper} — o
  * leiaute impresso varia de banco pra banco (só a formatação da linha digitável a partir do
  * código de barras de 44 dígitos é padrão Febraban, comum a todos).
+ *
+ * <p>Um PDF por título (não um único PDF combinado), gravado em disco na mesma pasta da
+ * remessa — {@code <pastaRemessa>/<codGeral>/<aaaamm>/pdf/} (ver {@link PastaCobrancaBanco},
+ * o manual do Sicredi capítulo 5 não define nome de arquivo pro boleto, só o leiaute).
  */
 @Service
 public class BoletoService {
@@ -63,8 +67,9 @@ public class BoletoService {
     }
 
     /**
-     * Um PDF por banco presente na seleção (cada banco tem seu próprio template), com um
-     * boleto por título, na ordem em que os títulos foram passados.
+     * Um PDF por título (cada banco presente na seleção usa seu próprio template), gravado
+     * na pasta {@code pdf} cadastrada no {@link Banco}. Todos os títulos de um mesmo banco
+     * compartilham a pasta {@code <aaaamm>} do dia da emissão.
      */
     public void emitirBoletos(List<TituloReceber> titulos) {
         Empresa empresa = utilGeralService.getEmpresa();
@@ -76,17 +81,31 @@ public class BoletoService {
         for (Map.Entry<Integer, List<TituloReceber>> entry : porBanco.entrySet()) {
             Integer codGeral = entry.getKey();
             BancoCobrancaHandler handler = resolverHandler(codGeral);
-            List<BoletoDto> boletos = entry.getValue().stream()
-                    .map(tituloReceber -> montarDto(empresa, tituloReceber, handler))
-                    .toList();
+            List<TituloReceber> titulosDoBanco = entry.getValue();
+            Banco banco = titulosDoBanco.get(0).getBanco();
+
+            Path pastaPdf = PastaCobrancaBanco.resolver(banco, LocalDate.now()).resolve("pdf");
+            try {
+                Files.createDirectories(pastaPdf);
+            } catch (IOException e) {
+                throw new UncheckedIOException("Não foi possível criar a pasta " + pastaPdf + ": " + e.getMessage(), e);
+            }
 
             String template = "boleto" + codGeral + ".jasper";
-            String nomeSaida = boletos.size() == 1
-                    ? "Boleto " + boletos.get(0).getNumeroDocumento() + ".pdf"
-                    : "Boletos.pdf";
             HashMap<String, Object> parametros = new HashMap<>();
             parametros.put("LOGO", logoBanco(codGeral));
-            relatorioService.emitirRelatorio(template, new JRBeanCollectionDataSource(boletos), parametros, nomeSaida);
+
+            for (TituloReceber tituloReceber : titulosDoBanco) {
+                BoletoDto boleto = montarDto(empresa, tituloReceber, handler);
+                byte[] pdf = relatorioService.gerarRelatorioPdf(template, new JRBeanCollectionDataSource(List.of(boleto)), parametros);
+                String nomeArquivo = "Boleto " + boleto.getNumeroDocumento() + ".pdf";
+                try {
+                    Files.write(pastaPdf.resolve(nomeArquivo), pdf);
+                } catch (IOException e) {
+                    throw new UncheckedIOException(
+                            "Não foi possível gravar " + nomeArquivo + " em " + pastaPdf + ": " + e.getMessage(), e);
+                }
+            }
         }
     }
 

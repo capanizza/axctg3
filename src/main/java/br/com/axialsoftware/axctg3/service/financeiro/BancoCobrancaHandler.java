@@ -4,6 +4,7 @@ import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.financeiro.Banco;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -51,4 +52,11 @@ public interface BancoCobrancaHandler {
 
     /** Formata agência/posto/código do cedente pro cabeçalho "Agência / Código Beneficiário" do boleto. */
     String formatarAgenciaCodigoBeneficiario(Banco banco);
+
+    /**
+     * Nome do arquivo de remessa no padrão do banco — cada banco tem sua própria convenção
+     * de nomenclatura, assim como o leiaute do CNAB (ex.: Sicredi, seção 6.1 do manual:
+     * {@code CCCCCMDD.XXX}).
+     */
+    String nomeArquivoRemessa(Banco banco, LocalDate dataRemessa, int numeroRemessa);
 }
