@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/09/12-112524-c1f40fd1-tituloreceber-conta-contabil-criar.xml">
+    <!-- Mesmo papel de TituloPagar.contaContabil: contrapartida de receita usada por
+         TituloReceberService.lancamentosEmissao. -->
+    <changeSet id="1" author="axctg3">
+        <addColumn tableName="TITULO_RECEBER">
+            <column name="CONTA_CONTABIL_ID" type="UUID"/>
+        </addColumn>
+    </changeSet>
+    <changeSet id="2" author="axctg3">
+        <createIndex indexName="IDX_TITULO_RECEBER_CONTA_CONTABIL" tableName="TITULO_RECEBER">
+            <column name="CONTA_CONTABIL_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="CONTA_CONTABIL_ID" baseTableName="TITULO_RECEBER"
+                                  constraintName="FK_TITULO_RECEBER_ON_CONTA_CONTABIL" referencedColumnNames="ID"
+                                  referencedTableName="CONTA_CONTABIL"/>
+    </changeSet>
+</databaseChangeLog>

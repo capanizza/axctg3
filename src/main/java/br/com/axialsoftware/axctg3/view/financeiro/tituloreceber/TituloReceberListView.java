@@ -20,9 +20,11 @@ import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.DataManager;
 import io.jmix.core.SaveContext;
+import br.com.axialsoftware.axctg3.service.financeiro.TituloReceberService;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.UiComponents;
+import io.jmix.flowui.action.DialogAction;
 import io.jmix.flowui.app.inputdialog.DialogActions;
 import io.jmix.flowui.app.inputdialog.DialogOutcome;
 import io.jmix.flowui.backgroundtask.BackgroundTask;
@@ -38,6 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.UncheckedIOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -49,9 +52,9 @@ import java.util.stream.Collectors;
 import static io.jmix.flowui.app.inputdialog.InputParameter.localDateParameter;
 
 /**
- * Só a listagem/edição de emissão. Não tem botão "Lançamentos" — o lançamento contábil
- * de emissão de {@link TituloReceber} depende de campos fiscais de NotaSaida que ainda
- * não existem (ver Javadoc da entidade); a baixa é lançada em BaixaTituloReceber.list.
+ * Listagem/edição de emissão, mais o botão "Lançamentos" (lança o item de emissão, item
+ * 1, dos títulos selecionados — mesmo padrão de TituloPagarListView). A baixa é lançada
+ * em BaixaTituloReceber.list, não aqui.
  */
 @Route(value = "tituloRecebers", layout = MainView.class)
 @ViewController(id = "TituloReceber.list")
@@ -82,6 +85,8 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
     private NfcomImportService nfcomImportService;
     @Autowired
     private BoletoService boletoService;
+    @Autowired
+    private TituloReceberService tituloReceberService;
     @ViewComponent
     private HorizontalLayout buttonsPanel;
     @ViewComponent
@@ -167,6 +172,68 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
                     }
                 })
                 .open();
+    }
+
+    @Subscribe("tituloRecebersDataGrid.lancamentoAction")
+    public void onTituloRecebersDataGridLancamentoAction(final ActionPerformedEvent event) {
+        Set<TituloReceber> selecionados = tituloRecebersDataGrid.getSelectedItems();
+        List<TituloReceber> titulosReceber = new ArrayList<>(selecionados);
+        titulosReceber.removeIf(TituloReceber::getContabilizadoEmissao);
+        titulosReceber.removeIf(tituloReceber -> tituloReceber.getContaContabil() == null);
+        if (titulosReceber.isEmpty()) {
+            dialogs.createMessageDialog()
+                    .withHeader("Lançamentos contábeis")
+                    .withText("Nenhum título para ser lançado")
+                    .open();
+            return;
+        }
+
+        titulosReceber.sort(Comparator.comparing(TituloReceber::getNumero));
+
+        String mensagem = "Confirma geração do(s) lançamento(s) do(s) " + titulosReceber.size() + " título(s) selecionado(s)?";
+        dialogs.createOptionDialog()
+                .withHeader("Lançamentos contábeis")
+                .withText(mensagem)
+                .withActions(
+                        new DialogAction(DialogAction.Type.YES)
+                                .withHandler(e -> dialogs.createBackgroundTaskDialog(new LancamentoEmissaoTask(20, this, titulosReceber))
+                                        .withHeader("Lançamento de entradas a receber")
+                                        .withText("Gerando lançamentos...")
+                                        .withTotal(titulosReceber.size())
+                                        .withCancelAllowed(true)
+                                        .open()),
+                        new DialogAction(DialogAction.Type.NO)
+                )
+                .open();
+    }
+
+    protected class LancamentoEmissaoTask extends BackgroundTask<Integer, Void> {
+        private final List<TituloReceber> titulosReceber;
+
+        public LancamentoEmissaoTask(long timeoutSeconds, View<?> view, List<TituloReceber> titulosReceber) {
+            super(timeoutSeconds, view);
+            this.titulosReceber = titulosReceber;
+        }
+
+        @Override
+        public Void run(TaskLifeCycle<Integer> taskLifeCycle) throws Exception {
+            int i = 1;
+            for (TituloReceber tituloReceber : titulosReceber) {
+                tituloReceberService.lancamentosEmissao(tituloReceber);
+                taskLifeCycle.publish(i++);
+            }
+            return null;
+        }
+
+        @Override
+        public void done(Void result) {
+            super.done(result);
+            tituloRecebersDl.load();
+            dialogs.createMessageDialog()
+                    .withHeader("Lançamentos contábeis")
+                    .withText(titulosReceber.size() + " título(s) lançado(s)")
+                    .open();
+        }
     }
 
     @Subscribe("relatoriosSwitcher.emissaoItem.emissaoAction")

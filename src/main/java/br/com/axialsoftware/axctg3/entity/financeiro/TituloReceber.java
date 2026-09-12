@@ -1,6 +1,7 @@
 package br.com.axialsoftware.axctg3.entity.financeiro;
 
 import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
+import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import io.jmix.core.DeletePolicy;
 import io.jmix.core.annotation.DeletedBy;
@@ -39,6 +40,13 @@ import java.util.UUID;
  * br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida} — porta-los quando o módulo
  * fiscal fornecer isso. O lançamento de <b>baixa</b> não depende disso e está portado
  * em {@code ItemReceberService.lancamentosBaixa}.
+ * <p>
+ * O lançamento contábil de <b>emissão</b> ({@code TituloReceberService.lancamentosEmissao})
+ * usa {@code contaContabil} (este campo) como contrapartida de receita — versão
+ * simplificada, valor único por item, no mesmo padrão de {@code TituloPagar.contaContabil}
+ * / {@code TituloPagarService.lancamentosEmissao}; não detalha mercadoria/IPI/ST/frete/
+ * seguro a partir de {@link br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida} como o
+ * axctg-flow fazia, porque esses valores fiscais ainda não existem lá.
  */
 @JmixEntity
 @Table(name = "TITULO_RECEBER", indexes = {
@@ -47,6 +55,7 @@ import java.util.UUID;
         @Index(name = "IDX_TITULO_RECEBER_DATA_VENCIMENTO", columnList = "DATA_VENCIMENTO"),
         @Index(name = "IDX_TITULO_RECEBER_PARCEIRO", columnList = "PARCEIRO_ID"),
         @Index(name = "IDX_TITULO_RECEBER_BANCO", columnList = "BANCO_ID"),
+        @Index(name = "IDX_TITULO_RECEBER_CONTA_CONTABIL", columnList = "CONTA_CONTABIL_ID"),
         @Index(name = "IDX_TITULO_RECEBER_UNQ_NUMERO_COD_EMPRESA", columnList = "NUMERO, COD_EMPRESA", unique = true)
 })
 @Entity
@@ -134,6 +143,10 @@ public class TituloReceber {
     @NotNull
     private BigDecimal valor = BigDecimal.ZERO;
 
+    @JoinColumn(name = "CONTA_CONTABIL_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private ContaContabil contaContabil;
+
     @Column(name = "OBSERVACAO")
     @Lob
     private String observacao;
@@ -158,6 +171,14 @@ public class TituloReceber {
 
     public void setObservacao(String observacao) {
         this.observacao = observacao;
+    }
+
+    public ContaContabil getContaContabil() {
+        return contaContabil;
+    }
+
+    public void setContaContabil(ContaContabil contaContabil) {
+        this.contaContabil = contaContabil;
     }
 
     public BigDecimal getValor() {

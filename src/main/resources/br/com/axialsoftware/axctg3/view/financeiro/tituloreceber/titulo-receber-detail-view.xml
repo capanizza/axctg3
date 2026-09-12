@@ -8,6 +8,7 @@
             <fetchPlan extends="_base">
                 <property name="parceiro" fetchPlan="_instance_name"/>
                 <property name="banco" fetchPlan="_instance_name"/>
+                <property name="contaContabil" fetchPlan="_base"/>
                 <property name="itens" fetchPlan="_base">
                     <property name="valorLiquido"/>
                 </property>
@@ -56,7 +57,7 @@
                 <entityPicker id="parceiroField"
                               property="parceiro"
                               dataContainer="tituloReceberDc"
-                              width="65%" themeNames="small"
+                              width="40%" themeNames="small"
                               label="msg://br.com.axialsoftware.axctg3.entity.financeiro/TituloReceber.parceiro">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
@@ -66,8 +67,18 @@
                 <entityPicker id="bancoField"
                               property="banco"
                               dataContainer="tituloReceberDc"
-                              width="35%" themeNames="small"
+                              width="30%" themeNames="small"
                               label="msg://br.com.axialsoftware.axctg3.entity.financeiro/TituloReceber.banco">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+                <entityPicker id="contaContabilField"
+                              property="contaContabil"
+                              dataContainer="tituloReceberDc"
+                              width="30%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/TituloReceber.contaContabil">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>

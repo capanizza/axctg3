@@ -1,6 +1,10 @@
 package br.com.axialsoftware.axctg3.service.financeiro;
 
 import br.com.axialsoftware.axctg3.entity.cadastros.ConfigRel;
+import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
+import br.com.axialsoftware.axctg3.entity.contabil.HistoricoContabil;
+import br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro;
+import br.com.axialsoftware.axctg3.entity.financeiro.ItemReceber;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceberDto;
 import br.com.axialsoftware.axctg3.service.RelatorioService;
@@ -18,9 +22,10 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * {@code lancamentosEmissao} do axctg-flow não foi portado — ver o Javadoc de
- * {@link TituloReceber}. O que segue (cálculo de aberto/valor baixado e os relatórios)
- * não depende disso.
+ * {@code lancamentosEmissao} portado a partir de {@code TituloPagarService.lancamentosEmissao}
+ * usando {@code TituloReceber.contaContabil} — ver o Javadoc de {@link TituloReceber} para o
+ * porquê da versão simplificada. O restante (cálculo de aberto/valor baixado e os
+ * relatórios) não depende disso.
  */
 @Service
 public class TituloReceberService {
@@ -28,11 +33,41 @@ public class TituloReceberService {
     private final DataManager dataManager;
     private final UtilGeralService utilGeralService;
     private final RelatorioService relatorioService;
+    private final UtilFinanceiroService utilFinanceiroService;
 
-    public TituloReceberService(DataManager dataManager, UtilGeralService utilGeralService, RelatorioService relatorioService) {
+    public TituloReceberService(DataManager dataManager, UtilGeralService utilGeralService, RelatorioService relatorioService, UtilFinanceiroService utilFinanceiroService) {
         this.dataManager = dataManager;
         this.utilGeralService = utilGeralService;
         this.relatorioService = relatorioService;
+        this.utilFinanceiroService = utilFinanceiroService;
+    }
+
+    /** Lança contabilmente o item de emissão (item 1) de cada título ainda não contabilizado. */
+    public void lancamentosEmissao(TituloReceber tituloReceber) {
+        for (ItemReceber itemReceber : tituloReceber.getItens()) {
+            if (itemReceber.getHistoricoFinanceiro().getBaixa()) {
+                continue;
+            }
+            ContaContabil contaParceiroSaida = utilGeralService.getEmpresa().getContaParceiroSaida(); // conta devedora
+            ContaContabil contaSaida = tituloReceber.getContaContabil(); // conta credora
+            HistoricoFinanceiro historicoFinanceiro = itemReceber.getHistoricoFinanceiro();
+            HistoricoContabil historicoSaida = historicoFinanceiro.getHistoricoContabilReceber();
+            String complementoHistorico = tituloReceber.getNumero() + " cliente: " + tituloReceber.getParceiro().getApelido();
+            LocalDate dataEmissao = itemReceber.getData();
+            int dia = dataEmissao.getDayOfMonth();
+            BigDecimal valor = itemReceber.getValor();
+
+            utilFinanceiroService.gerarLancamento(tituloReceber,
+                    dia,
+                    contaParceiroSaida,
+                    contaSaida,
+                    valor,
+                    historicoSaida,
+                    complementoHistorico);
+
+            itemReceber.setContabilizado(true);
+            dataManager.save(itemReceber);
+        }
     }
 
     /** Soma dos itens de baixa (item 2+) já lançados para este título. */

@@ -11,6 +11,7 @@ import br.com.axialsoftware.axctg3.entity.financeiro.ItemPagar;
 import br.com.axialsoftware.axctg3.entity.financeiro.ItemReceber;
 import br.com.axialsoftware.axctg3.entity.financeiro.MovimentoBanco;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloPagar;
+import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import io.jmix.core.DataManager;
 import io.jmix.flowui.Dialogs;
@@ -92,6 +93,7 @@ public class UtilFinanceiroService {
             case DiversoPagar ignored -> "em diverso";
             case ItemDiversoPagar ignored -> "bx diverso";
             case ItemReceber ignored -> "bx receber";
+            case TituloReceber ignored -> "em receber";
             case TituloPagar ignored -> "em pagar";
             case ItemPagar ignored -> "bx pagar";
             case MovimentoBanco ignored -> "mov banco";

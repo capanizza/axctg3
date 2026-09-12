@@ -9,6 +9,7 @@
                 <property name="itens" fetchPlan="_base"/>
                 <property name="parceiro" fetchPlan="_base"/>
                 <property name="banco" fetchPlan="_base"/>
+                <property name="contaContabil" fetchPlan="_base"/>
                 <property name="aberto"/>
                 <property name="contabilizadoEmissao"/>
             </fetchPlan>
@@ -39,6 +40,7 @@
                 <button id="createButton" action="tituloRecebersDataGrid.createAction" themeNames="xsmall"/>
                 <button id="editButton" action="tituloRecebersDataGrid.editAction" themeNames="xsmall"/>
                 <button id="removeButton" action="tituloRecebersDataGrid.removeAction" themeNames="xsmall"/>
+                <button id="lancamentoButton" action="tituloRecebersDataGrid.lancamentoAction" themeNames="xsmall"/>
                 <dropdownButton id="relatoriosSwitcher"
                                 text="Relatórios" icon="PRINT" themeNames="xsmall"
                                 dropdownIndicatorVisible="true">
@@ -90,6 +92,7 @@
                 <action id="editAction" type="list_edit"/>
                 <action id="removeAction" type="list_remove"/>
                 <action id="delimitarAction" text="Delimitar" icon="vaadin:calendar"/>
+                <action id="lancamentoAction" text="Lançamentos" type="list_itemTracking" icon="lumo:checkmark"/>
                 <action id="gerarRemessaAction" text="msg://tituloReceberListView.gerarRemessaAction.text" icon="vaadin:upload"/>
                 <action id="emitirBoletoAction" text="msg://tituloReceberListView.emitirBoletoAction.text" icon="vaadin:print"/>
                 <action id="verRemessasAction" text="msg://tituloReceberListView.verRemessasAction.text"/>
@@ -102,6 +105,7 @@
                 <column property="parceiro" flexGrow="5" filterable="true"/>
                 <column property="banco" flexGrow="2" filterable="true"/>
                 <column property="valor" filterable="true" textAlign="END"/>
+                <column property="contaContabil" filterable="true"/>
                 <column property="aberto" flexGrow="0" textAlign="CENTER"/>
                 <column property="contabilizadoEmissao" flexGrow="0" textAlign="CENTER"/>
                 <column property="numBanco" filterable="true"/>
