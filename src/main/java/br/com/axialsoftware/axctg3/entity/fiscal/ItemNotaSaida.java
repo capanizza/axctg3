@@ -21,6 +21,15 @@ import java.util.UUID;
  * {@code axctg-flow/.../entity/fiscal/ItemNotaSaida.java}; {@code produto} aponta pro
  * novo {@link Produto} deste projeto (também em {@code entity.fiscal}, diferente do
  * legado onde ficava em {@code entity.cadastros}).
+ *
+ * <p><b>Decisão de arquitetura (2026-09-13):</b> minimalista de propósito — só o que é
+ * <b>digitado</b> pelo operador (produto/quantidade/preço) mais duas classificações que
+ * variam por item e não têm de onde ser derivadas automaticamente ({@code cfop},
+ * {@code cst}). Os valores monetários de ICMS/IPI (base/alíquota/valor) NÃO ficam mais
+ * aqui — são calculados ao vivo na emissão ({@code NfeXmlBuilder}, mesma técnica já usada
+ * pra IBS/CBS), a partir da alíquota de {@link Produto} (quando {@code
+ * NaturezaOperacao.venda}) ou de {@link NaturezaOperacao} (quando não é venda). ICMS-ST
+ * não é suportado (nenhum cliente ativo usa) — só os CSTs sem substituição tributária.
  */
 @JmixEntity
 @Table(name = "ITEM_NOTA_SAIDA", indexes = {
@@ -85,113 +94,22 @@ public class ItemNotaSaida {
     @Column(name = "VALOR_UNITARIO", precision = 19, scale = 6)
     private BigDecimal valorUnitario = BigDecimal.ZERO;
 
-    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
-    @Column(name = "VALOR_DESCONTO", precision = 19, scale = 2)
-    private BigDecimal valorDesconto = BigDecimal.ZERO;
-
-    @NumberFormat(pattern = "##0.00")
-    @Column(name = "PORC_DESCONTO", precision = 19, scale = 2)
-    private BigDecimal porcDesconto = BigDecimal.ZERO;
-
-    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
-    @Column(name = "BASE_ICMS", precision = 19, scale = 2)
-    private BigDecimal baseIcms = BigDecimal.ZERO;
-
-    @NumberFormat(pattern = "##0.00")
-    @Column(name = "ALIQ_ICMS", precision = 19, scale = 2)
-    private BigDecimal aliqIcms = BigDecimal.ZERO;
-
-    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
-    @Column(name = "VALOR_ICMS", precision = 19, scale = 2)
-    private BigDecimal valorIcms = BigDecimal.ZERO;
-
-    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
-    @Column(name = "BASE_IPI", precision = 19, scale = 2)
-    private BigDecimal baseIpi = BigDecimal.ZERO;
-
-    @NumberFormat(pattern = "##0.00")
-    @Column(name = "ALIQ_IPI", precision = 19, scale = 2)
-    private BigDecimal aliqIpi = BigDecimal.ZERO;
-
-    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
-    @Column(name = "VALOR_IPI", precision = 19, scale = 2)
-    private BigDecimal valorIpi = BigDecimal.ZERO;
-
-    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
-    @Column(name = "BASE_ST", precision = 19, scale = 2)
-    private BigDecimal baseSt = BigDecimal.ZERO;
-
-    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
-    @Column(name = "VALOR_ST", precision = 19, scale = 2)
-    private BigDecimal valorSt = BigDecimal.ZERO;
-
-    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
-    @Column(name = "FRETE", precision = 19, scale = 2)
-    private BigDecimal frete = BigDecimal.ZERO;
-
-    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
-    @Column(name = "SEGURO", precision = 19, scale = 2)
-    private BigDecimal seguro = BigDecimal.ZERO;
-
-    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
-    @Column(name = "DESPESAS", precision = 19, scale = 2)
-    private BigDecimal despesas = BigDecimal.ZERO;
-
+    // pré-preenchido com NaturezaOperacao.cfop da nota (ItemNotaSaidaEventListener), mas
+    // editável — dentro da mesma nota, itens podem ter CFOP diferente do padrão.
     @NumberFormat(pattern = "0000")
     @Column(name = "CFOP")
     private Integer cfop;
 
+    // Situação Tributária do ICMS — varia por item por cliente real (não dá pra derivar
+    // de Produto/NaturezaOperacao), então fica só digitação manual, sem pré-preenchimento.
     @Column(name = "CST", length = 4)
     private String cst;
-
-    // Código de Classificação Tributária (cClassTrib IBS/CBS) resolvido pra este item.
-    // Sem valor padrão: o ItemNotaSaidaEventListener preenche na primeira gravação
-    // aplicando a regra de precedência (docs/REFORMA-TRIBUTARIA-IBS-CBS.md) — CST 000 da
-    // NaturezaOperacao usa o valor do Produto, senão usa o da própria NaturezaOperacao.
-    // É um snapshot congelado no momento da gravação, não recalculado depois: uma
-    // mudança posterior no cadastro do produto ou da natureza não deve reescrever
-    // retroativamente o que já foi declarado num item existente.
-    @Column(name = "COD_CLASS_TRIB")
-    @NumberFormat(pattern = "000000")
-    private Integer codClassTrib;
-
-    public Integer getCodClassTrib() {
-        return codClassTrib;
-    }
-
-    public void setCodClassTrib(Integer codClassTrib) {
-        this.codClassTrib = codClassTrib;
-    }
-
-    @NumberFormat(pattern = "###,###,##0.00000", decimalSeparator = ",", groupingSeparator = ".")
-    @Column(name = "PESO_LIQUIDO", precision = 19, scale = 5)
-    private BigDecimal pesoLiquido = BigDecimal.ZERO;
-
-    @NumberFormat(pattern = "###,###,##0.00000", decimalSeparator = ",", groupingSeparator = ".")
-    @Column(name = "PESO_BRUTO", precision = 19, scale = 5)
-    private BigDecimal pesoBruto = BigDecimal.ZERO;
 
     @DependsOnProperties({"quantidade", "valorUnitario"})
     @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
     @JmixProperty
     public BigDecimal getSubTotal() {
         return quantidade.multiply(valorUnitario).setScale(2, RoundingMode.HALF_UP);
-    }
-
-    public BigDecimal getPesoBruto() {
-        return pesoBruto;
-    }
-
-    public void setPesoBruto(BigDecimal pesoBruto) {
-        this.pesoBruto = pesoBruto;
-    }
-
-    public BigDecimal getPesoLiquido() {
-        return pesoLiquido;
-    }
-
-    public void setPesoLiquido(BigDecimal pesoLiquido) {
-        this.pesoLiquido = pesoLiquido;
     }
 
     public String getCst() {
@@ -208,110 +126,6 @@ public class ItemNotaSaida {
 
     public void setCfop(Integer cfop) {
         this.cfop = cfop;
-    }
-
-    public BigDecimal getDespesas() {
-        return despesas;
-    }
-
-    public void setDespesas(BigDecimal despesas) {
-        this.despesas = despesas;
-    }
-
-    public BigDecimal getSeguro() {
-        return seguro;
-    }
-
-    public void setSeguro(BigDecimal seguro) {
-        this.seguro = seguro;
-    }
-
-    public BigDecimal getFrete() {
-        return frete;
-    }
-
-    public void setFrete(BigDecimal frete) {
-        this.frete = frete;
-    }
-
-    public BigDecimal getValorSt() {
-        return valorSt;
-    }
-
-    public void setValorSt(BigDecimal valorSt) {
-        this.valorSt = valorSt;
-    }
-
-    public BigDecimal getBaseSt() {
-        return baseSt;
-    }
-
-    public void setBaseSt(BigDecimal baseSt) {
-        this.baseSt = baseSt;
-    }
-
-    public BigDecimal getValorIpi() {
-        return valorIpi;
-    }
-
-    public void setValorIpi(BigDecimal valorIpi) {
-        this.valorIpi = valorIpi;
-    }
-
-    public BigDecimal getAliqIpi() {
-        return aliqIpi;
-    }
-
-    public void setAliqIpi(BigDecimal aliqIpi) {
-        this.aliqIpi = aliqIpi;
-    }
-
-    public BigDecimal getBaseIpi() {
-        return baseIpi;
-    }
-
-    public void setBaseIpi(BigDecimal baseIpi) {
-        this.baseIpi = baseIpi;
-    }
-
-    public BigDecimal getValorIcms() {
-        return valorIcms;
-    }
-
-    public void setValorIcms(BigDecimal valorIcms) {
-        this.valorIcms = valorIcms;
-    }
-
-    public BigDecimal getAliqIcms() {
-        return aliqIcms;
-    }
-
-    public void setAliqIcms(BigDecimal aliqIcms) {
-        this.aliqIcms = aliqIcms;
-    }
-
-    public BigDecimal getBaseIcms() {
-        return baseIcms;
-    }
-
-    public void setBaseIcms(BigDecimal baseIcms) {
-        this.baseIcms = baseIcms;
-    }
-
-    public BigDecimal getPorcDesconto() {
-        return porcDesconto;
-    }
-
-    public void setPorcDesconto(BigDecimal porcDesconto) {
-        this.porcDesconto = porcDesconto;
-    }
-
-    public BigDecimal getValorDesconto() {
-        return valorDesconto;
-    }
-
-    public void setValorDesconto(BigDecimal valorDesconto) {
-        this.valorDesconto = valorDesconto;
     }
 
     public BigDecimal getValorUnitario() {

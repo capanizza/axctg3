@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/09/13-133810-c1f40fd1-notasaida-remover-valores-calculados.xml">
+    <changeSet id="1" author="axctg3">
+        <!-- NotaSaida para de guardar valor fiscal calculado — passa a ser calculado ao
+             vivo na emissão (NfeXmlBuilder) e gravado de verdade em Nfe/NfeItem. Ver
+             Javadoc de NotaSaida (decisão 2026-09-04, desenhada em detalhe 2026-09-13). -->
+        <dropColumn tableName="NOTA_SAIDA" columnName="VALOR"/>
+        <dropColumn tableName="NOTA_SAIDA" columnName="VALOR_MERCADORIA"/>
+        <dropColumn tableName="NOTA_SAIDA" columnName="BASE_ICMS"/>
+        <dropColumn tableName="NOTA_SAIDA" columnName="VALOR_ICMS"/>
+        <dropColumn tableName="NOTA_SAIDA" columnName="BASE_ST"/>
+        <dropColumn tableName="NOTA_SAIDA" columnName="VALOR_ST"/>
+        <dropColumn tableName="NOTA_SAIDA" columnName="BASE_IPI"/>
+        <dropColumn tableName="NOTA_SAIDA" columnName="VALOR_IPI"/>
+    </changeSet>
+    <changeSet id="2" author="axctg3">
+        <!-- Desconto continua digitado (não calculado) — renomeado pra bater com a
+             convenção valor/porc já usada em ItemNotaSaida, e ganha o par percentual. -->
+        <renameColumn tableName="NOTA_SAIDA" oldColumnName="DESCONTO" newColumnName="VALOR_DESCONTO"
+                       columnDataType="DECIMAL(19, 2)"/>
+    </changeSet>
+    <changeSet id="3" author="axctg3">
+        <addColumn tableName="NOTA_SAIDA">
+            <column name="PORC_DESCONTO" type="DECIMAL(19, 2)"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/09/13-133815-c1f40fd1-itemnotasaida-minimalista.xml">
+    <changeSet id="1" author="axctg3">
+        <!-- ItemNotaSaida vira minimalista: só produto/quantidade/valorUnitario/cfop/cst
+             (o que é digitado). ICMS/IPI (base/alíquota/valor) passam a ser calculados ao
+             vivo na emissão (NfeXmlBuilder), não gravados aqui. ST não é suportado
+             (nenhum cliente ativo usa). Frete/seguro/despesas/desconto sobem pro
+             cabeçalho de NotaSaida (um valor só por nota, não por item). codClassTrib
+             passa a ser calculado na emissão também (mesma regra de precedência, movida
+             de ItemNotaSaidaEventListener pra NfeXmlBuilder). pesoLiquido/pesoBruto nunca
+             foram lidos por item (só notaSaida.getPesoLiquido()/getPesoBruto() eram
+             usados) — ficam só no cabeçalho. Ver Javadoc de ItemNotaSaida. -->
+        <dropColumn tableName="ITEM_NOTA_SAIDA" columnName="VALOR_DESCONTO"/>
+        <dropColumn tableName="ITEM_NOTA_SAIDA" columnName="PORC_DESCONTO"/>
+        <dropColumn tableName="ITEM_NOTA_SAIDA" columnName="BASE_ICMS"/>
+        <dropColumn tableName="ITEM_NOTA_SAIDA" columnName="ALIQ_ICMS"/>
+        <dropColumn tableName="ITEM_NOTA_SAIDA" columnName="VALOR_ICMS"/>
+        <dropColumn tableName="ITEM_NOTA_SAIDA" columnName="BASE_IPI"/>
+        <dropColumn tableName="ITEM_NOTA_SAIDA" columnName="ALIQ_IPI"/>
+        <dropColumn tableName="ITEM_NOTA_SAIDA" columnName="VALOR_IPI"/>
+        <dropColumn tableName="ITEM_NOTA_SAIDA" columnName="BASE_ST"/>
+        <dropColumn tableName="ITEM_NOTA_SAIDA" columnName="VALOR_ST"/>
+        <dropColumn tableName="ITEM_NOTA_SAIDA" columnName="FRETE"/>
+        <dropColumn tableName="ITEM_NOTA_SAIDA" columnName="SEGURO"/>
+        <dropColumn tableName="ITEM_NOTA_SAIDA" columnName="DESPESAS"/>
+        <dropColumn tableName="ITEM_NOTA_SAIDA" columnName="COD_CLASS_TRIB"/>
+        <dropColumn tableName="ITEM_NOTA_SAIDA" columnName="PESO_LIQUIDO"/>
+        <dropColumn tableName="ITEM_NOTA_SAIDA" columnName="PESO_BRUTO"/>
+    </changeSet>
+</databaseChangeLog>

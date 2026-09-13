@@ -12,6 +12,13 @@
             </fetchPlan>
             <loader id="notaSaidaDl"/>
         </instance>
+        <!-- sem loader: NotaSaidaComplementarDetailView.onReady carrega ou cria a linha
+             (pode não existir ainda numa complementar nova) e mescla no DataContext, pra
+             ser salva junto com notaSaidaDc -->
+        <instance id="valoresDc"
+                  class="br.com.axialsoftware.axctg3.entity.fiscal.NotaSaidaComplementarValores">
+            <fetchPlan extends="_base"/>
+        </instance>
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
@@ -59,53 +66,37 @@
                               readOnly="true"
                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.parceiro"/>
             </hbox>
-            <!-- valores da complementar — mesmos campos de "Valores calculados" +
-                 frete/seguro/desconto/despesas de "Complementos" em NotaSaidaDetailView;
-                 baseIpi/valorIpi/baseIcms/valorIcms alimentam o pseudo item automático
-                 (NfeEmissaoService.gerarItemComplementar) -->
+            <!-- valores da complementar (NotaSaidaComplementarValores) — alimentam o
+                 pseudo item automático (NfeEmissaoService.gerarItemComplementar). Sem ST:
+                 nenhum cliente ativo usa (decisão 2026-09-13). -->
             <hbox width="100%">
-                <bigDecimalField id="valorField"
-                                 property="valor"
-                                 dataContainer="notaSaidaDc"
-                                 width="25%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.valor"/>
                 <bigDecimalField id="valorMercadoriaField"
                                  property="valorMercadoria"
-                                 dataContainer="notaSaidaDc"
+                                 dataContainer="valoresDc"
                                  width="25%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.valorMercadoria"/>
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaidaComplementarValores.valorMercadoria"/>
                 <bigDecimalField id="baseIcmsField"
                                  property="baseIcms"
-                                 dataContainer="notaSaidaDc"
+                                 dataContainer="valoresDc"
                                  width="25%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.baseIcms"/>
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaidaComplementarValores.baseIcms"/>
                 <bigDecimalField id="valorIcmsField"
                                  property="valorIcms"
-                                 dataContainer="notaSaidaDc"
+                                 dataContainer="valoresDc"
                                  width="25%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.valorIcms"/>
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaidaComplementarValores.valorIcms"/>
             </hbox>
             <hbox width="100%">
-                <bigDecimalField id="baseStField"
-                                 property="baseSt"
-                                 dataContainer="notaSaidaDc"
-                                 width="25%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.baseSt"/>
-                <bigDecimalField id="valorStField"
-                                 property="valorSt"
-                                 dataContainer="notaSaidaDc"
-                                 width="25%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.valorSt"/>
                 <bigDecimalField id="baseIpiField"
                                  property="baseIpi"
-                                 dataContainer="notaSaidaDc"
+                                 dataContainer="valoresDc"
                                  width="25%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.baseIpi"/>
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaidaComplementarValores.baseIpi"/>
                 <bigDecimalField id="valorIpiField"
                                  property="valorIpi"
-                                 dataContainer="notaSaidaDc"
+                                 dataContainer="valoresDc"
                                  width="25%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.valorIpi"/>
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaidaComplementarValores.valorIpi"/>
             </hbox>
             <hbox width="100%">
                 <bigDecimalField id="freteField"
@@ -118,11 +109,11 @@
                                  dataContainer="notaSaidaDc"
                                  width="25%" themeNames="small"
                                  label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.seguro"/>
-                <bigDecimalField id="descontoField"
-                                 property="desconto"
+                <bigDecimalField id="valorDescontoField"
+                                 property="valorDesconto"
                                  dataContainer="notaSaidaDc"
                                  width="25%" themeNames="small"
-                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.desconto"/>
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.valorDesconto"/>
                 <bigDecimalField id="despesasField"
                                  property="despesas"
                                  dataContainer="notaSaidaDc"

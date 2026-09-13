@@ -5,6 +5,7 @@ import br.com.axialsoftware.axctg3.entity.enums.FinNfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.ItemNotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.Nfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
+import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaidaComplementarValores;
 import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
 import io.jmix.core.DataManager;
 import io.jmix.core.FetchPlan;
@@ -18,7 +19,6 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.StringWriter;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
@@ -146,22 +146,24 @@ public class NfeEmissaoService {
     /**
      * Gera o único item de uma NFe Complementar (finNFe=2) que o operador não lançou
      * manualmente — mesmo padrão do legado AxFat (`F_Complemento.pas`): o operador só
-     * edita o cabeçalho da nota ("Valores calculados"), o item é montado sozinho aqui.
+     * edita {@link NotaSaidaComplementarValores} (tela {@code NotaSaidaComplementarDetailView}),
+     * o item é montado sozinho aqui.
      *
      * <p>Diferente do legado (onde o XML pegava {@code vProd}/{@code vICMS} direto do
      * cabeçalho, independente da quantidade do item), {@link NfeXmlBuilder} usa {@code
      * item.getSubTotal()} (quantidade×valorUnitario) pra {@code vProd} — então o item
-     * precisa nascer matematicamente equivalente ao cabeçalho: {@code quantidade=1}/
-     * {@code valorUnitario=valorMercadoria} quando há diferença de preço, {@code 0}/{@code
-     * 0} quando é só imposto (senão {@code ICMSTot/vProd}, que {@link NfeXmlBuilder} ainda
-     * lê direto de {@code NotaSaida.valorMercadoria}, ficaria inconsistente com o item —
+     * precisa nascer matematicamente equivalente ao valor digitado:
+     * {@code quantidade=1}/{@code valorUnitario=valorMercadoria}, {@code 0}/{@code 0}
+     * quando é só imposto (senão {@code ICMSTot/vProd} ficaria inconsistente com o item —
      * mesma família de bug já corrigida pra frete/IBS-UF, confirmada de novo em
      * homologação 2026-09-03 pra este caso específico antes desta correção existir).
      *
-     * <p>ICMS, ICMS-ST e IPI são espelhados — CST sai {@code "10"} (com {@code baseSt}/
-     * {@code valorSt} do cabeçalho) quando a complementar tem ST, senão {@code "00"} (ver
-     * bloco abaixo). {@code construirIcms} só lê {@code baseSt}/{@code valorSt} do item nos
-     * ramos CST 10/60 — os únicos dois casos cobertos aqui.
+     * <p>Desde 2026-09-13, {@code ItemNotaSaida} não guarda mais ICMS/IPI/ST/cClassTrib —
+     * só o pseudo item "esqueleto" (produto/quantidade/valorUnitario/cfop/cst) é criado
+     * aqui; {@link NfeXmlBuilder} lê os valores fiscais direto de {@link
+     * NotaSaidaComplementarValores} quando {@code finNfe == COMPLEMENTAR} (ver
+     * {@code baseIcmsDoItem}/{@code valorIcmsDoItem}/{@code resolverCodClassTrib} lá). CST
+     * sempre {@code "00"} — ICMS-ST não é suportado (nenhum cliente ativo usa).
      */
     private String gerarItemComplementar(NotaSaida notaSaida, Empresa empresa) {
         if (empresa.getProdutoNfeComplementar() == null) {
@@ -172,21 +174,28 @@ public class NfeEmissaoService {
             return "Natureza de operação sem CFOP configurado — necessário pro item automático da complementar.";
         }
 
-        // Recarrega o produto com fetch plan explícito incluindo classTrib — o placeholder
-        // vindo de Empresa está "detached" e sem esse atributo buscado (ItemNotaSaidaEventListener.
-        // resolverCodClassTrib lê produto.getClassTrib() ao salvar o item, e um objeto
-        // detached não consegue mais buscar lazy; confirmado por IllegalStateException
-        // "Cannot get unfetched attribute [classTrib]" rodando os testes).
+        // Recarrega o produto com fetch plan explícito — o placeholder vindo de Empresa
+        // está "detached" (mesmo cuidado de antes, mesmo que classTrib não seja mais
+        // necessário aqui: a resolução de cClassTrib da complementar não passa mais pelo
+        // produto, ver NfeXmlBuilder.resolverCodClassTrib).
         Produto produtoPlaceholder = dataManager.load(Produto.class)
                 .id(empresa.getProdutoNfeComplementar().getId())
-                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE).add("classTrib", FetchPlan.BASE))
+                .fetchPlan(FetchPlan.BASE)
                 .one();
+
+        NotaSaidaComplementarValores valores = dataManager.load(NotaSaidaComplementarValores.class)
+                .query("select e from NotaSaidaComplementarValores e where e.notaSaida = :notaSaida")
+                .parameter("notaSaida", notaSaida)
+                .optional()
+                .orElse(null);
+        BigDecimal valorMercadoria = valores == null ? BigDecimal.ZERO : nvl(valores.getValorMercadoria());
 
         ItemNotaSaida item = dataManager.create(ItemNotaSaida.class);
         item.setNotaSaida(notaSaida);
         item.setItem(1);
         item.setProduto(produtoPlaceholder);
         item.setCfop(notaSaida.getNatureza().getCfop());
+        item.setCst("00");
 
         // qCom sempre 1 — mesmo quando a complementar é só de imposto (valorMercadoria
         // zero) — nunca 0. Achado 2026-09-06 investigando o cStat=225 (ver
@@ -195,56 +204,8 @@ public class NfeEmissaoService {
         // vProd zerados, qCom nunca é zero. O tipo aceita "0.0000" no padrão regex (já
         // conferido contra o XSD), mas na prática a SEFAZ rejeita quantidade zero como
         // "Falha no Schema XML" (provável minExclusive no tipo, não visível só na regex).
-        // item.setQuantidade(null) — que antes só disparava quando valorMercadoria != 0 —
-        // fazia NfeXmlBuilder.dec(null,4) cair em "0.0000" nesse caso.
-        BigDecimal valorMercadoria = nvl(notaSaida.getValorMercadoria());
         item.setQuantidade(BigDecimal.ONE);
         item.setValorUnitario(valorMercadoria);
-
-        item.setBaseIcms(nvl(notaSaida.getBaseIcms()));
-        item.setValorIcms(nvl(notaSaida.getValorIcms()));
-        item.setAliqIcms(aliquotaEfetiva(item.getValorIcms(), item.getBaseIcms()));
-
-        // CST 10 (ICMS com ST) quando a complementar carrega baseSt/valorSt no cabeçalho —
-        // mesmos campos já editáveis em NotaSaidaComplementarDetailView, mesma mecânica do
-        // ICMS "normal" acima. Achado 2026-09-06 (ver [[axctg3-nfe-complementar-cstat225]]):
-        // antes disso o CST saía sempre "00", mesmo pra uma nota original CST 10 — estrutural
-        // pro schema (CST 00 é uma variante válida por si só), mas não reflete a operação
-        // quando o valor complementado é de ICMS-ST. NfeXmlBuilder.construirIcms's CST "10"
-        // deriva pMVAST de baseSt/baseIcms — por isso baseIcms tem que estar preenchido
-        // também nesse caso (não dá pra complementar só o ST sem base de ICMS).
-        BigDecimal baseSt = nvl(notaSaida.getBaseSt());
-        BigDecimal valorSt = nvl(notaSaida.getValorSt());
-        if (baseSt.compareTo(BigDecimal.ZERO) != 0 || valorSt.compareTo(BigDecimal.ZERO) != 0) {
-            item.setBaseSt(baseSt);
-            item.setValorSt(valorSt);
-            item.setCst("10");
-        } else {
-            item.setCst("00");
-        }
-
-        item.setBaseIpi(nvl(notaSaida.getBaseIpi()));
-        item.setValorIpi(nvl(notaSaida.getValorIpi()));
-        item.setAliqIpi(aliquotaEfetiva(item.getValorIpi(), item.getBaseIpi()));
-
-        // CST/cClassTrib do IBS/CBS: em princípio os MESMOS da nota original (o
-        // NotaSaida.classTrib já é copiado dela ao criar a complementar —
-        // NotaSaidaListView.criarComplementar, `nova.setClassTrib(original.getClassTrib())`)
-        // — MAS só faz sentido herdar isso quando o pseudo item carrega valor de mercadoria
-        // de verdade (complemento de preço). Quando é complemento SÓ de imposto
-        // (valorMercadoria=0, este bloco if), o item não representa a mesma operação pro
-        // IBS/CBS — não tem base nenhuma pra tributar — e cravar um classTrib "Padrão"
-        // (tributação integral) com o grupo gIBSCBS inteiro zerado foi rejeitado pela SEFAZ
-        // como "Falha no Schema XML" (achado 2026-09-06, ver
-        // [[axctg3-nfe-complementar-cstat225]] — confirmado que a nota original usada no
-        // teste também caía no mesmo classTrib genérico "000001", então herdar dela não
-        // ajudaria aqui). 410029 "Operações acobertadas somente pelo ICMS" (CST 410, tipo
-        // "Sem alíquota") é o código que bate com esse caso — grupo gIBSCBS.
-        if (valorMercadoria.compareTo(BigDecimal.ZERO) == 0) {
-            item.setCodClassTrib(410029);
-        } else if (notaSaida.getClassTrib() != null) {
-            item.setCodClassTrib(notaSaida.getClassTrib().getCodigo());
-        }
 
         dataManager.save(item);
         return null;
@@ -252,14 +213,6 @@ public class NfeEmissaoService {
 
     private static BigDecimal nvl(BigDecimal valor) {
         return valor == null ? BigDecimal.ZERO : valor;
-    }
-
-    /** {@code valor×100/base}, ou zero se a base for zero (evita divisão por zero). */
-    private static BigDecimal aliquotaEfetiva(BigDecimal valor, BigDecimal base) {
-        if (base == null || base.compareTo(BigDecimal.ZERO) == 0) {
-            return BigDecimal.ZERO;
-        }
-        return valor.multiply(new BigDecimal(100)).divide(base, 2, RoundingMode.HALF_UP);
     }
 
     /**

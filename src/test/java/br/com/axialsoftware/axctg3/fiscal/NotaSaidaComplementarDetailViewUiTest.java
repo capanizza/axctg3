@@ -133,10 +133,6 @@ class NotaSaidaComplementarDetailViewUiTest {
         assertThat(baseIcmsField.isReadOnly()).isFalse();
         JmixBigDecimalField valorIcmsField = UiTestUtils.getComponent(view, "valorIcmsField");
         assertThat(valorIcmsField.isReadOnly()).isFalse();
-        JmixBigDecimalField baseStField = UiTestUtils.getComponent(view, "baseStField");
-        assertThat(baseStField.isReadOnly()).isFalse();
-        JmixBigDecimalField valorStField = UiTestUtils.getComponent(view, "valorStField");
-        assertThat(valorStField.isReadOnly()).isFalse();
         JmixBigDecimalField baseIpiField = UiTestUtils.getComponent(view, "baseIpiField");
         assertThat(baseIpiField.isReadOnly()).isFalse();
         JmixBigDecimalField valorIpiField = UiTestUtils.getComponent(view, "valorIpiField");
@@ -145,8 +141,8 @@ class NotaSaidaComplementarDetailViewUiTest {
         assertThat(freteField.isReadOnly()).isFalse();
         JmixBigDecimalField seguroField = UiTestUtils.getComponent(view, "seguroField");
         assertThat(seguroField.isReadOnly()).isFalse();
-        JmixBigDecimalField descontoField = UiTestUtils.getComponent(view, "descontoField");
-        assertThat(descontoField.isReadOnly()).isFalse();
+        JmixBigDecimalField valorDescontoField = UiTestUtils.getComponent(view, "valorDescontoField");
+        assertThat(valorDescontoField.isReadOnly()).isFalse();
         JmixBigDecimalField despesasField = UiTestUtils.getComponent(view, "despesasField");
         assertThat(despesasField.isReadOnly()).isFalse();
 

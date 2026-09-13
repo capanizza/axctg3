@@ -14,8 +14,10 @@ import io.jmix.core.annotation.DeletedDate;
 import io.jmix.core.entity.annotation.JmixGeneratedValue;
 import io.jmix.core.entity.annotation.OnDelete;
 import io.jmix.core.metamodel.annotation.Composition;
+import io.jmix.core.metamodel.annotation.DependsOnProperties;
 import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
+import io.jmix.core.metamodel.annotation.JmixProperty;
 import io.jmix.core.metamodel.annotation.NumberFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -33,10 +35,19 @@ import java.util.UUID;
 
 /**
  * Nota fiscal de saída. Deliberadamente **não** é a NFe completa — {@code chave} apenas
- * guarda a chave de acesso da NFe correspondente (quando emitida), que é uma entidade
- * separada, ainda não modelada. Portada de
- * {@code axctg-flow/.../entity/fiscal/NotaSaida.java}, referenciada por
+ * guarda a chave de acesso da NFe correspondente (quando emitida); {@link Nfe} é a
+ * entidade separada que guarda o registro fiscal de verdade, ligada só pela chave (sem
+ * FK). Portada de {@code axctg-flow/.../entity/fiscal/NotaSaida.java}, referenciada por
  * {@link br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber}.
+ *
+ * <p><b>Decisão de arquitetura (2026-09-04, desenhada em detalhe 2026-09-13):</b> esta
+ * entidade guarda só o que é <b>digitado</b> — nenhum valor fiscal calculado
+ * (mercadoria/ICMS/ST/IPI/pesos) fica persistido aqui. Isso é responsabilidade da
+ * emissão ({@code NfeEmissaoService}/{@code NfeXmlBuilder}), que calcula tudo ao vivo a
+ * partir dos itens (mesma técnica já usada pra IBS/CBS) e grava o resultado de verdade em
+ * {@code Nfe}/{@code NfeItem}. Uma NFe Complementar (sem itens comerciais reais) usa
+ * {@link NotaSaidaComplementarValores} — entidade satélite separada — pros valores que o
+ * operador digita diretamente, não este cabeçalho.
  */
 @JmixEntity
 @Table(name = "NOTA_SAIDA", indexes = {
@@ -159,38 +170,6 @@ public class NotaSaida {
     private String complementoMensagem;
 
     @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
-    @Column(name = "VALOR", precision = 19, scale = 2)
-    private BigDecimal valor = BigDecimal.ZERO;
-
-    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
-    @Column(name = "VALOR_MERCADORIA", precision = 19, scale = 2)
-    private BigDecimal valorMercadoria = BigDecimal.ZERO;
-
-    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
-    @Column(name = "BASE_ICMS", precision = 19, scale = 2)
-    private BigDecimal baseIcms = BigDecimal.ZERO;
-
-    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
-    @Column(name = "VALOR_ICMS", precision = 19, scale = 2)
-    private BigDecimal valorIcms = BigDecimal.ZERO;
-
-    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
-    @Column(name = "BASE_ST", precision = 19, scale = 2)
-    private BigDecimal baseSt = BigDecimal.ZERO;
-
-    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
-    @Column(name = "VALOR_ST", precision = 19, scale = 2)
-    private BigDecimal valorSt = BigDecimal.ZERO;
-
-    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
-    @Column(name = "BASE_IPI", precision = 19, scale = 2)
-    private BigDecimal baseIpi = BigDecimal.ZERO;
-
-    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
-    @Column(name = "VALOR_IPI", precision = 19, scale = 2)
-    private BigDecimal valorIpi = BigDecimal.ZERO;
-
-    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
     @Column(name = "FRETE", precision = 19, scale = 2)
     private BigDecimal frete = BigDecimal.ZERO;
 
@@ -203,11 +182,12 @@ public class NotaSaida {
     private BigDecimal despesas = BigDecimal.ZERO;
 
     @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
-    @Column(name = "DESCONTO", precision = 19, scale = 2)
-    private BigDecimal desconto = BigDecimal.ZERO;
+    @Column(name = "VALOR_DESCONTO", precision = 19, scale = 2)
+    private BigDecimal valorDesconto = BigDecimal.ZERO;
 
-    @Column(name = "CANCELADA")
-    private Boolean cancelada = false;
+    @NumberFormat(pattern = "##0.00")
+    @Column(name = "PORC_DESCONTO", precision = 19, scale = 2)
+    private BigDecimal porcDesconto = BigDecimal.ZERO;
 
     @NumberFormat(pattern = "###,###,##0.00000", decimalSeparator = ",", groupingSeparator = ".")
     @Column(name = "PESO_LIQUIDO", precision = 19, scale = 5)
@@ -217,10 +197,12 @@ public class NotaSaida {
     @Column(name = "PESO_BRUTO", precision = 19, scale = 5)
     private BigDecimal pesoBruto = BigDecimal.ZERO;
 
+    @Column(name = "CANCELADA")
+    private Boolean cancelada = false;
+
     // chave de acesso da NFe correspondente (44 dígitos no leiaute oficial, mas o legado
-    // guarda com folga em 50) — liga esta NotaSaida à entidade NFe, que ainda não existe
-    // no projeto. Preenchida só depois da nota autorizada, então fica somente leitura na
-    // tela.
+    // guarda com folga em 50) — liga esta NotaSaida à entidade Nfe. Preenchida só depois
+    // da nota autorizada, então fica somente leitura na tela.
     @Column(name = "CHAVE", length = 50)
     private String chave;
 
@@ -262,6 +244,26 @@ public class NotaSaida {
         this.itens = itens;
     }
 
+    // Soma dos itens (quantidade×valorUnitario) — não é o total da nota (vNF, que soma
+    // frete/seguro/despesas/IPI e subtrai desconto, calculado só na emissão por
+    // NfeXmlBuilder); útil como coluna de listagem sem precisar montar o XML inteiro.
+    @DependsOnProperties("itens")
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @JmixProperty
+    public BigDecimal getValorMercadoria() {
+        if (itens == null) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal total = BigDecimal.ZERO;
+        for (ItemNotaSaida item : itens) {
+            BigDecimal subTotal = item.getSubTotal();
+            if (subTotal != null) {
+                total = total.add(subTotal);
+            }
+        }
+        return total;
+    }
+
     public String getChave() {
         return chave;
     }
@@ -294,12 +296,28 @@ public class NotaSaida {
         this.chaveNotaOriginal = chaveNotaOriginal;
     }
 
-    public BigDecimal getPesoBruto() {
-        return pesoBruto;
+    public Boolean getCancelada() {
+        return cancelada;
     }
 
-    public void setPesoBruto(BigDecimal pesoBruto) {
-        this.pesoBruto = pesoBruto;
+    public void setCancelada(Boolean cancelada) {
+        this.cancelada = cancelada;
+    }
+
+    public BigDecimal getValorDesconto() {
+        return valorDesconto;
+    }
+
+    public void setValorDesconto(BigDecimal valorDesconto) {
+        this.valorDesconto = valorDesconto;
+    }
+
+    public BigDecimal getPorcDesconto() {
+        return porcDesconto;
+    }
+
+    public void setPorcDesconto(BigDecimal porcDesconto) {
+        this.porcDesconto = porcDesconto;
     }
 
     public BigDecimal getPesoLiquido() {
@@ -310,20 +328,12 @@ public class NotaSaida {
         this.pesoLiquido = pesoLiquido;
     }
 
-    public Boolean getCancelada() {
-        return cancelada;
+    public BigDecimal getPesoBruto() {
+        return pesoBruto;
     }
 
-    public void setCancelada(Boolean cancelada) {
-        this.cancelada = cancelada;
-    }
-
-    public BigDecimal getDesconto() {
-        return desconto;
-    }
-
-    public void setDesconto(BigDecimal desconto) {
-        this.desconto = desconto;
+    public void setPesoBruto(BigDecimal pesoBruto) {
+        this.pesoBruto = pesoBruto;
     }
 
     public BigDecimal getDespesas() {
@@ -348,70 +358,6 @@ public class NotaSaida {
 
     public void setFrete(BigDecimal frete) {
         this.frete = frete;
-    }
-
-    public BigDecimal getValorIpi() {
-        return valorIpi;
-    }
-
-    public void setValorIpi(BigDecimal valorIpi) {
-        this.valorIpi = valorIpi;
-    }
-
-    public BigDecimal getBaseIpi() {
-        return baseIpi;
-    }
-
-    public void setBaseIpi(BigDecimal baseIpi) {
-        this.baseIpi = baseIpi;
-    }
-
-    public BigDecimal getValorSt() {
-        return valorSt;
-    }
-
-    public void setValorSt(BigDecimal valorSt) {
-        this.valorSt = valorSt;
-    }
-
-    public BigDecimal getBaseSt() {
-        return baseSt;
-    }
-
-    public void setBaseSt(BigDecimal baseSt) {
-        this.baseSt = baseSt;
-    }
-
-    public BigDecimal getValorIcms() {
-        return valorIcms;
-    }
-
-    public void setValorIcms(BigDecimal valorIcms) {
-        this.valorIcms = valorIcms;
-    }
-
-    public BigDecimal getBaseIcms() {
-        return baseIcms;
-    }
-
-    public void setBaseIcms(BigDecimal baseIcms) {
-        this.baseIcms = baseIcms;
-    }
-
-    public BigDecimal getValorMercadoria() {
-        return valorMercadoria;
-    }
-
-    public void setValorMercadoria(BigDecimal valorMercadoria) {
-        this.valorMercadoria = valorMercadoria;
-    }
-
-    public BigDecimal getValor() {
-        return valor;
-    }
-
-    public void setValor(BigDecimal valor) {
-        this.valor = valor;
     }
 
     public @NotNull NaturezaOperacao getNatureza() {

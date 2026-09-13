@@ -8,6 +8,8 @@ import br.com.axialsoftware.axctg3.entity.enums.FinNfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.ItemNotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
+import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaidaComplementarValores;
+import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber;
 import br.com.axialsoftware.axctg3.entity.tabelas.AliquotaIbsCbs;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
@@ -44,12 +46,28 @@ import java.util.List;
  * completa): sem diferimento/devolução de tributo no bloco IBS/CBS (fica zerado), sem
  * crédito de ICMS do Simples (pCredSN/vCredICMSSN zerado), frete/transportador não
  * modelados em {@code NotaSaida} (modFrete fixo em 9 = sem transporte).
+ *
+ * <p><b>Decisão de arquitetura (2026-09-13):</b> {@code NotaSaida}/{@code ItemNotaSaida}
+ * pararam de guardar valor fiscal calculado (mercadoria/ICMS/IPI) — só o digitado. Esta
+ * classe passa a <b>calcular</b> ICMS/IPI ao vivo aqui na emissão, mesma técnica já usada
+ * pra IBS/CBS: alíquota de {@link Produto} quando a natureza é venda
+ * ({@code NaturezaOperacao.venda}), senão de {@link NaturezaOperacao}. <b>ICMS-ST não é
+ * suportado</b> — nenhum cliente ativo usa (confirmado pelo usuário), então os CSTs 10/60
+ * caem no mesmo tratamento do CST 00 (sem bloco ST). Numa NFe Complementar (sem produto
+ * real), os valores vêm digitados de {@link NotaSaidaComplementarValores} em vez de
+ * calculados — ver {@code gerarItemComplementar} em {@code NfeEmissaoService}.
  */
 @Service
 public class NfeXmlBuilder {
 
     private static final String NS_NFE = "http://www.portalfiscal.inf.br/nfe";
     private static final DateTimeFormatter DATA_HORA = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+
+    // CST-IBS/CBS "tributação integral", os 3 primeiros dígitos de um cClassTrib de 6
+    // dígitos (ex.: 000000..000499) — ver docs/REFORMA-TRIBUTARIA-IBS-CBS.md. Natureza
+    // com esse CST é "rasa": não fixa um tratamento tributário próprio, então quem decide
+    // é o produto do item.
+    private static final int CST_TRIBUTACAO_INTEGRAL = 0;
 
     private final DataManager dataManager;
     private final NfeChaveService chaveService;
@@ -151,25 +169,47 @@ public class NfeXmlBuilder {
         // isso entra como fallback e não como valor sempre usado.
         AliquotaIbsCbs aliquotaTeste = buscarAliquotaIbsCbs(dhEmi.getYear());
 
+        NotaSaidaComplementarValores complementar = notaSaida.getFinNfe() == FinNfe.COMPLEMENTAR
+                ? buscarComplementarValores(notaSaida) : null;
+
         BigDecimal totalVIbs = BigDecimal.ZERO;
         BigDecimal totalVIbsUf = BigDecimal.ZERO;
         BigDecimal totalVIbsMun = BigDecimal.ZERO;
         BigDecimal totalVCbs = BigDecimal.ZERO;
+        BigDecimal totalValorMercadoria = BigDecimal.ZERO;
+        BigDecimal totalBaseIcms = BigDecimal.ZERO;
+        BigDecimal totalValorIcms = BigDecimal.ZERO;
+        BigDecimal totalValorIpi = BigDecimal.ZERO;
         int nItem = 1;
         for (ItemNotaSaida item : notaSaida.getItens()) {
-            Element det = construirDet(doc, item, empresa, notaSaida.getNatureza(), nItem, aliquotaTeste);
+            Element det = construirDet(doc, item, empresa, notaSaida, complementar, nItem, aliquotaTeste);
             infNFe.appendChild(det);
             totalVIbsUf = totalVIbsUf.add(valorIbsUfDoItem(item, notaSaida.getNatureza(), aliquotaTeste));
             totalVIbsMun = totalVIbsMun.add(valorIbsMunDoItem(item, notaSaida.getNatureza(), aliquotaTeste));
             totalVIbs = totalVIbs.add(valorIbsDoItem(item, notaSaida.getNatureza(), aliquotaTeste));
             totalVCbs = totalVCbs.add(valorCbsDoItem(item, notaSaida.getNatureza(), aliquotaTeste));
+            totalValorMercadoria = totalValorMercadoria.add(nvl(item.getSubTotal()));
+            totalBaseIcms = totalBaseIcms.add(baseIcmsDoItem(item, notaSaida.getNatureza(), complementar));
+            totalValorIcms = totalValorIcms.add(valorIcmsDoItem(item, notaSaida.getNatureza(), complementar));
+            totalValorIpi = totalValorIpi.add(valorIpiDoItem(item, complementar));
             nItem++;
         }
 
-        infNFe.appendChild(construirTotal(doc, notaSaida, totalVIbs, totalVIbsUf, totalVIbsMun, totalVCbs));
+        // vNF (total da nota) calculado, não digitado — vProd - vDesc + vFrete + vSeg +
+        // vOutro + vIPI (ICMS não entra: já embutido no preço, padrão brasileiro; sem ICMS-
+        // ST/II, não suportados). Ver Javadoc da classe.
+        BigDecimal valorNota = totalValorMercadoria
+                .subtract(nvl(notaSaida.getValorDesconto()))
+                .add(nvl(notaSaida.getFrete()))
+                .add(nvl(notaSaida.getSeguro()))
+                .add(nvl(notaSaida.getDespesas()))
+                .add(totalValorIpi);
+
+        infNFe.appendChild(construirTotal(doc, notaSaida, totalValorMercadoria, totalBaseIcms, totalValorIcms,
+                totalValorIpi, valorNota, totalVIbs, totalVIbsUf, totalVIbsMun, totalVCbs));
         infNFe.appendChild(construirTransp(doc, notaSaida));
         List<TituloReceber> titulos = buscarTitulos(notaSaida);
-        Element cobr = construirCobr(doc, notaSaida, titulos);
+        Element cobr = construirCobr(doc, notaSaida, valorNota, titulos);
         if (cobr != null) {
             infNFe.appendChild(cobr);
         }
@@ -211,6 +251,14 @@ public class NfeXmlBuilder {
         return dataManager.load(Empresa.class)
                 .query("select e from Empresa e where e.codigo = :codigo")
                 .parameter("codigo", notaSaida.getCodEmpresa())
+                .optional()
+                .orElse(null);
+    }
+
+    private NotaSaidaComplementarValores buscarComplementarValores(NotaSaida notaSaida) {
+        return dataManager.load(NotaSaidaComplementarValores.class)
+                .query("select e from NotaSaidaComplementarValores e where e.notaSaida = :notaSaida")
+                .parameter("notaSaida", notaSaida)
                 .optional()
                 .orElse(null);
     }
@@ -350,8 +398,9 @@ public class NfeXmlBuilder {
 
     // ---- det (item) ----
 
-    private Element construirDet(Document doc, ItemNotaSaida item, Empresa empresa, NaturezaOperacao natureza, int nItem,
-                                  AliquotaIbsCbs aliquotaTeste) {
+    private Element construirDet(Document doc, ItemNotaSaida item, Empresa empresa, NotaSaida notaSaida,
+                                  NotaSaidaComplementarValores complementar, int nItem, AliquotaIbsCbs aliquotaTeste) {
+        NaturezaOperacao natureza = notaSaida.getNatureza();
         Element det = doc.createElementNS(NS_NFE, "det");
         det.setAttribute("nItem", String.valueOf(nItem));
 
@@ -369,7 +418,7 @@ public class NfeXmlBuilder {
                 ? item.getProduto().getClassificacaoFiscal().getCodNcm() : "00000000");
         // cBenef fica em prod, não em imposto/ICMS, apesar de depender do CST do ICMS —
         // ver Javadoc de cBenefDoItem().
-        text(doc, prod, "cBenef", cBenefDoItem(item, simplesNacional(empresa)));
+        text(doc, prod, "cBenef", cBenefDoItem(item, simplesNacional(empresa), complementar));
         text(doc, prod, "CFOP", item.getCfop());
         text(doc, prod, "uCom", vazioComo(item.getProduto().getUnidade(), "UN"));
         text(doc, prod, "qCom", dec(item.getQuantidade(), 4));
@@ -379,32 +428,34 @@ public class NfeXmlBuilder {
         text(doc, prod, "uTrib", vazioComo(item.getProduto().getUnidade(), "UN"));
         text(doc, prod, "qTrib", dec(item.getQuantidade(), 4));
         text(doc, prod, "vUnTrib", dec(item.getValorUnitario(), 10));
-        // vFrete/vSeg por item — SEFAZ confere que o somatório desses valores nos itens bate
-        // com total/ICMSTot/vFrete e vSeg (rejeição cStat=535 "Total do Frete difere do
-        // somatório dos itens", confirmado 2026-08-18: total vinha de notaSaida.getFrete()
-        // mas nenhum item carregava vFrete, então a soma dos itens dava zero). Só emite
-        // quando > 0 (campo opcional no schema, mesmo padrão das 176 notas reais — nem todo
-        // item tem frete/seguro rateado).
-        if (item.getFrete() != null && item.getFrete().compareTo(BigDecimal.ZERO) != 0) {
-            text(doc, prod, "vFrete", dec(item.getFrete(), 2));
-        }
-        if (item.getSeguro() != null && item.getSeguro().compareTo(BigDecimal.ZERO) != 0) {
-            text(doc, prod, "vSeg", dec(item.getSeguro(), 2));
+        // frete/seguro só existem no cabeçalho de NotaSaida (não mais por item) — o valor
+        // inteiro é atribuído ao primeiro item pra bater com o somatório que a SEFAZ confere
+        // contra total/ICMSTot/vFrete e vSeg (mesmo motivo do cStat=535 já corrigido — ver
+        // comentário de construirTotal), zero nos demais.
+        if (nItem == 1) {
+            BigDecimal frete = notaSaida.getFrete();
+            BigDecimal seguro = notaSaida.getSeguro();
+            if (frete != null && frete.compareTo(BigDecimal.ZERO) != 0) {
+                text(doc, prod, "vFrete", dec(frete, 2));
+            }
+            if (seguro != null && seguro.compareTo(BigDecimal.ZERO) != 0) {
+                text(doc, prod, "vSeg", dec(seguro, 2));
+            }
         }
         text(doc, prod, "indTot", 1);
         det.appendChild(prod);
 
         Element imposto = doc.createElementNS(NS_NFE, "imposto");
         text(doc, imposto, "vTotTrib", "0.00");
-        imposto.appendChild(construirIcms(doc, item, empresa));
-        Element ipi = construirIpi(doc, item);
+        imposto.appendChild(construirIcms(doc, item, empresa, natureza, complementar));
+        Element ipi = construirIpi(doc, item, complementar);
         if (ipi != null) {
             imposto.appendChild(ipi);
         }
         imposto.appendChild(construirPis(doc, item, natureza));
         imposto.appendChild(construirCofins(doc, item, natureza));
         if (incluirReformaTributaria) {
-            imposto.appendChild(construirIbsCbs(doc, item, natureza, aliquotaTeste));
+            imposto.appendChild(construirIbsCbs(doc, item, notaSaida, natureza, aliquotaTeste, complementar));
         }
         det.appendChild(imposto);
 
@@ -412,7 +463,7 @@ public class NfeXmlBuilder {
             // vItem (valor total do item já com IBS/CBS somado) — grupo novo da Reforma
             // Tributária, sibling de imposto, confirmado obrigatório em 30/30 notas reais de
             // teste com IBSCBS (ver conversa 2026-08-17); mesma fórmula do vNFTot do total.
-            BigDecimal vItem = (item.getSubTotal() == null ? BigDecimal.ZERO : item.getSubTotal())
+            BigDecimal vItem = nvl(item.getSubTotal())
                     .add(valorIbsDoItem(item, natureza, aliquotaTeste))
                     .add(valorCbsDoItem(item, natureza, aliquotaTeste));
             text(doc, det, "vItem", dec(vItem, 2));
@@ -421,11 +472,15 @@ public class NfeXmlBuilder {
         return det;
     }
 
-    /** CST/CSOSN de ICMS efetivo do item — "102" (Simples) ou "40" como default quando
-     * {@link ItemNotaSaida#getCst()} vem vazio, senão o valor gravado. Extraído de {@link
-     * #construirIcms} pra ser reaproveitado por {@link #cBenefDoItem} (o código de
-     * benefício fiscal depende do mesmo CST resolvido). */
-    private String resolverCstIcms(ItemNotaSaida item, boolean simples) {
+    /** CST/CSOSN de ICMS efetivo do item — "00" fixo numa complementar (ICMS-ST não é
+     * suportado, então não tem mais o CST 10 condicional de antes); senão "102" (Simples)
+     * ou "40" como default quando {@link ItemNotaSaida#getCst()} vem vazio, senão o valor
+     * gravado. Extraído de {@link #construirIcms} pra ser reaproveitado por {@link
+     * #cBenefDoItem} (o código de benefício fiscal depende do mesmo CST resolvido). */
+    private String resolverCstIcms(ItemNotaSaida item, boolean simples, NotaSaidaComplementarValores complementar) {
+        if (complementar != null) {
+            return "00";
+        }
         return item.getCst() == null || item.getCst().isBlank()
                 ? (simples ? "102" : "40") : item.getCst().trim();
     }
@@ -444,21 +499,22 @@ public class NfeXmlBuilder {
      * não modelado em lugar nenhum da entidade (nem {@code Produto} nem
      * {@code NaturezaOperacao}), então por ora é fixo igual ao legado; se aparecer uma UF/
      * situação com código diferente, precisa virar campo de verdade. */
-    private String cBenefDoItem(ItemNotaSaida item, boolean simples) {
+    private String cBenefDoItem(ItemNotaSaida item, boolean simples, NotaSaidaComplementarValores complementar) {
         if (simples) {
             return null;
         }
-        String codigo = resolverCstIcms(item, false);
+        String codigo = resolverCstIcms(item, false, complementar);
         return switch (codigo) {
             case "40", "41", "50" -> "SP099999";
             default -> null;
         };
     }
 
-    private Element construirIcms(Document doc, ItemNotaSaida item, Empresa empresa) {
+    private Element construirIcms(Document doc, ItemNotaSaida item, Empresa empresa, NaturezaOperacao natureza,
+                                   NotaSaidaComplementarValores complementar) {
         Element icms = doc.createElementNS(NS_NFE, "ICMS");
         boolean simples = simplesNacional(empresa);
-        String codigo = resolverCstIcms(item, simples);
+        String codigo = resolverCstIcms(item, simples, complementar);
 
         Element variante;
         if (simples) {
@@ -479,67 +535,52 @@ public class NfeXmlBuilder {
             variante = doc.createElementNS(NS_NFE, "ICMS" + elementoIcms);
             text(doc, variante, "orig", 0);
             text(doc, variante, "CST", codigo);
+            BigDecimal base = baseIcmsDoItem(item, natureza, complementar);
+            BigDecimal valor = valorIcmsDoItem(item, natureza, complementar);
+            // Numa complementar, base/valor vêm digitados (NotaSaidaComplementarValores) —
+            // não tem alíquota cadastrada pra derivar, então a alíquota efetiva é a razão
+            // valor/base; numa nota normal, a alíquota é a fonte (Produto ou
+            // NaturezaOperacao) e valor/base já foram calculados a partir dela.
+            BigDecimal aliq = complementar != null
+                    ? aliquotaEfetiva(valor, base)
+                    : aliqIcmsEfetiva(item, natureza);
             switch (codigo) {
                 case "00":
                     text(doc, variante, "modBC", 3);
-                    text(doc, variante, "vBC", dec(item.getBaseIcms(), 2));
-                    text(doc, variante, "pICMS", dec(item.getAliqIcms(), 2));
-                    text(doc, variante, "vICMS", dec(item.getValorIcms(), 2));
+                    text(doc, variante, "vBC", dec(base, 2));
+                    text(doc, variante, "pICMS", dec(aliq, 2));
+                    text(doc, variante, "vICMS", dec(valor, 2));
                     break;
                 case "20":
                     text(doc, variante, "modBC", 3);
-                    text(doc, variante, "vBC", dec(item.getBaseIcms(), 2));
-                    text(doc, variante, "pRedBC", BigDecimal.ZERO.toPlainString());
-                    text(doc, variante, "pICMS", dec(item.getAliqIcms(), 2));
-                    text(doc, variante, "vICMS", dec(item.getValorIcms(), 2));
+                    text(doc, variante, "vBC", dec(base, 2));
+                    text(doc, variante, "pRedBC", dec(reducaoIcmsEfetiva(item, natureza), 2));
+                    text(doc, variante, "pICMS", dec(aliq, 2));
+                    text(doc, variante, "vICMS", dec(valor, 2));
                     break;
                 case "51":
                     // Diferimento — mesmo tratamento que o Axial cravava incondicionalmente
                     // (ver plano); aqui vem do dado (ItemNotaSaida.cst), não de hardcode.
                     text(doc, variante, "modBC", 3);
                     text(doc, variante, "vBC", "0.00");
-                    text(doc, variante, "pICMS", dec(item.getAliqIcms(), 2));
-                    text(doc, variante, "vICMSOp", dec(item.getValorIcms(), 2));
+                    text(doc, variante, "pICMS", dec(aliq, 2));
+                    text(doc, variante, "vICMSOp", dec(valor, 2));
                     text(doc, variante, "pDif", "100.00");
-                    text(doc, variante, "vICMSDif", dec(item.getValorIcms(), 2));
+                    text(doc, variante, "vICMSDif", dec(valor, 2));
                     text(doc, variante, "vICMS", "0.00");
                     break;
                 case "40":
                 case "41":
                 case "50":
                     break;
-                case "10":
-                    // ICMS10 (tributada com cobrança de ICMS por ST) exige o bloco ST
-                    // completo (modBCST/pMVAST/vBCST/pICMSST/vICMSST) — schema rejeita sem
-                    // isso com cStat=225 genérico "Falha no Schema XML do lote" (confirmado
-                    // 2026-08-18: ItemNotaSaida já tem baseSt/valorSt, mas caía no `default`
-                    // abaixo, que só cobre o ICMS próprio, sem ST nenhum). Estrutura e
-                    // modBCST=4 conferidos contra 14/14 ocorrências reais de ICMS10 nas 176
-                    // notas de referência ([[nfe-xmls-reais-teste]]); pICMSST=pICMS em
-                    // 14/14 delas também (mesmo quando vICMSST/vBCST não bate exatamente com
-                    // esse percentual — o ICMS-ST real é líquido do próprio, SEFAZ tolera).
-                    // pMVAST não é campo próprio de ItemNotaSaida — derivado de vBCST/vBC (a
-                    // margem que já gerou o baseSt gravado).
-                    text(doc, variante, "modBC", 3);
-                    text(doc, variante, "vBC", dec(item.getBaseIcms(), 2));
-                    text(doc, variante, "pICMS", dec(item.getAliqIcms(), 2));
-                    text(doc, variante, "vICMS", dec(item.getValorIcms(), 2));
-                    text(doc, variante, "modBCST", 4);
-                    text(doc, variante, "pMVAST", dec(mvaSt(item), 4));
-                    text(doc, variante, "vBCST", dec(item.getBaseSt(), 2));
-                    text(doc, variante, "pICMSST", dec(aliqIcmsStEfetiva(item), 2));
-                    text(doc, variante, "vICMSST", dec(item.getValorSt(), 2));
-                    break;
-                case "60":
-                    text(doc, variante, "vBCSTRet", dec(item.getBaseSt(), 2));
-                    text(doc, variante, "vICMSSTRet", dec(item.getValorSt(), 2));
-                    break;
                 default:
-                    // 90/outras — mesma forma do CST 00, mais permissiva
+                    // 90/outras — mesma forma do CST 00, mais permissiva. ICMS-ST (CST
+                    // 10/60) não é suportado (nenhum cliente ativo usa, ver Javadoc da
+                    // classe) — cai aqui também se digitado por engano, sem bloco ST.
                     text(doc, variante, "modBC", 3);
-                    text(doc, variante, "vBC", dec(item.getBaseIcms(), 2));
-                    text(doc, variante, "pICMS", dec(item.getAliqIcms(), 2));
-                    text(doc, variante, "vICMS", dec(item.getValorIcms(), 2));
+                    text(doc, variante, "vBC", dec(base, 2));
+                    text(doc, variante, "pICMS", dec(aliq, 2));
+                    text(doc, variante, "vICMS", dec(valor, 2));
                     break;
             }
         }
@@ -547,54 +588,86 @@ public class NfeXmlBuilder {
         return icms;
     }
 
-    /** MVA (Margem de Valor Agregado) implícita: derivada de vBCST/vBC do item — não é
-     * campo próprio de {@link ItemNotaSaida} (só {@code baseIcms}/{@code baseSt} existem),
-     * então em vez de inventar um valor, recalcula a margem que já produziu o {@code baseSt}
-     * gravado. Só faz sentido junto do CST 10 (ver Javadoc no switch de {@link
-     * #construirIcms}). */
-    private BigDecimal mvaSt(ItemNotaSaida item) {
-        BigDecimal vBc = item.getBaseIcms();
-        BigDecimal vBcSt = item.getBaseSt();
-        if (vBc == null || vBc.compareTo(BigDecimal.ZERO) == 0 || vBcSt == null) {
-            return BigDecimal.ZERO;
+    /** Alíquota de ICMS efetiva do item: de {@link Produto} quando a natureza é venda, de
+     * {@link NaturezaOperacao} senão — regra decidida 2026-09-13. Não usada numa
+     * complementar (lá a alíquota é derivada de {@link #aliquotaEfetiva}). */
+    private BigDecimal aliqIcmsEfetiva(ItemNotaSaida item, NaturezaOperacao natureza) {
+        boolean venda = natureza != null && Boolean.TRUE.equals(natureza.getVenda());
+        if (venda) {
+            return item.getProduto() == null ? BigDecimal.ZERO : nvl(item.getProduto().getAliqIcms());
         }
-        return vBcSt.divide(vBc, 6, RoundingMode.HALF_UP).subtract(BigDecimal.ONE).multiply(new BigDecimal(100));
+        return natureza == null ? BigDecimal.ZERO : nvl(natureza.getAliqIcms());
     }
 
-    /** Alíquota efetiva do ICMS-ST ({@code pICMSST}): normalmente igual a {@code
-     * item.getAliqIcms()} (a alíquota do ICMS próprio — mesmo padrão validado contra 14/14
-     * ICMS10 reais em [[nfe-xmls-reais-teste]]). Mas numa complementar que ajusta SÓ o valor
-     * de ST (baseIcms/valorIcms zerados de propósito, ver {@code
-     * NfeEmissaoService.gerarItemComplementar}), {@code aliqIcms} também zera — declarar
-     * {@code pICMSST=0} junto de um {@code vICMSST} diferente de zero é uma contradição
-     * (0% de qualquer base não produz valor), rejeitada como "Falha no Schema XML"
-     * (confirmado 2026-09-06, ver [[axctg3-nfe-complementar-cstat225]]). Nesse caso, deriva
-     * de {@code valorSt}/{@code baseSt} em vez de herdar o zero do ICMS próprio. */
-    private BigDecimal aliqIcmsStEfetiva(ItemNotaSaida item) {
-        BigDecimal aliqIcms = item.getAliqIcms();
-        if (aliqIcms != null && aliqIcms.compareTo(BigDecimal.ZERO) != 0) {
-            return aliqIcms;
+    /** Redução de base de ICMS efetiva — mesma regra de precedência de {@link
+     * #aliqIcmsEfetiva}. */
+    private BigDecimal reducaoIcmsEfetiva(ItemNotaSaida item, NaturezaOperacao natureza) {
+        boolean venda = natureza != null && Boolean.TRUE.equals(natureza.getVenda());
+        if (venda) {
+            return item.getProduto() == null ? BigDecimal.ZERO : nvl(item.getProduto().getReducaoIcms());
         }
-        BigDecimal baseSt = item.getBaseSt();
-        BigDecimal valorSt = item.getValorSt();
-        if (baseSt == null || baseSt.compareTo(BigDecimal.ZERO) == 0 || valorSt == null) {
-            return BigDecimal.ZERO;
-        }
-        return valorSt.multiply(new BigDecimal(100)).divide(baseSt, 2, RoundingMode.HALF_UP);
+        return natureza == null ? BigDecimal.ZERO : nvl(natureza.getReducaoIcms());
     }
 
-    private Element construirIpi(Document doc, ItemNotaSaida item) {
-        if (item.getValorIpi() == null || item.getValorIpi().compareTo(BigDecimal.ZERO) == 0) {
+    /** Base de ICMS do item — {@code subTotal} reduzido por {@link #reducaoIcmsEfetiva},
+     * ou digitada ({@code NotaSaidaComplementarValores.baseIcms}) numa complementar. */
+    private BigDecimal baseIcmsDoItem(ItemNotaSaida item, NaturezaOperacao natureza, NotaSaidaComplementarValores complementar) {
+        if (complementar != null) {
+            return nvl(complementar.getBaseIcms());
+        }
+        BigDecimal subTotal = nvl(item.getSubTotal());
+        BigDecimal reducao = reducaoIcmsEfetiva(item, natureza);
+        BigDecimal fator = BigDecimal.ONE.subtract(reducao.divide(new BigDecimal(100), 6, RoundingMode.HALF_UP));
+        return subTotal.multiply(fator).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /** Valor de ICMS do item — {@code base×alíquota}, ou digitado numa complementar. */
+    private BigDecimal valorIcmsDoItem(ItemNotaSaida item, NaturezaOperacao natureza, NotaSaidaComplementarValores complementar) {
+        if (complementar != null) {
+            return nvl(complementar.getValorIcms());
+        }
+        BigDecimal base = baseIcmsDoItem(item, natureza, complementar);
+        BigDecimal aliq = aliqIcmsEfetiva(item, natureza);
+        return valorPercentual(base, aliq);
+    }
+
+    private Element construirIpi(Document doc, ItemNotaSaida item, NotaSaidaComplementarValores complementar) {
+        BigDecimal valor = valorIpiDoItem(item, complementar);
+        if (valor == null || valor.compareTo(BigDecimal.ZERO) == 0) {
             return null;
         }
+        BigDecimal base = baseIpiDoItem(item, complementar);
+        BigDecimal aliq = complementar != null ? aliquotaEfetiva(valor, base) : aliqIpiEfetiva(item);
         Element ipi = doc.createElementNS(NS_NFE, "IPI");
         Element trib = doc.createElementNS(NS_NFE, "IPITrib");
         text(doc, trib, "CST", "50");
-        text(doc, trib, "vBC", dec(item.getBaseIpi(), 2));
-        text(doc, trib, "pIPI", dec(item.getAliqIpi(), 2));
-        text(doc, trib, "vIPI", dec(item.getValorIpi(), 2));
+        text(doc, trib, "vBC", dec(base, 2));
+        text(doc, trib, "pIPI", dec(aliq, 2));
+        text(doc, trib, "vIPI", dec(valor, 2));
         ipi.appendChild(trib);
         return ipi;
+    }
+
+    /** Alíquota de IPI do item — só {@link Produto} tem esse cadastro (sem equivalente em
+     * {@code NaturezaOperacao}). Nenhum cliente ativo tem produto com IPI hoje
+     * (confirmado 2026-09-13), então isso normalmente calcula zero — {@link
+     * #construirIpi} nem emite o grupo quando o valor resultante é zero. */
+    private BigDecimal aliqIpiEfetiva(ItemNotaSaida item) {
+        return item.getProduto() == null ? BigDecimal.ZERO : nvl(item.getProduto().getAliqIpi());
+    }
+
+    private BigDecimal baseIpiDoItem(ItemNotaSaida item, NotaSaidaComplementarValores complementar) {
+        if (complementar != null) {
+            return nvl(complementar.getBaseIpi());
+        }
+        return nvl(item.getSubTotal());
+    }
+
+    private BigDecimal valorIpiDoItem(ItemNotaSaida item, NotaSaidaComplementarValores complementar) {
+        if (complementar != null) {
+            return nvl(complementar.getValorIpi());
+        }
+        return valorPercentual(baseIpiDoItem(item, null), aliqIpiEfetiva(item));
     }
 
     private Element construirPis(Document doc, ItemNotaSaida item, NaturezaOperacao natureza) {
@@ -671,12 +744,12 @@ public class NfeXmlBuilder {
      * cStat=1080 "Total de IBS UF difere da soma dos itens", confirmado 2026-08-18 — o
      * total vinha cravado em zero, nunca somando os itens). */
     private BigDecimal valorIbsUfDoItem(ItemNotaSaida item, NaturezaOperacao natureza, AliquotaIbsCbs aliquotaTeste) {
-        BigDecimal base = item.getSubTotal() == null ? BigDecimal.ZERO : item.getSubTotal();
+        BigDecimal base = nvl(item.getSubTotal());
         return valorPercentual(base, aliqIbsUfEfetiva(natureza, aliquotaTeste));
     }
 
     private BigDecimal valorIbsMunDoItem(ItemNotaSaida item, NaturezaOperacao natureza, AliquotaIbsCbs aliquotaTeste) {
-        BigDecimal base = item.getSubTotal() == null ? BigDecimal.ZERO : item.getSubTotal();
+        BigDecimal base = nvl(item.getSubTotal());
         return valorPercentual(base, aliqIbsMunEfetiva(natureza, aliquotaTeste));
     }
 
@@ -688,11 +761,12 @@ public class NfeXmlBuilder {
 
     private BigDecimal valorCbsDoItem(ItemNotaSaida item, NaturezaOperacao natureza, AliquotaIbsCbs aliquotaTeste) {
         BigDecimal aliqCbs = aliqCbsEfetiva(natureza, aliquotaTeste);
-        BigDecimal base = item.getSubTotal() == null ? BigDecimal.ZERO : item.getSubTotal();
-        return base.multiply(aliqCbs).divide(new BigDecimal(100), 2, RoundingMode.HALF_UP);
+        BigDecimal base = nvl(item.getSubTotal());
+        return valorPercentual(base, aliqCbs);
     }
 
-    private Element construirIbsCbs(Document doc, ItemNotaSaida item, NaturezaOperacao natureza, AliquotaIbsCbs aliquotaTeste) {
+    private Element construirIbsCbs(Document doc, ItemNotaSaida item, NotaSaida notaSaida, NaturezaOperacao natureza,
+                                     AliquotaIbsCbs aliquotaTeste, NotaSaidaComplementarValores complementar) {
         Element ibsCbs = doc.createElementNS(NS_NFE, "IBSCBS");
         // Default quando o item não tem cClassTrib associado (Produto/NaturezaOperacao sem
         // FK configurada — notas antigas, de antes da associação virar obrigatória): "1"
@@ -700,11 +774,11 @@ public class NfeXmlBuilder {
         // a SEFAZ rejeita com cStat=1023 "Classificação Tributária do IBS/CBS informada
         // inexistente" por não existir na tabela oficial (confirmado 2026-08-17; "000001" é
         // o código mais usado nas 176 notas reais de referência, 838/1175 itens).
-        ClassTrib classTrib = buscarClassTrib(item.getCodClassTrib() != null ? item.getCodClassTrib() : 1);
+        Integer codClassTrib = resolverCodClassTrib(notaSaida, natureza, item, complementar);
+        ClassTrib classTrib = buscarClassTrib(codClassTrib != null ? codClassTrib : 1);
         String cst = classTrib != null ? String.format("%03d", classTrib.getCst()) : "000";
         text(doc, ibsCbs, "CST", cst);
-        text(doc, ibsCbs, "cClassTrib", String.format("%06d",
-                item.getCodClassTrib() != null ? item.getCodClassTrib() : 1));
+        text(doc, ibsCbs, "cClassTrib", String.format("%06d", codClassTrib != null ? codClassTrib : 1));
 
         // ClassTrib.tipoAliquota "Sem alíquota" (CST 4xx/5xx/8xx — imunidade, não
         // incidência, suspensão etc., ver class_trib_seed.csv) não preenche gIBSCBS: o
@@ -719,7 +793,7 @@ public class NfeXmlBuilder {
         }
 
         Element gIbsCbs = doc.createElementNS(NS_NFE, "gIBSCBS");
-        BigDecimal base = item.getSubTotal() == null ? BigDecimal.ZERO : item.getSubTotal();
+        BigDecimal base = nvl(item.getSubTotal());
         text(doc, gIbsCbs, "vBC", dec(base, 2));
 
         BigDecimal aliqUf = aliqIbsUfEfetiva(natureza, aliquotaTeste);
@@ -747,8 +821,56 @@ public class NfeXmlBuilder {
         return ibsCbs;
     }
 
+    /**
+     * Regra de precedência do {@code cClassTrib} (docs/REFORMA-TRIBUTARIA-IBS-CBS.md) —
+     * migrada de {@code ItemNotaSaidaEventListener} em 2026-09-13 ({@code ItemNotaSaida}
+     * não guarda mais {@code codClassTrib}, calculado aqui na hora da emissão a partir de
+     * {@code NaturezaOperacao.classTrib}/{@code Produto.classTrib}, mesmas referências reais
+     * de antes). Numa complementar a regra muda: 410029 ("Operações acobertadas somente
+     * pelo ICMS", tipoAliquota "Sem alíquota") quando o complemento é só de imposto
+     * ({@code valorMercadoria} zero), senão o {@code classTrib} da nota original — mesma
+     * lógica que {@code NfeEmissaoService.gerarItemComplementar} já usava (ver
+     * [[axctg3-nfe-complementar-cstat225]]).
+     */
+    private Integer resolverCodClassTrib(NotaSaida notaSaida, NaturezaOperacao natureza, ItemNotaSaida item,
+                                          NotaSaidaComplementarValores complementar) {
+        if (complementar != null) {
+            BigDecimal valorMercadoria = nvl(complementar.getValorMercadoria());
+            if (valorMercadoria.compareTo(BigDecimal.ZERO) == 0) {
+                return 410029;
+            }
+            return notaSaida.getClassTrib() != null ? notaSaida.getClassTrib().getCodigo() : null;
+        }
+        ClassTrib classTribNatureza = natureza == null ? null : natureza.getClassTrib();
+        // Natureza sem ClassTrib ainda (cadastro pendente de migração) é tratada como
+        // "rasa", mesma consequência prática de CST 000: nada de especial foi fixado na
+        // natureza, então o produto decide.
+        int cst = classTribNatureza == null ? CST_TRIBUTACAO_INTEGRAL : classTribNatureza.getCst();
+        if (cst == CST_TRIBUTACAO_INTEGRAL) {
+            Produto produto = item.getProduto();
+            ClassTrib classTribProduto = produto == null ? null : produto.getClassTrib();
+            return classTribProduto == null ? null : classTribProduto.getCodigo();
+        }
+        return classTribNatureza.getCodigo();
+    }
+
     private BigDecimal valorPercentual(BigDecimal base, BigDecimal aliq) {
-        return base.multiply(aliq).divide(new BigDecimal(100), 2, RoundingMode.HALF_UP);
+        return nvl(base).multiply(nvl(aliq)).divide(new BigDecimal(100), 2, RoundingMode.HALF_UP);
+    }
+
+    /** {@code valor×100/base}, ou zero se a base for zero (evita divisão por zero) — usado
+     * só numa complementar, onde base/valor vêm digitados e não tem alíquota cadastrada
+     * pra derivar de outro jeito (o XML ainda precisa do percentual pra {@code pICMS}/
+     * {@code pIPI}). */
+    private BigDecimal aliquotaEfetiva(BigDecimal valor, BigDecimal base) {
+        if (base == null || base.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+        return nvl(valor).multiply(new BigDecimal(100)).divide(base, 2, RoundingMode.HALF_UP);
+    }
+
+    private static BigDecimal nvl(BigDecimal valor) {
+        return valor == null ? BigDecimal.ZERO : valor;
     }
 
     private ClassTrib buscarClassTrib(Integer codigo) {
@@ -776,29 +898,36 @@ public class NfeXmlBuilder {
 
     // ---- total ----
 
-    private Element construirTotal(Document doc, NotaSaida notaSaida, BigDecimal totalVIbs, BigDecimal totalVIbsUf,
+    private Element construirTotal(Document doc, NotaSaida notaSaida, BigDecimal totalValorMercadoria,
+                                    BigDecimal totalBaseIcms, BigDecimal totalValorIcms, BigDecimal totalValorIpi,
+                                    BigDecimal valorNota, BigDecimal totalVIbs, BigDecimal totalVIbsUf,
                                     BigDecimal totalVIbsMun, BigDecimal totalVCbs) {
         Element total = doc.createElementNS(NS_NFE, "total");
         Element icmsTot = doc.createElementNS(NS_NFE, "ICMSTot");
-        text(doc, icmsTot, "vBC", dec(notaSaida.getBaseIcms(), 2));
-        text(doc, icmsTot, "vICMS", dec(notaSaida.getValorIcms(), 2));
+        text(doc, icmsTot, "vBC", dec(totalBaseIcms, 2));
+        text(doc, icmsTot, "vICMS", dec(totalValorIcms, 2));
         text(doc, icmsTot, "vICMSDeson", "0.00");
         text(doc, icmsTot, "vFCP", "0.00");
-        text(doc, icmsTot, "vBCST", dec(notaSaida.getBaseSt(), 2));
-        text(doc, icmsTot, "vST", dec(notaSaida.getValorSt(), 2));
+        // ICMS-ST não suportado — nenhum cliente ativo usa (ver Javadoc da classe), sempre
+        // zero.
+        text(doc, icmsTot, "vBCST", "0.00");
+        text(doc, icmsTot, "vST", "0.00");
         text(doc, icmsTot, "vFCPST", "0.00");
         text(doc, icmsTot, "vFCPSTRet", "0.00");
-        text(doc, icmsTot, "vProd", dec(notaSaida.getValorMercadoria(), 2));
+        text(doc, icmsTot, "vProd", dec(totalValorMercadoria, 2));
+        // vFrete/vSeg do cabeçalho conferidos pela SEFAZ contra o somatório dos itens
+        // (rejeição cStat=535, ver comentário em construirDet) — atribuídos inteiros ao
+        // primeiro item, então o somatório sempre bate com o valor do cabeçalho aqui.
         text(doc, icmsTot, "vFrete", dec(notaSaida.getFrete(), 2));
         text(doc, icmsTot, "vSeg", dec(notaSaida.getSeguro(), 2));
-        text(doc, icmsTot, "vDesc", dec(notaSaida.getDesconto(), 2));
+        text(doc, icmsTot, "vDesc", dec(notaSaida.getValorDesconto(), 2));
         text(doc, icmsTot, "vII", "0.00");
-        text(doc, icmsTot, "vIPI", dec(notaSaida.getValorIpi(), 2));
+        text(doc, icmsTot, "vIPI", dec(totalValorIpi, 2));
         text(doc, icmsTot, "vIPIDevol", "0.00");
         text(doc, icmsTot, "vPIS", "0.00");
         text(doc, icmsTot, "vCOFINS", "0.00");
         text(doc, icmsTot, "vOutro", dec(notaSaida.getDespesas(), 2));
-        text(doc, icmsTot, "vNF", dec(notaSaida.getValor(), 2));
+        text(doc, icmsTot, "vNF", dec(valorNota, 2));
         text(doc, icmsTot, "vTotTrib", "0.00");
         total.appendChild(icmsTot);
 
@@ -809,7 +938,7 @@ public class NfeXmlBuilder {
             // mesma simplificação já documentada em docs/EMISSAO-NFE.md (sem
             // diferimento/devolução/crédito presumido nesta versão).
             Element ibsCbsTot = doc.createElementNS(NS_NFE, "IBSCBSTot");
-            text(doc, ibsCbsTot, "vBCIBSCBS", dec(notaSaida.getValorMercadoria(), 2));
+            text(doc, ibsCbsTot, "vBCIBSCBS", dec(totalValorMercadoria, 2));
             Element gIbs = doc.createElementNS(NS_NFE, "gIBS");
             Element gIbsUf = doc.createElementNS(NS_NFE, "gIBSUF");
             text(doc, gIbsUf, "vDif", "0.00");
@@ -836,7 +965,7 @@ public class NfeXmlBuilder {
 
             // vNFTot também é grupo novo da Reforma (não existe no TTotal clássico) — só faz
             // sentido junto com IBSCBSTot, por isso dentro do mesmo if.
-            text(doc, total, "vNFTot", dec(notaSaida.getValor().add(totalVIbs).add(totalVCbs), 2));
+            text(doc, total, "vNFTot", dec(valorNota.add(totalVIbs).add(totalVCbs), 2));
         }
 
         return total;
@@ -870,15 +999,15 @@ public class NfeXmlBuilder {
                 .list();
     }
 
-    private Element construirCobr(Document doc, NotaSaida notaSaida, List<TituloReceber> titulos) {
+    private Element construirCobr(Document doc, NotaSaida notaSaida, BigDecimal valorNota, List<TituloReceber> titulos) {
         if (titulos.isEmpty()) {
             return null;
         }
         Element cobr = doc.createElementNS(NS_NFE, "cobr");
         Element fat = doc.createElementNS(NS_NFE, "fat");
         text(doc, fat, "nFat", notaSaida.getNumero());
-        text(doc, fat, "vOrig", dec(notaSaida.getValor(), 2));
-        text(doc, fat, "vLiq", dec(notaSaida.getValor(), 2));
+        text(doc, fat, "vOrig", dec(valorNota, 2));
+        text(doc, fat, "vLiq", dec(valorNota, 2));
         cobr.appendChild(fat);
         int n = 1;
         for (TituloReceber titulo : titulos) {

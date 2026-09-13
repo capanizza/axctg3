@@ -10,6 +10,7 @@
                 <property name="parceiro" fetchPlan="_instance_name"/>
                 <property name="natureza" fetchPlan="_instance_name"/>
                 <property name="classTrib" fetchPlan="_base"/>
+                <property name="itens" fetchPlan="_base"/>
             </fetchPlan>
             <loader id="notaSaidasDl" readOnly="true">
                 <query>
@@ -85,7 +86,7 @@
                 <column property="serie" filterable="true" width="7%"/>
                 <column property="parceiro" filterable="true" width="22%"/>
                 <column property="natureza" filterable="true" width="19%"/>
-                <column property="valor" filterable="true" textAlign="END" width="12%"/>
+                <column property="valorMercadoria" textAlign="END" width="12%"/>
                 <column property="chave" filterable="true" width="13%"/>
             </columns>
         </dataGrid>
