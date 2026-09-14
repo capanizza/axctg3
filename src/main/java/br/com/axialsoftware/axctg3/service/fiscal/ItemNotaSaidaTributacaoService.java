@@ -32,23 +32,21 @@ public class ItemNotaSaidaTributacaoService {
     // nenhum) não fixa tratamento próprio, quem decide é o Cst do produto.
     private static final String CST_ICMS_TRIBUTACAO_INTEGRAL = "00";
 
-    /** CST + alíquota resolvidos do MESMO lado (natureza ou produto) — decidido com o
-     * usuário 2026-09-14 que a alíquota nunca pode vir de um lado diferente de quem
-     * decidiu o CST, pra não ter CST "00" com a alíquota do produto errado. */
+    /** CST resolvido (Natureza/Produto, ver {@link #resolverCstIcms}) + alíquota — a
+     * alíquota vem SEMPRE de {@code NaturezaOperacao.aliqIcms}, decidido com o usuário
+     * 2026-09-14 (correção de uma versão anterior, que fazia a alíquota seguir o mesmo
+     * lado que decidiu o CST — errado: quem manda na alíquota é sempre a natureza,
+     * independente de qual dos dois decidiu o CST). */
     public record TributacaoIcms(String cst, BigDecimal aliqIcms) {
     }
 
     public TributacaoIcms resolverTributacaoIcms(NaturezaOperacao natureza, Produto produto) {
-        Cst cstNatureza = natureza == null ? null : natureza.getCst();
-        boolean rasa = cstNatureza == null || CST_ICMS_TRIBUTACAO_INTEGRAL.equals(cstNatureza.getCodigo());
-        if (!rasa) {
-            return new TributacaoIcms(cstNatureza.getCodigo(), natureza.getAliqIcms());
-        }
-        Cst cstProduto = produto == null ? null : produto.getCst();
-        if (cstProduto == null) {
+        String cst = resolverCstIcms(natureza, produto);
+        if (cst == null) {
             return null;
         }
-        return new TributacaoIcms(cstProduto.getCodigo(), produto.getAliqIcms());
+        BigDecimal aliqIcms = natureza == null ? BigDecimal.ZERO : natureza.getAliqIcms();
+        return new TributacaoIcms(cst, aliqIcms);
     }
 
     /**
@@ -61,8 +59,13 @@ public class ItemNotaSaidaTributacaoService {
      * mostrou ao usuário.
      */
     public String resolverCstIcms(NaturezaOperacao natureza, Produto produto) {
-        TributacaoIcms tributacao = resolverTributacaoIcms(natureza, produto);
-        return tributacao == null ? null : tributacao.cst();
+        Cst cstNatureza = natureza == null ? null : natureza.getCst();
+        boolean rasa = cstNatureza == null || CST_ICMS_TRIBUTACAO_INTEGRAL.equals(cstNatureza.getCodigo());
+        if (!rasa) {
+            return cstNatureza.getCodigo();
+        }
+        Cst cstProduto = produto == null ? null : produto.getCst();
+        return cstProduto == null ? null : cstProduto.getCodigo();
     }
 
     /**

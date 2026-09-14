@@ -26,9 +26,10 @@ import static org.assertj.core.api.Assertions.assertThat;
  * valor, no item e no total da nota) decididos em 2026-09-14 (ver Javadoc de {@link Cst},
  * {@code ItemNotaSaidaEventListener} e {@code NotaSaidaService}): substitui a árvore
  * procedural do legado por um catálogo, com a mesma precedência natureza/produto já
- * usada pro cClassTrib do IBS/CBS — e a alíquota usada no cálculo vem sempre do MESMO
- * lado que decidiu o CST. Item de teste criado direto via {@link DataManager}, sem
- * passar pela view — mesmo padrão de {@code NfeEmissaoServiceTest}.
+ * usada pro cClassTrib do IBS/CBS pro CST — mas a alíquota usada no cálculo vem SEMPRE
+ * de {@code NaturezaOperacao.aliqIcms} (corrigido no mesmo dia: não segue mais o lado
+ * que decidiu o CST). Item de teste criado direto via {@link DataManager}, sem passar
+ * pela view — mesmo padrão de {@code NfeEmissaoServiceTest}.
  */
 @SpringBootTest
 @ExtendWith(AuthenticatedAsAdmin.class)
@@ -240,24 +241,26 @@ class ItemNotaSaidaCstTest {
     }
 
     @Test
-    void icmsDoItemUsaAliquotaDoMesmoLadoQueDecidiuOCst() {
-        // natureza rasa (CST "00") delega CST *e* alíquota pro produto — aliqIcms da
-        // natureza (99%, absurdo de propósito) não pode vazar pro cálculo.
-        NaturezaOperacao natureza = criarNatureza(carregarCst("00"), new BigDecimal("99.00"));
-        Produto produto = criarProduto(carregarCst("10"), new BigDecimal("18.00"));
+    void icmsDoItemUsaAliquotaDaNaturezaMesmoQuandoProdutoDecideOCst() {
+        // natureza rasa (CST "00") delega o CST pro produto, mas a alíquota continua
+        // sendo da natureza — a do produto (99%, absurdo de propósito) não pode vazar
+        // pro cálculo.
+        NaturezaOperacao natureza = criarNatureza(carregarCst("00"), new BigDecimal("18.00"));
+        Produto produto = criarProduto(carregarCst("10"), new BigDecimal("99.00"));
         NotaSaida notaSaida = criarNotaSaida(natureza);
 
         ItemNotaSaida item = criarItem(notaSaida, produto, 1, new BigDecimal("10"), new BigDecimal("10"));
 
-        assertThat(item.getAliqIcms()).isEqualByComparingTo("18.00");
+        assertThat(item.getCst()).isEqualTo("10"); // CST ainda vem do produto
+        assertThat(item.getAliqIcms()).isEqualByComparingTo("18.00"); // alíquota vem da natureza
         assertThat(item.getBaseIcms()).isEqualByComparingTo("100.00");
         assertThat(item.getValorIcms()).isEqualByComparingTo("18.00");
     }
 
     @Test
     void icmsRecalculadoAoEditarQuantidadeDoItem() {
-        NaturezaOperacao natureza = criarNatureza(carregarCst("00"));
-        Produto produto = criarProduto(carregarCst("00"), new BigDecimal("18.00"));
+        NaturezaOperacao natureza = criarNatureza(carregarCst("00"), new BigDecimal("18.00"));
+        Produto produto = criarProduto(carregarCst("00"));
         NotaSaida notaSaida = criarNotaSaida(natureza);
         ItemNotaSaida item = criarItem(notaSaida, produto, 1, new BigDecimal("10"), new BigDecimal("10"));
         assertThat(item.getValorIcms()).isEqualByComparingTo("18.00");
@@ -271,18 +274,20 @@ class ItemNotaSaidaCstTest {
 
     @Test
     void totalDaNotaSomaIcmsDeTodosOsItens() {
-        NaturezaOperacao natureza = criarNatureza(carregarCst("00"));
-        Produto produto1 = criarProduto(carregarCst("00"), new BigDecimal("18.00"), 1);
-        Produto produto2 = criarProduto(carregarCst("00"), new BigDecimal("12.00"), 2);
+        // os dois itens são da MESMA nota, logo da MESMA natureza — só uma alíquota
+        // possível pros dois (18%), já que ela não segue mais o produto.
+        NaturezaOperacao natureza = criarNatureza(carregarCst("00"), new BigDecimal("18.00"));
+        Produto produto1 = criarProduto(carregarCst("00"), BigDecimal.ZERO, 1);
+        Produto produto2 = criarProduto(carregarCst("00"), BigDecimal.ZERO, 2);
         NotaSaida notaSaida = criarNotaSaida(natureza);
 
         criarItem(notaSaida, produto1, 1, new BigDecimal("10"), new BigDecimal("10")); // base 100, ICMS 18.00
-        criarItem(notaSaida, produto2, 2, new BigDecimal("5"), new BigDecimal("20"));  // base 100, ICMS 12.00
+        criarItem(notaSaida, produto2, 2, new BigDecimal("5"), new BigDecimal("20"));  // base 100, ICMS 18.00
 
         NotaSaida notaSaidaAtualizada = dataManager.load(NotaSaida.class).id(notaSaida.getId()).one();
         assertThat(notaSaidaAtualizada.getValorMercadoria()).isEqualByComparingTo("200.00");
         assertThat(notaSaidaAtualizada.getBaseIcms()).isEqualByComparingTo("200.00");
-        assertThat(notaSaidaAtualizada.getValorIcms()).isEqualByComparingTo("30.00");
+        assertThat(notaSaidaAtualizada.getValorIcms()).isEqualByComparingTo("36.00");
         // sem frete/seguro/despesas/desconto: valor da nota = valorMercadoria (ICMS é "por
         // dentro" do preço, não soma — ver NotaSaidaService.calcularValorTotal)
         assertThat(notaSaidaAtualizada.getValor()).isEqualByComparingTo("200.00");

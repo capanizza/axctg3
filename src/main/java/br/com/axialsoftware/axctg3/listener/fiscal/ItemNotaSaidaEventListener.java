@@ -87,9 +87,9 @@ public class ItemNotaSaidaEventListener {
 
         // ICMS recalculado a cada save (criação OU edição, ao contrário de cst/
         // codClassTrib acima, que são snapshot só na criação): quantidade/valorUnitario
-        // podem mudar depois, então base/valor têm que acompanhar. Mesma precedência
-        // natureza/produto do CST — decidido com o usuário 2026-09-14 que alíquota vem
-        // sempre do MESMO lado que decidiu o CST, nunca de um lado diferente.
+        // podem mudar depois, então base/valor têm que acompanhar. CST segue a
+        // precedência natureza/produto; alíquota vem sempre de NaturezaOperacao.aliqIcms
+        // (decidido com o usuário 2026-09-14 — independe de qual dos dois decidiu o CST).
         //
         // EXCETO pro pseudo item de uma complementar (NfeEmissaoService.gerarItemComplementar):
         // ali quantidade=1/valorUnitario=valorMercadoria é só um jeito de carregar o
