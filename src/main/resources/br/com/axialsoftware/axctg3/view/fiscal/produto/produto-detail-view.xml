@@ -9,6 +9,7 @@
                 <property name="grupoProduto" fetchPlan="_base"/>
                 <property name="classificacaoFiscal" fetchPlan="_base"/>
                 <property name="classTrib" fetchPlan="_base"/>
+                <property name="cst" fetchPlan="_base"/>
             </fetchPlan>
             <loader id="produtoDl"/>
         </instance>
@@ -106,6 +107,16 @@
                               dataContainer="produtoDc"
                               width="50%" themeNames="small"
                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.classTrib">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityPicker>
+                <entityPicker id="cstField"
+                              property="cst"
+                              dataContainer="produtoDc"
+                              width="30%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.cst">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>

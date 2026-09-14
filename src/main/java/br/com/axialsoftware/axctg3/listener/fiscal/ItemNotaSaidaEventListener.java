@@ -5,6 +5,7 @@ import br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
+import br.com.axialsoftware.axctg3.entity.tabelas.Cst;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import io.jmix.core.event.EntitySavingEvent;
 import io.jmix.data.Sequence;
@@ -20,6 +21,11 @@ public class ItemNotaSaidaEventListener {
     // com esse CST é "rasa": não fixa um tratamento tributário próprio, então quem decide
     // é o produto do item.
     private static final int CST_TRIBUTACAO_INTEGRAL = 0;
+
+    // CST de ICMS "tributação integral" (Cst.codigo, não o CST-IBS/CBS acima — catálogos
+    // diferentes, mesmo nome). Mesma ideia de "rasa": natureza com esse CST (ou sem Cst
+    // nenhum) não fixa tratamento próprio, quem decide é o Cst do produto.
+    private static final String CST_ICMS_TRIBUTACAO_INTEGRAL = "00";
 
     private final Sequences sequences;
     private final UtilGeralService utilGeralService;
@@ -46,7 +52,33 @@ public class ItemNotaSaidaEventListener {
             if (itemNotaSaida.getCodClassTrib() == null) {
                 itemNotaSaida.setCodClassTrib(resolverCodClassTrib(natureza, itemNotaSaida));
             }
+            if (itemNotaSaida.getCst() == null) {
+                String cst = resolverCstIcms(natureza, itemNotaSaida);
+                if (cst != null) {
+                    itemNotaSaida.setCst(cst);
+                }
+            }
         }
+    }
+
+    /**
+     * Precedência do CST de ICMS — mesma regra de {@link #resolverCodClassTrib}, catálogo
+     * diferente (ver Javadoc de {@link Cst}): a natureza decide quando fixa um CST próprio
+     * (qualquer um diferente de "00"); quando a natureza é "rasa" (Cst "00" ou sem Cst),
+     * quem decide é o Cst do produto. Sem nenhum dos dois, retorna {@code null} — o
+     * default final ("40"/"102" conforme o regime) é aplicado só na emissão, em
+     * {@code NfeXmlBuilder.resolverCstIcms}, pra não gravar um valor no item que a UI não
+     * mostrou ao usuário.
+     */
+    private String resolverCstIcms(NaturezaOperacao natureza, ItemNotaSaida itemNotaSaida) {
+        Cst cstNatureza = natureza == null ? null : natureza.getCst();
+        boolean rasa = cstNatureza == null || CST_ICMS_TRIBUTACAO_INTEGRAL.equals(cstNatureza.getCodigo());
+        if (!rasa) {
+            return cstNatureza.getCodigo();
+        }
+        Produto produto = itemNotaSaida.getProduto();
+        Cst cstProduto = produto == null ? null : produto.getCst();
+        return cstProduto == null ? null : cstProduto.getCodigo();
     }
 
     /**

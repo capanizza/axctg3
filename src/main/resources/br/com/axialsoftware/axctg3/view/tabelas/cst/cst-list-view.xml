@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://cstListView.title"
+      focusComponent="cstsDataGrid">
+    <data>
+        <collection id="cstsDc"
+                    class="br.com.axialsoftware.axctg3.entity.tabelas.Cst">
+            <fetchPlan extends="_base"/>
+            <loader id="cstsDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from Cst e
+                        order by e.csosn asc, e.codigo asc]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <actions>
+        <action id="selectAction" type="lookup_select"/>
+        <action id="discardAction" type="lookup_discard"/>
+    </actions>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <startSlot>
+                <button id="createButton" action="cstsDataGrid.createAction" themeNames="small"/>
+                <button id="editButton" action="cstsDataGrid.editAction" themeNames="small"/>
+                <button id="removeButton" action="cstsDataGrid.removeAction" themeNames="small"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="cstsDl"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="cstsDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="cstsDc"
+                  columnReorderingAllowed="true"
+                  themeNames="small">
+            <actions>
+                <action id="createAction" type="list_create"/>
+                <action id="editAction" type="list_edit"/>
+                <action id="removeAction" type="list_remove"/>
+            </actions>
+            <columns resizable="true">
+                <column property="codigo" width="10rem" filterable="true"/>
+                <column property="csosn" width="10rem" filterable="true"/>
+                <column property="descricao" width="60rem" filterable="true"/>
+            </columns>
+        </dataGrid>
+        <hbox id="lookupActions" visible="false">
+            <button id="selectButton" action="selectAction" themeNames="small"/>
+            <button id="discardButton" action="discardAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

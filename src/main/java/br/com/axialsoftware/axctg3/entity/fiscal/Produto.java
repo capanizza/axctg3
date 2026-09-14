@@ -3,6 +3,7 @@ package br.com.axialsoftware.axctg3.entity.fiscal;
 import br.com.axialsoftware.axctg3.entity.enums.TipoProduto;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassificacaoFiscal;
+import br.com.axialsoftware.axctg3.entity.tabelas.Cst;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.annotation.DeletedBy;
 import io.jmix.core.annotation.DeletedDate;
@@ -24,7 +25,8 @@ import java.util.UUID;
 @Table(name = "PRODUTO", indexes = {
         @Index(name = "IDX_PRODUTO_GRUPO_PRODUTO", columnList = "GRUPO_PRODUTO_ID"),
         @Index(name = "IDX_PRODUTO_CLASSIFICACAO_FISCAL", columnList = "CLASSIFICACAO_FISCAL_ID"),
-        @Index(name = "IDX_PRODUTO_UNQ", columnList = "CODIGO, COD_EMPRESA", unique = true)
+        @Index(name = "IDX_PRODUTO_UNQ", columnList = "CODIGO, COD_EMPRESA", unique = true),
+        @Index(name = "IDX_PRODUTO_CST", columnList = "CST_ID")
 })
 @Entity
 public class Produto {
@@ -156,6 +158,23 @@ public class Produto {
 
     public void setClassTrib(@NotNull ClassTrib classTrib) {
         this.classTrib = classTrib;
+    }
+
+    // CST de ICMS (catálogo Cst — ver Javadoc da entidade). Nullable: ao contrário de
+    // classTrib, aqui existe um fallback silencioso ("40"/"102" conforme o regime da
+    // empresa, ver NfeXmlBuilder.resolverCstIcms) pra produto ainda não migrado. É este
+    // campo que ItemNotaSaidaEventListener consulta quando a natureza da nota é "rasa"
+    // (Cst "00" ou sem Cst definido).
+    @JoinColumn(name = "CST_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Cst cst;
+
+    public Cst getCst() {
+        return cst;
+    }
+
+    public void setCst(Cst cst) {
+        this.cst = cst;
     }
 
     public String getNcm() {

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/09/14-100200-c1f40fd1-natureza_operacao-produto-cst-adicionar.xml">
+    <!--
+        NATUREZA_OPERACAO.CST_ID e PRODUTO.CST_ID — referência real pra CST (ver
+        entity.tabelas.Cst), mesmo padrão de CLASS_TRIB_ID em
+        2026/08/17-091725-...-natureza_operacao-produto-classtrib-fk-vincular.xml. Ambas
+        nullable: cadastro existente migra aos poucos, e ItemNotaSaidaEventListener/
+        NfeXmlBuilder mantêm o fallback pro CST digitado à mão ("40"/"102" conforme o
+        regime) enquanto isso não acontece.
+    -->
+    <changeSet id="1" author="axctg3">
+        <addColumn tableName="NATUREZA_OPERACAO">
+            <column name="CST_ID" type="${uuid.type}"/>
+        </addColumn>
+    </changeSet>
+    <changeSet id="2" author="axctg3">
+        <createIndex indexName="IDX_NATUREZA_OPERACAO_CST" tableName="NATUREZA_OPERACAO">
+            <column name="CST_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="CST_ID" baseTableName="NATUREZA_OPERACAO"
+                                  constraintName="FK_NATUREZA_OPERACAO_ON_CST" referencedColumnNames="ID"
+                                  referencedTableName="CST"/>
+    </changeSet>
+    <changeSet id="3" author="axctg3">
+        <addColumn tableName="PRODUTO">
+            <column name="CST_ID" type="${uuid.type}"/>
+        </addColumn>
+    </changeSet>
+    <changeSet id="4" author="axctg3">
+        <createIndex indexName="IDX_PRODUTO_CST" tableName="PRODUTO">
+            <column name="CST_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="CST_ID" baseTableName="PRODUTO"
+                                  constraintName="FK_PRODUTO_ON_CST" referencedColumnNames="ID"
+                                  referencedTableName="CST"/>
+    </changeSet>
+</databaseChangeLog>

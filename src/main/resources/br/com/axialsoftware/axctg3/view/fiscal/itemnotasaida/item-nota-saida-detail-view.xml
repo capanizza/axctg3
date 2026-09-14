@@ -45,6 +45,7 @@
                            property="cst"
                            maxLength="4"
                            dataContainer="itemNotaSaidaDc"
+                           readOnly="true"
                            width="5%" themeNames="small"
                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.cst"/>
                 <integerField id="codClassTribField"
