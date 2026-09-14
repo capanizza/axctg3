@@ -3,6 +3,7 @@ package br.com.axialsoftware.axctg3.listener.fiscal;
 import br.com.axialsoftware.axctg3.entity.fiscal.ItemNotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
+import br.com.axialsoftware.axctg3.service.fiscal.NotaSaidaService;
 import io.jmix.core.DataManager;
 import io.jmix.core.Id;
 import io.jmix.core.event.EntityChangedEvent;
@@ -28,17 +29,20 @@ public class NotaSaidaEventListener {
     private final UtilGeralService utilGeralService;
     private final DataManager dataManager;
     private final Sequences sequences;
+    private final NotaSaidaService notaSaidaService;
 
-    public NotaSaidaEventListener(UtilGeralService utilGeralService, DataManager dataManager, Sequences sequences) {
+    public NotaSaidaEventListener(UtilGeralService utilGeralService, DataManager dataManager, Sequences sequences,
+                                   NotaSaidaService notaSaidaService) {
         this.utilGeralService = utilGeralService;
         this.dataManager = dataManager;
         this.sequences = sequences;
+        this.notaSaidaService = notaSaidaService;
     }
 
     @EventListener
     public void onNotaSaidaSaving(final EntitySavingEvent<NotaSaida> event) {
+        NotaSaida notaSaida = event.getEntity();
         if (event.isNewEntity()) {
-            NotaSaida notaSaida = event.getEntity();
             if (notaSaida.getCodEmpresa() == null) {
                 notaSaida.setCodEmpresa(utilGeralService.getCodEmpresa());
             }
@@ -46,6 +50,14 @@ public class NotaSaidaEventListener {
                 long numero = sequences.createNextValue(Sequence.withName("nota_saida_seq_" + notaSaida.getCodEmpresa()));
                 notaSaida.setNumero(Math.toIntExact(numero));
             }
+        }
+
+        // Cobre o caso de o usuário editar frete/seguro/despesas/desconto sem tocar em
+        // item nenhum — quando um item muda, quem recalcula "valor" é
+        // NotaSaidaService.atualizarValoresCalculados (ItemNotaSaidaEventListener), que
+        // roda DEPOIS deste evento na mesma transação e tem a palavra final.
+        if (notaSaidaService.isNotaSimples(notaSaida)) {
+            notaSaida.setValor(notaSaidaService.calcularValorTotal(notaSaida));
         }
     }
 

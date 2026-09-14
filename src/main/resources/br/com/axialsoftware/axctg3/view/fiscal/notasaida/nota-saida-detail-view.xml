@@ -269,6 +269,7 @@
                                 <bigDecimalField id="valorField"
                                                  property="valor"
                                                  dataContainer="notaSaidaDc"
+                                                 readOnly="true"
                                                  width="25%" themeNames="small"
                                                  label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.valor"/>
                                 <bigDecimalField id="valorMercadoriaField"

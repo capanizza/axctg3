@@ -14,11 +14,12 @@ import java.util.UUID;
  * Recalcula os totais do cabeçalho de {@link NotaSaida} (aba "Valores calculados" na
  * tela) somando os itens atuais — chamado por
  * {@code ItemNotaSaidaEventListener.onItemNotaSaidaChanged} toda vez que um item é
- * criado, editado ou removido. Decisão 2026-09-14: só {@code valorMercadoria}/
- * {@code baseIcms}/{@code valorIcms} são recalculados (ICMS é a única coisa que o item
- * calcula automaticamente por enquanto — ver {@code ItemNotaSaidaEventListener}); {@code
- * valor} (total da nota, inclui frete/seguro/despesas/desconto) e os campos de
- * ST/IPI continuam manuais, fora de escopo de "nota simples".
+ * criado, editado ou removido, e por {@code NotaSaidaEventListener.onNotaSaidaSaving}
+ * (via {@link #calcularValorTotal}) toda vez que a nota é salva, pra cobrir também o
+ * caso de o usuário editar frete/seguro/despesas/desconto sem tocar em item nenhum.
+ * Decisão 2026-09-14: {@code valorMercadoria}/{@code baseIcms}/{@code valorIcms}/
+ * {@code valor} são recalculados; os campos de ST/IPI continuam manuais, fora de escopo
+ * de "nota simples".
  */
 @Service
 public class NotaSaidaService {
@@ -40,7 +41,7 @@ public class NotaSaidaService {
             // nota removida no meio do caminho (ex.: exclusão em cascata) — nada a atualizar
             return;
         }
-        if (notaSaida.getFinNfe() != null && notaSaida.getFinNfe() != FinNfe.NORMAL) {
+        if (!isNotaSimples(notaSaida)) {
             // Complementar/ajuste/devolução: o pseudo item (NfeEmissaoService.
             // gerarItemComplementar) só espelha o que já está no cabeçalho, não o
             // contrário — nunca recalcula esses casos a partir dos itens.
@@ -59,7 +60,31 @@ public class NotaSaidaService {
         notaSaida.setValorMercadoria(valorMercadoria);
         notaSaida.setBaseIcms(baseIcms);
         notaSaida.setValorIcms(valorIcms);
+        notaSaida.setValor(calcularValorTotal(notaSaida));
         dataManager.saveWithoutReload(notaSaida);
+    }
+
+    /**
+     * Total da nota (campo {@code valor}, vira {@code vNF} no XML) = mercadoria + frete +
+     * seguro + despesas − desconto. O ICMS não entra aqui: é "por dentro" do preço do
+     * produto (embutido em {@code valorMercadoria}), diferente do IBS/CBS, que é "por
+     * fora" e soma direto no total da NFe em {@code NfeXmlBuilder} (nunca no cabeçalho da
+     * NotaSaida). Sem ST/IPI nesta versão — fora de escopo de "nota simples".
+     */
+    public BigDecimal calcularValorTotal(NotaSaida notaSaida) {
+        return nvl(notaSaida.getValorMercadoria())
+                .add(nvl(notaSaida.getFrete()))
+                .add(nvl(notaSaida.getSeguro()))
+                .add(nvl(notaSaida.getDespesas()))
+                .subtract(nvl(notaSaida.getDesconto()));
+    }
+
+    /** Complementar/ajuste/devolução ficam de fora do cálculo automático — o pseudo item
+     * (NfeEmissaoService.gerarItemComplementar) e os campos da tela dedicada de
+     * complementar já são preenchidos direto pelo usuário/serviço, não a partir de itens
+     * de verdade. */
+    public boolean isNotaSimples(NotaSaida notaSaida) {
+        return notaSaida.getFinNfe() == null || notaSaida.getFinNfe() == FinNfe.NORMAL;
     }
 
     private BigDecimal nvl(BigDecimal valor) {

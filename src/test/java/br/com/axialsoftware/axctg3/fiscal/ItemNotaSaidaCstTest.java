@@ -283,5 +283,24 @@ class ItemNotaSaidaCstTest {
         assertThat(notaSaidaAtualizada.getValorMercadoria()).isEqualByComparingTo("200.00");
         assertThat(notaSaidaAtualizada.getBaseIcms()).isEqualByComparingTo("200.00");
         assertThat(notaSaidaAtualizada.getValorIcms()).isEqualByComparingTo("30.00");
+        // sem frete/seguro/despesas/desconto: valor da nota = valorMercadoria (ICMS é "por
+        // dentro" do preço, não soma — ver NotaSaidaService.calcularValorTotal)
+        assertThat(notaSaidaAtualizada.getValor()).isEqualByComparingTo("200.00");
+    }
+
+    @Test
+    void valorDaNotaRecalculadoAoEditarFreteSemTocarEmItem() {
+        NaturezaOperacao natureza = criarNatureza(carregarCst("00"));
+        Produto produto = criarProduto(carregarCst("00"), new BigDecimal("18.00"));
+        NotaSaida notaSaida = criarNotaSaida(natureza);
+        criarItem(notaSaida, produto, 1, new BigDecimal("10"), new BigDecimal("10")); // valorMercadoria 100
+
+        NotaSaida recarregada = dataManager.load(NotaSaida.class).id(notaSaida.getId()).one();
+        assertThat(recarregada.getValor()).isEqualByComparingTo("100.00");
+
+        recarregada.setFrete(new BigDecimal("15.00"));
+        recarregada = dataManager.save(recarregada);
+
+        assertThat(recarregada.getValor()).isEqualByComparingTo("115.00");
     }
 }
