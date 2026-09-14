@@ -837,7 +837,7 @@
                 <text><![CDATA[V.ICMS]]></text>
             </staticText>
             <staticText>
-                <reportElement x="493" y="10" width="35" height="14" uuid="a1b2c3d4-0003-0001-0001-00000000000c"/>
+                <reportElement x="496" y="10" width="32" height="14" uuid="a1b2c3d4-0003-0001-0001-00000000000c"/>
                     <box leftPadding="2" rightPadding="2"><pen lineWidth="0.5"/><leftPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5" isBold="true"/></textElement>
                 <text><![CDATA[V.IPI]]></text>
@@ -920,7 +920,7 @@
                 <textFieldExpression><![CDATA[$F{valorIcms}]]></textFieldExpression>
             </textField>
             <textField pattern="###,###,##0.00">
-                <reportElement x="493" y="0" width="35" height="11" uuid="a1b2c3d4-0004-0001-0001-00000000000c"/>
+                <reportElement x="496" y="0" width="32" height="11" uuid="a1b2c3d4-0004-0001-0001-00000000000c"/>
                     <box leftPadding="2" rightPadding="2"><leftPen lineWidth="0.25"/><bottomPen lineWidth="0.25"/><rightPen lineWidth="0"/></box>
                 <textElement textAlignment="Right" verticalAlignment="Middle"><font fontName="DejaVu Serif Condensed" size="5"/></textElement>
                 <textFieldExpression><![CDATA[$F{valorIpi}]]></textFieldExpression>
