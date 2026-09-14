@@ -101,16 +101,19 @@
                 <bigDecimalField id="baseIcmsField"
                                  property="baseIcms"
                                  dataContainer="itemNotaSaidaDc"
+                                 readOnly="true"
                                  width="12%" themeNames="small"
                                  label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.baseIcms"/>
                 <bigDecimalField id="aliqIcmsField"
                                  property="aliqIcms"
                                  dataContainer="itemNotaSaidaDc"
+                                 readOnly="true"
                                  width="12%" themeNames="small"
                                  label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.aliqIcms"/>
                 <bigDecimalField id="valorIcmsField"
                                  property="valorIcms"
                                  dataContainer="itemNotaSaidaDc"
+                                 readOnly="true"
                                  width="12%" themeNames="small"
                                  label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.valorIcms"/>
                 <bigDecimalField id="baseStField"

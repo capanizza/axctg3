@@ -274,16 +274,19 @@
                                 <bigDecimalField id="valorMercadoriaField"
                                                  property="valorMercadoria"
                                                  dataContainer="notaSaidaDc"
+                                                 readOnly="true"
                                                  width="25%" themeNames="small"
                                                  label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.valorMercadoria"/>
                                 <bigDecimalField id="baseIcmsField"
                                                  property="baseIcms"
                                                  dataContainer="notaSaidaDc"
+                                                 readOnly="true"
                                                  width="25%" themeNames="small"
                                                  label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.baseIcms"/>
                                 <bigDecimalField id="valorIcmsField"
                                                  property="valorIcms"
                                                  dataContainer="notaSaidaDc"
+                                                 readOnly="true"
                                                  width="25%" themeNames="small"
                                                  label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.valorIcms"/>
                             </hbox>
