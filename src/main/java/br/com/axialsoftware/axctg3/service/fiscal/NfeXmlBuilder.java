@@ -955,16 +955,18 @@ public class NfeXmlBuilder {
         text(doc, fat, "vOrig", dec(notaSaida.getValor(), 2));
         text(doc, fat, "vLiq", dec(notaSaida.getValor(), 2));
         cobr.appendChild(fat);
-        // nDup: número da duplicata de verdade (TituloReceber.numero — número da nota com
-        // 6 dígitos + letra por parcela, ver TituloReceberService.gerarTitulosDaEmissao),
-        // não uma posição sequencial no XML. TDup no schema é string livre (1-60
-        // caracteres), aceita a letra sem problema.
+        // nDup: posição sequencial da parcela no lote ("001", "002"...) — especificação da
+        // NFe, NÃO o número do título (TituloReceber.numero, que carrega o "/" + letra pro
+        // controle interno). Confirmado com o usuário 2026-09-14: não trocar por
+        // titulo.getNumero(), mesmo esse sendo o número "de verdade" do título.
+        int n = 1;
         for (TituloReceber titulo : titulos) {
             Element dup = doc.createElementNS(NS_NFE, "dup");
-            text(doc, dup, "nDup", titulo.getNumero());
+            text(doc, dup, "nDup", String.format("%03d", n));
             text(doc, dup, "dVenc", titulo.getDataVencimento().toString());
             text(doc, dup, "vDup", dec(titulo.getValor(), 2));
             cobr.appendChild(dup);
+            n++;
         }
         return cobr;
     }

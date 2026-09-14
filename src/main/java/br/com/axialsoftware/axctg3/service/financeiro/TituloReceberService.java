@@ -62,10 +62,11 @@ public class TituloReceberService {
      * pela PRIMEIRA parcela, não pela última — pedido explícito do usuário 2026-09-14.
      *
      * <p>Numeração do título: número da nota com 6 dígitos (zeros à esquerda). Parcela
-     * única não leva sufixo; mais de uma parcela leva uma letra maiúscula colada em
-     * seguida (sem espaço), começando em "A" pra primeira parcela — mesma convenção do
-     * {@code nDup} de duplicata usado no mercado (não é {@link CondicaoPagamento#getCodigo()}
-     * nem nada específico da condição, só o número da nota + posição da parcela).
+     * única não leva sufixo; mais de uma parcela leva "/" + uma letra maiúscula,
+     * começando em "A" pra primeira parcela (não é {@link CondicaoPagamento#getCodigo()}
+     * nem nada específico da condição, só o número da nota + posição da parcela). O
+     * {@code nDup} do XML/DANFE é outra coisa — não usa esse número, ver
+     * {@code NfeXmlBuilder.construirCobr}.
      *
      * @return mensagem de erro (sem gerar nada) quando falta um pré-requisito; {@code null}
      * em caso de sucesso ou quando não há nada a fazer (nota já tem título, ou não tem
@@ -110,7 +111,7 @@ public class TituloReceberService {
         for (int i = 0; i < parcelas; i++) {
             TituloReceber titulo = dataManager.create(TituloReceber.class);
             titulo.setNotaSaida(notaSaida);
-            titulo.setNumero(parcelas == 1 ? numeroBase : numeroBase + (char) ('A' + i));
+            titulo.setNumero(parcelas == 1 ? numeroBase : numeroBase + "/" + (char) ('A' + i));
             titulo.setCodEmpresa(notaSaida.getCodEmpresa());
             titulo.setDataEmissao(notaSaida.getDataEmissao());
             titulo.setDataVencimento(dataVencimento);

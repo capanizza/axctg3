@@ -40,13 +40,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  * depende dos títulos já existirem. Testado direto no serviço, sem passar pela emissão de
  * verdade.
  *
- * <p>Cada teste usa seu PRÓPRIO {@code codEmpresa} (contador estático, base 9120) em vez
- * de uma constante compartilhada: {@code TituloReceberEventListener.
- * onTituloReceberChangedBeforeCommit} exige um {@code HistoricoFinanceiro} codigo=1 já
- * existente pra essa empresa, e reaproveitar o mesmo código de empresa entre testes bateu
- * numa inconsistência de visibilidade entre execuções (a leitura de um teste não via o
- * que o {@code @BeforeEach} do teste anterior tinha acabado de gravar) — empresa nova por
- * teste elimina o problema por construção.
+ * <p>Cada teste usa seu PRÓPRIO {@code codEmpresa} (contador estático, base variável por
+ * execução — ver comentário do campo) em vez de uma constante fixa compartilhada: o
+ * HSQLDB de teste é um arquivo persistente entre rodadas de {@code clean test}, e seu
+ * índice único não exclui linha soft-deletada — reaproveitar o mesmo código de empresa
+ * entre execuções bateria em {@code UniqueConstraintViolationException} numa rodada
+ * seguinte. {@code TituloReceberEventListener.onTituloReceberChangedBeforeCommit} também
+ * exige um {@code HistoricoFinanceiro} codigo=1 já existente pra essa empresa.
  */
 @SpringBootTest
 @ExtendWith(AuthenticatedAsAdmin.class)
@@ -278,15 +278,15 @@ class TituloReceberGeracaoTest {
         String base = String.format("%06d", notaSaida.getNumero());
 
         // 100.00 / 3 = 33.33 (arredondado) por parcela — sobra vai pra primeira: 33.34
-        assertThat(titulos.get(0).getNumero()).isEqualTo(base + "A");
+        assertThat(titulos.get(0).getNumero()).isEqualTo(base + "/A");
         assertThat(titulos.get(0).getValor()).isEqualByComparingTo("33.34");
         assertThat(titulos.get(0).getDataVencimento()).isEqualTo(LocalDate.of(2026, 10, 14));
 
-        assertThat(titulos.get(1).getNumero()).isEqualTo(base + "B");
+        assertThat(titulos.get(1).getNumero()).isEqualTo(base + "/B");
         assertThat(titulos.get(1).getValor()).isEqualByComparingTo("33.33");
         assertThat(titulos.get(1).getDataVencimento()).isEqualTo(LocalDate.of(2026, 11, 13));
 
-        assertThat(titulos.get(2).getNumero()).isEqualTo(base + "C");
+        assertThat(titulos.get(2).getNumero()).isEqualTo(base + "/C");
         assertThat(titulos.get(2).getValor()).isEqualByComparingTo("33.33");
         assertThat(titulos.get(2).getDataVencimento()).isEqualTo(LocalDate.of(2026, 12, 13));
 
