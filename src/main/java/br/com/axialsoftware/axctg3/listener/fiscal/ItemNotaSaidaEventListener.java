@@ -7,6 +7,9 @@ import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
 import br.com.axialsoftware.axctg3.entity.tabelas.Cst;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
+import io.jmix.core.DataManager;
+import io.jmix.core.EntityStates;
+import io.jmix.core.FetchPlan;
 import io.jmix.core.event.EntitySavingEvent;
 import io.jmix.data.Sequence;
 import io.jmix.data.Sequences;
@@ -29,10 +32,15 @@ public class ItemNotaSaidaEventListener {
 
     private final Sequences sequences;
     private final UtilGeralService utilGeralService;
+    private final DataManager dataManager;
+    private final EntityStates entityStates;
 
-    public ItemNotaSaidaEventListener(Sequences sequences, UtilGeralService utilGeralService) {
+    public ItemNotaSaidaEventListener(Sequences sequences, UtilGeralService utilGeralService,
+                                       DataManager dataManager, EntityStates entityStates) {
         this.sequences = sequences;
         this.utilGeralService = utilGeralService;
+        this.dataManager = dataManager;
+        this.entityStates = entityStates;
     }
 
     @EventListener
@@ -45,20 +53,63 @@ public class ItemNotaSaidaEventListener {
                 itemNotaSaida.setItem(Math.toIntExact(item));
             }
             NotaSaida notaSaida = itemNotaSaida.getNotaSaida();
-            NaturezaOperacao natureza = notaSaida == null ? null : notaSaida.getNatureza();
-            if (itemNotaSaida.getCfop() == null && natureza != null) {
-                itemNotaSaida.setCfop(natureza.getCfop());
+            NaturezaOperacao naturezaRef = notaSaida == null ? null : notaSaida.getNatureza();
+            if (itemNotaSaida.getCfop() == null && naturezaRef != null) {
+                itemNotaSaida.setCfop(naturezaRef.getCfop());
             }
+            // Recarrega natureza/produto com classTrib+cst garantidamente fetched: as
+            // referências que chegam aqui (via notaSaida.getNatureza()/item.getProduto())
+            // normalmente vêm de um entityPicker de tela, carregado só com
+            // "_instance_name" — ler um ManyToOne LAZY não fetched dentro de
+            // EntitySavingEvent não faz lazy-load, estoura
+            // ValidationException.instantiatingValueholderWithNullSession porque a
+            // referência está desanexada da sessão nesse ponto do save (confirmado ao vivo
+            // 2026-09-14, com Produto.cst preenchido). Só recarrega quando falta mesmo —
+            // a maioria dos saves já vem com o suficiente.
+            NaturezaOperacao natureza = carregarNaturezaComTributacao(naturezaRef);
+            Produto produto = carregarProdutoComTributacao(itemNotaSaida.getProduto());
             if (itemNotaSaida.getCodClassTrib() == null) {
-                itemNotaSaida.setCodClassTrib(resolverCodClassTrib(natureza, itemNotaSaida));
+                itemNotaSaida.setCodClassTrib(resolverCodClassTrib(natureza, produto));
             }
             if (itemNotaSaida.getCst() == null) {
-                String cst = resolverCstIcms(natureza, itemNotaSaida);
+                String cst = resolverCstIcms(natureza, produto);
                 if (cst != null) {
                     itemNotaSaida.setCst(cst);
                 }
             }
         }
+    }
+
+    private NaturezaOperacao carregarNaturezaComTributacao(NaturezaOperacao natureza) {
+        if (natureza == null) {
+            return null;
+        }
+        if (entityStates.isLoaded(natureza, "classTrib") && entityStates.isLoaded(natureza, "cst")) {
+            return natureza;
+        }
+        return dataManager.load(NaturezaOperacao.class)
+                .id(natureza.getId())
+                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE)
+                        .add("classTrib", FetchPlan.BASE)
+                        .add("cst", FetchPlan.BASE))
+                .optional()
+                .orElse(natureza);
+    }
+
+    private Produto carregarProdutoComTributacao(Produto produto) {
+        if (produto == null) {
+            return null;
+        }
+        if (entityStates.isLoaded(produto, "classTrib") && entityStates.isLoaded(produto, "cst")) {
+            return produto;
+        }
+        return dataManager.load(Produto.class)
+                .id(produto.getId())
+                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE)
+                        .add("classTrib", FetchPlan.BASE)
+                        .add("cst", FetchPlan.BASE))
+                .optional()
+                .orElse(produto);
     }
 
     /**
@@ -70,13 +121,12 @@ public class ItemNotaSaidaEventListener {
      * {@code NfeXmlBuilder.resolverCstIcms}, pra não gravar um valor no item que a UI não
      * mostrou ao usuário.
      */
-    private String resolverCstIcms(NaturezaOperacao natureza, ItemNotaSaida itemNotaSaida) {
+    private String resolverCstIcms(NaturezaOperacao natureza, Produto produto) {
         Cst cstNatureza = natureza == null ? null : natureza.getCst();
         boolean rasa = cstNatureza == null || CST_ICMS_TRIBUTACAO_INTEGRAL.equals(cstNatureza.getCodigo());
         if (!rasa) {
             return cstNatureza.getCodigo();
         }
-        Produto produto = itemNotaSaida.getProduto();
         Cst cstProduto = produto == null ? null : produto.getCst();
         return cstProduto == null ? null : cstProduto.getCodigo();
     }
@@ -90,14 +140,13 @@ public class ItemNotaSaidaEventListener {
      * congelado, não uma referência viva (mesmo motivo de {@code NfeItem.codClassTrib}
      * ser String, não FK).
      */
-    private Integer resolverCodClassTrib(NaturezaOperacao natureza, ItemNotaSaida itemNotaSaida) {
+    private Integer resolverCodClassTrib(NaturezaOperacao natureza, Produto produto) {
         ClassTrib classTribNatureza = natureza == null ? null : natureza.getClassTrib();
         // Natureza sem ClassTrib ainda (cadastro pendente de migração) é tratada como
         // "rasa", mesma consequência prática de CST 000: nada de especial foi fixado na
         // natureza, então o produto decide.
         int cst = classTribNatureza == null ? CST_TRIBUTACAO_INTEGRAL : classTribNatureza.getCst();
         if (cst == CST_TRIBUTACAO_INTEGRAL) {
-            Produto produto = itemNotaSaida.getProduto();
             ClassTrib classTribProduto = produto == null ? null : produto.getClassTrib();
             return classTribProduto == null ? null : classTribProduto.getCodigo();
         }

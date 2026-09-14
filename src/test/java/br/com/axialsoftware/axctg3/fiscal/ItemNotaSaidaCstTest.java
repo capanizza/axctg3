@@ -184,4 +184,29 @@ class ItemNotaSaidaCstTest {
 
         assertThat(item.getCst()).isNull();
     }
+
+    /**
+     * Bug real reproduzido ao vivo 2026-09-14: o produto que chega em
+     * {@code ItemNotaSaidaEventListener} vem de um {@code entityPicker} de tela,
+     * carregado só com {@code _instance_name} — sem {@code cst}/{@code classTrib}. Ler
+     * esse ManyToOne LAZY não fetched dentro de {@code EntitySavingEvent} não faz
+     * lazy-load; estoura {@code ValidationException.instantiatingValueholderWithNullSession}.
+     * Recarrega aqui a mesma condição (produto "raso") pra provar que o listener se
+     * recupera sozinho em vez de propagar a exceção.
+     */
+    @Test
+    void produtoCarregadoSoComInstanceNameNaoEstouraAoResolverCst() {
+        NaturezaOperacao natureza = criarNatureza(null);
+        Produto produtoCompleto = criarProduto(carregarCst("60"));
+        NotaSaida notaSaida = criarNotaSaida(natureza);
+
+        Produto produtoRaso = dataManager.load(Produto.class)
+                .id(produtoCompleto.getId())
+                .fetchPlan("_instance_name")
+                .one();
+
+        ItemNotaSaida item = criarItem(notaSaida, produtoRaso);
+
+        assertThat(item.getCst()).isEqualTo("60");
+    }
 }
