@@ -1,20 +1,25 @@
 package br.com.axialsoftware.axctg3.service.financeiro;
 
+import br.com.axialsoftware.axctg3.entity.cadastros.CondicaoPagamento;
 import br.com.axialsoftware.axctg3.entity.cadastros.ConfigRel;
 import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
 import br.com.axialsoftware.axctg3.entity.contabil.HistoricoContabil;
+import br.com.axialsoftware.axctg3.entity.financeiro.Banco;
 import br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro;
 import br.com.axialsoftware.axctg3.entity.financeiro.ItemReceber;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceberDto;
+import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.service.RelatorioService;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import io.jmix.core.DataManager;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -40,6 +45,83 @@ public class TituloReceberService {
         this.utilGeralService = utilGeralService;
         this.relatorioService = relatorioService;
         this.utilFinanceiroService = utilFinanceiroService;
+    }
+
+    /**
+     * Gera os títulos a receber de uma {@link NotaSaida} a partir de
+     * {@code NotaSaida.condicaoPagamento} — chamado por {@code NfeEmissaoService.emitir}
+     * ANTES de montar o XML (o grupo {@code cobr}/{@code dup} e {@code pag} dependem dos
+     * títulos já existirem nesse momento, ver {@code NfeXmlBuilder.buscarTitulos}).
+     * Idempotente: não gera de novo se a nota já tem título — cobre reemissão depois de
+     * um erro anterior sem duplicar título.
+     *
+     * <p>Cada parcela vence {@code condicaoPagamento.primeira} dias após a emissão, e as
+     * seguintes a cada {@code condicaoPagamento.diferenca} dias. Valor de cada parcela =
+     * {@code NotaSaida.valor} ÷ número de parcelas, arredondado; a diferença de
+     * arredondamento (se a soma das parcelas não bater com o valor da nota) é absorvida
+     * pela PRIMEIRA parcela, não pela última — pedido explícito do usuário 2026-09-14.
+     *
+     * <p>Numeração do título: número da nota com 6 dígitos (zeros à esquerda). Parcela
+     * única não leva sufixo; mais de uma parcela leva uma letra maiúscula colada em
+     * seguida (sem espaço), começando em "A" pra primeira parcela — mesma convenção do
+     * {@code nDup} de duplicata usado no mercado (não é {@link CondicaoPagamento#getCodigo()}
+     * nem nada específico da condição, só o número da nota + posição da parcela).
+     *
+     * @return mensagem de erro (sem gerar nada) quando falta um pré-requisito; {@code null}
+     * em caso de sucesso ou quando não há nada a fazer (nota já tem título, ou não tem
+     * condição de pagamento configurada — mesmo comportamento de hoje, sem duplicata no XML)
+     */
+    @Transactional
+    public String gerarTitulosDaEmissao(NotaSaida notaSaida) {
+        boolean jaTemTitulo = !dataManager.load(TituloReceber.class)
+                .query("select e from TituloReceber e where e.notaSaida = :notaSaida")
+                .parameter("notaSaida", notaSaida)
+                .list()
+                .isEmpty();
+        if (jaTemTitulo) {
+            return null;
+        }
+        CondicaoPagamento condicaoPagamento = notaSaida.getCondicaoPagamento();
+        if (condicaoPagamento == null) {
+            return null;
+        }
+        Banco banco = notaSaida.getBanco();
+        if (banco == null) {
+            return "Nota tem condição de pagamento mas não tem banco configurado — "
+                    + "obrigatório pra gerar os títulos a receber";
+        }
+        int parcelas = condicaoPagamento.getParcelas();
+        if (parcelas < 1) {
+            return "Condição de pagamento com número de parcelas inválido (" + parcelas + ")";
+        }
+        if (parcelas > 26) {
+            return "Condição de pagamento com mais de 26 parcelas — a letra de identificação "
+                    + "do título esgota o alfabeto";
+        }
+
+        BigDecimal valorTotal = notaSaida.getValor() == null ? BigDecimal.ZERO : notaSaida.getValor();
+        BigDecimal valorParcela = valorTotal.divide(BigDecimal.valueOf(parcelas), 2, RoundingMode.HALF_UP);
+        BigDecimal valorDemaisParcelas = valorParcela.multiply(BigDecimal.valueOf(parcelas - 1L));
+        BigDecimal valorPrimeiraParcela = valorTotal.subtract(valorDemaisParcelas);
+
+        String numeroBase = String.format("%06d", notaSaida.getNumero());
+        LocalDate dataVencimento = notaSaida.getDataEmissao().plusDays(condicaoPagamento.getPrimeira());
+
+        for (int i = 0; i < parcelas; i++) {
+            TituloReceber titulo = dataManager.create(TituloReceber.class);
+            titulo.setNotaSaida(notaSaida);
+            titulo.setNumero(parcelas == 1 ? numeroBase : numeroBase + (char) ('A' + i));
+            titulo.setCodEmpresa(notaSaida.getCodEmpresa());
+            titulo.setDataEmissao(notaSaida.getDataEmissao());
+            titulo.setDataVencimento(dataVencimento);
+            titulo.setParceiro(notaSaida.getParceiro());
+            titulo.setBanco(banco);
+            titulo.setValor(i == 0 ? valorPrimeiraParcela : valorParcela);
+            dataManager.save(titulo);
+
+            dataVencimento = dataVencimento.plusDays(condicaoPagamento.getDiferenca());
+        }
+        return null;
     }
 
     /** Lança contabilmente o item de emissão (item 1) de cada título ainda não contabilizado. */

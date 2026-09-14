@@ -6,6 +6,7 @@ import br.com.axialsoftware.axctg3.entity.fiscal.ItemNotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.Nfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
+import br.com.axialsoftware.axctg3.service.financeiro.TituloReceberService;
 import io.jmix.core.DataManager;
 import io.jmix.core.FetchPlan;
 import org.springframework.stereotype.Service;
@@ -52,14 +53,17 @@ public class NfeEmissaoService {
     private final NfeXmlSigner signer;
     private final NfeWebserviceClient client;
     private final NfeImportService importService;
+    private final TituloReceberService tituloReceberService;
 
     public NfeEmissaoService(DataManager dataManager, NfeXmlBuilder xmlBuilder, NfeXmlSigner signer,
-                              NfeWebserviceClient client, NfeImportService importService) {
+                              NfeWebserviceClient client, NfeImportService importService,
+                              TituloReceberService tituloReceberService) {
         this.dataManager = dataManager;
         this.xmlBuilder = xmlBuilder;
         this.signer = signer;
         this.client = client;
         this.importService = importService;
+        this.tituloReceberService = tituloReceberService;
     }
 
     public record ResultadoEmissao(boolean sucesso, String chave, String protocolo, String motivo) {
@@ -96,6 +100,20 @@ public class NfeEmissaoService {
                 return new ResultadoEmissao(false, null, null, erroItem);
             }
             notaSaida = carregarComFetchPlan(notaSaida.getId());
+        }
+
+        // Títulos a receber: gerados a partir de NotaSaida.condicaoPagamento ANTES de
+        // montar o XML — o grupo cobr/dup e pag (NfeXmlBuilder.buscarTitulos) leem os
+        // títulos do banco, então precisam já existir nesse ponto, não depois. Só pra
+        // finalidade normal — complementar não gera título a receber (não é venda, ver
+        // [[lancamentos-contabeis-financeiro-projeto]]). Idempotente (TituloReceberService
+        // não gera de novo se a nota já tem título), então seguro de chamar de novo numa
+        // reemissão.
+        if (notaSaida.getFinNfe() == FinNfe.NORMAL) {
+            String erroTitulos = tituloReceberService.gerarTitulosDaEmissao(notaSaida);
+            if (erroTitulos != null) {
+                return new ResultadoEmissao(false, null, null, erroTitulos);
+            }
         }
 
         // Já existe uma tentativa pendente (resposta anterior perdida/timeout) — não
@@ -423,6 +441,8 @@ public class NfeEmissaoService {
                                 .add("tipoLogradouro", FetchPlan.BASE))
                         .add("natureza", fpNatureza -> fpNatureza.addFetchPlan(FetchPlan.BASE)
                                 .add("classTrib", FetchPlan.BASE))
+                        .add("condicaoPagamento", FetchPlan.BASE)
+                        .add("banco", FetchPlan.BASE)
                         .add("itens", fpItens -> fpItens.addFetchPlan(FetchPlan.BASE)
                                 .add("produto", fpProduto -> fpProduto.addFetchPlan(FetchPlan.BASE)
                                         .add("classificacaoFiscal", FetchPlan.BASE)
