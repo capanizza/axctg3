@@ -1,4 +1,3 @@
-
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view"
       title="msg://notaSaidaDetailView.title"
@@ -45,21 +44,20 @@
                             dataContainer="notaSaidaDc"
                             width="12%" themeNames="small"
                             label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.dataEmissao"/>
-                <!-- entityPicker abre Parceiro.list, que não filtra por "cliente=true"
-                     como o legado fazia (a grid de Parceiro não expõe essa coluna hoje).
-                     Piloto entityComboBox tentado em 2026-09-15 e revertido — dropdown não
-                     abre nesta versão do Jmix/Vaadin (clique/seta/digitação, nenhum
-                     funciona, sem erro no console); ver entitycombobox-toggle-nao-abre na
-                     memória do projeto antes de tentar de novo. -->
-                <entityPicker id="parceiroField"
-                              property="parceiro"
-                              dataContainer="notaSaidaDc" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.parceiro">
+                <!-- entityComboBox com busca preguiçosa (itemsFetchCallback, ver
+                     NotaSaidaDetailView.parceiroFieldItemsFetchCallback) — não itemsContainer,
+                     que carregaria os ~20 mil clientes de uma vez (lento, achado ao vivo
+                     2026-09-15). Busca por lote (50 de cada vez) direto no banco, filtrado
+                     por cliente=true e pelo texto digitado. -->
+                <entityComboBox id="parceiroField"
+                                property="parceiro"
+                                dataContainer="notaSaidaDc" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.parceiro">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
                 <checkbox id="canceladaField"
                           property="cancelada"
                           dataContainer="notaSaidaDc"

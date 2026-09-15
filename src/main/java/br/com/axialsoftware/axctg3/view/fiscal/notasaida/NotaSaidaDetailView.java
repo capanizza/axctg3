@@ -1,14 +1,19 @@
 package br.com.axialsoftware.axctg3.view.fiscal.notasaida;
 
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
+import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
+import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.router.Route;
+import io.jmix.core.DataManager;
 import io.jmix.core.EntityStates;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.stream.Stream;
 
 @Route(value = "nota-saidas/:id", layout = MainView.class)
 @ViewController(id = "NotaSaida.detail")
@@ -22,8 +27,32 @@ public class NotaSaidaDetailView extends StandardDetailView<NotaSaida> {
     private Dialogs dialogs;
     @Autowired
     private EntityStates entityStates;
+    @Autowired
+    private DataManager dataManager;
     @ViewComponent
     private MessageBundle messageBundle;
+
+    /**
+     * Busca preguiçosa dos parceiros de {@code parceiroField} (entityComboBox) — a
+     * empresa 1 sozinha tem ~20 mil {@code Parceiro} com {@code cliente=true}; carregar
+     * tudo de uma vez via {@code itemsContainer} deixou a tela visivelmente mais lenta
+     * (achado ao vivo 2026-09-15). Busca no banco por lote (offset/limit vêm do próprio
+     * {@code Query} do Vaadin, tamanho padrão 50) filtrando por {@code cliente=true} e
+     * pelo texto já digitado — nunca carrega a lista inteira.
+     */
+    @Install(to = "parceiroField", subject = "itemsFetchCallback")
+    private Stream<Parceiro> parceiroFieldItemsFetchCallback(final Query<Parceiro, String> query) {
+        String texto = query.getFilter().orElse("");
+        return dataManager.load(Parceiro.class)
+                .query("select e from Parceiro e where e.codEmpresa = :codEmpresa and e.cliente = true "
+                        + "and upper(e.nome) like upper(concat('%', :texto, '%')) order by e.nome")
+                .parameter("codEmpresa", utilGeralService.getCodEmpresa())
+                .parameter("texto", texto)
+                .firstResult(query.getOffset())
+                .maxResults(query.getLimit())
+                .list()
+                .stream();
+    }
 
     /**
      * Pré-preenche espécie/série/modalidade de frete na inclusão a partir de {@code
