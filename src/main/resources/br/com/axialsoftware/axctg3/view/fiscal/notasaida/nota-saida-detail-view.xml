@@ -72,12 +72,14 @@
                                            maxLength="4"
                                            dataContainer="notaSaidaDc"
                                            width="8%" themeNames="small"
+                                           readOnly="true"
                                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.especie"/>
                                 <textField id="serieField"
                                            property="serie"
                                            maxLength="2"
                                            dataContainer="notaSaidaDc"
                                            width="5%" themeNames="small"
+                                           readOnly="true"
                                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.serie"/>
                                 <datePicker id="dataSaidaField"
                                             property="dataSaida"
