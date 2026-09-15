@@ -932,18 +932,30 @@ public class NfeXmlBuilder {
         // transporta: só faz sentido informar quando há de fato uma transportadora
         // (mesmo quando modFrete indica "sem transporte" por engano de cadastro, não
         // inventa dado — só emite o que o operador de fato lançou). Ordem dos campos
-        // (CNPJ, xNome, IE, xEnder, xMun, UF) confirmada contra NFe complementar real
+        // (CNPJ/CPF, xNome, IE, xEnder, xMun, UF) confirmada contra NFe complementar real
         // aceita (ver nfe-xmls-reais-teste); Transportadora não tem campo de IE.
         Transportadora transportadora = notaSaida.getTransportadora();
         if (transportadora != null) {
             Element transporta = doc.createElementNS(NS_NFE, "transporta");
             if (transportadora.getCnpj() != null && !transportadora.getCnpj().isBlank()) {
-                text(doc, transporta, "CNPJ", somenteDigitos(transportadora.getCnpj()));
+                // Transportadora.cnpj guarda CNPJ OU CPF (transportador pessoa física é
+                // comum — confirmado 2026-09-15, cStat=225 real com um CPF de 11 dígitos
+                // gravado dentro de <CNPJ>, que exige exatamente 14). Mesma escolha por
+                // tamanho já usada em construirDest.
+                String cnpjOuCpf = somenteDigitos(transportadora.getCnpj());
+                if (cnpjOuCpf.length() == 11) {
+                    text(doc, transporta, "CPF", cnpjOuCpf);
+                } else {
+                    text(doc, transporta, "CNPJ", cnpjOuCpf);
+                }
             }
-            text(doc, transporta, "xNome", transportadora.getNome());
-            text(doc, transporta, "xEnder", transportadora.getEndereco());
-            text(doc, transporta, "xMun", transportadora.getCidade());
-            text(doc, transporta, "UF", transportadora.getEstado());
+            // trim: mesmo dado migrado do legado com espaço de sobra (coluna CHAR de
+            // largura fixa no Firebird) já visto em Produto.descricao — schema rejeita
+            // texto com espaço em branco à frente/atrás.
+            text(doc, transporta, "xNome", trimOuNull(transportadora.getNome()));
+            text(doc, transporta, "xEnder", trimOuNull(transportadora.getEndereco()));
+            text(doc, transporta, "xMun", trimOuNull(transportadora.getCidade()));
+            text(doc, transporta, "UF", trimOuNull(transportadora.getEstado()));
             transp.appendChild(transporta);
         }
 
@@ -1060,6 +1072,16 @@ public class NfeXmlBuilder {
 
     private String somenteDigitos(String texto) {
         return texto == null ? "" : texto.replaceAll("\\D", "");
+    }
+
+    // trim retornando null (não string vazia) pra text() continuar omitindo a tag quando
+    // não há valor — texto == "" depois do trim também vira null, mesmo tratamento.
+    private String trimOuNull(String texto) {
+        if (texto == null) {
+            return null;
+        }
+        String aparado = texto.trim();
+        return aparado.isEmpty() ? null : aparado;
     }
 
     // TIe aceita dígitos OU o literal "ISENTO" — somenteDigitos() sozinho zeraria "ISENTO"
