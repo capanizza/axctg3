@@ -324,17 +324,17 @@
                 </staticText>
             </frame>
 
-            <!-- Linha de corte tracejada, com tesourinha indicando o ponto de destaque. -->
+            <!-- Linha de corte tracejada (mesmo <line lineStyle="Dashed"/> do DANFE, não
+                 mais texto de traços), com tesourinha indicando o ponto de destaque. -->
             <staticText>
                 <reportElement x="0" y="286" width="18" height="12" uuid="b0117480-0002-0001-0001-56"/>
                 <textElement textAlignment="Left" verticalAlignment="Middle"><font fontName="DejaVu Sans Mono" size="10"/></textElement>
                 <text><![CDATA[✂]]></text>
             </staticText>
-            <staticText>
-                <reportElement x="18" y="289" width="537" height="8" uuid="b0117480-0002-0001-0001-55"/>
-                <textElement textAlignment="Left"><font fontName="DejaVu Sans Mono" size="9"/></textElement>
-                <text><![CDATA[- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -]]></text>
-            </staticText>
+            <line>
+                <reportElement x="0" y="292" width="555" height="1" uuid="b0117480-0002-0001-0001-57"/>
+                <graphicElement><pen lineStyle="Dashed"/></graphicElement>
+            </line>
 
             <!-- ================= FICHA DE COMPENSAÇÃO (y 234-509, com código de barras) ================= -->
             <frame>
