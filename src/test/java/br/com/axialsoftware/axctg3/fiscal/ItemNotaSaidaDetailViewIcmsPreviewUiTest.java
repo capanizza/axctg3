@@ -10,6 +10,7 @@ import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
 import br.com.axialsoftware.axctg3.entity.tabelas.Cst;
 import br.com.axialsoftware.axctg3.view.fiscal.itemnotasaida.ItemNotaSaidaDetailView;
 import io.jmix.core.DataManager;
+import io.jmix.core.FetchPlan;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.component.textfield.JmixBigDecimalField;
 import io.jmix.flowui.component.textfield.TypedTextField;
@@ -169,6 +170,96 @@ class ItemNotaSaidaDetailViewIcmsPreviewUiTest {
 
         JmixBigDecimalField aliqIcmsField = UiTestUtils.getComponent(view, "aliqIcmsField");
         assertThat(aliqIcmsField.getValue()).isEqualByComparingTo("18.00"); // alíquota vem da natureza
+
+        JmixBigDecimalField valorIcmsField = UiTestUtils.getComponent(view, "valorIcmsField");
+        assertThat(valorIcmsField.getValue()).isEqualByComparingTo("18.00");
+    }
+
+    /**
+     * Reproduz o bug real relatado 2026-09-15: "inclusão" (teste acima) nunca quebrava
+     * porque a {@code NaturezaOperacao} em memória vinha com todos os campos (criada e
+     * salva na mesma sessão). Entrar numa {@code NotaSaida} já salva pra incluir item
+     * ("alteração") recarrega a nota via {@code notaSaidaDl}, cujo fetch plan restringe
+     * {@code natureza} a {@code fetchPlan="_instance_name"} (nota-saida-detail-view.xml) —
+     * sem {@code aliqIcms}/{@code cst}/{@code classTrib}. Simula isso recarregando a
+     * natureza com o mesmo fetch plan restrito antes de abrir o item, em vez de reusar o
+     * objeto em memória que a criou.
+     */
+    @Test
+    void previewDoIcmsNaoQuebraQuandoNaturezaVemComFetchPlanRestrito() {
+        ClassTrib classTrib = dataManager.create(ClassTrib.class);
+        classTrib.setCodigo(CLASS_TRIB_CODIGO_TESTE);
+        classTrib.setCst(1);
+        classTrib.setDescricao("ClassTrib de teste");
+        classTrib.setTipoAliquota("Padrão");
+        classTrib.setNomenclatura("Teste");
+        classTrib.setDescricaoTratamentoTributario("Teste");
+        classTrib = dataManager.save(classTrib);
+
+        NaturezaOperacao natureza = dataManager.create(NaturezaOperacao.class);
+        natureza.setCodigo(1);
+        natureza.setCodEmpresa(COD_EMPRESA);
+        natureza.setNome("Venda de teste");
+        natureza.setCfop(5102);
+        natureza.setCst(carregarCst("00")); // rasa: delega o CST pro produto
+        natureza.setAliqIcms(new BigDecimal("18.00"));
+        natureza = dataManager.save(natureza);
+
+        Produto produto = dataManager.create(Produto.class);
+        produto.setCodigo(1);
+        produto.setCodEmpresa(COD_EMPRESA);
+        produto.setDescricao("Produto de teste");
+        produto.setApelido("Teste");
+        produto.setClassTrib(classTrib);
+        produto.setCst(carregarCst("10"));
+        produto = dataManager.save(produto);
+
+        Parceiro parceiro = dataManager.create(Parceiro.class);
+        parceiro.setCodigo(1L);
+        parceiro.setCodEmpresa(COD_EMPRESA);
+        parceiro.setNome("Cliente de Teste");
+        parceiro.setApelido("Cliente Teste");
+        parceiro.setCnpj("12345678000190");
+        parceiro = dataManager.save(parceiro);
+
+        NotaSaida notaSaida = dataManager.create(NotaSaida.class);
+        notaSaida.setCodEmpresa(COD_EMPRESA);
+        notaSaida.setDataEmissao(LocalDate.now());
+        notaSaida.setDataSaida(LocalDate.now());
+        notaSaida.setEspecie("NF");
+        notaSaida.setSerie("1");
+        notaSaida.setParceiro(parceiro);
+        notaSaida.setNatureza(natureza);
+        notaSaida = dataManager.save(notaSaida);
+
+        // Mesmo fetch plan restrito de notaSaidaDl (nota-saida-detail-view.xml): natureza
+        // só com _instance_name, sem aliqIcms/cst/classTrib.
+        NotaSaida notaSaidaRecarregada = dataManager.load(NotaSaida.class)
+                .id(notaSaida.getId())
+                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE)
+                        .add("natureza", FetchPlan.INSTANCE_NAME))
+                .one();
+
+        View<?> origin = UiTestUtils.getCurrentView();
+        Produto produtoFinal = produto;
+        DialogWindow<ItemNotaSaidaDetailView> dialogWindow = dialogWindows.detail(origin, ItemNotaSaida.class)
+                .withViewClass(ItemNotaSaidaDetailView.class)
+                .newEntity()
+                .withInitializer(item -> item.setNotaSaida(notaSaidaRecarregada))
+                .open();
+        ItemNotaSaidaDetailView view = dialogWindow.getView();
+
+        EntityPicker<Produto> produtoField = UiTestUtils.getComponent(view, "produtoField");
+        produtoField.setValue(produtoFinal);
+
+        JmixBigDecimalField quantidadeField = UiTestUtils.getComponent(view, "quantidadeField");
+        quantidadeField.setValue(new BigDecimal("10"));
+
+        JmixBigDecimalField valorUnitarioField = UiTestUtils.getComponent(view, "valorUnitarioField");
+        valorUnitarioField.setValue(new BigDecimal("10"));
+
+        JmixBigDecimalField aliqIcmsField = UiTestUtils.getComponent(view, "aliqIcmsField");
+        assertThat(aliqIcmsField.getValue()).isEqualByComparingTo("18.00");
 
         JmixBigDecimalField valorIcmsField = UiTestUtils.getComponent(view, "valorIcmsField");
         assertThat(valorIcmsField.getValue()).isEqualByComparingTo("18.00");

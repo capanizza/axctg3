@@ -5,6 +5,9 @@ import br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao;
 import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
 import br.com.axialsoftware.axctg3.entity.tabelas.Cst;
+import io.jmix.core.DataManager;
+import io.jmix.core.EntityStates;
+import io.jmix.core.FetchPlan;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -32,6 +35,14 @@ public class ItemNotaSaidaTributacaoService {
     // nenhum) não fixa tratamento próprio, quem decide é o Cst do produto.
     private static final String CST_ICMS_TRIBUTACAO_INTEGRAL = "00";
 
+    private final DataManager dataManager;
+    private final EntityStates entityStates;
+
+    public ItemNotaSaidaTributacaoService(DataManager dataManager, EntityStates entityStates) {
+        this.dataManager = dataManager;
+        this.entityStates = entityStates;
+    }
+
     /** CST resolvido (Natureza/Produto, ver {@link #resolverCstIcms}) + alíquota — a
      * alíquota vem SEMPRE de {@code NaturezaOperacao.aliqIcms}, decidido com o usuário
      * 2026-09-14 (correção de uma versão anterior, que fazia a alíquota seguir o mesmo
@@ -40,8 +51,10 @@ public class ItemNotaSaidaTributacaoService {
     public record TributacaoIcms(String cst, BigDecimal aliqIcms) {
     }
 
-    public TributacaoIcms resolverTributacaoIcms(NaturezaOperacao natureza, Produto produto) {
-        String cst = resolverCstIcms(natureza, produto);
+    public TributacaoIcms resolverTributacaoIcms(NaturezaOperacao naturezaIn, Produto produtoIn) {
+        NaturezaOperacao natureza = comTributacaoFetched(naturezaIn);
+        Produto produto = comTributacaoFetched(produtoIn);
+        String cst = resolverCstIcmsImpl(natureza, produto);
         if (cst == null) {
             return null;
         }
@@ -58,7 +71,11 @@ public class ItemNotaSaidaTributacaoService {
      * {@code NfeXmlBuilder.resolverCstIcms}, pra não gravar um valor no item que a UI não
      * mostrou ao usuário.
      */
-    public String resolverCstIcms(NaturezaOperacao natureza, Produto produto) {
+    public String resolverCstIcms(NaturezaOperacao naturezaIn, Produto produtoIn) {
+        return resolverCstIcmsImpl(comTributacaoFetched(naturezaIn), comTributacaoFetched(produtoIn));
+    }
+
+    private String resolverCstIcmsImpl(NaturezaOperacao natureza, Produto produto) {
         Cst cstNatureza = natureza == null ? null : natureza.getCst();
         boolean rasa = cstNatureza == null || CST_ICMS_TRIBUTACAO_INTEGRAL.equals(cstNatureza.getCodigo());
         if (!rasa) {
@@ -77,7 +94,9 @@ public class ItemNotaSaidaTributacaoService {
      * congelado, não uma referência viva (mesmo motivo de {@code NfeItem.codClassTrib}
      * ser String, não FK).
      */
-    public Integer resolverCodClassTrib(NaturezaOperacao natureza, Produto produto) {
+    public Integer resolverCodClassTrib(NaturezaOperacao naturezaIn, Produto produtoIn) {
+        NaturezaOperacao natureza = comTributacaoFetched(naturezaIn);
+        Produto produto = comTributacaoFetched(produtoIn);
         ClassTrib classTribNatureza = natureza == null ? null : natureza.getClassTrib();
         // Natureza sem ClassTrib ainda (cadastro pendente de migração) é tratada como
         // "rasa", mesma consequência prática de CST 000: nada de especial foi fixado na
@@ -105,5 +124,56 @@ public class ItemNotaSaidaTributacaoService {
         item.setAliqIcms(aliqIcms);
         item.setBaseIcms(baseIcms);
         item.setValorIcms(valorIcms);
+    }
+
+    /**
+     * Garante {@code cst}/{@code classTrib}/{@code aliqIcms} carregados antes de ler — as
+     * referências que chegam aqui costumam vir de um {@code entityPicker} de tela ou de um
+     * {@code notaSaidaDl} com fetch plan restrito (ex.: {@code fetchPlan="_instance_name"}
+     * em {@code nota-saida-detail-view.xml}, que NÃO inclui esses atributos). Bug real
+     * achado 2026-09-15: {@code ItemNotaSaidaDetailView}'s preview ao vivo lia {@code
+     * natureza.getAliqIcms()} direto, sem essa garantia — funcionava na inclusão (a
+     * natureza vinha recém-escolhida pelo entityPicker, com fetch plan mais rico) e
+     * quebrava na alteração de uma nota já salva (natureza recarregada só com
+     * {@code _instance_name} por {@code notaSaidaDl}), com {@code IllegalStateException:
+     * Cannot get unfetched attribute [aliqIcms] from detached object}. Centralizado aqui
+     * (em vez de duplicado em cada chamador) pra qualquer uso futuro de {@code
+     * NaturezaOperacao}/{@code Produto} por este serviço ficar protegido automaticamente —
+     * {@code ItemNotaSaidaEventListener} já fazia essa mesma garantia por conta própria
+     * antes de chamar este serviço; manter os dois não causa reload duplicado (o segundo
+     * {@code isLoaded} já bate certo).
+     */
+    private NaturezaOperacao comTributacaoFetched(NaturezaOperacao natureza) {
+        if (natureza == null) {
+            return null;
+        }
+        if (entityStates.isLoaded(natureza, "cst")
+                && entityStates.isLoaded(natureza, "classTrib")
+                && entityStates.isLoaded(natureza, "aliqIcms")) {
+            return natureza;
+        }
+        return dataManager.load(NaturezaOperacao.class)
+                .id(natureza.getId())
+                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE)
+                        .add("cst", FetchPlan.BASE)
+                        .add("classTrib", FetchPlan.BASE))
+                .optional()
+                .orElse(natureza);
+    }
+
+    private Produto comTributacaoFetched(Produto produto) {
+        if (produto == null) {
+            return null;
+        }
+        if (entityStates.isLoaded(produto, "cst") && entityStates.isLoaded(produto, "classTrib")) {
+            return produto;
+        }
+        return dataManager.load(Produto.class)
+                .id(produto.getId())
+                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE)
+                        .add("cst", FetchPlan.BASE)
+                        .add("classTrib", FetchPlan.BASE))
+                .optional()
+                .orElse(produto);
     }
 }
