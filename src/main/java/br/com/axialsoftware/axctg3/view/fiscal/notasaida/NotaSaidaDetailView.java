@@ -1,14 +1,12 @@
 package br.com.axialsoftware.axctg3.view.fiscal.notasaida;
 
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
-import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.EntityStates;
 import io.jmix.flowui.Dialogs;
-import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -47,17 +45,6 @@ public class NotaSaidaDetailView extends StandardDetailView<NotaSaida> {
         notaSaida.setEspecie(empresa.getEspecieNfe());
         notaSaida.setSerie(empresa.getSerieNfe());
         notaSaida.setModFrete(empresa.getModFretePadrao());
-    }
-
-    /**
-     * Parâmetro do filtro de {@code parceirosDl} (ver {@code itemsContainer="parceirosDc"}
-     * de {@code parceiroField}, piloto entityComboBox 2026-09-15) — precisa ser setado
-     * antes do {@code dataLoadCoordinator} carregar, não dá pra deixar fixo na query XML
-     * porque {@code codEmpresa} muda por sessão/usuário.
-     */
-    @Subscribe(id = "parceirosDl", target = Target.DATA_LOADER)
-    public void onParceirosDlPreLoad(final CollectionLoader.PreLoadEvent<Parceiro> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
     }
 
     /**
