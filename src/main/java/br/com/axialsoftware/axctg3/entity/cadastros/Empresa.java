@@ -341,6 +341,32 @@ public class Empresa {
     @Column(name = "CERTIFICADO_SENHA", length = 100)
     private String certificadoSenha;
 
+    // Valores padrão de NotaSaida.especie/serie pra pré-preencher NotaSaidaDetailView na
+    // inclusão (NotaSaidaDetailView.onInitEntity) — mesmo tamanho dos campos que copiam.
+    // Nullable: sem configurar, a tela continua pedindo o operador digitar (comportamento
+    // de hoje), só não tem mais o atalho.
+    @Column(name = "ESPECIE_NFE", length = 4)
+    private String especieNfe;
+
+    @Column(name = "SERIE_NFE", length = 2)
+    private String serieNfe;
+
+    public String getEspecieNfe() {
+        return especieNfe;
+    }
+
+    public void setEspecieNfe(String especieNfe) {
+        this.especieNfe = especieNfe;
+    }
+
+    public String getSerieNfe() {
+        return serieNfe;
+    }
+
+    public void setSerieNfe(String serieNfe) {
+        this.serieNfe = serieNfe;
+    }
+
     public String getCertificadoSenha() {
         return certificadoSenha;
     }

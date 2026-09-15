@@ -446,6 +446,16 @@
                                         <action id="entityClearAction" type="entity_clear"/>
                                     </actions>
                                 </entityPicker>
+                                <textField id="especieNfeField"
+                                           property="especieNfe"
+                                           dataContainer="empresaDc"
+                                           width="25%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.especieNfe"/>
+                                <textField id="serieNfeField"
+                                           property="serieNfe"
+                                           dataContainer="empresaDc"
+                                           width="25%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.serieNfe"/>
                             </hbox>
                             <hbox width="100%">
                                 <button id="testarConexaoSefazButton"

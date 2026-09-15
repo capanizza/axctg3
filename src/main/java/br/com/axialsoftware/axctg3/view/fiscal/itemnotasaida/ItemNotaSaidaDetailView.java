@@ -28,6 +28,23 @@ public class ItemNotaSaidaDetailView extends StandardDetailView<ItemNotaSaida> {
     private ItemNotaSaidaTributacaoService tributacaoService;
 
     /**
+     * Pré-preenche o CFOP na inclusão a partir de {@code NotaSaida.natureza.cfop} — o
+     * container do item já é {@code Nested} (collection property-bound de {@code
+     * itensDc}), então o framework seta {@code item.notaSaida} antes de disparar este
+     * evento (confirmado em {@code DetailWindowBuilderProcessor.initNewEntity}). Continua
+     * editável; só evita o operador redigitar o CFOP que já é o padrão da natureza em
+     * quase todo item.
+     */
+    @Subscribe
+    public void onInitEntity(final InitEntityEvent<ItemNotaSaida> event) {
+        ItemNotaSaida item = event.getEntity();
+        NotaSaida notaSaida = item.getNotaSaida();
+        if (item.getCfop() == null && notaSaida != null && notaSaida.getNatureza() != null) {
+            item.setCfop(notaSaida.getNatureza().getCfop());
+        }
+    }
+
+    /**
      * Preview ao vivo de CST/base/alíquota/valor do ICMS enquanto o usuário digita —
      * sem isso, esses campos (read-only) ficam em branco até o primeiro Salvar, porque a
      * gravação de verdade só acontece em {@code ItemNotaSaidaEventListener.
