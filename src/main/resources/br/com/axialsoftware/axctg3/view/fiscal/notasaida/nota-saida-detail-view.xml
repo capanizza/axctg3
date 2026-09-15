@@ -21,6 +21,17 @@
             <loader id="notaSaidaDl"/>
             <collection id="itensDc" property="itens"/>
         </instance>
+        <!-- Piloto entityComboBox (2026-09-15, ver memória do projeto): filtro por
+             cliente=true recupera a regra de negócio que o entityPicker tinha perdido
+             (ver comentário antigo em parceiroField), e o combo ainda digita com busca
+             ao vivo — sem abrir mão do botão de lupa, que continua abrindo Parceiro.list
+             completo (ação entity_lookup, igual o picker já fazia). -->
+        <collection id="parceirosDc"
+                    class="br.com.axialsoftware.axctg3.entity.cadastros.Parceiro">
+            <loader id="parceirosDl">
+                <query><![CDATA[select e from Parceiro e where e.codEmpresa = :codEmpresa and e.cliente = true order by e.nome]]></query>
+            </loader>
+        </collection>
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
@@ -44,17 +55,20 @@
                             dataContainer="notaSaidaDc"
                             width="12%" themeNames="small"
                             label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.dataEmissao"/>
-                <!-- entityPicker abre Parceiro.list, que não filtra por "cliente=true"
-                     como o legado fazia (a grid de Parceiro não expõe essa coluna hoje) -->
-                <entityPicker id="parceiroField"
-                              property="parceiro"
-                              dataContainer="notaSaidaDc" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.parceiro">
+                <!-- entityComboBox (piloto, ver comentário em <data>): digita e filtra ao
+                     vivo (query de parceirosDc, só cliente=true) e mantém o botão de lupa
+                     que abre Parceiro.list completo, igual o entityPicker que ele
+                     substituiu aqui. -->
+                <entityComboBox id="parceiroField"
+                                property="parceiro"
+                                itemsContainer="parceirosDc"
+                                dataContainer="notaSaidaDc" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.parceiro">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
                 <checkbox id="canceladaField"
                           property="cancelada"
                           dataContainer="notaSaidaDc"
