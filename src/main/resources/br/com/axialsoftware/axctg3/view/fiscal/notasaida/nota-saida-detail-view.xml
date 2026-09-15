@@ -171,6 +171,13 @@
                                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.complementoMensagem"/>
                             </hbox>
                             <hbox width="100%">
+                                <comboBox id="modFreteField"
+                                          property="modFrete"
+                                          dataContainer="notaSaidaDc"
+                                          width="50%" themeNames="small"
+                                          label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.modFrete"/>
+                            </hbox>
+                            <hbox width="100%">
                                 <bigDecimalField id="freteField"
                                                  property="frete"
                                                  dataContainer="notaSaidaDc"

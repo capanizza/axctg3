@@ -26,13 +26,14 @@ public class NotaSaidaDetailView extends StandardDetailView<NotaSaida> {
     private MessageBundle messageBundle;
 
     /**
-     * Pré-preenche espécie/série na inclusão a partir de {@code Empresa.especieNfe}/
-     * {@code .serieNfe} (aba "Emissão NFe") — evita o operador digitar o mesmo valor em
-     * toda nota nova. Só roda pra entidade nova de verdade (InitEntityEvent não dispara
-     * na edição). Os campos ficaram somente leitura na tela (`especieField`/
-     * `serieField`), então um valor não configurado na Empresa deixa a nota impossível
-     * de salvar — ver {@link #onReady}, que avisa disso antes do operador digitar o
-     * resto e perder o trabalho.
+     * Pré-preenche espécie/série/modalidade de frete na inclusão a partir de {@code
+     * Empresa.especieNfe}/{@code .serieNfe}/{@code .modFretePadrao} (aba "Emissão NFe") —
+     * evita o operador digitar o mesmo valor em toda nota nova. Só roda pra entidade nova
+     * de verdade (InitEntityEvent não dispara na edição). Espécie/série ficaram somente
+     * leitura na tela (`especieField`/`serieField`), então um valor não configurado na
+     * Empresa deixa a nota impossível de salvar — ver {@link #onReady}, que avisa disso
+     * antes do operador digitar o resto e perder o trabalho. {@code modFrete} continua
+     * editável (pode variar nota a nota, diferente de espécie/série).
      */
     @Subscribe
     public void onInitEntity(final InitEntityEvent<NotaSaida> event) {
@@ -43,6 +44,7 @@ public class NotaSaidaDetailView extends StandardDetailView<NotaSaida> {
         NotaSaida notaSaida = event.getEntity();
         notaSaida.setEspecie(empresa.getEspecieNfe());
         notaSaida.setSerie(empresa.getSerieNfe());
+        notaSaida.setModFrete(empresa.getModFretePadrao());
     }
 
     /**

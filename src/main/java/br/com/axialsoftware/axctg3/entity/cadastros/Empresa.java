@@ -351,6 +351,21 @@ public class Empresa {
     @Column(name = "SERIE_NFE", length = 2)
     private String serieNfe;
 
+    // Modalidade do frete padrão (modFrete) pra pré-preencher NotaSaida.modFrete na
+    // inclusão — mesmo raciocínio de especieNfe/serieNfe acima. Nullable: sem configurar,
+    // NfeXmlBuilder.construirTransp continua caindo no fallback SEM_TRANSPORTE (9), igual
+    // era antes deste campo existir.
+    @Column(name = "MOD_FRETE_PADRAO")
+    private Integer modFretePadrao;
+
+    public ModFrete getModFretePadrao() {
+        return modFretePadrao == null ? null : ModFrete.fromId(modFretePadrao);
+    }
+
+    public void setModFretePadrao(ModFrete modFretePadrao) {
+        this.modFretePadrao = modFretePadrao == null ? null : modFretePadrao.getId();
+    }
+
     public String getEspecieNfe() {
         return especieNfe;
     }

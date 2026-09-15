@@ -458,6 +458,13 @@
                                            label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.serieNfe"/>
                             </hbox>
                             <hbox width="100%">
+                                <comboBox id="modFretePadraoField"
+                                          property="modFretePadrao"
+                                          dataContainer="empresaDc"
+                                          width="50%" themeNames="small"
+                                          label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.modFretePadrao"/>
+                            </hbox>
+                            <hbox width="100%">
                                 <button id="testarConexaoSefazButton"
                                         text="msg://br.com.axialsoftware.axctg3.view.cadastros.empresa/empresaDetailView.testarConexaoSefaz.button"
                                         icon="vaadin:connect" themeNames="small"/>

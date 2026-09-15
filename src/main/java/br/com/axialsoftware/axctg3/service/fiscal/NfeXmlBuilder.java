@@ -2,9 +2,11 @@ package br.com.axialsoftware.axctg3.service.fiscal;
 
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
+import br.com.axialsoftware.axctg3.entity.cadastros.Transportadora;
 import br.com.axialsoftware.axctg3.entity.enums.AmbienteNfe;
 import br.com.axialsoftware.axctg3.entity.enums.CodRegimeTributario;
 import br.com.axialsoftware.axctg3.entity.enums.FinNfe;
+import br.com.axialsoftware.axctg3.entity.enums.ModFrete;
 import br.com.axialsoftware.axctg3.entity.fiscal.ItemNotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
@@ -921,9 +923,30 @@ public class NfeXmlBuilder {
 
     private Element construirTransp(Document doc, NotaSaida notaSaida) {
         Element transp = doc.createElementNS(NS_NFE, "transp");
-        // NotaSaida não modela transportador/frete ainda — sem transporte é o único valor
-        // seguro de cravar aqui (ver docs/EMISSAO-NFE.md).
-        text(doc, transp, "modFrete", 9);
+        // modFrete vem de NotaSaida.modFrete (pré-preenchido de Empresa.modFretePadrao,
+        // ver NotaSaidaDetailView); nota antiga sem o campo preenchido cai no mesmo
+        // SEM_TRANSPORTE (9) que era cravado incondicionalmente antes deste campo existir.
+        ModFrete modFrete = notaSaida.getModFrete();
+        text(doc, transp, "modFrete", modFrete == null ? ModFrete.SEM_TRANSPORTE.getId() : modFrete.getId());
+
+        // transporta: só faz sentido informar quando há de fato uma transportadora
+        // (mesmo quando modFrete indica "sem transporte" por engano de cadastro, não
+        // inventa dado — só emite o que o operador de fato lançou). Ordem dos campos
+        // (CNPJ, xNome, IE, xEnder, xMun, UF) confirmada contra NFe complementar real
+        // aceita (ver nfe-xmls-reais-teste); Transportadora não tem campo de IE.
+        Transportadora transportadora = notaSaida.getTransportadora();
+        if (transportadora != null) {
+            Element transporta = doc.createElementNS(NS_NFE, "transporta");
+            if (transportadora.getCnpj() != null && !transportadora.getCnpj().isBlank()) {
+                text(doc, transporta, "CNPJ", somenteDigitos(transportadora.getCnpj()));
+            }
+            text(doc, transporta, "xNome", transportadora.getNome());
+            text(doc, transporta, "xEnder", transportadora.getEndereco());
+            text(doc, transporta, "xMun", transportadora.getCidade());
+            text(doc, transporta, "UF", transportadora.getEstado());
+            transp.appendChild(transporta);
+        }
+
         BigDecimal pesoLiquido = notaSaida.getPesoLiquido();
         BigDecimal pesoBruto = notaSaida.getPesoBruto();
         if ((pesoLiquido != null && pesoLiquido.compareTo(BigDecimal.ZERO) > 0)
