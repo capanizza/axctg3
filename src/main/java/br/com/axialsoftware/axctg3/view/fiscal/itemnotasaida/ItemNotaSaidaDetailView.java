@@ -69,6 +69,15 @@ public class ItemNotaSaidaDetailView extends StandardDetailView<ItemNotaSaida> {
                 item.setCst(cst);
             }
         }
+        // Mesma precedência natureza/produto do CST (ver reforma-tributaria-cclasstrib-
+        // precedencia), preview em vez de só resolver no save (ItemNotaSaidaEventListener.
+        // onItemNotaSaidaSaving já faz isso, mas só depois de salvar).
+        if (item.getCodClassTrib() == null) {
+            Integer codClassTrib = tributacaoService.resolverCodClassTrib(natureza, produto);
+            if (codClassTrib != null) {
+                item.setCodClassTrib(codClassTrib);
+            }
+        }
         tributacaoService.aplicarCalculoIcms(item, natureza, produto);
     }
 }
