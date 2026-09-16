@@ -1,7 +1,13 @@
 package br.com.axialsoftware.axctg3.view.fiscal.notasaida;
 
+import br.com.axialsoftware.axctg3.entity.cadastros.CondicaoPagamento;
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
+import br.com.axialsoftware.axctg3.entity.cadastros.Mensagem;
 import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
+import br.com.axialsoftware.axctg3.entity.cadastros.Transportadora;
+import br.com.axialsoftware.axctg3.entity.cadastros.Vendedor;
+import br.com.axialsoftware.axctg3.entity.financeiro.Banco;
+import br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
@@ -10,6 +16,7 @@ import com.vaadin.flow.router.Route;
 import io.jmix.core.DataManager;
 import io.jmix.core.EntityStates;
 import io.jmix.flowui.Dialogs;
+import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -52,6 +59,41 @@ public class NotaSaidaDetailView extends StandardDetailView<NotaSaida> {
                 .maxResults(query.getLimit())
                 .list()
                 .stream();
+    }
+
+    /**
+     * Parâmetros dos itemsContainer de natureza/condicaoPagamento/banco/transportadora/
+     * vendedor/mensagem (entityComboBox, troca de entityPicker) — codEmpresa da sessão.
+     * classTribField usa classTribsDc (tabela global), sem parâmetro.
+     */
+    @Subscribe(id = "naturezaOperacoesDl", target = Target.DATA_LOADER)
+    public void onNaturezaOperacoesDlPreLoad(final CollectionLoader.PreLoadEvent<NaturezaOperacao> event) {
+        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+    }
+
+    @Subscribe(id = "condicoesPagamentoDl", target = Target.DATA_LOADER)
+    public void onCondicoesPagamentoDlPreLoad(final CollectionLoader.PreLoadEvent<CondicaoPagamento> event) {
+        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+    }
+
+    @Subscribe(id = "bancosDl", target = Target.DATA_LOADER)
+    public void onBancosDlPreLoad(final CollectionLoader.PreLoadEvent<Banco> event) {
+        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+    }
+
+    @Subscribe(id = "transportadorasDl", target = Target.DATA_LOADER)
+    public void onTransportadorasDlPreLoad(final CollectionLoader.PreLoadEvent<Transportadora> event) {
+        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+    }
+
+    @Subscribe(id = "vendedoresDl", target = Target.DATA_LOADER)
+    public void onVendedoresDlPreLoad(final CollectionLoader.PreLoadEvent<Vendedor> event) {
+        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+    }
+
+    @Subscribe(id = "mensagensDl", target = Target.DATA_LOADER)
+    public void onMensagensDlPreLoad(final CollectionLoader.PreLoadEvent<Mensagem> event) {
+        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
     }
 
     /**

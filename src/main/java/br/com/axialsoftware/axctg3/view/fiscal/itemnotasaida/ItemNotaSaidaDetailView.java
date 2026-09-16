@@ -4,9 +4,11 @@ import br.com.axialsoftware.axctg3.entity.fiscal.ItemNotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
+import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.fiscal.ItemNotaSaidaTributacaoService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 import com.vaadin.flow.router.Route;
+import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.model.InstanceContainer;
 import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,17 @@ public class ItemNotaSaidaDetailView extends StandardDetailView<ItemNotaSaida> {
 
     @Autowired
     private ItemNotaSaidaTributacaoService tributacaoService;
+    @Autowired
+    private UtilGeralService utilGeralService;
+
+    /**
+     * Parâmetro do itemsContainer de produtoField (entityComboBox, troca de
+     * entityPicker) — codEmpresa da sessão.
+     */
+    @Subscribe(id = "produtosDl", target = Target.DATA_LOADER)
+    public void onProdutosDlPreLoad(final CollectionLoader.PreLoadEvent<Produto> event) {
+        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+    }
 
     /**
      * Pré-preenche o CFOP na inclusão a partir de {@code NotaSaida.natureza.cfop} — o

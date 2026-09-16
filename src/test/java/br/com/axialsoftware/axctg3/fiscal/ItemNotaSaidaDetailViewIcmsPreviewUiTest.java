@@ -14,7 +14,7 @@ import io.jmix.core.FetchPlan;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.component.textfield.JmixBigDecimalField;
 import io.jmix.flowui.component.textfield.TypedTextField;
-import io.jmix.flowui.component.valuepicker.EntityPicker;
+import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.testassist.FlowuiTestAssistConfiguration;
 import io.jmix.flowui.testassist.UiTest;
 import io.jmix.flowui.testassist.UiTestUtils;
@@ -152,7 +152,7 @@ class ItemNotaSaidaDetailViewIcmsPreviewUiTest {
                 .open();
         ItemNotaSaidaDetailView view = dialogWindow.getView();
 
-        EntityPicker<Produto> produtoField = UiTestUtils.getComponent(view, "produtoField");
+        EntityComboBox<Produto> produtoField = UiTestUtils.getComponent(view, "produtoField");
         produtoField.setValue(produtoFinal);
 
         JmixBigDecimalField quantidadeField = UiTestUtils.getComponent(view, "quantidadeField");
@@ -249,7 +249,7 @@ class ItemNotaSaidaDetailViewIcmsPreviewUiTest {
                 .open();
         ItemNotaSaidaDetailView view = dialogWindow.getView();
 
-        EntityPicker<Produto> produtoField = UiTestUtils.getComponent(view, "produtoField");
+        EntityComboBox<Produto> produtoField = UiTestUtils.getComponent(view, "produtoField");
         produtoField.setValue(produtoFinal);
 
         JmixBigDecimalField quantidadeField = UiTestUtils.getComponent(view, "quantidadeField");

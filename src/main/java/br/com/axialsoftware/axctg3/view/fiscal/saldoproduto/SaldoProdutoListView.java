@@ -1,5 +1,6 @@
 package br.com.axialsoftware.axctg3.view.fiscal.saldoproduto;
 
+import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
 import br.com.axialsoftware.axctg3.entity.fiscal.SaldoProduto;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
@@ -37,6 +38,8 @@ public class SaldoProdutoListView extends StandardListView<SaldoProduto> {
     @ViewComponent
     private CollectionLoader<SaldoProduto> saldoProdutosDl;
     @ViewComponent
+    private CollectionLoader<Produto> produtosDl;
+    @ViewComponent
     private InstanceContainer<SaldoProduto> saldoProdutoDc;
     @ViewComponent
     private HorizontalLayout buttonsPanel;
@@ -55,6 +58,10 @@ public class SaldoProdutoListView extends StandardListView<SaldoProduto> {
         if (codEmpresa != null) {
             saldoProdutosDl.setParameter("codEmpresa", codEmpresa);
             saldoProdutosDl.load();
+
+            // itemsContainer de produtoField (entityComboBox, troca de entityPicker)
+            produtosDl.setParameter("codEmpresa", codEmpresa);
+            produtosDl.load();
         }
 
         Dialog dialog = UiComponentUtils.findDialog(this);

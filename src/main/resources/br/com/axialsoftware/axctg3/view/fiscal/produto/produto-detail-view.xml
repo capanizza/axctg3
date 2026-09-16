@@ -13,6 +13,30 @@
             </fetchPlan>
             <loader id="produtoDl"/>
         </instance>
+        <!-- itemsContainer dos entityComboBox abaixo (troca de entityPicker, ver
+             memória do projeto entitypicker-not-entitycombobox); classTrib/cst são
+             tabelas globais, sem filtro. grupoProduto filtra por codEmpresa da sessão
+             via PreLoadEvent. classificacaoFiscalField usa itemsFetchCallback (lazy) em
+             vez disso — tabela NCM global, ~10 mil linhas — ver
+             ProdutoDetailView.classificacaoFiscalFieldItemsFetchCallback. -->
+        <collection id="gruposProdutoDc"
+                    class="br.com.axialsoftware.axctg3.entity.fiscal.GrupoProduto">
+            <loader id="gruposProdutoDl">
+                <query><![CDATA[select e from GrupoProduto e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+            </loader>
+        </collection>
+        <collection id="classTribsDc"
+                    class="br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib">
+            <loader id="classTribsDl">
+                <query><![CDATA[select e from ClassTrib e order by e.codigo]]></query>
+            </loader>
+        </collection>
+        <collection id="cstsDc"
+                    class="br.com.axialsoftware.axctg3.entity.tabelas.Cst">
+            <loader id="cstsDl">
+                <query><![CDATA[select e from Cst e order by e.codigo]]></query>
+            </loader>
+        </collection>
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
@@ -69,31 +93,32 @@
                       width="100%" themeNames="small"
                       label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.descricao"/>
             <hbox width="100%">
-                <entityPicker id="grupoProdutoField"
-                              property="grupoProduto"
-                              dataContainer="produtoDc"
-                              width="35%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.grupoProduto">
+                <entityComboBox id="grupoProdutoField"
+                                property="grupoProduto"
+                                itemsContainer="gruposProdutoDc"
+                                dataContainer="produtoDc"
+                                width="35%" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.grupoProduto">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
                 <select id="tipoProdutoField"
                         property="tipoProduto"
                         dataContainer="produtoDc"
                         width="15%" themeNames="small"
                         label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.tipoProduto"/>
-                <entityPicker id="classificacaoFiscalField"
-                              property="classificacaoFiscal"
-                              dataContainer="produtoDc"
-                              width="35%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.classificacaoFiscal">
+                <entityComboBox id="classificacaoFiscalField"
+                                property="classificacaoFiscal"
+                                dataContainer="produtoDc"
+                                width="35%" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.classificacaoFiscal">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
                 <textField id="ncmField"
                            property="ncm"
                            maxLength="20"
@@ -102,26 +127,28 @@
                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.ncm"/>
             </hbox>
             <hbox width="100%">
-                <entityPicker id="classTribField"
-                              property="classTrib"
-                              dataContainer="produtoDc"
-                              width="50%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.classTrib">
+                <entityComboBox id="classTribField"
+                                property="classTrib"
+                                itemsContainer="classTribsDc"
+                                dataContainer="produtoDc"
+                                width="50%" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.classTrib">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
-                <entityPicker id="cstField"
-                              property="cst"
-                              dataContainer="produtoDc"
-                              width="30%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.cst">
+                </entityComboBox>
+                <entityComboBox id="cstField"
+                                property="cst"
+                                itemsContainer="cstsDc"
+                                dataContainer="produtoDc"
+                                width="30%" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Produto.cst">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
             </hbox>
             <hbox width="100%">
                 <bigDecimalField id="aliqIcmsField"

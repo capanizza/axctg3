@@ -21,6 +21,51 @@
             <loader id="notaSaidaDl"/>
             <collection id="itensDc" property="itens"/>
         </instance>
+        <!-- itemsContainer dos entityComboBox abaixo (troca de entityPicker, ver
+             memória do projeto entitypicker-not-entitycombobox); codEmpresa da sessão
+             via PreLoadEvent nos que não são tabela global. -->
+        <collection id="naturezaOperacoesDc"
+                    class="br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao">
+            <loader id="naturezaOperacoesDl">
+                <query><![CDATA[select e from NaturezaOperacao e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+            </loader>
+        </collection>
+        <collection id="classTribsDc"
+                    class="br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib">
+            <loader id="classTribsDl">
+                <query><![CDATA[select e from ClassTrib e order by e.codigo]]></query>
+            </loader>
+        </collection>
+        <collection id="condicoesPagamentoDc"
+                    class="br.com.axialsoftware.axctg3.entity.cadastros.CondicaoPagamento">
+            <loader id="condicoesPagamentoDl">
+                <query><![CDATA[select e from CondicaoPagamento e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+            </loader>
+        </collection>
+        <collection id="bancosDc"
+                    class="br.com.axialsoftware.axctg3.entity.financeiro.Banco">
+            <loader id="bancosDl">
+                <query><![CDATA[select e from Banco e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+            </loader>
+        </collection>
+        <collection id="transportadorasDc"
+                    class="br.com.axialsoftware.axctg3.entity.cadastros.Transportadora">
+            <loader id="transportadorasDl">
+                <query><![CDATA[select e from Transportadora e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+            </loader>
+        </collection>
+        <collection id="vendedoresDc"
+                    class="br.com.axialsoftware.axctg3.entity.cadastros.Vendedor">
+            <loader id="vendedoresDl">
+                <query><![CDATA[select e from Vendedor e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+            </loader>
+        </collection>
+        <collection id="mensagensDc"
+                    class="br.com.axialsoftware.axctg3.entity.cadastros.Mensagem">
+            <loader id="mensagensDl">
+                <query><![CDATA[select e from Mensagem e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+            </loader>
+        </collection>
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
@@ -89,84 +134,91 @@
                                             dataContainer="notaSaidaDc"
                                             width="13%" themeNames="small"
                                             label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.dataSaida"/>
-                                <entityPicker id="naturezaField"
-                                              property="natureza"
-                                              width="36%"
-                                              dataContainer="notaSaidaDc" themeNames="small"
-                                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.natureza">
+                                <entityComboBox id="naturezaField"
+                                                property="natureza"
+                                                itemsContainer="naturezaOperacoesDc"
+                                                width="36%"
+                                                dataContainer="notaSaidaDc" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.natureza">
                                     <actions>
                                         <action id="entityLookupAction" type="entity_lookup"/>
                                         <action id="entityClearAction" type="entity_clear"/>
                                     </actions>
-                                </entityPicker>
-                                <entityPicker id="classTribField"
-                                              property="classTrib"
-                                              dataContainer="notaSaidaDc"
-                                              width="36%" themeNames="small"
-                                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.classTrib">
+                                </entityComboBox>
+                                <entityComboBox id="classTribField"
+                                                property="classTrib"
+                                                itemsContainer="classTribsDc"
+                                                dataContainer="notaSaidaDc"
+                                                width="36%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.classTrib">
                                     <actions>
                                         <action id="entityLookupAction" type="entity_lookup"/>
                                         <action id="entityClearAction" type="entity_clear"/>
                                     </actions>
-                                </entityPicker>
+                                </entityComboBox>
                             </hbox>
                             <hbox width="100%">
-                                <entityPicker id="condicaoPagamentoField"
-                                              property="condicaoPagamento"
-                                              dataContainer="notaSaidaDc"
-                                              width="25%" themeNames="small"
-                                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.condicaoPagamento">
+                                <entityComboBox id="condicaoPagamentoField"
+                                                property="condicaoPagamento"
+                                                itemsContainer="condicoesPagamentoDc"
+                                                dataContainer="notaSaidaDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.condicaoPagamento">
                                     <actions>
                                         <action id="entityLookupAction" type="entity_lookup"/>
                                         <action id="entityClearAction" type="entity_clear"/>
                                     </actions>
-                                </entityPicker>
-                                <entityPicker id="bancoField"
-                                              property="banco"
-                                              dataContainer="notaSaidaDc"
-                                              width="25%" themeNames="small"
-                                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.banco">
+                                </entityComboBox>
+                                <entityComboBox id="bancoField"
+                                                property="banco"
+                                                itemsContainer="bancosDc"
+                                                dataContainer="notaSaidaDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.banco">
                                     <actions>
                                         <action id="entityLookupAction" type="entity_lookup"/>
                                         <action id="entityClearAction" type="entity_clear"/>
                                     </actions>
-                                </entityPicker>
-                                <entityPicker id="transportadoraField"
-                                              property="transportadora"
-                                              dataContainer="notaSaidaDc"
-                                              width="25%" themeNames="small"
-                                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.transportadora">
+                                </entityComboBox>
+                                <entityComboBox id="transportadoraField"
+                                                property="transportadora"
+                                                itemsContainer="transportadorasDc"
+                                                dataContainer="notaSaidaDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.transportadora">
                                     <actions>
                                         <action id="entityLookupAction" type="entity_lookup"/>
                                         <action id="entityClearAction" type="entity_clear"/>
                                     </actions>
-                                </entityPicker>
-                                <entityPicker id="vendedorField"
-                                              property="vendedor"
-                                              dataContainer="notaSaidaDc"
-                                              width="25%" themeNames="small"
-                                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.vendedor">
+                                </entityComboBox>
+                                <entityComboBox id="vendedorField"
+                                                property="vendedor"
+                                                itemsContainer="vendedoresDc"
+                                                dataContainer="notaSaidaDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.vendedor">
                                     <actions>
                                         <action id="entityLookupAction" type="entity_lookup"/>
                                         <action id="entityClearAction" type="entity_clear"/>
                                     </actions>
-                                </entityPicker>
+                                </entityComboBox>
                             </hbox>
                         </vbox>
                     </tab>
                     <tab id="complementosTab" label="Complementos">
                         <vbox width="100%">
                             <hbox width="100%" expand="complementoMensagemField">
-                                <entityPicker id="mensagemField"
-                                              property="mensagem"
-                                              dataContainer="notaSaidaDc"
-                                              width="40%" themeNames="small"
-                                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.mensagem">
+                                <entityComboBox id="mensagemField"
+                                                property="mensagem"
+                                                itemsContainer="mensagensDc"
+                                                dataContainer="notaSaidaDc"
+                                                width="40%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.mensagem">
                                     <actions>
                                         <action id="entityLookupAction" type="entity_lookup"/>
                                         <action id="entityClearAction" type="entity_clear"/>
                                     </actions>
-                                </entityPicker>
+                                </entityComboBox>
                                 <textArea id="complementoMensagemField"
                                           property="complementoMensagem"
                                           dataContainer="notaSaidaDc"

@@ -10,6 +10,15 @@
             </fetchPlan>
             <loader id="itemNotaSaidaDl"/>
         </instance>
+        <!-- itemsContainer do entityComboBox de produtoField (troca de entityPicker,
+             ver memória do projeto entitypicker-not-entitycombobox); codEmpresa da
+             sessão via PreLoadEvent. -->
+        <collection id="produtosDc"
+                    class="br.com.axialsoftware.axctg3.entity.fiscal.Produto">
+            <loader id="produtosDl">
+                <query><![CDATA[select e from Produto e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+            </loader>
+        </collection>
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
@@ -27,15 +36,16 @@
                               width="5%" themeNames="small"
                               readOnly="true"
                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.item"/>
-                <entityPicker id="produtoField"
-                              property="produto"
-                              dataContainer="itemNotaSaidaDc" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.produto">
+                <entityComboBox id="produtoField"
+                                property="produto"
+                                itemsContainer="produtosDc"
+                                dataContainer="itemNotaSaidaDc" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.produto">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
                 <integerField id="cfopField"
                               property="cfop"
                               dataContainer="itemNotaSaidaDc"
