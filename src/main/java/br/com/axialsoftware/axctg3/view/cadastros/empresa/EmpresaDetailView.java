@@ -46,6 +46,7 @@ public class EmpresaDetailView extends StandardDetailView<Empresa> {
     @Subscribe(id = "contasContabeisDl", target = Target.DATA_LOADER)
     public void onContasContabeisDlPreLoad(final CollectionLoader.PreLoadEvent<ContaContabil> event) {
         event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+        event.getSource().setParameter("ano", utilGeralService.getAnoContabil());
     }
 
     @Subscribe(id = "produtosEmpresaDl", target = Target.DATA_LOADER)

@@ -53,7 +53,9 @@
         <collection id="contasContabeisDc"
                     class="br.com.axialsoftware.axctg3.entity.contabil.ContaContabil">
             <loader id="contasContabeisDl">
-                <query><![CDATA[select e from ContaContabil e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+                <query><![CDATA[select e from ContaContabil e
+                    where e.codEmpresa = :codEmpresa and e.ano = :ano and e.analitica = true
+                    order by e.codigo]]></query>
             </loader>
         </collection>
         <collection id="produtosEmpresaDc"

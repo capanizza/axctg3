@@ -1,16 +1,23 @@
 package br.com.axialsoftware.axctg3.view.contabil.lancamento;
 
+import br.com.axialsoftware.axctg3.entity.cadastros.CentroCusto;
+import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
+import br.com.axialsoftware.axctg3.entity.contabil.HistoricoContabil;
 import br.com.axialsoftware.axctg3.entity.contabil.Lancamento;
+import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 import com.vaadin.flow.router.Route;
 import io.jmix.flowui.component.datepicker.TypedDatePicker;
 import io.jmix.flowui.component.textfield.JmixIntegerField;
+import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.EditedEntityContainer;
 import io.jmix.flowui.view.StandardDetailView;
 import io.jmix.flowui.view.Subscribe;
+import io.jmix.flowui.view.Target;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
 
@@ -28,6 +35,29 @@ public class LancamentoDetailView extends StandardDetailView<Lancamento> {
     private JmixIntegerField mesField;
     @ViewComponent
     private TypedDatePicker<LocalDate> dataLancamentoField;
+    @Autowired
+    private UtilGeralService utilGeralService;
+
+    /**
+     * Parâmetros dos itemsContainer de conta/centroCusto/historicoContabil
+     * (entityComboBox, troca de entityPicker) — codEmpresa/ano da sessão, mesmo
+     * critério que os list views já usam.
+     */
+    @Subscribe(id = "contasContabeisDl", target = Target.DATA_LOADER)
+    public void onContasContabeisDlPreLoad(final CollectionLoader.PreLoadEvent<ContaContabil> event) {
+        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+        event.getSource().setParameter("ano", utilGeralService.getAnoContabil());
+    }
+
+    @Subscribe(id = "centrosCustoDl", target = Target.DATA_LOADER)
+    public void onCentrosCustoDlPreLoad(final CollectionLoader.PreLoadEvent<CentroCusto> event) {
+        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+    }
+
+    @Subscribe(id = "historicosContabeisDl", target = Target.DATA_LOADER)
+    public void onHistoricosContabeisDlPreLoad(final CollectionLoader.PreLoadEvent<HistoricoContabil> event) {
+        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+    }
 
     /**
      * numero/ano/mes/dataLancamento são {@code @NotNull} na entidade, mas carimbados

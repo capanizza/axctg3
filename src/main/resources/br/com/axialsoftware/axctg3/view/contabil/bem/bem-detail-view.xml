@@ -17,6 +17,18 @@
         </instance>
         <collection id="depreciacaos1Dc" class="br.com.axialsoftware.axctg3.entity.contabil.Depreciacao"/>
         <collection id="depreciacaos2Dc" class="br.com.axialsoftware.axctg3.entity.contabil.Depreciacao"/>
+        <!-- itemsContainer do entityComboBox de contaContabil* (troca de entityPicker,
+             ver memória do projeto entitypicker-not-entitycombobox); codEmpresa da sessão
+             via PreLoadEvent. parceiroField usa itemsFetchCallback (lazy) em vez disso —
+             ver BemDetailView.parceiroFieldItemsFetchCallback. -->
+        <collection id="contasContabeisDc"
+                    class="br.com.axialsoftware.axctg3.entity.contabil.ContaContabil">
+            <loader id="contasContabeisDl">
+                <query><![CDATA[select e from ContaContabil e
+                    where e.codEmpresa = :codEmpresa and e.ano = :ano and e.analitica = true
+                    order by e.codigo]]></query>
+            </loader>
+        </collection>
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
@@ -28,16 +40,17 @@
     <layout>
         <vbox id="form" width="100%">
             <hbox width="100%" expand="descricaoField">
-                <entityPicker id="contaContabilField"
-                              property="contaContabil"
-                              dataContainer="bemDc"
-                              width="30%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.contaContabil">
+                <entityComboBox id="contaContabilField"
+                                property="contaContabil"
+                                itemsContainer="contasContabeisDc"
+                                dataContainer="bemDc"
+                                width="30%" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.contaContabil">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
                 <textField id="codigoField"
                            property="codigo"
                            dataContainer="bemDc"
@@ -75,15 +88,15 @@
                            dataContainer="bemDc"
                            width="12%" themeNames="small"
                            label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.valorCompra"/>
-                <entityPicker id="parceiroField"
-                              property="parceiro"
-                              dataContainer="bemDc" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.parceiro">
+                <entityComboBox id="parceiroField"
+                                property="parceiro"
+                                dataContainer="bemDc" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.parceiro">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
                 <textField id="documentoField"
                            property="documento"
                            dataContainer="bemDc"
@@ -91,26 +104,28 @@
                            label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.documento"/>
             </hbox>
             <hbox width="100%">
-                <entityPicker id="contaContabilDeprField"
-                              property="contaContabilDepr"
-                              dataContainer="bemDc"
-                              width="30%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.contaContabilDepr">
+                <entityComboBox id="contaContabilDeprField"
+                                property="contaContabilDepr"
+                                itemsContainer="contasContabeisDc"
+                                dataContainer="bemDc"
+                                width="30%" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.contaContabilDepr">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
-                <entityPicker id="contaContabilDespDeprField"
-                              property="contaContabilDespDepr"
-                              dataContainer="bemDc"
-                              width="30%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.contaContabilDespDepr">
+                </entityComboBox>
+                <entityComboBox id="contaContabilDespDeprField"
+                                property="contaContabilDespDepr"
+                                itemsContainer="contasContabeisDc"
+                                dataContainer="bemDc"
+                                width="30%" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.contabil/Bem.contaContabilDespDepr">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
                 <textField id="taxaDeprField"
                            property="taxaDepr"
                            dataContainer="bemDc"

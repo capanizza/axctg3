@@ -14,7 +14,7 @@ import io.jmix.data.PersistenceHints;
 import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.component.textfield.JmixBigDecimalField;
 import io.jmix.flowui.component.textfield.JmixIntegerField;
-import io.jmix.flowui.component.valuepicker.EntityPicker;
+import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.testassist.FlowuiTestAssistConfiguration;
 import io.jmix.flowui.testassist.UiTest;
@@ -91,9 +91,9 @@ class LancamentoDetailViewSalvarTest {
 
         // numeroField e dataLancamentoField ficam em branco de propósito — só
         // contaDevedora/contaCredora/valor/dia são preenchidos, como um usuário faria
-        EntityPicker<ContaContabil> contaDevedoraField = UiTestUtils.getComponent(view, "contaDevedoraField");
+        EntityComboBox<ContaContabil> contaDevedoraField = UiTestUtils.getComponent(view, "contaDevedoraField");
         contaDevedoraField.setValue(devedora);
-        EntityPicker<ContaContabil> contaCredoraField = UiTestUtils.getComponent(view, "contaCredoraField");
+        EntityComboBox<ContaContabil> contaCredoraField = UiTestUtils.getComponent(view, "contaCredoraField");
         contaCredoraField.setValue(credora);
         JmixBigDecimalField valorField = UiTestUtils.getComponent(view, "valorField");
         valorField.setValue(new BigDecimal("77.00"));
@@ -137,7 +137,7 @@ class LancamentoDetailViewSalvarTest {
         LancamentoDetailView view = UiTestUtils.getCurrentView();
 
         // contaDevedoraField fica sem valor de propósito — só contaCredora/valor/dia
-        EntityPicker<ContaContabil> contaCredoraField = UiTestUtils.getComponent(view, "contaCredoraField");
+        EntityComboBox<ContaContabil> contaCredoraField = UiTestUtils.getComponent(view, "contaCredoraField");
         contaCredoraField.setValue(credora);
         JmixBigDecimalField valorField = UiTestUtils.getComponent(view, "valorField");
         valorField.setValue(new BigDecimal("77.00"));
