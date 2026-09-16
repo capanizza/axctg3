@@ -1,6 +1,11 @@
 package br.com.axialsoftware.axctg3.view.cadastros.empresa;
 
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
+import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
+import br.com.axialsoftware.axctg3.entity.contabil.HistoricoContabil;
+import br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro;
+import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
+import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeWebserviceClient;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
@@ -9,6 +14,7 @@ import com.vaadin.flow.router.Route;
 import io.jmix.core.Messages;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.kit.component.button.JmixButton;
+import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.model.InstanceContainer;
 import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +35,33 @@ public class EmpresaDetailView extends StandardDetailView<Empresa> {
     private NfeWebserviceClient nfeWebserviceClient;
     @Autowired
     private Messages messages;
+    @Autowired
+    private UtilGeralService utilGeralService;
+
+    /**
+     * Parâmetro dos loaders de itemsContainer dos entityComboBox de conta/histórico/
+     * produto (troca de entityPicker, ver memória do projeto) — codEmpresa da sessão,
+     * mesmo critério que ContaContabilListView/ProdutoListView/etc já usam.
+     */
+    @Subscribe(id = "contasContabeisDl", target = Target.DATA_LOADER)
+    public void onContasContabeisDlPreLoad(final CollectionLoader.PreLoadEvent<ContaContabil> event) {
+        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+    }
+
+    @Subscribe(id = "produtosEmpresaDl", target = Target.DATA_LOADER)
+    public void onProdutosEmpresaDlPreLoad(final CollectionLoader.PreLoadEvent<Produto> event) {
+        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+    }
+
+    @Subscribe(id = "historicosContabeisDl", target = Target.DATA_LOADER)
+    public void onHistoricosContabeisDlPreLoad(final CollectionLoader.PreLoadEvent<HistoricoContabil> event) {
+        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+    }
+
+    @Subscribe(id = "historicosFinanceirosDl", target = Target.DATA_LOADER)
+    public void onHistoricosFinanceirosDlPreLoad(final CollectionLoader.PreLoadEvent<HistoricoFinanceiro> event) {
+        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+    }
 
     @Subscribe(id = "testarConexaoSefazButton", subject = "clickListener")
     public void onTestarConexaoSefazButtonClick(final ClickEvent<JmixButton> event) {

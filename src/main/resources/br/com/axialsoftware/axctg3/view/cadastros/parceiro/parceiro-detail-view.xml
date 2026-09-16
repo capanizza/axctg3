@@ -11,6 +11,21 @@
             </fetchPlan>
             <loader id="parceiroDl"/>
         </instance>
+        <!-- Fontes de itens dos entityComboBox abaixo (troca de entityPicker, ver
+             memória do projeto entitypicker-not-entitycombobox). Tabelas globais, sem
+             filtro por codEmpresa. -->
+        <collection id="tiposLogradouroDc"
+                    class="br.com.axialsoftware.axctg3.entity.tabelas.TipoLogradouro">
+            <loader id="tiposLogradouroDl">
+                <query><![CDATA[select e from TipoLogradouro e order by e.descricao]]></query>
+            </loader>
+        </collection>
+        <collection id="municipiosDc"
+                    class="br.com.axialsoftware.axctg3.entity.tabelas.Municipio">
+            <loader id="municipiosDl">
+                <query><![CDATA[select e from Municipio e order by e.nome]]></query>
+            </loader>
+        </collection>
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
@@ -60,16 +75,17 @@
                            label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.contato"/>
             </hbox>
             <hbox width="100%" expand="logradouroField">
-                <entityPicker id="tipoLogradouroField"
-                              property="tipoLogradouro"
-                              dataContainer="parceiroDc"
-                              width="25%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.tipoLogradouro">
+                <entityComboBox id="tipoLogradouroField"
+                                property="tipoLogradouro"
+                                itemsContainer="tiposLogradouroDc"
+                                dataContainer="parceiroDc"
+                                width="25%" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.tipoLogradouro">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
                 <textField id="logradouroField"
                            property="logradouro"
                            dataContainer="parceiroDc" themeNames="small"
@@ -91,15 +107,16 @@
                            dataContainer="parceiroDc"
                            width="25%" themeNames="small"
                            label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.bairro"/>
-                <entityPicker id="municipioField"
-                              property="municipio"
-                              dataContainer="parceiroDc" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.municipio">
+                <entityComboBox id="municipioField"
+                                property="municipio"
+                                itemsContainer="municipiosDc"
+                                dataContainer="parceiroDc" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.municipio">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
                 <textField id="cepField"
                            property="cep"
                            dataContainer="parceiroDc"
