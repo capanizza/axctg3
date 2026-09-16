@@ -83,48 +83,52 @@
                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/HistoricoFinanceiro.desconto"/>
             </hbox>
             <hbox width="60%">
-                <entityPicker id="contaContabilReceberField"
-                              dataContainer="historicoFinanceiroDc"
-                              property="contaContabilReceber"
-                              width="60%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/HistoricoFinanceiro.contaContabilReceber">
+                <entityComboBox id="contaContabilReceberField"
+                                dataContainer="historicoFinanceiroDc"
+                                property="contaContabilReceber"
+                                itemsContainer="contaContabilsDc"
+                                width="60%" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.financeiro/HistoricoFinanceiro.contaContabilReceber">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
-                <entityPicker id="historicoContabilReceberField"
-                              dataContainer="historicoFinanceiroDc"
-                              property="historicoContabilReceber"
-                              width="40%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/HistoricoFinanceiro.historicoContabilReceber">
+                </entityComboBox>
+                <entityComboBox id="historicoContabilReceberField"
+                                dataContainer="historicoFinanceiroDc"
+                                property="historicoContabilReceber"
+                                itemsContainer="historicoContabilsDc"
+                                width="40%" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.financeiro/HistoricoFinanceiro.historicoContabilReceber">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
             </hbox>
             <hbox width="60%">
-                <entityPicker id="contaContabilPagarField"
-                              dataContainer="historicoFinanceiroDc"
-                              property="contaContabilPagar"
-                              width="60%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/HistoricoFinanceiro.contaContabilPagar">
+                <entityComboBox id="contaContabilPagarField"
+                                dataContainer="historicoFinanceiroDc"
+                                property="contaContabilPagar"
+                                itemsContainer="contaContabilsDc"
+                                width="60%" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.financeiro/HistoricoFinanceiro.contaContabilPagar">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
-                <entityPicker id="historicoContabilPagarField"
-                              dataContainer="historicoFinanceiroDc"
-                              property="historicoContabilPagar"
-                              width="40%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/HistoricoFinanceiro.historicoContabilPagar">
+                </entityComboBox>
+                <entityComboBox id="historicoContabilPagarField"
+                                dataContainer="historicoFinanceiroDc"
+                                property="historicoContabilPagar"
+                                itemsContainer="historicoContabilsDc"
+                                width="40%" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.financeiro/HistoricoFinanceiro.historicoContabilPagar">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
             </hbox>
         </vbox>
         <hbox id="detailActions">

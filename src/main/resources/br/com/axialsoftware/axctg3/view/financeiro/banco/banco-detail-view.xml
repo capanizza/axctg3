@@ -214,16 +214,17 @@
             </hbox>
         </vbox>
         <hbox width="100%">
-            <entityPicker id="contaContabilField"
-                          property="contaContabil"
-                          dataContainer="bancoDc" themeNames="small"
-                          width="50%"
-                          label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.contaContabil">
+            <entityComboBox id="contaContabilField"
+                            property="contaContabil"
+                            itemsContainer="contaContabilsDc"
+                            dataContainer="bancoDc" themeNames="small"
+                            width="50%"
+                            label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.contaContabil">
                 <actions>
                     <action id="entityLookupAction" type="entity_lookup"/>
                     <action id="entityClearAction" type="entity_clear"/>
                 </actions>
-            </entityPicker>
+            </entityComboBox>
             <textArea id="mensagemField"
                       property="mensagem"
                       dataContainer="bancoDc"

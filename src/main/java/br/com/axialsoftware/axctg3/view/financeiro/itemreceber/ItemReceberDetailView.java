@@ -3,12 +3,14 @@ package br.com.axialsoftware.axctg3.view.financeiro.itemreceber;
 import br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro;
 import br.com.axialsoftware.axctg3.entity.financeiro.ItemReceber;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber;
+import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.financeiro.UtilFinanceiroService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 import com.vaadin.flow.router.Route;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.action.DialogAction;
 import io.jmix.flowui.component.textfield.TypedTextField;
+import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -31,6 +33,17 @@ public class ItemReceberDetailView extends StandardDetailView<ItemReceber> {
     private Dialogs dialogs;
     @Autowired
     private UtilFinanceiroService utilFinanceiroService;
+    @Autowired
+    private UtilGeralService utilGeralService;
+
+    /**
+     * Parâmetro do itemsContainer de historicoFinanceiro (entityComboBox, troca de
+     * entityPicker) — codEmpresa da sessão.
+     */
+    @Subscribe(id = "historicosFinanceirosDl", target = Target.DATA_LOADER)
+    public void onHistoricosFinanceirosDlPreLoad(final CollectionLoader.PreLoadEvent<HistoricoFinanceiro> event) {
+        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+    }
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {

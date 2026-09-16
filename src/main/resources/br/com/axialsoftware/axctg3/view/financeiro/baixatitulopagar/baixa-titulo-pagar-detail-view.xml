@@ -51,16 +51,20 @@
                             label="msg://br.com.axialsoftware.axctg3.entity.financeiro/TituloPagar.dataVencimento"/>
             </hbox>
             <hbox width="60%">
-                <entityPicker id="parceiroField"
-                              property="parceiro"
-                              dataContainer="tituloPagarDc"
-                              width="75%" themeNames="small" readOnly="true"
-                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/TituloPagar.parceiro">
+                <!-- entityComboBox com busca preguiçosa (itemsFetchCallback, ver
+                     BaixaTituloPagarDetailView.parceiroFieldItemsFetchCallback) —
+                     campo readOnly (tela só exibe), mas evita o itemsContainer carregar
+                     todos os ~20 mil parceiros no dataLoadCoordinator do open da tela. -->
+                <entityComboBox id="parceiroField"
+                                property="parceiro"
+                                dataContainer="tituloPagarDc"
+                                width="75%" themeNames="small" readOnly="true"
+                                label="msg://br.com.axialsoftware.axctg3.entity.financeiro/TituloPagar.parceiro">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
                 <textField id="valorField"
                            property="valor"
                            dataContainer="tituloPagarDc"

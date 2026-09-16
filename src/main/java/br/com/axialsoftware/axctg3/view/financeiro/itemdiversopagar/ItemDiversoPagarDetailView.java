@@ -1,14 +1,17 @@
 package br.com.axialsoftware.axctg3.view.financeiro.itemdiversopagar;
 
+import br.com.axialsoftware.axctg3.entity.financeiro.Banco;
 import br.com.axialsoftware.axctg3.entity.financeiro.DiversoPagar;
 import br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro;
 import br.com.axialsoftware.axctg3.entity.financeiro.ItemDiversoPagar;
+import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.financeiro.UtilFinanceiroService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 import com.vaadin.flow.router.Route;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.action.DialogAction;
 import io.jmix.flowui.component.textfield.TypedTextField;
+import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -30,6 +33,22 @@ public class ItemDiversoPagarDetailView extends StandardDetailView<ItemDiversoPa
     private TypedTextField<BigDecimal> valorLiquidoField;
     @Autowired
     private UtilFinanceiroService utilFinanceiroService;
+    @Autowired
+    private UtilGeralService utilGeralService;
+
+    /**
+     * Parâmetros dos itemsContainer de historicoFinanceiro/banco (entityComboBox, troca
+     * de entityPicker) — codEmpresa da sessão.
+     */
+    @Subscribe(id = "historicosFinanceirosDl", target = Target.DATA_LOADER)
+    public void onHistoricosFinanceirosDlPreLoad(final CollectionLoader.PreLoadEvent<HistoricoFinanceiro> event) {
+        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+    }
+
+    @Subscribe(id = "bancosDl", target = Target.DATA_LOADER)
+    public void onBancosDlPreLoad(final CollectionLoader.PreLoadEvent<Banco> event) {
+        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+    }
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {

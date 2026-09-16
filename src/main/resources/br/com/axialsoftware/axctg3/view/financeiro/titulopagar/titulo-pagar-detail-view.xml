@@ -16,6 +16,20 @@
             <loader id="tituloPagarDl"/>
             <collection id="itensDc" property="itens"/>
         </instance>
+        <!-- itemsContainer do entityComboBox de contaContabilField (troca de
+             entityPicker, ver memória do projeto entitypicker-not-entitycombobox);
+             codEmpresa/ano da sessão via PreLoadEvent, mesmo critério de
+             ContaContabilListView quando aberta como lookup (apenasAnaliticas=true).
+             parceiroField usa itemsFetchCallback (lazy) em vez disso — ver
+             TituloPagarDetailView.parceiroFieldItemsFetchCallback. -->
+        <collection id="contasContabeisDc"
+                    class="br.com.axialsoftware.axctg3.entity.contabil.ContaContabil">
+            <loader id="contasContabeisDl">
+                <query><![CDATA[select e from ContaContabil e
+                    where e.codEmpresa = :codEmpresa and e.ano = :ano and e.analitica = true
+                    order by e.codigo]]></query>
+            </loader>
+        </collection>
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
@@ -48,16 +62,16 @@
                             dataContainer="tituloPagarDc"
                             width="15%" themeNames="small"
                             label="msg://br.com.axialsoftware.axctg3.entity.financeiro/TituloPagar.dataVencimento"/>
-                <entityPicker id="parceiroField"
-                              property="parceiro"
-                              dataContainer="tituloPagarDc"
-                              themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/TituloPagar.parceiro">
+                <entityComboBox id="parceiroField"
+                                property="parceiro"
+                                dataContainer="tituloPagarDc"
+                                themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.financeiro/TituloPagar.parceiro">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
                 <textField id="valorField"
                            property="valor"
                            dataContainer="tituloPagarDc"
@@ -65,16 +79,17 @@
                            label="msg://br.com.axialsoftware.axctg3.entity.financeiro/TituloPagar.valor"/>
             </hbox>
             <hbox width="100%" expand="observacaoField">
-                <entityPicker id="contaContabilField"
-                              property="contaContabil"
-                              dataContainer="tituloPagarDc"
-                              width="50%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/TituloPagar.contaContabil">
+                <entityComboBox id="contaContabilField"
+                                property="contaContabil"
+                                itemsContainer="contasContabeisDc"
+                                dataContainer="tituloPagarDc"
+                                width="50%" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.financeiro/TituloPagar.contaContabil">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
                 <textArea id="observacaoField"
                           property="observacao"
                           dataContainer="tituloPagarDc" themeNames="small"
