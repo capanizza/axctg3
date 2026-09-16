@@ -35,14 +35,19 @@ public class NotaSaidaComplementarDetailView extends StandardDetailView<NotaSaid
     private UtilGeralService utilGeralService;
     @Autowired
     private DataManager dataManager;
+    @ViewComponent
+    private CollectionLoader<NaturezaOperacao> naturezaOperacoesDl;
 
     /**
-     * Parâmetro do itemsContainer de naturezaField (entityComboBox, troca de
-     * entityPicker) — codEmpresa da sessão.
+     * Carrega manualmente o itemsContainer de naturezaField (entityComboBox, troca de
+     * entityPicker) — dataLoadCoordinator auto="true" NÃO carrega sozinho um loader com
+     * parâmetro "solto" como :codEmpresa; precisa chamar .load() na mão (ver memória
+     * entitycombobox-toggle-nao-abre).
      */
-    @Subscribe(id = "naturezaOperacoesDl", target = Target.DATA_LOADER)
-    public void onNaturezaOperacoesDlPreLoad(final CollectionLoader.PreLoadEvent<NaturezaOperacao> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+    @Subscribe
+    public void onBeforeShow(final BeforeShowEvent event) {
+        naturezaOperacoesDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+        naturezaOperacoesDl.load();
     }
 
     /**

@@ -35,23 +35,23 @@ public class ItemPagarDetailView extends StandardDetailView<ItemPagar> {
     private UtilFinanceiroService utilFinanceiroService;
     @Autowired
     private UtilGeralService utilGeralService;
-
-    /**
-     * Parâmetros dos itemsContainer de historicoFinanceiro/banco (entityComboBox, troca
-     * de entityPicker) — codEmpresa da sessão.
-     */
-    @Subscribe(id = "historicosFinanceirosDl", target = Target.DATA_LOADER)
-    public void onHistoricosFinanceirosDlPreLoad(final CollectionLoader.PreLoadEvent<HistoricoFinanceiro> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
-    }
-
-    @Subscribe(id = "bancosDl", target = Target.DATA_LOADER)
-    public void onBancosDlPreLoad(final CollectionLoader.PreLoadEvent<Banco> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
-    }
+    @ViewComponent
+    private CollectionLoader<HistoricoFinanceiro> historicosFinanceirosDl;
+    @ViewComponent
+    private CollectionLoader<Banco> bancosDl;
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
+        // itemsContainer de historicoFinanceiro/banco (entityComboBox, troca de
+        // entityPicker) — dataLoadCoordinator auto="true" NÃO carrega sozinho um loader
+        // com parâmetro "solto"; precisa chamar .load() na mão (ver memória
+        // entitycombobox-toggle-nao-abre).
+        Integer codEmpresa = utilGeralService.getCodEmpresa();
+        historicosFinanceirosDl.setParameter("codEmpresa", codEmpresa);
+        historicosFinanceirosDl.load();
+        bancosDl.setParameter("codEmpresa", codEmpresa);
+        bancosDl.load();
+
         ItemPagar itemPagar = getEditedEntity();
         TituloPagar tituloPagar = itemPagar.getTituloPagar();
         if (itemPagar.getValor().compareTo(BigDecimal.ZERO) == 0) {

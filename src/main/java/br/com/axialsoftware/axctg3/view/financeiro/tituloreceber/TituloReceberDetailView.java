@@ -42,22 +42,10 @@ public class TituloReceberDetailView extends StandardDetailView<TituloReceber> {
     private UtilGeralService utilGeralService;
     @Autowired
     private DataManager dataManager;
-
-    /**
-     * Parâmetros dos itemsContainer de banco/contaContabil (entityComboBox, troca de
-     * entityPicker) — codEmpresa/ano da sessão, mesmo critério de
-     * ContaContabilListView quando aberta como lookup (apenasAnaliticas=true).
-     */
-    @Subscribe(id = "bancosDl", target = Target.DATA_LOADER)
-    public void onBancosDlPreLoad(final CollectionLoader.PreLoadEvent<Banco> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
-    }
-
-    @Subscribe(id = "contasContabeisDl", target = Target.DATA_LOADER)
-    public void onContasContabeisDlPreLoad(final CollectionLoader.PreLoadEvent<ContaContabil> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
-        event.getSource().setParameter("ano", utilGeralService.getAnoContabil());
-    }
+    @ViewComponent
+    private CollectionLoader<Banco> bancosDl;
+    @ViewComponent
+    private CollectionLoader<ContaContabil> contasContabeisDl;
 
     /**
      * Busca preguiçosa de {@code parceiroField} (entityComboBox, troca de entityPicker)
@@ -80,6 +68,18 @@ public class TituloReceberDetailView extends StandardDetailView<TituloReceber> {
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
+        // itemsContainer de banco/contaContabil (entityComboBox, troca de entityPicker)
+        // — dataLoadCoordinator auto="true" NÃO carrega sozinho um loader com parâmetro
+        // "solto"; precisa chamar .load() na mão (ver memória
+        // entitycombobox-toggle-nao-abre). codEmpresa/ano da sessão, mesmo critério de
+        // ContaContabilListView quando aberta como lookup (apenasAnaliticas=true).
+        Integer codEmpresa = utilGeralService.getCodEmpresa();
+        bancosDl.setParameter("codEmpresa", codEmpresa);
+        bancosDl.load();
+        contasContabeisDl.setParameter("codEmpresa", codEmpresa);
+        contasContabeisDl.setParameter("ano", utilGeralService.getAnoContabil());
+        contasContabeisDl.load();
+
         TituloReceber tituloReceber = tituloReceberDc.getItem();
         valorField.setReadOnly(tituloReceberService.valorRecebidoTitulo(tituloReceber).compareTo(BigDecimal.ZERO) != 0);
     }

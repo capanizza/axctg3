@@ -34,16 +34,8 @@ public class BemDetailView extends StandardDetailView<Bem> {
     private UtilGeralService utilGeralService;
     @Autowired
     private DataManager dataManager;
-
-    /**
-     * Parâmetro do itemsContainer de contaContabil* (entityComboBox, troca de
-     * entityPicker) — codEmpresa da sessão, mesmo critério dos list views.
-     */
-    @Subscribe(id = "contasContabeisDl", target = Target.DATA_LOADER)
-    public void onContasContabeisDlPreLoad(final CollectionLoader.PreLoadEvent<ContaContabil> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
-        event.getSource().setParameter("ano", utilGeralService.getAnoContabil());
-    }
+    @ViewComponent
+    private CollectionLoader<ContaContabil> contasContabeisDl;
 
     /**
      * Busca preguiçosa de {@code parceiroField} (entityComboBox) — mesmo padrão de
@@ -66,6 +58,14 @@ public class BemDetailView extends StandardDetailView<Bem> {
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
+        // itemsContainer de contaContabil* (entityComboBox, troca de entityPicker) —
+        // dataLoadCoordinator auto="true" NÃO carrega sozinho um loader com parâmetro
+        // "solto" como :codEmpresa/:ano; precisa chamar .load() na mão (ver memória
+        // entitycombobox-toggle-nao-abre).
+        contasContabeisDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+        contasContabeisDl.setParameter("ano", utilGeralService.getAnoContabil());
+        contasContabeisDl.load();
+
         List<Depreciacao> all = new ArrayList<>(depreciacaosDc.getItems());
 
         int splitIndex = Math.min(all.size() / 2, all.size());

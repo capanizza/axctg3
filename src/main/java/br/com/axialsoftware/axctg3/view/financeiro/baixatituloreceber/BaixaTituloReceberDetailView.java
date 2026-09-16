@@ -37,14 +37,19 @@ public class BaixaTituloReceberDetailView extends StandardDetailView<TituloReceb
     private UtilGeralService utilGeralService;
     @Autowired
     private DataManager dataManager;
+    @ViewComponent
+    private CollectionLoader<Banco> bancosDl;
 
     /**
-     * Parâmetro do itemsContainer de bancoField (entityComboBox, troca de entityPicker)
-     * — codEmpresa da sessão.
+     * Carrega manualmente o itemsContainer de bancoField (entityComboBox, troca de
+     * entityPicker) — dataLoadCoordinator auto="true" NÃO carrega sozinho um loader com
+     * parâmetro "solto" como :codEmpresa; precisa chamar .load() na mão (ver memória
+     * entitycombobox-toggle-nao-abre).
      */
-    @Subscribe(id = "bancosDl", target = Target.DATA_LOADER)
-    public void onBancosDlPreLoad(final CollectionLoader.PreLoadEvent<Banco> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+    @Subscribe
+    public void onBeforeShow(final BeforeShowEvent event) {
+        bancosDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+        bancosDl.load();
     }
 
     /**

@@ -18,26 +18,32 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class MovimentoBancoDetailView extends StandardDetailView<MovimentoBanco> {
     @Autowired
     private UtilGeralService utilGeralService;
+    @ViewComponent
+    private CollectionLoader<Banco> bancosDl;
+    @ViewComponent
+    private CollectionLoader<HistoricoFinanceiro> historicosFinanceirosDl;
+    @ViewComponent
+    private CollectionLoader<ContaContabil> contasContabeisDl;
 
     /**
-     * Parâmetros dos itemsContainer de banco/historicoFinanceiro/contaContabil
-     * (entityComboBox, troca de entityPicker) — codEmpresa/ano da sessão, mesmo
+     * Carrega manualmente os itemsContainer de banco/historicoFinanceiro/contaContabil
+     * (entityComboBox, troca de entityPicker) — dataLoadCoordinator auto="true" NÃO
+     * carrega sozinho um loader com parâmetro "solto"; precisa chamar .load() na mão
+     * (ver memória entitycombobox-toggle-nao-abre). codEmpresa/ano da sessão, mesmo
      * critério de ContaContabilListView quando aberta como lookup
      * (apenasAnaliticas=true).
      */
-    @Subscribe(id = "bancosDl", target = Target.DATA_LOADER)
-    public void onBancosDlPreLoad(final CollectionLoader.PreLoadEvent<Banco> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
-    }
+    @Subscribe
+    public void onBeforeShow(final BeforeShowEvent event) {
+        Integer codEmpresa = utilGeralService.getCodEmpresa();
+        bancosDl.setParameter("codEmpresa", codEmpresa);
+        bancosDl.load();
 
-    @Subscribe(id = "historicosFinanceirosDl", target = Target.DATA_LOADER)
-    public void onHistoricosFinanceirosDlPreLoad(final CollectionLoader.PreLoadEvent<HistoricoFinanceiro> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
-    }
+        historicosFinanceirosDl.setParameter("codEmpresa", codEmpresa);
+        historicosFinanceirosDl.load();
 
-    @Subscribe(id = "contasContabeisDl", target = Target.DATA_LOADER)
-    public void onContasContabeisDlPreLoad(final CollectionLoader.PreLoadEvent<ContaContabil> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
-        event.getSource().setParameter("ano", utilGeralService.getAnoContabil());
+        contasContabeisDl.setParameter("codEmpresa", codEmpresa);
+        contasContabeisDl.setParameter("ano", utilGeralService.getAnoContabil());
+        contasContabeisDl.load();
     }
 }

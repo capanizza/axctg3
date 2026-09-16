@@ -37,27 +37,12 @@ public class LancamentoDetailView extends StandardDetailView<Lancamento> {
     private TypedDatePicker<LocalDate> dataLancamentoField;
     @Autowired
     private UtilGeralService utilGeralService;
-
-    /**
-     * Parâmetros dos itemsContainer de conta/centroCusto/historicoContabil
-     * (entityComboBox, troca de entityPicker) — codEmpresa/ano da sessão, mesmo
-     * critério que os list views já usam.
-     */
-    @Subscribe(id = "contasContabeisDl", target = Target.DATA_LOADER)
-    public void onContasContabeisDlPreLoad(final CollectionLoader.PreLoadEvent<ContaContabil> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
-        event.getSource().setParameter("ano", utilGeralService.getAnoContabil());
-    }
-
-    @Subscribe(id = "centrosCustoDl", target = Target.DATA_LOADER)
-    public void onCentrosCustoDlPreLoad(final CollectionLoader.PreLoadEvent<CentroCusto> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
-    }
-
-    @Subscribe(id = "historicosContabeisDl", target = Target.DATA_LOADER)
-    public void onHistoricosContabeisDlPreLoad(final CollectionLoader.PreLoadEvent<HistoricoContabil> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
-    }
+    @ViewComponent
+    private CollectionLoader<ContaContabil> contasContabeisDl;
+    @ViewComponent
+    private CollectionLoader<CentroCusto> centrosCustoDl;
+    @ViewComponent
+    private CollectionLoader<HistoricoContabil> historicosContabeisDl;
 
     /**
      * numero/ano/mes/dataLancamento são {@code @NotNull} na entidade, mas carimbados
@@ -73,6 +58,21 @@ public class LancamentoDetailView extends StandardDetailView<Lancamento> {
      */
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
+        // itemsContainer de conta/centroCusto/historicoContabil (entityComboBox, troca
+        // de entityPicker) — dataLoadCoordinator auto="true" NÃO carrega sozinho um
+        // loader com parâmetro "solto"; precisa chamar .load() na mão (ver memória
+        // entitycombobox-toggle-nao-abre).
+        Integer codEmpresa = utilGeralService.getCodEmpresa();
+        contasContabeisDl.setParameter("codEmpresa", codEmpresa);
+        contasContabeisDl.setParameter("ano", utilGeralService.getAnoContabil());
+        contasContabeisDl.load();
+
+        centrosCustoDl.setParameter("codEmpresa", codEmpresa);
+        centrosCustoDl.load();
+
+        historicosContabeisDl.setParameter("codEmpresa", codEmpresa);
+        historicosContabeisDl.load();
+
         Lancamento lancamento = getEditedEntity();
         numeroField.setValue(lancamento.getNumero());
         anoField.setValue(lancamento.getAno());

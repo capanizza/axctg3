@@ -30,14 +30,19 @@ public class ItemNotaSaidaDetailView extends StandardDetailView<ItemNotaSaida> {
     private ItemNotaSaidaTributacaoService tributacaoService;
     @Autowired
     private UtilGeralService utilGeralService;
+    @ViewComponent
+    private CollectionLoader<Produto> produtosDl;
 
     /**
-     * Parâmetro do itemsContainer de produtoField (entityComboBox, troca de
-     * entityPicker) — codEmpresa da sessão.
+     * Carrega manualmente o itemsContainer de produtoField (entityComboBox, troca de
+     * entityPicker) — dataLoadCoordinator auto="true" NÃO carrega sozinho um loader com
+     * parâmetro "solto" como :codEmpresa; precisa chamar .load() na mão (ver memória
+     * entitycombobox-toggle-nao-abre).
      */
-    @Subscribe(id = "produtosDl", target = Target.DATA_LOADER)
-    public void onProdutosDlPreLoad(final CollectionLoader.PreLoadEvent<Produto> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+    @Subscribe
+    public void onBeforeShow(final BeforeShowEvent event) {
+        produtosDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+        produtosDl.load();
     }
 
     /**

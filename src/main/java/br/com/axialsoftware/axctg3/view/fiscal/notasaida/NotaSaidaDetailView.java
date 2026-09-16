@@ -38,6 +38,18 @@ public class NotaSaidaDetailView extends StandardDetailView<NotaSaida> {
     private DataManager dataManager;
     @ViewComponent
     private MessageBundle messageBundle;
+    @ViewComponent
+    private CollectionLoader<NaturezaOperacao> naturezaOperacoesDl;
+    @ViewComponent
+    private CollectionLoader<CondicaoPagamento> condicoesPagamentoDl;
+    @ViewComponent
+    private CollectionLoader<Banco> bancosDl;
+    @ViewComponent
+    private CollectionLoader<Transportadora> transportadorasDl;
+    @ViewComponent
+    private CollectionLoader<Vendedor> vendedoresDl;
+    @ViewComponent
+    private CollectionLoader<Mensagem> mensagensDl;
 
     /**
      * Busca preguiçosa dos parceiros de {@code parceiroField} (entityComboBox) — a
@@ -62,38 +74,34 @@ public class NotaSaidaDetailView extends StandardDetailView<NotaSaida> {
     }
 
     /**
-     * Parâmetros dos itemsContainer de natureza/condicaoPagamento/banco/transportadora/
-     * vendedor/mensagem (entityComboBox, troca de entityPicker) — codEmpresa da sessão.
-     * classTribField usa classTribsDc (tabela global), sem parâmetro.
+     * Carrega manualmente os itemsContainer de natureza/condicaoPagamento/banco/
+     * transportadora/vendedor/mensagem (entityComboBox, troca de entityPicker) —
+     * {@code dataLoadCoordinator auto="true"} NÃO carrega sozinho um loader com
+     * parâmetro "solto" (sem prefixo container_/component_) como {@code :codEmpresa} —
+     * precisa chamar {@code .load()} na mão (ver memória
+     * entitycombobox-toggle-nao-abre). classTribField usa classTribsDc (tabela global,
+     * sem parâmetro), carregada automaticamente pelo coordinator.
      */
-    @Subscribe(id = "naturezaOperacoesDl", target = Target.DATA_LOADER)
-    public void onNaturezaOperacoesDlPreLoad(final CollectionLoader.PreLoadEvent<NaturezaOperacao> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
-    }
+    @Subscribe
+    public void onBeforeShow(final BeforeShowEvent event) {
+        Integer codEmpresa = utilGeralService.getCodEmpresa();
+        naturezaOperacoesDl.setParameter("codEmpresa", codEmpresa);
+        naturezaOperacoesDl.load();
 
-    @Subscribe(id = "condicoesPagamentoDl", target = Target.DATA_LOADER)
-    public void onCondicoesPagamentoDlPreLoad(final CollectionLoader.PreLoadEvent<CondicaoPagamento> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
-    }
+        condicoesPagamentoDl.setParameter("codEmpresa", codEmpresa);
+        condicoesPagamentoDl.load();
 
-    @Subscribe(id = "bancosDl", target = Target.DATA_LOADER)
-    public void onBancosDlPreLoad(final CollectionLoader.PreLoadEvent<Banco> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
-    }
+        bancosDl.setParameter("codEmpresa", codEmpresa);
+        bancosDl.load();
 
-    @Subscribe(id = "transportadorasDl", target = Target.DATA_LOADER)
-    public void onTransportadorasDlPreLoad(final CollectionLoader.PreLoadEvent<Transportadora> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
-    }
+        transportadorasDl.setParameter("codEmpresa", codEmpresa);
+        transportadorasDl.load();
 
-    @Subscribe(id = "vendedoresDl", target = Target.DATA_LOADER)
-    public void onVendedoresDlPreLoad(final CollectionLoader.PreLoadEvent<Vendedor> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
-    }
+        vendedoresDl.setParameter("codEmpresa", codEmpresa);
+        vendedoresDl.load();
 
-    @Subscribe(id = "mensagensDl", target = Target.DATA_LOADER)
-    public void onMensagensDlPreLoad(final CollectionLoader.PreLoadEvent<Mensagem> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+        mensagensDl.setParameter("codEmpresa", codEmpresa);
+        mensagensDl.load();
     }
 
     /**

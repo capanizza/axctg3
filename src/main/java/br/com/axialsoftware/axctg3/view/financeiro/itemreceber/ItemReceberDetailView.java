@@ -35,18 +35,18 @@ public class ItemReceberDetailView extends StandardDetailView<ItemReceber> {
     private UtilFinanceiroService utilFinanceiroService;
     @Autowired
     private UtilGeralService utilGeralService;
-
-    /**
-     * Parâmetro do itemsContainer de historicoFinanceiro (entityComboBox, troca de
-     * entityPicker) — codEmpresa da sessão.
-     */
-    @Subscribe(id = "historicosFinanceirosDl", target = Target.DATA_LOADER)
-    public void onHistoricosFinanceirosDlPreLoad(final CollectionLoader.PreLoadEvent<HistoricoFinanceiro> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
-    }
+    @ViewComponent
+    private CollectionLoader<HistoricoFinanceiro> historicosFinanceirosDl;
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
+        // itemsContainer de historicoFinanceiro (entityComboBox, troca de entityPicker)
+        // — dataLoadCoordinator auto="true" NÃO carrega sozinho um loader com parâmetro
+        // "solto"; precisa chamar .load() na mão (ver memória
+        // entitycombobox-toggle-nao-abre).
+        historicosFinanceirosDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+        historicosFinanceirosDl.load();
+
         ItemReceber itemReceber = getEditedEntity();
         TituloReceber tituloReceber = itemReceber.getTituloReceber();
         if (itemReceber.getValor().compareTo(BigDecimal.ZERO) == 0) {

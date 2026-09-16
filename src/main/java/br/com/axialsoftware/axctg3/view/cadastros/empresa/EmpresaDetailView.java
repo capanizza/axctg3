@@ -37,31 +37,38 @@ public class EmpresaDetailView extends StandardDetailView<Empresa> {
     private Messages messages;
     @Autowired
     private UtilGeralService utilGeralService;
+    @ViewComponent
+    private CollectionLoader<ContaContabil> contasContabeisDl;
+    @ViewComponent
+    private CollectionLoader<Produto> produtosEmpresaDl;
+    @ViewComponent
+    private CollectionLoader<HistoricoContabil> historicosContabeisDl;
+    @ViewComponent
+    private CollectionLoader<HistoricoFinanceiro> historicosFinanceirosDl;
 
     /**
-     * Parâmetro dos loaders de itemsContainer dos entityComboBox de conta/histórico/
+     * Carrega manualmente os itemsContainer dos entityComboBox de conta/histórico/
      * produto (troca de entityPicker, ver memória do projeto) — codEmpresa da sessão,
      * mesmo critério que ContaContabilListView/ProdutoListView/etc já usam.
+     * {@code dataLoadCoordinator auto="true"} NÃO carrega sozinho um loader com
+     * parâmetro "solto" (sem prefixo container_/component_) como {@code :codEmpresa} —
+     * precisa chamar {@code .load()} na mão (ver memória entitycombobox-toggle-nao-abre).
      */
-    @Subscribe(id = "contasContabeisDl", target = Target.DATA_LOADER)
-    public void onContasContabeisDlPreLoad(final CollectionLoader.PreLoadEvent<ContaContabil> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
-        event.getSource().setParameter("ano", utilGeralService.getAnoContabil());
-    }
+    @Subscribe
+    public void onBeforeShow(final BeforeShowEvent event) {
+        Integer codEmpresa = utilGeralService.getCodEmpresa();
+        contasContabeisDl.setParameter("codEmpresa", codEmpresa);
+        contasContabeisDl.setParameter("ano", utilGeralService.getAnoContabil());
+        contasContabeisDl.load();
 
-    @Subscribe(id = "produtosEmpresaDl", target = Target.DATA_LOADER)
-    public void onProdutosEmpresaDlPreLoad(final CollectionLoader.PreLoadEvent<Produto> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
-    }
+        produtosEmpresaDl.setParameter("codEmpresa", codEmpresa);
+        produtosEmpresaDl.load();
 
-    @Subscribe(id = "historicosContabeisDl", target = Target.DATA_LOADER)
-    public void onHistoricosContabeisDlPreLoad(final CollectionLoader.PreLoadEvent<HistoricoContabil> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
-    }
+        historicosContabeisDl.setParameter("codEmpresa", codEmpresa);
+        historicosContabeisDl.load();
 
-    @Subscribe(id = "historicosFinanceirosDl", target = Target.DATA_LOADER)
-    public void onHistoricosFinanceirosDlPreLoad(final CollectionLoader.PreLoadEvent<HistoricoFinanceiro> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+        historicosFinanceirosDl.setParameter("codEmpresa", codEmpresa);
+        historicosFinanceirosDl.load();
     }
 
     @Subscribe(id = "testarConexaoSefazButton", subject = "clickListener")

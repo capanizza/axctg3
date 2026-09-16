@@ -31,16 +31,21 @@ public class TituloPagarDetailView extends StandardDetailView<TituloPagar> {
     private UtilGeralService utilGeralService;
     @Autowired
     private DataManager dataManager;
+    @ViewComponent
+    private CollectionLoader<ContaContabil> contasContabeisDl;
 
     /**
-     * Parâmetro do itemsContainer de contaContabilField (entityComboBox, troca de
-     * entityPicker) — codEmpresa/ano da sessão, mesmo critério de
+     * Carrega manualmente o itemsContainer de contaContabilField (entityComboBox, troca
+     * de entityPicker) — dataLoadCoordinator auto="true" NÃO carrega sozinho um loader
+     * com parâmetro "solto"; precisa chamar .load() na mão (ver memória
+     * entitycombobox-toggle-nao-abre). codEmpresa/ano da sessão, mesmo critério de
      * ContaContabilListView quando aberta como lookup (apenasAnaliticas=true).
      */
-    @Subscribe(id = "contasContabeisDl", target = Target.DATA_LOADER)
-    public void onContasContabeisDlPreLoad(final CollectionLoader.PreLoadEvent<ContaContabil> event) {
-        event.getSource().setParameter("codEmpresa", utilGeralService.getCodEmpresa());
-        event.getSource().setParameter("ano", utilGeralService.getAnoContabil());
+    @Subscribe
+    public void onBeforeShow(final BeforeShowEvent event) {
+        contasContabeisDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+        contasContabeisDl.setParameter("ano", utilGeralService.getAnoContabil());
+        contasContabeisDl.load();
     }
 
     /**
