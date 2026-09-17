@@ -59,16 +59,20 @@
                         themeNames="small"
                         width="30%"
                         label="msg://br.com.axialsoftware.axctg3.entity.contabil/ContaContabil.codNat"/>
-                <entityPicker id="contaReferencialField"
-                              property="contaReferencial"
-                              dataContainer="contaContabilDc" themeNames="small"
-                              width="20%"
-                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/ContaContabil.contaReferencial">
+                <!-- entityComboBox com busca preguiçosa (itemsFetchCallback, ver
+                     ContaContabilDetailView.contaReferencialFieldItemsFetchCallback) —
+                     ContaReferencial tem ~22 mil linhas (10 planos), não dá pra carregar
+                     via itemsContainer. -->
+                <entityComboBox id="contaReferencialField"
+                                property="contaReferencial"
+                                dataContainer="contaContabilDc" themeNames="small"
+                                width="20%"
+                                label="msg://br.com.axialsoftware.axctg3.entity.contabil/ContaContabil.contaReferencial">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
                 <textField id="codContaSupField"
                            property="codContaSup"
                            dataContainer="contaContabilDc"

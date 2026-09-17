@@ -11,6 +11,7 @@ import br.com.axialsoftware.axctg3.view.main.MainView;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.data.renderer.TextRenderer;
 import com.vaadin.flow.router.Route;
@@ -34,6 +35,7 @@ import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.stream.Stream;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -105,6 +107,27 @@ public class AssociacaoListView extends StandardListView<ContaContabil> {
     private Renderer<ContaContabil> contaContabilsDataGridCodigoRenderer() {
         return new TextRenderer<>(contaContabil ->
                 formatacaoService.formatacaoMascContabil(contaContabil.getCodigo()));
+    }
+
+    /**
+     * Busca preguiçosa de {@code contaReferencialField} (entityComboBox, troca de
+     * entityPicker) — ContaReferencial tem ~22 mil linhas (10 planos), filtrada aqui
+     * pelo {@code codPlanRef} da empresa da sessão, mesmo critério de
+     * {@code ContaReferencialListView}.
+     */
+    @Install(to = "contaReferencialField", subject = "itemsFetchCallback")
+    private Stream<ContaReferencial> contaReferencialFieldItemsFetchCallback(
+            final Query<ContaReferencial, String> query) {
+        String texto = query.getFilter().orElse("");
+        return dataManager.load(ContaReferencial.class)
+                .query("select e from ContaReferencial e where e.codPlanRef = :codPlanRef "
+                        + "and upper(e.descricao) like upper(concat('%', :texto, '%')) order by e.codigo")
+                .parameter("codPlanRef", utilGeralService.getEmpresa().getCodPlanRef().getId())
+                .parameter("texto", texto)
+                .firstResult(query.getOffset())
+                .maxResults(query.getLimit())
+                .list()
+                .stream();
     }
 
     @Subscribe("contaContabilsDataGrid.associarAction")

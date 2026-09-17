@@ -12,6 +12,24 @@
             </fetchPlan>
             <loader id="notaSaidaDl"/>
         </instance>
+        <!-- itemsContainer dos entityComboBox abaixo (troca de entityPicker, ver
+             memória do projeto entitypicker-not-entitycombobox) — campos readOnly (tela
+             só exibe, herdados da nota original), mas evita o itemsContainer de
+             parceiroField carregar todos os ~20 mil parceiros: usa itemsFetchCallback
+             (lazy) em vez disso, ver
+             NotaSaidaComplementarDetailView.parceiroFieldItemsFetchCallback. -->
+        <collection id="naturezaOperacoesDc"
+                    class="br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao">
+            <loader id="naturezaOperacoesDl">
+                <query><![CDATA[select e from NaturezaOperacao e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+            </loader>
+        </collection>
+        <collection id="classTribsDc"
+                    class="br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib">
+            <loader id="classTribsDl">
+                <query><![CDATA[select e from ClassTrib e order by e.codigo]]></query>
+            </loader>
+        </collection>
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
@@ -41,23 +59,25 @@
             <!-- herdados da nota original, travados — só a NotaSaidaListView que preenche
                  (onNotaSaidasDataGridEmitirNfeComplementarAction) -->
             <hbox width="100%" expand="parceiroField">
-                <entityPicker id="naturezaField"
-                              property="natureza"
-                              dataContainer="notaSaidaDc" themeNames="small"
-                              readOnly="true"
-                              width="30%"
-                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.natureza"/>
-                <entityPicker id="classTribField"
-                              property="classTrib"
-                              dataContainer="notaSaidaDc" themeNames="small"
-                              readOnly="true"
-                              width="30%"
-                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.classTrib"/>
-                <entityPicker id="parceiroField"
-                              property="parceiro"
-                              dataContainer="notaSaidaDc" themeNames="small"
-                              readOnly="true"
-                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.parceiro"/>
+                <entityComboBox id="naturezaField"
+                                property="natureza"
+                                itemsContainer="naturezaOperacoesDc"
+                                dataContainer="notaSaidaDc" themeNames="small"
+                                readOnly="true"
+                                width="30%"
+                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.natureza"/>
+                <entityComboBox id="classTribField"
+                                property="classTrib"
+                                itemsContainer="classTribsDc"
+                                dataContainer="notaSaidaDc" themeNames="small"
+                                readOnly="true"
+                                width="30%"
+                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.classTrib"/>
+                <entityComboBox id="parceiroField"
+                                property="parceiro"
+                                dataContainer="notaSaidaDc" themeNames="small"
+                                readOnly="true"
+                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.parceiro"/>
             </hbox>
             <!-- valores da complementar — mesmos campos de "Valores calculados" +
                  frete/seguro/desconto/despesas de "Complementos" em NotaSaidaDetailView;

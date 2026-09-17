@@ -6,6 +6,7 @@ import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
 import br.com.axialsoftware.axctg3.entity.cadastros.Transportadora;
 import br.com.axialsoftware.axctg3.entity.cadastros.Vendedor;
 import br.com.axialsoftware.axctg3.entity.enums.FinNfe;
+import br.com.axialsoftware.axctg3.entity.enums.ModFrete;
 import br.com.axialsoftware.axctg3.entity.financeiro.Banco;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
 import io.jmix.core.DeletePolicy;
@@ -135,6 +136,12 @@ public class NotaSaida {
     @JoinColumn(name = "TRANSPORTADORA_ID")
     @ManyToOne(fetch = FetchType.LAZY)
     private Transportadora transportadora;
+
+    // Modalidade do frete (modFrete do leiaute NFe) — pré-preenchido de Empresa.
+    // modFretePadrao na inclusão (NotaSaidaDetailView.onInitEntity), editável. Nullable:
+    // NfeXmlBuilder.construirTransp cai pra SEM_TRANSPORTE (9) quando não informado.
+    @Column(name = "MOD_FRETE")
+    private Integer modFrete;
 
     @JoinColumn(name = "VENDEDOR_ID")
     @ManyToOne(fetch = FetchType.LAZY)
@@ -444,6 +451,14 @@ public class NotaSaida {
 
     public void setTransportadora(Transportadora transportadora) {
         this.transportadora = transportadora;
+    }
+
+    public ModFrete getModFrete() {
+        return modFrete == null ? null : ModFrete.fromId(modFrete);
+    }
+
+    public void setModFrete(ModFrete modFrete) {
+        this.modFrete = modFrete == null ? null : modFrete.getId();
     }
 
     public Vendedor getVendedor() {

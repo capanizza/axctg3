@@ -13,6 +13,30 @@
             </fetchPlan>
             <loader id="lancamentoDl"/>
         </instance>
+        <!-- itemsContainer dos entityComboBox abaixo (troca de entityPicker, ver
+             memória do projeto entitypicker-not-entitycombobox); codEmpresa/ano da
+             sessão via PreLoadEvent, mesmo critério de ContaContabilListView quando
+             aberta como lookup (apenasAnaliticas=true). -->
+        <collection id="contasContabeisDc"
+                    class="br.com.axialsoftware.axctg3.entity.contabil.ContaContabil">
+            <loader id="contasContabeisDl">
+                <query><![CDATA[select e from ContaContabil e
+                    where e.codEmpresa = :codEmpresa and e.ano = :ano and e.analitica = true
+                    order by e.codigo]]></query>
+            </loader>
+        </collection>
+        <collection id="centrosCustoDc"
+                    class="br.com.axialsoftware.axctg3.entity.cadastros.CentroCusto">
+            <loader id="centrosCustoDl">
+                <query><![CDATA[select e from CentroCusto e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+            </loader>
+        </collection>
+        <collection id="historicosContabeisDc"
+                    class="br.com.axialsoftware.axctg3.entity.contabil.HistoricoContabil">
+            <loader id="historicosContabeisDl">
+                <query><![CDATA[select e from HistoricoContabil e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+            </loader>
+        </collection>
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
@@ -60,48 +84,52 @@
                                  label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.valor"/>
             </hbox>
             <hbox width="100%">
-                <entityPicker id="contaDevedoraField"
-                              property="contaDevedora"
-                              dataContainer="lancamentoDc"
-                              width="45%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.contaDevedora">
+                <entityComboBox id="contaDevedoraField"
+                                property="contaDevedora"
+                                itemsContainer="contasContabeisDc"
+                                dataContainer="lancamentoDc"
+                                width="45%" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.contaDevedora">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
-                <entityPicker id="contaCredoraField"
-                              property="contaCredora"
-                              dataContainer="lancamentoDc"
-                              width="45%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.contaCredora">
+                </entityComboBox>
+                <entityComboBox id="contaCredoraField"
+                                property="contaCredora"
+                                itemsContainer="contasContabeisDc"
+                                dataContainer="lancamentoDc"
+                                width="45%" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.contaCredora">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
             </hbox>
             <hbox width="100%">
-                <entityPicker id="centroCustoField"
-                              property="centroCusto"
-                              dataContainer="lancamentoDc"
-                              width="30%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.centroCusto">
+                <entityComboBox id="centroCustoField"
+                                property="centroCusto"
+                                itemsContainer="centrosCustoDc"
+                                dataContainer="lancamentoDc"
+                                width="30%" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.centroCusto">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
-                <entityPicker id="historicoContabilField"
-                              property="historicoContabil"
-                              dataContainer="lancamentoDc"
-                              width="30%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.historicoContabil">
+                </entityComboBox>
+                <entityComboBox id="historicoContabilField"
+                                property="historicoContabil"
+                                itemsContainer="historicosContabeisDc"
+                                dataContainer="lancamentoDc"
+                                width="30%" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.contabil/Lancamento.historicoContabil">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
                 <textField id="origemField"
                            property="origem"
                            dataContainer="lancamentoDc"

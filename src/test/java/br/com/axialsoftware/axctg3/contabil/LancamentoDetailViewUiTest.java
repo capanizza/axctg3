@@ -13,7 +13,7 @@ import io.jmix.data.PersistenceHints;
 import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.component.textfield.JmixIntegerField;
 import io.jmix.flowui.component.textfield.JmixBigDecimalField;
-import io.jmix.flowui.component.valuepicker.EntityPicker;
+import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.testassist.FlowuiTestAssistConfiguration;
 import io.jmix.flowui.testassist.UiTest;
 import io.jmix.flowui.testassist.UiTestUtils;
@@ -96,10 +96,10 @@ class LancamentoDetailViewUiTest {
         JmixBigDecimalField valorField = UiTestUtils.getComponent(view, "valorField");
         assertThat(valorField.getValue()).isEqualByComparingTo("150.00");
 
-        EntityPicker<ContaContabil> contaDevedoraField = UiTestUtils.getComponent(view, "contaDevedoraField");
+        EntityComboBox<ContaContabil> contaDevedoraField = UiTestUtils.getComponent(view, "contaDevedoraField");
         assertThat(contaDevedoraField.getValue()).isEqualTo(devedora);
 
-        EntityPicker<ContaContabil> contaCredoraField = UiTestUtils.getComponent(view, "contaCredoraField");
+        EntityComboBox<ContaContabil> contaCredoraField = UiTestUtils.getComponent(view, "contaCredoraField");
         assertThat(contaCredoraField.getValue()).isEqualTo(credora);
     }
 

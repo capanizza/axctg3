@@ -3,12 +3,14 @@ package br.com.axialsoftware.axctg3.view.financeiro.itemreceber;
 import br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro;
 import br.com.axialsoftware.axctg3.entity.financeiro.ItemReceber;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber;
+import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.financeiro.UtilFinanceiroService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 import com.vaadin.flow.router.Route;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.action.DialogAction;
 import io.jmix.flowui.component.textfield.TypedTextField;
+import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -31,9 +33,20 @@ public class ItemReceberDetailView extends StandardDetailView<ItemReceber> {
     private Dialogs dialogs;
     @Autowired
     private UtilFinanceiroService utilFinanceiroService;
+    @Autowired
+    private UtilGeralService utilGeralService;
+    @ViewComponent
+    private CollectionLoader<HistoricoFinanceiro> historicosFinanceirosDl;
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
+        // itemsContainer de historicoFinanceiro (entityComboBox, troca de entityPicker)
+        // — dataLoadCoordinator auto="true" NÃO carrega sozinho um loader com parâmetro
+        // "solto"; precisa chamar .load() na mão (ver memória
+        // entitycombobox-toggle-nao-abre).
+        historicosFinanceirosDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+        historicosFinanceirosDl.load();
+
         ItemReceber itemReceber = getEditedEntity();
         TituloReceber tituloReceber = itemReceber.getTituloReceber();
         if (itemReceber.getValor().compareTo(BigDecimal.ZERO) == 0) {

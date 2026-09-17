@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://cstDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="cstDc"
+                  class="br.com.axialsoftware.axctg3.entity.tabelas.Cst">
+            <fetchPlan extends="_base"/>
+            <loader id="cstDl"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <vbox id="form" width="100%">
+            <hbox width="100%" expand="descricaoField">
+                <textField id="codigoField"
+                           property="codigo"
+                           maxLength="3"
+                           dataContainer="cstDc"
+                           width="12%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.tabelas/Cst.codigo"/>
+                <textField id="descricaoField"
+                           property="descricao"
+                           dataContainer="cstDc" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.tabelas/Cst.descricao"/>
+                <checkbox id="csosnField"
+                          property="csosn"
+                          dataContainer="cstDc"
+                          required="false"
+                          width="15%"
+                          alignSelf="END"
+                          label="msg://br.com.axialsoftware.axctg3.entity.tabelas/Cst.csosn"/>
+            </hbox>
+        </vbox>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

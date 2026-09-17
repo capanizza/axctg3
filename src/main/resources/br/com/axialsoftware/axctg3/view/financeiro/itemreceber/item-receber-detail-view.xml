@@ -11,6 +11,15 @@
             </fetchPlan>
             <loader id="itemReceberDl"/>
         </instance>
+        <!-- itemsContainer do entityComboBox abaixo (troca de entityPicker, ver
+             memória do projeto entitypicker-not-entitycombobox); codEmpresa da sessão
+             via PreLoadEvent. -->
+        <collection id="historicosFinanceirosDc"
+                    class="br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro">
+            <loader id="historicosFinanceirosDl">
+                <query><![CDATA[select e from HistoricoFinanceiro e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+            </loader>
+        </collection>
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
@@ -32,16 +41,17 @@
                             dataContainer="itemReceberDc"
                             width="20%" themeNames="small"
                             label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemReceber.data"/>
-                <entityPicker id="historicoFinanceiroField"
-                              property="historicoFinanceiro"
-                              dataContainer="itemReceberDc"
-                              width="70%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemReceber.historicoFinanceiro">
+                <entityComboBox id="historicoFinanceiroField"
+                                property="historicoFinanceiro"
+                                itemsContainer="historicosFinanceirosDc"
+                                dataContainer="itemReceberDc"
+                                width="70%" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.financeiro/ItemReceber.historicoFinanceiro">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
             </hbox>
             <hbox width="100%">
                 <textField id="valorField"

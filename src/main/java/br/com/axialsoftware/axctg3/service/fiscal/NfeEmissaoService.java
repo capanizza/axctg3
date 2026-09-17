@@ -6,6 +6,7 @@ import br.com.axialsoftware.axctg3.entity.fiscal.ItemNotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.Nfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
+import br.com.axialsoftware.axctg3.service.financeiro.TituloReceberService;
 import io.jmix.core.DataManager;
 import io.jmix.core.FetchPlan;
 import org.springframework.stereotype.Service;
@@ -52,14 +53,17 @@ public class NfeEmissaoService {
     private final NfeXmlSigner signer;
     private final NfeWebserviceClient client;
     private final NfeImportService importService;
+    private final TituloReceberService tituloReceberService;
 
     public NfeEmissaoService(DataManager dataManager, NfeXmlBuilder xmlBuilder, NfeXmlSigner signer,
-                              NfeWebserviceClient client, NfeImportService importService) {
+                              NfeWebserviceClient client, NfeImportService importService,
+                              TituloReceberService tituloReceberService) {
         this.dataManager = dataManager;
         this.xmlBuilder = xmlBuilder;
         this.signer = signer;
         this.client = client;
         this.importService = importService;
+        this.tituloReceberService = tituloReceberService;
     }
 
     public record ResultadoEmissao(boolean sucesso, String chave, String protocolo, String motivo) {
@@ -96,6 +100,20 @@ public class NfeEmissaoService {
                 return new ResultadoEmissao(false, null, null, erroItem);
             }
             notaSaida = carregarComFetchPlan(notaSaida.getId());
+        }
+
+        // Títulos a receber: gerados a partir de NotaSaida.condicaoPagamento ANTES de
+        // montar o XML — o grupo cobr/dup e pag (NfeXmlBuilder.buscarTitulos) leem os
+        // títulos do banco, então precisam já existir nesse ponto, não depois. Só pra
+        // finalidade normal — complementar não gera título a receber (não é venda, ver
+        // [[lancamentos-contabeis-financeiro-projeto]]). Idempotente (TituloReceberService
+        // não gera de novo se a nota já tem título), então seguro de chamar de novo numa
+        // reemissão.
+        if (notaSaida.getFinNfe() == FinNfe.NORMAL) {
+            String erroTitulos = tituloReceberService.gerarTitulosDaEmissao(notaSaida);
+            if (erroTitulos != null) {
+                return new ResultadoEmissao(false, null, null, erroTitulos);
+            }
         }
 
         // Já existe uma tentativa pendente (resposta anterior perdida/timeout) — não
@@ -201,9 +219,22 @@ public class NfeEmissaoService {
         item.setQuantidade(BigDecimal.ONE);
         item.setValorUnitario(valorMercadoria);
 
-        item.setBaseIcms(nvl(notaSaida.getBaseIcms()));
         item.setValorIcms(nvl(notaSaida.getValorIcms()));
-        item.setAliqIcms(aliquotaEfetiva(item.getValorIcms(), item.getBaseIcms()));
+        if (valorMercadoria.compareTo(BigDecimal.ZERO) == 0) {
+            // Convenção usada em complementar SÓ de imposto (sem diferença de mercadoria):
+            // declarar o próprio valor a complementar como base, com alíquota 100% — em vez
+            // de uma base "real" (ex.: o valor original do produto) combinada com a alíquota
+            // real do produto, que não representa o que está sendo corrigido aqui. vBC =
+            // vICMS = valor complementado; pICMS = 100,00. Testar depois de o usuário achar
+            // essa orientação numa referência externa (a mesma alíquota real, 18% sobre uma
+            // base arbitrária, gerou cStat=225 em 2026-09-15 — ainda não confirmado se essa
+            // é a causa, ver [[axctg3-nfe-complementar-cstat225]]).
+            item.setBaseIcms(item.getValorIcms());
+            item.setAliqIcms(BigDecimal.valueOf(100));
+        } else {
+            item.setBaseIcms(nvl(notaSaida.getBaseIcms()));
+            item.setAliqIcms(aliquotaEfetiva(item.getValorIcms(), item.getBaseIcms()));
+        }
 
         // CST 10 (ICMS com ST) quando a complementar carrega baseSt/valorSt no cabeçalho —
         // mesmos campos já editáveis em NotaSaidaComplementarDetailView, mesma mecânica do
@@ -227,22 +258,16 @@ public class NfeEmissaoService {
         item.setValorIpi(nvl(notaSaida.getValorIpi()));
         item.setAliqIpi(aliquotaEfetiva(item.getValorIpi(), item.getBaseIpi()));
 
-        // CST/cClassTrib do IBS/CBS: em princípio os MESMOS da nota original (o
-        // NotaSaida.classTrib já é copiado dela ao criar a complementar —
-        // NotaSaidaListView.criarComplementar, `nova.setClassTrib(original.getClassTrib())`)
-        // — MAS só faz sentido herdar isso quando o pseudo item carrega valor de mercadoria
-        // de verdade (complemento de preço). Quando é complemento SÓ de imposto
-        // (valorMercadoria=0, este bloco if), o item não representa a mesma operação pro
-        // IBS/CBS — não tem base nenhuma pra tributar — e cravar um classTrib "Padrão"
-        // (tributação integral) com o grupo gIBSCBS inteiro zerado foi rejeitado pela SEFAZ
-        // como "Falha no Schema XML" (achado 2026-09-06, ver
-        // [[axctg3-nfe-complementar-cstat225]] — confirmado que a nota original usada no
-        // teste também caía no mesmo classTrib genérico "000001", então herdar dela não
-        // ajudaria aqui). 410029 "Operações acobertadas somente pelo ICMS" (CST 410, tipo
-        // "Sem alíquota") é o código que bate com esse caso — grupo gIBSCBS.
-        if (valorMercadoria.compareTo(BigDecimal.ZERO) == 0) {
-            item.setCodClassTrib(410029);
-        } else if (notaSaida.getClassTrib() != null) {
+        // CST/cClassTrib do IBS/CBS: sempre o mesmo da nota original (NotaSaida.classTrib já
+        // é copiado dela ao criar a complementar — NotaSaidaListView.criarComplementar,
+        // `nova.setClassTrib(original.getClassTrib())`), mesmo pro complemento SÓ de imposto.
+        // Teste 2026-09-15 (ver [[axctg3-nfe-complementar-cstat225]]): o código "Sem alíquota"
+        // dedicado (410029, omitindo o grupo gIBSCBS) rejeitou com cStat=225 tanto com a
+        // alíquota real quanto com pICMS=100%; a ideia de "herdar o classTrib genérico da nota
+        // original mesmo assim" (000001 "Padrão", gIBSCBS preenchido zerado) é o próximo teste
+        // pedido pelo usuário — mesma combinação que uma rodada anterior (2026-09-06) já tinha
+        // achado rejeitada, mas com um item diferente; vale reconfirmar.
+        if (notaSaida.getClassTrib() != null) {
             item.setCodClassTrib(notaSaida.getClassTrib().getCodigo());
         }
 
@@ -423,6 +448,8 @@ public class NfeEmissaoService {
                                 .add("tipoLogradouro", FetchPlan.BASE))
                         .add("natureza", fpNatureza -> fpNatureza.addFetchPlan(FetchPlan.BASE)
                                 .add("classTrib", FetchPlan.BASE))
+                        .add("condicaoPagamento", FetchPlan.BASE)
+                        .add("banco", FetchPlan.BASE)
                         .add("itens", fpItens -> fpItens.addFetchPlan(FetchPlan.BASE)
                                 .add("produto", fpProduto -> fpProduto.addFetchPlan(FetchPlan.BASE)
                                         .add("classificacaoFiscal", FetchPlan.BASE)

@@ -16,7 +16,7 @@ import io.jmix.data.PersistenceHints;
 import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.textfield.TypedTextField;
-import io.jmix.flowui.component.valuepicker.EntityPicker;
+import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.testassist.FlowuiTestAssistConfiguration;
 import io.jmix.flowui.testassist.UiTest;
@@ -117,7 +117,7 @@ class AssociacaoListViewUiTest {
         TypedTextField<Object> nomeField = UiTestUtils.getComponent(view, "nomeField");
         assertThat(nomeField.getValue()).isEqualTo("Analítica de teste");
 
-        EntityPicker<ContaReferencial> contaReferencialField = UiTestUtils.getComponent(view, "contaReferencialField");
+        EntityComboBox<ContaReferencial> contaReferencialField = UiTestUtils.getComponent(view, "contaReferencialField");
         contaReferencialField.setValue(contaReferencial);
 
         JmixButton saveAndCloseBtn = UiTestUtils.getComponent(view, "saveAndCloseBtn");

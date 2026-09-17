@@ -12,6 +12,30 @@
             </fetchPlan>
             <loader id="movimentoBancoDl"/>
         </instance>
+        <!-- itemsContainer dos entityComboBox abaixo (troca de entityPicker, ver
+             memória do projeto entitypicker-not-entitycombobox); codEmpresa/ano da
+             sessão via PreLoadEvent, contaContabil com o mesmo critério de
+             ContaContabilListView quando aberta como lookup (apenasAnaliticas=true). -->
+        <collection id="bancosDc"
+                    class="br.com.axialsoftware.axctg3.entity.financeiro.Banco">
+            <loader id="bancosDl">
+                <query><![CDATA[select e from Banco e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+            </loader>
+        </collection>
+        <collection id="historicosFinanceirosDc"
+                    class="br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro">
+            <loader id="historicosFinanceirosDl">
+                <query><![CDATA[select e from HistoricoFinanceiro e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+            </loader>
+        </collection>
+        <collection id="contasContabeisDc"
+                    class="br.com.axialsoftware.axctg3.entity.contabil.ContaContabil">
+            <loader id="contasContabeisDl">
+                <query><![CDATA[select e from ContaContabil e
+                    where e.codEmpresa = :codEmpresa and e.ano = :ano and e.analitica = true
+                    order by e.codigo]]></query>
+            </loader>
+        </collection>
     </data>
     <facets>
         <dataLoadCoordinator auto="true"/>
@@ -29,16 +53,17 @@
                               width="15%" themeNames="small"
                               readOnly="true"
                               label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.lancamento"/>
-                <entityPicker id="bancoField"
-                              property="banco"
-                              dataContainer="movimentoBancoDc"
-                              width="65%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.banco">
+                <entityComboBox id="bancoField"
+                                property="banco"
+                                itemsContainer="bancosDc"
+                                dataContainer="movimentoBancoDc"
+                                width="65%" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.banco">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
                 <datePicker id="dataField"
                             property="data"
                             dataContainer="movimentoBancoDc"
@@ -68,28 +93,30 @@
                            dataContainer="movimentoBancoDc"
                            width="20%" themeNames="small"
                            label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.valor"/>
-                <entityPicker id="historicoFinanceiroField"
-                              property="historicoFinanceiro"
-                              dataContainer="movimentoBancoDc"
-                              width="80%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.historicoFinanceiro">
+                <entityComboBox id="historicoFinanceiroField"
+                                property="historicoFinanceiro"
+                                itemsContainer="historicosFinanceirosDc"
+                                dataContainer="movimentoBancoDc"
+                                width="80%" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.historicoFinanceiro">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
             </hbox>
             <hbox width="100%">
-                <entityPicker id="contaContabilField"
-                              property="contaContabil"
-                              dataContainer="movimentoBancoDc"
-                              width="55%" themeNames="small"
-                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.contaContabil">
+                <entityComboBox id="contaContabilField"
+                                property="contaContabil"
+                                itemsContainer="contasContabeisDc"
+                                dataContainer="movimentoBancoDc"
+                                width="55%" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.financeiro/MovimentoBanco.contaContabil">
                     <actions>
                         <action id="entityLookupAction" type="entity_lookup"/>
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
-                </entityPicker>
+                </entityComboBox>
                 <checkbox id="entradaField"
                           property="entrada"
                           dataContainer="movimentoBancoDc"

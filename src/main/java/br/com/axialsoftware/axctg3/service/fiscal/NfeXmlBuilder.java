@@ -2,9 +2,11 @@ package br.com.axialsoftware.axctg3.service.fiscal;
 
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
+import br.com.axialsoftware.axctg3.entity.cadastros.Transportadora;
 import br.com.axialsoftware.axctg3.entity.enums.AmbienteNfe;
 import br.com.axialsoftware.axctg3.entity.enums.CodRegimeTributario;
 import br.com.axialsoftware.axctg3.entity.enums.FinNfe;
+import br.com.axialsoftware.axctg3.entity.enums.ModFrete;
 import br.com.axialsoftware.axctg3.entity.fiscal.ItemNotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
@@ -155,18 +157,21 @@ public class NfeXmlBuilder {
         BigDecimal totalVIbsUf = BigDecimal.ZERO;
         BigDecimal totalVIbsMun = BigDecimal.ZERO;
         BigDecimal totalVCbs = BigDecimal.ZERO;
+        RateioItem totalRateio = RateioItem.ZERO;
         int nItem = 1;
         for (ItemNotaSaida item : notaSaida.getItens()) {
-            Element det = construirDet(doc, item, empresa, notaSaida.getNatureza(), nItem, aliquotaTeste);
+            RateioItem rateio = calcularRateioItem(item, notaSaida);
+            Element det = construirDet(doc, item, empresa, notaSaida.getNatureza(), nItem, aliquotaTeste, rateio);
             infNFe.appendChild(det);
             totalVIbsUf = totalVIbsUf.add(valorIbsUfDoItem(item, notaSaida.getNatureza(), aliquotaTeste));
             totalVIbsMun = totalVIbsMun.add(valorIbsMunDoItem(item, notaSaida.getNatureza(), aliquotaTeste));
             totalVIbs = totalVIbs.add(valorIbsDoItem(item, notaSaida.getNatureza(), aliquotaTeste));
             totalVCbs = totalVCbs.add(valorCbsDoItem(item, notaSaida.getNatureza(), aliquotaTeste));
+            totalRateio = totalRateio.somar(rateio);
             nItem++;
         }
 
-        infNFe.appendChild(construirTotal(doc, notaSaida, totalVIbs, totalVIbsUf, totalVIbsMun, totalVCbs));
+        infNFe.appendChild(construirTotal(doc, notaSaida, totalVIbs, totalVIbsUf, totalVIbsMun, totalVCbs, totalRateio));
         infNFe.appendChild(construirTransp(doc, notaSaida));
         List<TituloReceber> titulos = buscarTitulos(notaSaida);
         Element cobr = construirCobr(doc, notaSaida, titulos);
@@ -351,7 +356,7 @@ public class NfeXmlBuilder {
     // ---- det (item) ----
 
     private Element construirDet(Document doc, ItemNotaSaida item, Empresa empresa, NaturezaOperacao natureza, int nItem,
-                                  AliquotaIbsCbs aliquotaTeste) {
+                                  AliquotaIbsCbs aliquotaTeste, RateioItem rateio) {
         Element det = doc.createElementNS(NS_NFE, "det");
         det.setAttribute("nItem", String.valueOf(nItem));
 
@@ -379,24 +384,32 @@ public class NfeXmlBuilder {
         text(doc, prod, "uTrib", vazioComo(item.getProduto().getUnidade(), "UN"));
         text(doc, prod, "qTrib", dec(item.getQuantidade(), 4));
         text(doc, prod, "vUnTrib", dec(item.getValorUnitario(), 10));
-        // vFrete/vSeg por item — SEFAZ confere que o somatório desses valores nos itens bate
-        // com total/ICMSTot/vFrete e vSeg (rejeição cStat=535 "Total do Frete difere do
+        // vFrete/vSeg/vDesc/vOutro por item — SEFAZ confere que o somatório desses valores
+        // nos itens bate com total/ICMSTot (rejeição cStat=535 "Total do Frete difere do
         // somatório dos itens", confirmado 2026-08-18: total vinha de notaSaida.getFrete()
-        // mas nenhum item carregava vFrete, então a soma dos itens dava zero). Só emite
-        // quando > 0 (campo opcional no schema, mesmo padrão das 176 notas reais — nem todo
-        // item tem frete/seguro rateado).
-        if (item.getFrete() != null && item.getFrete().compareTo(BigDecimal.ZERO) != 0) {
-            text(doc, prod, "vFrete", dec(item.getFrete(), 2));
+        // mas nenhum item carregava vFrete, então a soma dos itens dava zero). Desde
+        // 2026-09-14 esses valores são RATEADOS a partir do cabeçalho (vProd do item /
+        // vProd da nota, ver calcularRateioItem) em vez de lidos de um campo próprio do
+        // item — o total do rateio é usado tal e qual no ICMSTot (construirTotal), então
+        // os dois lados batem por construção. Só emite quando != 0 (campos opcionais).
+        if (rateio.frete().compareTo(BigDecimal.ZERO) != 0) {
+            text(doc, prod, "vFrete", dec(rateio.frete(), 2));
         }
-        if (item.getSeguro() != null && item.getSeguro().compareTo(BigDecimal.ZERO) != 0) {
-            text(doc, prod, "vSeg", dec(item.getSeguro(), 2));
+        if (rateio.seguro().compareTo(BigDecimal.ZERO) != 0) {
+            text(doc, prod, "vSeg", dec(rateio.seguro(), 2));
+        }
+        if (rateio.desconto().compareTo(BigDecimal.ZERO) != 0) {
+            text(doc, prod, "vDesc", dec(rateio.desconto(), 2));
+        }
+        if (rateio.despesas().compareTo(BigDecimal.ZERO) != 0) {
+            text(doc, prod, "vOutro", dec(rateio.despesas(), 2));
         }
         text(doc, prod, "indTot", 1);
         det.appendChild(prod);
 
         Element imposto = doc.createElementNS(NS_NFE, "imposto");
         text(doc, imposto, "vTotTrib", "0.00");
-        imposto.appendChild(construirIcms(doc, item, empresa));
+        imposto.appendChild(construirIcms(doc, item, empresa, rateio));
         Element ipi = construirIpi(doc, item);
         if (ipi != null) {
             imposto.appendChild(ipi);
@@ -419,6 +432,66 @@ public class NfeXmlBuilder {
         }
 
         return det;
+    }
+
+    /**
+     * Rateio de frete/seguro/desconto/despesas do cabeçalho por item — pedido do usuário
+     * 2026-09-14: esses valores só existem no cabeçalho da {@link NotaSaida}, mas o
+     * schema da NFe exige (e a SEFAZ confere) que o somatório por item bata com o total.
+     * Ratear proporcionalmente ao vProd do item também é o critério pedido ("o rateio é
+     * feito pelo vProd do item dividido pelo vProd da nota"). Calculado só na emissão —
+     * não persiste em {@link ItemNotaSaida} nem aparece na aba "Valores calculados" da
+     * tela, mesmo espírito do cálculo "ao vivo" de IBS/CBS.
+     * <p>
+     * Frete/seguro/despesas somam à base do ICMS e desconto subtrai (art. 13 §1º da LC
+     * 87/96 — compõem a base de cálculo quando cobrados do destinatário); o valor do
+     * ICMS é recalculado sobre essa base ajustada com a mesma alíquota já resolvida pra
+     * o item ({@link ItemNotaSaida#getAliqIcms()}, que já reflete
+     * {@code NaturezaOperacao.aliqIcms} — ver {@code ItemNotaSaidaTributacaoService}).
+     */
+    private record RateioItem(BigDecimal frete, BigDecimal seguro, BigDecimal desconto, BigDecimal despesas,
+                               BigDecimal baseIcms, BigDecimal valorIcms) {
+        private static final RateioItem ZERO = new RateioItem(
+                BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO);
+
+        private RateioItem somar(RateioItem outro) {
+            return new RateioItem(
+                    frete.add(outro.frete),
+                    seguro.add(outro.seguro),
+                    desconto.add(outro.desconto),
+                    despesas.add(outro.despesas),
+                    baseIcms.add(outro.baseIcms),
+                    valorIcms.add(outro.valorIcms));
+        }
+    }
+
+    private RateioItem calcularRateioItem(ItemNotaSaida item, NotaSaida notaSaida) {
+        BigDecimal totalVProd = notaSaida.getValorMercadoria();
+        BigDecimal vProdItem = item.getSubTotal() == null ? BigDecimal.ZERO : item.getSubTotal();
+        // nota com vProd total zerado (ex.: todos os itens a custo zero) — sem base pra
+        // ratear, cada item fica sem parcela nenhuma em vez de dividir por zero.
+        BigDecimal fator = (totalVProd == null || totalVProd.compareTo(BigDecimal.ZERO) == 0)
+                ? BigDecimal.ZERO
+                : vProdItem.divide(totalVProd, 10, RoundingMode.HALF_UP);
+
+        BigDecimal frete = rateado(notaSaida.getFrete(), fator);
+        BigDecimal seguro = rateado(notaSaida.getSeguro(), fator);
+        BigDecimal desconto = rateado(notaSaida.getDesconto(), fator);
+        BigDecimal despesas = rateado(notaSaida.getDespesas(), fator);
+
+        BigDecimal baseIcmsPuro = item.getBaseIcms() == null ? BigDecimal.ZERO : item.getBaseIcms();
+        BigDecimal baseIcms = baseIcmsPuro.add(frete).add(seguro).add(despesas).subtract(desconto);
+        BigDecimal aliq = item.getAliqIcms() == null ? BigDecimal.ZERO : item.getAliqIcms();
+        BigDecimal valorIcms = baseIcms.multiply(aliq).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+
+        return new RateioItem(frete, seguro, desconto, despesas, baseIcms, valorIcms);
+    }
+
+    private BigDecimal rateado(BigDecimal valorTotal, BigDecimal fator) {
+        if (valorTotal == null || valorTotal.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+        return valorTotal.multiply(fator).setScale(2, RoundingMode.HALF_UP);
     }
 
     /** CST/CSOSN de ICMS efetivo do item — "102" (Simples) ou "40" como default quando
@@ -455,7 +528,7 @@ public class NfeXmlBuilder {
         };
     }
 
-    private Element construirIcms(Document doc, ItemNotaSaida item, Empresa empresa) {
+    private Element construirIcms(Document doc, ItemNotaSaida item, Empresa empresa, RateioItem rateio) {
         Element icms = doc.createElementNS(NS_NFE, "ICMS");
         boolean simples = simplesNacional(empresa);
         String codigo = resolverCstIcms(item, simples);
@@ -482,16 +555,16 @@ public class NfeXmlBuilder {
             switch (codigo) {
                 case "00":
                     text(doc, variante, "modBC", 3);
-                    text(doc, variante, "vBC", dec(item.getBaseIcms(), 2));
+                    text(doc, variante, "vBC", dec(rateio.baseIcms(), 2));
                     text(doc, variante, "pICMS", dec(item.getAliqIcms(), 2));
-                    text(doc, variante, "vICMS", dec(item.getValorIcms(), 2));
+                    text(doc, variante, "vICMS", dec(rateio.valorIcms(), 2));
                     break;
                 case "20":
                     text(doc, variante, "modBC", 3);
-                    text(doc, variante, "vBC", dec(item.getBaseIcms(), 2));
+                    text(doc, variante, "vBC", dec(rateio.baseIcms(), 2));
                     text(doc, variante, "pRedBC", BigDecimal.ZERO.toPlainString());
                     text(doc, variante, "pICMS", dec(item.getAliqIcms(), 2));
-                    text(doc, variante, "vICMS", dec(item.getValorIcms(), 2));
+                    text(doc, variante, "vICMS", dec(rateio.valorIcms(), 2));
                     break;
                 case "51":
                     // Diferimento — mesmo tratamento que o Axial cravava incondicionalmente
@@ -521,9 +594,9 @@ public class NfeXmlBuilder {
                     // pMVAST não é campo próprio de ItemNotaSaida — derivado de vBCST/vBC (a
                     // margem que já gerou o baseSt gravado).
                     text(doc, variante, "modBC", 3);
-                    text(doc, variante, "vBC", dec(item.getBaseIcms(), 2));
+                    text(doc, variante, "vBC", dec(rateio.baseIcms(), 2));
                     text(doc, variante, "pICMS", dec(item.getAliqIcms(), 2));
-                    text(doc, variante, "vICMS", dec(item.getValorIcms(), 2));
+                    text(doc, variante, "vICMS", dec(rateio.valorIcms(), 2));
                     text(doc, variante, "modBCST", 4);
                     text(doc, variante, "pMVAST", dec(mvaSt(item), 4));
                     text(doc, variante, "vBCST", dec(item.getBaseSt(), 2));
@@ -537,9 +610,9 @@ public class NfeXmlBuilder {
                 default:
                     // 90/outras — mesma forma do CST 00, mais permissiva
                     text(doc, variante, "modBC", 3);
-                    text(doc, variante, "vBC", dec(item.getBaseIcms(), 2));
+                    text(doc, variante, "vBC", dec(rateio.baseIcms(), 2));
                     text(doc, variante, "pICMS", dec(item.getAliqIcms(), 2));
-                    text(doc, variante, "vICMS", dec(item.getValorIcms(), 2));
+                    text(doc, variante, "vICMS", dec(rateio.valorIcms(), 2));
                     break;
             }
         }
@@ -777,11 +850,15 @@ public class NfeXmlBuilder {
     // ---- total ----
 
     private Element construirTotal(Document doc, NotaSaida notaSaida, BigDecimal totalVIbs, BigDecimal totalVIbsUf,
-                                    BigDecimal totalVIbsMun, BigDecimal totalVCbs) {
+                                    BigDecimal totalVIbsMun, BigDecimal totalVCbs, RateioItem totalRateio) {
         Element total = doc.createElementNS(NS_NFE, "total");
         Element icmsTot = doc.createElementNS(NS_NFE, "ICMSTot");
-        text(doc, icmsTot, "vBC", dec(notaSaida.getBaseIcms(), 2));
-        text(doc, icmsTot, "vICMS", dec(notaSaida.getValorIcms(), 2));
+        // vBC/vICMS/vFrete/vSeg/vDesc/vOutro vêm da SOMA do rateio por item (totalRateio),
+        // não direto dos campos do cabeçalho — garante por construção que o total bate com
+        // a soma dos itens (mesma classe de rejeição que o cStat=535 de 2026-08-18, agora
+        // impossível de reproduzir porque os dois lados usam a mesma conta).
+        text(doc, icmsTot, "vBC", dec(totalRateio.baseIcms(), 2));
+        text(doc, icmsTot, "vICMS", dec(totalRateio.valorIcms(), 2));
         text(doc, icmsTot, "vICMSDeson", "0.00");
         text(doc, icmsTot, "vFCP", "0.00");
         text(doc, icmsTot, "vBCST", dec(notaSaida.getBaseSt(), 2));
@@ -789,15 +866,15 @@ public class NfeXmlBuilder {
         text(doc, icmsTot, "vFCPST", "0.00");
         text(doc, icmsTot, "vFCPSTRet", "0.00");
         text(doc, icmsTot, "vProd", dec(notaSaida.getValorMercadoria(), 2));
-        text(doc, icmsTot, "vFrete", dec(notaSaida.getFrete(), 2));
-        text(doc, icmsTot, "vSeg", dec(notaSaida.getSeguro(), 2));
-        text(doc, icmsTot, "vDesc", dec(notaSaida.getDesconto(), 2));
+        text(doc, icmsTot, "vFrete", dec(totalRateio.frete(), 2));
+        text(doc, icmsTot, "vSeg", dec(totalRateio.seguro(), 2));
+        text(doc, icmsTot, "vDesc", dec(totalRateio.desconto(), 2));
         text(doc, icmsTot, "vII", "0.00");
         text(doc, icmsTot, "vIPI", dec(notaSaida.getValorIpi(), 2));
         text(doc, icmsTot, "vIPIDevol", "0.00");
         text(doc, icmsTot, "vPIS", "0.00");
         text(doc, icmsTot, "vCOFINS", "0.00");
-        text(doc, icmsTot, "vOutro", dec(notaSaida.getDespesas(), 2));
+        text(doc, icmsTot, "vOutro", dec(totalRateio.despesas(), 2));
         text(doc, icmsTot, "vNF", dec(notaSaida.getValor(), 2));
         text(doc, icmsTot, "vTotTrib", "0.00");
         total.appendChild(icmsTot);
@@ -846,9 +923,42 @@ public class NfeXmlBuilder {
 
     private Element construirTransp(Document doc, NotaSaida notaSaida) {
         Element transp = doc.createElementNS(NS_NFE, "transp");
-        // NotaSaida não modela transportador/frete ainda — sem transporte é o único valor
-        // seguro de cravar aqui (ver docs/EMISSAO-NFE.md).
-        text(doc, transp, "modFrete", 9);
+        // modFrete vem de NotaSaida.modFrete (pré-preenchido de Empresa.modFretePadrao,
+        // ver NotaSaidaDetailView); nota antiga sem o campo preenchido cai no mesmo
+        // SEM_TRANSPORTE (9) que era cravado incondicionalmente antes deste campo existir.
+        ModFrete modFrete = notaSaida.getModFrete();
+        text(doc, transp, "modFrete", modFrete == null ? ModFrete.SEM_TRANSPORTE.getId() : modFrete.getId());
+
+        // transporta: só faz sentido informar quando há de fato uma transportadora
+        // (mesmo quando modFrete indica "sem transporte" por engano de cadastro, não
+        // inventa dado — só emite o que o operador de fato lançou). Ordem dos campos
+        // (CNPJ/CPF, xNome, IE, xEnder, xMun, UF) confirmada contra NFe complementar real
+        // aceita (ver nfe-xmls-reais-teste); Transportadora não tem campo de IE.
+        Transportadora transportadora = notaSaida.getTransportadora();
+        if (transportadora != null) {
+            Element transporta = doc.createElementNS(NS_NFE, "transporta");
+            if (transportadora.getCnpj() != null && !transportadora.getCnpj().isBlank()) {
+                // Transportadora.cnpj guarda CNPJ OU CPF (transportador pessoa física é
+                // comum — confirmado 2026-09-15, cStat=225 real com um CPF de 11 dígitos
+                // gravado dentro de <CNPJ>, que exige exatamente 14). Mesma escolha por
+                // tamanho já usada em construirDest.
+                String cnpjOuCpf = somenteDigitos(transportadora.getCnpj());
+                if (cnpjOuCpf.length() == 11) {
+                    text(doc, transporta, "CPF", cnpjOuCpf);
+                } else {
+                    text(doc, transporta, "CNPJ", cnpjOuCpf);
+                }
+            }
+            // trim: mesmo dado migrado do legado com espaço de sobra (coluna CHAR de
+            // largura fixa no Firebird) já visto em Produto.descricao — schema rejeita
+            // texto com espaço em branco à frente/atrás.
+            text(doc, transporta, "xNome", trimOuNull(transportadora.getNome()));
+            text(doc, transporta, "xEnder", trimOuNull(transportadora.getEndereco()));
+            text(doc, transporta, "xMun", trimOuNull(transportadora.getCidade()));
+            text(doc, transporta, "UF", trimOuNull(transportadora.getEstado()));
+            transp.appendChild(transporta);
+        }
+
         BigDecimal pesoLiquido = notaSaida.getPesoLiquido();
         BigDecimal pesoBruto = notaSaida.getPesoBruto();
         if ((pesoLiquido != null && pesoLiquido.compareTo(BigDecimal.ZERO) > 0)
@@ -880,6 +990,10 @@ public class NfeXmlBuilder {
         text(doc, fat, "vOrig", dec(notaSaida.getValor(), 2));
         text(doc, fat, "vLiq", dec(notaSaida.getValor(), 2));
         cobr.appendChild(fat);
+        // nDup: posição sequencial da parcela no lote ("001", "002"...) — especificação da
+        // NFe, NÃO o número do título (TituloReceber.numero, que carrega o "/" + letra pro
+        // controle interno). Confirmado com o usuário 2026-09-14: não trocar por
+        // titulo.getNumero(), mesmo esse sendo o número "de verdade" do título.
         int n = 1;
         for (TituloReceber titulo : titulos) {
             Element dup = doc.createElementNS(NS_NFE, "dup");
@@ -958,6 +1072,16 @@ public class NfeXmlBuilder {
 
     private String somenteDigitos(String texto) {
         return texto == null ? "" : texto.replaceAll("\\D", "");
+    }
+
+    // trim retornando null (não string vazia) pra text() continuar omitindo a tag quando
+    // não há valor — texto == "" depois do trim também vira null, mesmo tratamento.
+    private String trimOuNull(String texto) {
+        if (texto == null) {
+            return null;
+        }
+        String aparado = texto.trim();
+        return aparado.isEmpty() ? null : aparado;
     }
 
     // TIe aceita dígitos OU o literal "ISENTO" — somenteDigitos() sozinho zeraria "ISENTO"

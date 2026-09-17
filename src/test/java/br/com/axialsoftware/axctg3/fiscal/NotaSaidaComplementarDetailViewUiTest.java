@@ -12,7 +12,7 @@ import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.component.datepicker.TypedDatePicker;
 import io.jmix.flowui.component.textfield.JmixBigDecimalField;
 import io.jmix.flowui.component.textfield.JmixIntegerField;
-import io.jmix.flowui.component.valuepicker.EntityPicker;
+import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.testassist.FlowuiTestAssistConfiguration;
 import io.jmix.flowui.testassist.UiTest;
 import io.jmix.flowui.testassist.UiTestUtils;
@@ -109,17 +109,17 @@ class NotaSaidaComplementarDetailViewUiTest {
         // DialogWindows, que aceita withInitializer — ViewNavigators.detailView não aceita,
         // por isso o valor é setado direto no componente aqui, só pra provar que o binding
         // aceita o valor mesmo com readOnly="true")
-        EntityPicker<NaturezaOperacao> naturezaField = UiTestUtils.getComponent(view, "naturezaField");
+        EntityComboBox<NaturezaOperacao> naturezaField = UiTestUtils.getComponent(view, "naturezaField");
         assertThat(naturezaField.isReadOnly()).isTrue();
         naturezaField.setValue(natureza);
         assertThat(naturezaField.getValue()).isEqualTo(natureza);
 
-        EntityPicker<ClassTrib> classTribField = UiTestUtils.getComponent(view, "classTribField");
+        EntityComboBox<ClassTrib> classTribField = UiTestUtils.getComponent(view, "classTribField");
         assertThat(classTribField.isReadOnly()).isTrue();
         classTribField.setValue(classTrib);
         assertThat(classTribField.getValue()).isEqualTo(classTrib);
 
-        EntityPicker<Parceiro> parceiroField = UiTestUtils.getComponent(view, "parceiroField");
+        EntityComboBox<Parceiro> parceiroField = UiTestUtils.getComponent(view, "parceiroField");
         assertThat(parceiroField.isReadOnly()).isTrue();
         parceiroField.setValue(parceiro);
         assertThat(parceiroField.getValue()).isEqualTo(parceiro);

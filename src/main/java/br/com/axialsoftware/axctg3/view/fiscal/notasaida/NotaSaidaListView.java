@@ -464,6 +464,11 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
                     nova.setDataEmissao(LocalDate.now());
                     nova.setDataSaida(LocalDate.now());
                 })
+                .withAfterCloseListener(closeEvent -> {
+                    if (closeEvent.closedWith(StandardOutcome.SAVE)) {
+                        notaSaidasDl.load();
+                    }
+                })
                 .open();
     }
 

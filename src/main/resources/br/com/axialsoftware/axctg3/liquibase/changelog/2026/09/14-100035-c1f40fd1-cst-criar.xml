@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/09/14-100035-c1f40fd1-cst-criar.xml">
+    <!--
+        Catálogo de CST/CSOSN de ICMS (ver Javadoc de entity.tabelas.Cst) — substitui a
+        árvore de decisão procedural que o legado calculava na stored procedure
+        SituacaoTributaria a partir de flags cruzadas de Natureza/Produto. Seed fixo com
+        os 21 códigos oficiais (11 CST regime normal + 10 CSOSN Simples Nacional, Anexo do
+        Convênio s/n de 1970 / Ato COTEPE 44/2018) — tabela pequena e estável, sem fonte
+        externa que mude com frequência, então sem CSV/import como ClassTrib.
+    -->
+    <changeSet id="1" author="axctg3">
+        <createTable tableName="CST">
+            <column name="ID" type="${uuid.type}">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_CST"/>
+            </column>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="${offsetDateTime.type}"/>
+            <column name="LAST_MODIFIED_BY" type="VARCHAR(255)"/>
+            <column name="LAST_MODIFIED_DATE" type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY" type="VARCHAR(255)"/>
+            <column name="DELETED_DATE" type="${offsetDateTime.type}"/>
+            <column name="CODIGO" type="VARCHAR(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DESCRICAO" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CSOSN" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="2" author="axctg3" dbms="postgresql">
+        <!-- Unique parcial (só linhas não soft-deletadas) — mesmo padrão de
+             IDX_CLASS_TRIB_UNQ em 2026/08/09-180000-...-classtrib-criar.xml. -->
+        <createIndex indexName="IDX_CST_UNQ" tableName="CST" unique="true">
+            <column name="CODIGO"/>
+        </createIndex>
+
+        <modifySql>
+            <append value="where DELETED_DATE is null"/>
+        </modifySql>
+    </changeSet>
+    <changeSet id="3" author="axctg3" dbms="hsqldb">
+        <!-- HSQLDB (banco de teste) não suporta o índice único parcial do changeSet
+             acima — mesmo índice, sem a cláusula WHERE. -->
+        <createIndex indexName="IDX_CST_UNQ" tableName="CST" unique="true">
+            <column name="CODIGO"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="4" author="axctg3">
+        <insert tableName="CST">
+            <column name="ID" value="b0e5bc84-3020-4593-ab08-6b357d55c7fb"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" value="00"/>
+            <column name="DESCRICAO" value="Tributada integralmente"/>
+            <column name="CSOSN" valueBoolean="false"/>
+        </insert>
+        <insert tableName="CST">
+            <column name="ID" value="73ca5511-9313-4045-bfec-f46dcbb48e14"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" value="10"/>
+            <column name="DESCRICAO" value="Tributada e com cobrança do ICMS por substituição tributária"/>
+            <column name="CSOSN" valueBoolean="false"/>
+        </insert>
+        <insert tableName="CST">
+            <column name="ID" value="40f5909f-753f-47c4-adfe-03f154cd4c4a"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" value="20"/>
+            <column name="DESCRICAO" value="Com redução de base de cálculo"/>
+            <column name="CSOSN" valueBoolean="false"/>
+        </insert>
+        <insert tableName="CST">
+            <column name="ID" value="d481fef3-b0af-417c-bacd-f43c113dbe01"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" value="30"/>
+            <column name="DESCRICAO" value="Isenta ou não tributada e com cobrança do ICMS por substituição tributária"/>
+            <column name="CSOSN" valueBoolean="false"/>
+        </insert>
+        <insert tableName="CST">
+            <column name="ID" value="0edb1545-54d1-4ea2-b7f3-50ec6795b686"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" value="40"/>
+            <column name="DESCRICAO" value="Isenta"/>
+            <column name="CSOSN" valueBoolean="false"/>
+        </insert>
+        <insert tableName="CST">
+            <column name="ID" value="ac098caa-d961-4a04-8d68-eead7bf26eb2"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" value="41"/>
+            <column name="DESCRICAO" value="Não tributada"/>
+            <column name="CSOSN" valueBoolean="false"/>
+        </insert>
+        <insert tableName="CST">
+            <column name="ID" value="26ac306c-3a53-4875-8c2f-e08358d8d306"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" value="50"/>
+            <column name="DESCRICAO" value="Suspensão"/>
+            <column name="CSOSN" valueBoolean="false"/>
+        </insert>
+        <insert tableName="CST">
+            <column name="ID" value="d012ab9b-9160-4c1f-a918-270cd35053e0"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" value="51"/>
+            <column name="DESCRICAO" value="Diferimento"/>
+            <column name="CSOSN" valueBoolean="false"/>
+        </insert>
+        <insert tableName="CST">
+            <column name="ID" value="5df8622a-e37e-4a1a-9607-3caad5cae13b"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" value="60"/>
+            <column name="DESCRICAO" value="ICMS cobrado anteriormente por substituição tributária"/>
+            <column name="CSOSN" valueBoolean="false"/>
+        </insert>
+        <insert tableName="CST">
+            <column name="ID" value="89c6b39f-9400-4fd5-a76a-231d6d15c86e"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" value="70"/>
+            <column name="DESCRICAO" value="Com redução de base de cálculo e cobrança do ICMS por substituição tributária"/>
+            <column name="CSOSN" valueBoolean="false"/>
+        </insert>
+        <insert tableName="CST">
+            <column name="ID" value="99b38c5d-3b75-4a28-b34e-c282151b0331"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" value="90"/>
+            <column name="DESCRICAO" value="Outras"/>
+            <column name="CSOSN" valueBoolean="false"/>
+        </insert>
+        <insert tableName="CST">
+            <column name="ID" value="e9ec61f2-e303-4b38-a3c9-07cb4b640298"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" value="101"/>
+            <column name="DESCRICAO" value="Tributada pelo Simples Nacional com permissão de crédito"/>
+            <column name="CSOSN" valueBoolean="true"/>
+        </insert>
+        <insert tableName="CST">
+            <column name="ID" value="37cf2590-dcdc-43a8-b03a-30a2bee9ca2e"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" value="102"/>
+            <column name="DESCRICAO" value="Tributada pelo Simples Nacional sem permissão de crédito"/>
+            <column name="CSOSN" valueBoolean="true"/>
+        </insert>
+        <insert tableName="CST">
+            <column name="ID" value="80b623d9-f18f-4497-83df-7eb88b185976"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" value="103"/>
+            <column name="DESCRICAO" value="Isenção do ICMS no Simples Nacional para faixa de receita bruta"/>
+            <column name="CSOSN" valueBoolean="true"/>
+        </insert>
+        <insert tableName="CST">
+            <column name="ID" value="a0c54df2-4055-4a82-b23d-84c88021311e"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" value="201"/>
+            <column name="DESCRICAO" value="Tributada pelo Simples Nacional com permissão de crédito e com cobrança do ICMS por substituição tributária"/>
+            <column name="CSOSN" valueBoolean="true"/>
+        </insert>
+        <insert tableName="CST">
+            <column name="ID" value="6a7be081-80c7-430c-a1be-c4cc23ca78f1"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" value="202"/>
+            <column name="DESCRICAO" value="Tributada pelo Simples Nacional sem permissão de crédito e com cobrança do ICMS por substituição tributária"/>
+            <column name="CSOSN" valueBoolean="true"/>
+        </insert>
+        <insert tableName="CST">
+            <column name="ID" value="ee6ee24b-49cb-4b26-95e2-37c064a636f5"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" value="203"/>
+            <column name="DESCRICAO" value="Isenção do ICMS no Simples Nacional para faixa de receita bruta e com cobrança do ICMS por substituição tributária"/>
+            <column name="CSOSN" valueBoolean="true"/>
+        </insert>
+        <insert tableName="CST">
+            <column name="ID" value="74276b87-dfe5-4457-92a7-a858daadf253"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" value="300"/>
+            <column name="DESCRICAO" value="Imune"/>
+            <column name="CSOSN" valueBoolean="true"/>
+        </insert>
+        <insert tableName="CST">
+            <column name="ID" value="369db1dc-5a45-46d5-9394-e47b3e5f196e"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" value="400"/>
+            <column name="DESCRICAO" value="Não tributada pelo Simples Nacional"/>
+            <column name="CSOSN" valueBoolean="true"/>
+        </insert>
+        <insert tableName="CST">
+            <column name="ID" value="e111d9c0-42a6-4dba-a2b4-5c17d97c7bb4"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" value="500"/>
+            <column name="DESCRICAO" value="ICMS cobrado anteriormente por substituição tributária (substituído) ou por antecipação"/>
+            <column name="CSOSN" valueBoolean="true"/>
+        </insert>
+        <insert tableName="CST">
+            <column name="ID" value="a7debd93-1ccf-4a9a-b7da-ec7c222ea565"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" value="900"/>
+            <column name="DESCRICAO" value="Outros"/>
+            <column name="CSOSN" valueBoolean="true"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

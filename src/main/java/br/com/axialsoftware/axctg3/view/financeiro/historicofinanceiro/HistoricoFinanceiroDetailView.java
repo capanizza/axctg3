@@ -1,6 +1,7 @@
 package br.com.axialsoftware.axctg3.view.financeiro.historicofinanceiro;
 
 import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
+import br.com.axialsoftware.axctg3.entity.contabil.HistoricoContabil;
 import br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
@@ -21,12 +22,17 @@ public class HistoricoFinanceiroDetailView extends StandardDetailView<HistoricoF
     private UtilGeralService utilGeralService;
     @ViewComponent
     private CollectionLoader<ContaContabil> contaContabilsDl;
+    @ViewComponent
+    private CollectionLoader<HistoricoContabil> historicoContabilsDl;
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
         contaContabilsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
         contaContabilsDl.setParameter("anoContabil", utilGeralService.getAnoContabil());
         contaContabilsDl.load();
+
+        historicoContabilsDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
+        historicoContabilsDl.load();
 
         historicoFinanceiroDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
         historicoFinanceiroDl.load();

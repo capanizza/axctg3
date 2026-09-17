@@ -15,7 +15,7 @@ import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.data.PersistenceHints;
 import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.component.grid.DataGrid;
-import io.jmix.flowui.component.valuepicker.EntityPicker;
+import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.data.grid.DataGridItems;
 import io.jmix.flowui.testassist.FlowuiTestAssistConfiguration;
 import io.jmix.flowui.testassist.UiTest;
@@ -122,10 +122,10 @@ class BemUiTest {
                 .navigate();
         BemDetailView view = UiTestUtils.getCurrentView();
 
-        EntityPicker<ContaContabil> contaField = UiTestUtils.getComponent(view, "contaContabilField");
+        EntityComboBox<ContaContabil> contaField = UiTestUtils.getComponent(view, "contaContabilField");
         assertThat(contaField.getValue()).isEqualTo(conta);
 
-        EntityPicker<Parceiro> parceiroField = UiTestUtils.getComponent(view, "parceiroField");
+        EntityComboBox<Parceiro> parceiroField = UiTestUtils.getComponent(view, "parceiroField");
         assertThat(parceiroField.getValue()).isEqualTo(parceiro);
 
         // @OrderBy("dataDepr DESC") em Bem.depreciacaos: a mais recente (28/02) cai na

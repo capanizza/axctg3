@@ -252,14 +252,18 @@ class NfeEmissaoServiceTest {
         assertThat(item.getCfop()).isEqualTo(5102);
         assertThat(item.getQuantidade()).isEqualByComparingTo(BigDecimal.ONE);
         assertThat(item.getValorUnitario()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(item.getBaseIcms()).isEqualByComparingTo(new BigDecimal("100.00"));
+        // base = valorIcms / alíquota = 100% — convenção pra complementar só de imposto
+        // (declarar o próprio valor a complementar como base, ver gerarItemComplementar).
+        assertThat(item.getBaseIcms()).isEqualByComparingTo(new BigDecimal("18.00"));
         assertThat(item.getValorIcms()).isEqualByComparingTo(new BigDecimal("18.00"));
-        assertThat(item.getAliqIcms()).isEqualByComparingTo(new BigDecimal("18.00"));
+        assertThat(item.getAliqIcms()).isEqualByComparingTo(new BigDecimal("100"));
         assertThat(item.getCst()).isEqualTo("00");
-        // 410029 "Operações acobertadas somente pelo ICMS" (CST 410, "Sem alíquota") — não
-        // o classTrib "Padrão" genérico, que exige o grupo gIBSCBS preenchido com valores
-        // reais (ver comentário em gerarItemComplementar).
-        assertThat(item.getCodClassTrib()).isEqualTo(410029);
+        // classTrib não é mais um código especial "Sem alíquota" pra complemento só de
+        // imposto (teste 2026-09-15 rejeitou 410029 mesmo com pICMS=100%) — sem
+        // NotaSaida.classTrib configurado, o item cai no mesmo fallback de qualquer item
+        // novo (ItemNotaSaidaEventListener.resolverCodClassTrib, aqui o classTrib do
+        // produto placeholder).
+        assertThat(item.getCodClassTrib()).isEqualTo(CLASS_TRIB_CODIGO_TESTE);
     }
 
     /** Complemento de ICMS-ST (baseSt/valorSt preenchidos no cabeçalho) — item nasce com
@@ -282,7 +286,7 @@ class NfeEmissaoServiceTest {
         assertThat(item.getCst()).isEqualTo("10");
         assertThat(item.getBaseSt()).isEqualByComparingTo(new BigDecimal("50.00"));
         assertThat(item.getValorSt()).isEqualByComparingTo(new BigDecimal("9.00"));
-        assertThat(item.getBaseIcms()).isEqualByComparingTo(new BigDecimal("100.00"));
+        assertThat(item.getBaseIcms()).isEqualByComparingTo(new BigDecimal("18.00"));
         assertThat(item.getValorIcms()).isEqualByComparingTo(new BigDecimal("18.00"));
     }
 

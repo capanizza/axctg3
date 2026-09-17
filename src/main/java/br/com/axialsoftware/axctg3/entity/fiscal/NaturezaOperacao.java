@@ -2,6 +2,7 @@ package br.com.axialsoftware.axctg3.entity.fiscal;
 
 import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
+import br.com.axialsoftware.axctg3.entity.tabelas.Cst;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.annotation.DeletedBy;
 import io.jmix.core.annotation.DeletedDate;
@@ -23,7 +24,8 @@ import java.util.UUID;
 
 @JmixEntity
 @Table(name = "NATUREZA_OPERACAO", indexes = {
-        @Index(name = "IDX_NATUREZA_OPERACAO_UNQ_CODIGO_COD_EMPRESA", columnList = "CODIGO, COD_EMPRESA", unique = true)
+        @Index(name = "IDX_NATUREZA_OPERACAO_UNQ_CODIGO_COD_EMPRESA", columnList = "CODIGO, COD_EMPRESA", unique = true),
+        @Index(name = "IDX_NATUREZA_OPERACAO_CST", columnList = "CST_ID")
 })
 @Entity
 public class NaturezaOperacao {
@@ -137,6 +139,16 @@ public class NaturezaOperacao {
     @ManyToOne(fetch = FetchType.LAZY)
     private ClassTrib classTrib;
 
+    // CST de ICMS (catálogo Cst — ver Javadoc da entidade). Nullable pelo mesmo motivo de
+    // classTrib acima: cadastro de naturezas existentes migra aos poucos. Quando
+    // preenchido com "00" (tributação integral — natureza "rasa"), ou deixado em branco,
+    // ItemNotaSaidaEventListener repassa a decisão pro Cst do Produto; qualquer outro
+    // valor aqui é definitivo (a natureza força o tratamento, ex.: devolução, exportação),
+    // independente do produto do item.
+    @JoinColumn(name = "CST_ID")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Cst cst;
+
     // sem nullable=false: um Boolean NOT NULL vira propriedade "obrigatória" pro Jmix, e
     // como o valor vazio do Checkbox do Vaadin é justamente `false`, desmarcá-lo passa a
     // ser rejeitado como campo em branco. Ver Parceiro.cliente/fornecedor,
@@ -227,6 +239,14 @@ public class NaturezaOperacao {
 
     public void setClassTrib(ClassTrib classTrib) {
         this.classTrib = classTrib;
+    }
+
+    public Cst getCst() {
+        return cst;
+    }
+
+    public void setCst(Cst cst) {
+        this.cst = cst;
     }
 
     public Integer getCfop() {

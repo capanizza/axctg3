@@ -1,14 +1,17 @@
 package br.com.axialsoftware.axctg3.view.financeiro.itempagar;
 
+import br.com.axialsoftware.axctg3.entity.financeiro.Banco;
 import br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro;
 import br.com.axialsoftware.axctg3.entity.financeiro.ItemPagar;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloPagar;
+import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.financeiro.UtilFinanceiroService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 import com.vaadin.flow.router.Route;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.action.DialogAction;
 import io.jmix.flowui.component.textfield.TypedTextField;
+import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -30,9 +33,25 @@ public class ItemPagarDetailView extends StandardDetailView<ItemPagar> {
     private Dialogs dialogs;
     @Autowired
     private UtilFinanceiroService utilFinanceiroService;
+    @Autowired
+    private UtilGeralService utilGeralService;
+    @ViewComponent
+    private CollectionLoader<HistoricoFinanceiro> historicosFinanceirosDl;
+    @ViewComponent
+    private CollectionLoader<Banco> bancosDl;
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
+        // itemsContainer de historicoFinanceiro/banco (entityComboBox, troca de
+        // entityPicker) — dataLoadCoordinator auto="true" NÃO carrega sozinho um loader
+        // com parâmetro "solto"; precisa chamar .load() na mão (ver memória
+        // entitycombobox-toggle-nao-abre).
+        Integer codEmpresa = utilGeralService.getCodEmpresa();
+        historicosFinanceirosDl.setParameter("codEmpresa", codEmpresa);
+        historicosFinanceirosDl.load();
+        bancosDl.setParameter("codEmpresa", codEmpresa);
+        bancosDl.load();
+
         ItemPagar itemPagar = getEditedEntity();
         TituloPagar tituloPagar = itemPagar.getTituloPagar();
         if (itemPagar.getValor().compareTo(BigDecimal.ZERO) == 0) {

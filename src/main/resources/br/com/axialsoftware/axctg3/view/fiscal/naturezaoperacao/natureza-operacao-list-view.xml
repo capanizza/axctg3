@@ -9,6 +9,7 @@
             <fetchPlan extends="_base">
                 <property name="contaContabil" fetchPlan="_base"/>
                 <property name="classTrib" fetchPlan="_base"/>
+                <property name="cst" fetchPlan="_base"/>
             </fetchPlan>
             <loader id="naturezaOperacaosDl" readOnly="true">
                 <query>
@@ -51,10 +52,11 @@
                 <action id="removeAction" type="list_remove"/>
             </actions>
             <columns resizable="true">
-                <column property="codigo" width="10%" filterable="true"/>
-                <column property="nome" width="35%" filterable="true"/>
-                <column property="cfop" width="10%" filterable="true"/>
-                <column property="classTrib" width="15%" filterable="true"/>
+                <column property="codigo" width="8%" filterable="true"/>
+                <column property="nome" width="28%" filterable="true"/>
+                <column property="cfop" width="8%" filterable="true"/>
+                <column property="classTrib" width="14%" filterable="true"/>
+                <column property="cst" width="12%" filterable="true"/>
                 <column property="contaContabil" width="20%" filterable="true"/>
                 <column property="venda" width="10%" textAlign="CENTER"/>
             </columns>
