@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/09/17-101711-c1f40fd1-pedidovenda-itempedidovenda-criar.xml">
+    <changeSet id="1" author="axctg3">
+        <createTable tableName="PEDIDO_VENDA">
+            <column name="ID" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_PEDIDO_VENDA"/>
+            </column>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="${offsetDateTime.type}"/>
+            <column name="LAST_MODIFIED_BY" type="VARCHAR(255)"/>
+            <column name="LAST_MODIFIED_DATE" type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY" type="VARCHAR(255)"/>
+            <column name="DELETED_DATE" type="${offsetDateTime.type}"/>
+            <column name="NUMERO" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="COD_EMPRESA" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DATA_EMISSAO" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DATA_SAIDA" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ESPECIE" type="VARCHAR(4)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="SERIE" type="VARCHAR(2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PARCEIRO_ID" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="NATUREZA_ID" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CONDICAO_PAGAMENTO_ID" type="UUID"/>
+            <column name="BANCO_ID" type="UUID"/>
+            <column name="TRANSPORTADORA_ID" type="UUID"/>
+            <column name="MOD_FRETE" type="INT"/>
+            <column name="VENDEDOR_ID" type="UUID"/>
+            <column name="CLASS_TRIB_ID" type="UUID"/>
+            <column name="MENSAGEM_ID" type="UUID"/>
+            <column name="COMPLEMENTO_MENSAGEM" type="CLOB"/>
+            <column name="FRETE" type="DECIMAL(19, 2)"/>
+            <column name="SEGURO" type="DECIMAL(19, 2)"/>
+            <column name="DESPESAS" type="DECIMAL(19, 2)"/>
+            <column name="DESCONTO" type="DECIMAL(19, 2)"/>
+            <column name="PESO_LIQUIDO" type="DECIMAL(19, 5)"/>
+            <column name="PESO_BRUTO" type="DECIMAL(19, 5)"/>
+            <column name="CANCELADO" type="BOOLEAN" defaultValue="FALSE"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2" author="axctg3">
+        <createIndex indexName="IDX_PEDIDO_VENDA_DATA_EMISSAO" tableName="PEDIDO_VENDA">
+            <column name="DATA_EMISSAO"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="3" author="axctg3">
+        <createIndex indexName="IDX_PEDIDO_VENDA_PARCEIRO" tableName="PEDIDO_VENDA">
+            <column name="PARCEIRO_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="PARCEIRO_ID" baseTableName="PEDIDO_VENDA"
+                                 constraintName="FK_PEDIDO_VENDA_ON_PARCEIRO" referencedColumnNames="ID"
+                                 referencedTableName="PARCEIRO"/>
+    </changeSet>
+
+    <changeSet id="4" author="axctg3">
+        <createIndex indexName="IDX_PEDIDO_VENDA_NATUREZA" tableName="PEDIDO_VENDA">
+            <column name="NATUREZA_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="NATUREZA_ID" baseTableName="PEDIDO_VENDA"
+                                 constraintName="FK_PEDIDO_VENDA_ON_NATUREZA" referencedColumnNames="ID"
+                                 referencedTableName="NATUREZA_OPERACAO"/>
+    </changeSet>
+
+    <changeSet id="5" author="axctg3">
+        <createIndex indexName="IDX_PEDIDO_VENDA_CONDICAO_PAGAMENTO" tableName="PEDIDO_VENDA">
+            <column name="CONDICAO_PAGAMENTO_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="CONDICAO_PAGAMENTO_ID" baseTableName="PEDIDO_VENDA"
+                                 constraintName="FK_PEDIDO_VENDA_ON_CONDICAO_PAGAMENTO" referencedColumnNames="ID"
+                                 referencedTableName="CONDICAO_PAGAMENTO"/>
+    </changeSet>
+
+    <changeSet id="6" author="axctg3">
+        <createIndex indexName="IDX_PEDIDO_VENDA_BANCO" tableName="PEDIDO_VENDA">
+            <column name="BANCO_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="BANCO_ID" baseTableName="PEDIDO_VENDA"
+                                 constraintName="FK_PEDIDO_VENDA_ON_BANCO" referencedColumnNames="ID"
+                                 referencedTableName="BANCO"/>
+    </changeSet>
+
+    <changeSet id="7" author="axctg3">
+        <createIndex indexName="IDX_PEDIDO_VENDA_TRANSPORTADORA" tableName="PEDIDO_VENDA">
+            <column name="TRANSPORTADORA_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="TRANSPORTADORA_ID" baseTableName="PEDIDO_VENDA"
+                                 constraintName="FK_PEDIDO_VENDA_ON_TRANSPORTADORA" referencedColumnNames="ID"
+                                 referencedTableName="TRANSPORTADORA"/>
+    </changeSet>
+
+    <changeSet id="8" author="axctg3">
+        <createIndex indexName="IDX_PEDIDO_VENDA_VENDEDOR" tableName="PEDIDO_VENDA">
+            <column name="VENDEDOR_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="VENDEDOR_ID" baseTableName="PEDIDO_VENDA"
+                                 constraintName="FK_PEDIDO_VENDA_ON_VENDEDOR" referencedColumnNames="ID"
+                                 referencedTableName="VENDEDOR"/>
+    </changeSet>
+
+    <changeSet id="9" author="axctg3">
+        <createIndex indexName="IDX_PEDIDO_VENDA_CLASS_TRIB" tableName="PEDIDO_VENDA">
+            <column name="CLASS_TRIB_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="CLASS_TRIB_ID" baseTableName="PEDIDO_VENDA"
+                                 constraintName="FK_PEDIDO_VENDA_ON_CLASS_TRIB" referencedColumnNames="ID"
+                                 referencedTableName="CLASS_TRIB"/>
+    </changeSet>
+
+    <changeSet id="10" author="axctg3">
+        <createIndex indexName="IDX_PEDIDO_VENDA_MENSAGEM" tableName="PEDIDO_VENDA">
+            <column name="MENSAGEM_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="MENSAGEM_ID" baseTableName="PEDIDO_VENDA"
+                                 constraintName="FK_PEDIDO_VENDA_ON_MENSAGEM" referencedColumnNames="ID"
+                                 referencedTableName="MENSAGEM"/>
+    </changeSet>
+
+    <!-- Índice único NUMERO+COD_EMPRESA+ESPECIE+SERIE, mesmo padrão final de NOTA_SAIDA
+         (cada série tem sua própria numeração). Postgres usa índice parcial (soft
+         delete); HSQLDB (testes) não suporta índice parcial, então cobre também as
+         linhas com soft delete. -->
+    <changeSet id="11" author="axctg3" dbms="postgresql">
+        <createIndex indexName="IDX_PEDIDO_VENDA_UNQ" tableName="PEDIDO_VENDA" unique="true">
+            <column name="NUMERO"/>
+            <column name="COD_EMPRESA"/>
+            <column name="ESPECIE"/>
+            <column name="SERIE"/>
+        </createIndex>
+
+        <modifySql>
+            <append value="where DELETED_DATE is null"/>
+        </modifySql>
+    </changeSet>
+
+    <changeSet id="12" author="axctg3" dbms="hsqldb">
+        <createIndex indexName="IDX_PEDIDO_VENDA_UNQ" tableName="PEDIDO_VENDA" unique="true">
+            <column name="NUMERO"/>
+            <column name="COD_EMPRESA"/>
+            <column name="ESPECIE"/>
+            <column name="SERIE"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="13" author="axctg3">
+        <createTable tableName="ITEM_PEDIDO_VENDA">
+            <column name="ID" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_ITEM_PEDIDO_VENDA"/>
+            </column>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="${offsetDateTime.type}"/>
+            <column name="LAST_MODIFIED_BY" type="VARCHAR(255)"/>
+            <column name="LAST_MODIFIED_DATE" type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY" type="VARCHAR(255)"/>
+            <column name="DELETED_DATE" type="${offsetDateTime.type}"/>
+            <column name="PEDIDO_VENDA_ID" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ITEM" type="INT"/>
+            <column name="PRODUTO_ID" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CFOP" type="INT"/>
+            <column name="CST" type="VARCHAR(4)"/>
+            <column name="COD_CLASS_TRIB" type="INT"/>
+            <column name="QUANTIDADE" type="DECIMAL(19, 3)"/>
+            <column name="VALOR_UNITARIO" type="DECIMAL(19, 6)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="14" author="axctg3">
+        <createIndex indexName="IDX_ITEM_PEDIDO_VENDA_PEDIDO_VENDA" tableName="ITEM_PEDIDO_VENDA">
+            <column name="PEDIDO_VENDA_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="PEDIDO_VENDA_ID" baseTableName="ITEM_PEDIDO_VENDA"
+                                 constraintName="FK_ITEM_PEDIDO_VENDA_ON_PEDIDO_VENDA" referencedColumnNames="ID"
+                                 referencedTableName="PEDIDO_VENDA"/>
+    </changeSet>
+
+    <changeSet id="15" author="axctg3">
+        <createIndex indexName="IDX_ITEM_PEDIDO_VENDA_PRODUTO" tableName="ITEM_PEDIDO_VENDA">
+            <column name="PRODUTO_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="PRODUTO_ID" baseTableName="ITEM_PEDIDO_VENDA"
+                                 constraintName="FK_ITEM_PEDIDO_VENDA_ON_PRODUTO" referencedColumnNames="ID"
+                                 referencedTableName="PRODUTO"/>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://itemPedidoVendaDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="itemPedidoVendaDc"
+                  class="br.com.axialsoftware.axctg3.entity.fiscal.ItemPedidoVenda">
+            <fetchPlan extends="_base">
+                <property name="produto" fetchPlan="_instance_name"/>
+            </fetchPlan>
+            <loader id="itemPedidoVendaDl"/>
+        </instance>
+        <!-- itemsContainer do entityComboBox de produtoField; codEmpresa da sessão via
+             onBeforeShow. -->
+        <collection id="produtosDc"
+                    class="br.com.axialsoftware.axctg3.entity.fiscal.Produto">
+            <loader id="produtosDl">
+                <query><![CDATA[select e from Produto e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <vbox id="form" width="100%">
+            <hbox width="100%" expand="produtoField">
+                <integerField id="itemField"
+                              property="item"
+                              dataContainer="itemPedidoVendaDc"
+                              width="5%" themeNames="small"
+                              readOnly="true"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemPedidoVenda.item"/>
+                <entityComboBox id="produtoField"
+                                property="produto"
+                                itemsContainer="produtosDc"
+                                dataContainer="itemPedidoVendaDc" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemPedidoVenda.produto">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityComboBox>
+                <integerField id="cfopField"
+                              property="cfop"
+                              dataContainer="itemPedidoVendaDc"
+                              width="10%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemPedidoVenda.cfop"/>
+                <textField id="cstField"
+                           property="cst"
+                           maxLength="4"
+                           dataContainer="itemPedidoVendaDc"
+                           width="8%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemPedidoVenda.cst"/>
+                <integerField id="codClassTribField"
+                              property="codClassTrib"
+                              dataContainer="itemPedidoVendaDc"
+                              width="16%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemPedidoVenda.codClassTrib"/>
+            </hbox>
+            <hbox width="100%">
+                <bigDecimalField id="quantidadeField"
+                                 property="quantidade"
+                                 dataContainer="itemPedidoVendaDc"
+                                 width="20%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemPedidoVenda.quantidade"/>
+                <bigDecimalField id="valorUnitarioField"
+                                 property="valorUnitario"
+                                 dataContainer="itemPedidoVendaDc"
+                                 width="20%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemPedidoVenda.valorUnitario"/>
+                <bigDecimalField id="subTotalField"
+                                 property="subTotal"
+                                 dataContainer="itemPedidoVendaDc" themeNames="small"
+                                 readOnly="true"
+                                 width="20%"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemPedidoVenda.subTotal"/>
+            </hbox>
+        </vbox>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

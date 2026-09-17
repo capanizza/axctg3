@@ -85,6 +85,8 @@
                   title="msg://br.com.axialsoftware.axctg3.view.fiscal.produto/produtoListView.title"/>
             <item view="SaldoProduto.list"
                   title="msg://br.com.axialsoftware.axctg3.view.fiscal.saldoproduto/saldoProdutoListView.title"/>
+            <item view="PedidoVenda.list"
+                  title="msg://br.com.axialsoftware.axctg3.view.fiscal.pedidovenda/pedidoVendaListView.title"/>
             <item view="NotaSaida.list"
                   title="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.title"/>
             <item view="Nfe.list"

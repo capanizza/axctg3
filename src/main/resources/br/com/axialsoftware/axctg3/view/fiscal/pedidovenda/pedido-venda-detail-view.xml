@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://pedidoVendaDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="pedidoVendaDc"
+                  class="br.com.axialsoftware.axctg3.entity.fiscal.PedidoVenda">
+            <fetchPlan extends="_base">
+                <property name="itens" fetchPlan="_base">
+                    <property name="produto" fetchPlan="_instance_name"/>
+                </property>
+                <property name="parceiro" fetchPlan="_instance_name"/>
+                <property name="natureza" fetchPlan="_instance_name"/>
+                <property name="condicaoPagamento" fetchPlan="_instance_name"/>
+                <property name="banco" fetchPlan="_instance_name"/>
+                <property name="transportadora" fetchPlan="_instance_name"/>
+                <property name="vendedor" fetchPlan="_instance_name"/>
+                <property name="classTrib" fetchPlan="_base"/>
+                <property name="mensagem" fetchPlan="_instance_name"/>
+            </fetchPlan>
+            <loader id="pedidoVendaDl"/>
+            <collection id="itensDc" property="itens"/>
+        </instance>
+        <!-- itemsContainer dos entityComboBox abaixo, mesmo padrão de
+             NotaSaidaDetailView; codEmpresa da sessão via onBeforeShow. -->
+        <collection id="naturezaOperacoesDc"
+                    class="br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao">
+            <loader id="naturezaOperacoesDl">
+                <query><![CDATA[select e from NaturezaOperacao e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+            </loader>
+        </collection>
+        <collection id="classTribsDc"
+                    class="br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib">
+            <loader id="classTribsDl">
+                <query><![CDATA[select e from ClassTrib e order by e.codigo]]></query>
+            </loader>
+        </collection>
+        <collection id="condicoesPagamentoDc"
+                    class="br.com.axialsoftware.axctg3.entity.cadastros.CondicaoPagamento">
+            <loader id="condicoesPagamentoDl">
+                <query><![CDATA[select e from CondicaoPagamento e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+            </loader>
+        </collection>
+        <collection id="bancosDc"
+                    class="br.com.axialsoftware.axctg3.entity.financeiro.Banco">
+            <loader id="bancosDl">
+                <query><![CDATA[select e from Banco e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+            </loader>
+        </collection>
+        <collection id="transportadorasDc"
+                    class="br.com.axialsoftware.axctg3.entity.cadastros.Transportadora">
+            <loader id="transportadorasDl">
+                <query><![CDATA[select e from Transportadora e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+            </loader>
+        </collection>
+        <collection id="vendedoresDc"
+                    class="br.com.axialsoftware.axctg3.entity.cadastros.Vendedor">
+            <loader id="vendedoresDl">
+                <query><![CDATA[select e from Vendedor e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+            </loader>
+        </collection>
+        <collection id="mensagensDc"
+                    class="br.com.axialsoftware.axctg3.entity.cadastros.Mensagem">
+            <loader id="mensagensDl">
+                <query><![CDATA[select e from Mensagem e where e.codEmpresa = :codEmpresa order by e.codigo]]></query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <vbox id="form" width="100%" spacing="true">
+            <!-- fora das abas: identificação/status do pedido, visível em qualquer aba -->
+            <hbox width="100%" expand="parceiroField">
+                <integerField id="numeroField"
+                              property="numero"
+                              dataContainer="pedidoVendaDc"
+                              width="8%" themeNames="small"
+                              readOnly="true"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.numero"/>
+                <datePicker id="dataEmissaoField"
+                            property="dataEmissao"
+                            dataContainer="pedidoVendaDc"
+                            width="12%" themeNames="small"
+                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.dataEmissao"/>
+                <!-- entityComboBox com busca preguiçosa (itemsFetchCallback, ver
+                     PedidoVendaDetailView.parceiroFieldItemsFetchCallback) — mesmo
+                     padrão de NotaSaidaDetailView.parceiroField, evita carregar todos
+                     os clientes de uma vez. -->
+                <entityComboBox id="parceiroField"
+                                property="parceiro"
+                                dataContainer="pedidoVendaDc" themeNames="small"
+                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.parceiro">
+                    <actions>
+                        <action id="entityLookupAction" type="entity_lookup"/>
+                        <action id="entityClearAction" type="entity_clear"/>
+                    </actions>
+                </entityComboBox>
+                <checkbox id="canceladoField"
+                          property="cancelado"
+                          dataContainer="pedidoVendaDc"
+                          width="12%"
+                          alignSelf="END"
+                          label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.cancelado"/>
+            </hbox>
+            <vbox id="verticalBox" width="100%">
+                <tabSheet id="formTabs" width="100%" themeNames="small, bordered">
+                    <tab id="informacoesGeraisTab" label="Informações gerais">
+                        <vbox width="100%">
+                            <hbox width="100%" expand="naturezaField">
+                                <textField id="especieField"
+                                           property="especie"
+                                           maxLength="4"
+                                           dataContainer="pedidoVendaDc"
+                                           width="8%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.especie"/>
+                                <textField id="serieField"
+                                           property="serie"
+                                           maxLength="2"
+                                           dataContainer="pedidoVendaDc"
+                                           width="5%" themeNames="small"
+                                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.serie"/>
+                                <datePicker id="dataSaidaField"
+                                            property="dataSaida"
+                                            dataContainer="pedidoVendaDc"
+                                            width="13%" themeNames="small"
+                                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.dataSaida"/>
+                                <entityComboBox id="naturezaField"
+                                                property="natureza"
+                                                itemsContainer="naturezaOperacoesDc"
+                                                width="36%"
+                                                dataContainer="pedidoVendaDc" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.natureza">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityComboBox>
+                                <entityComboBox id="classTribField"
+                                                property="classTrib"
+                                                itemsContainer="classTribsDc"
+                                                dataContainer="pedidoVendaDc"
+                                                width="36%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.classTrib">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityComboBox>
+                            </hbox>
+                            <hbox width="100%">
+                                <entityComboBox id="condicaoPagamentoField"
+                                                property="condicaoPagamento"
+                                                itemsContainer="condicoesPagamentoDc"
+                                                dataContainer="pedidoVendaDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.condicaoPagamento">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityComboBox>
+                                <entityComboBox id="bancoField"
+                                                property="banco"
+                                                itemsContainer="bancosDc"
+                                                dataContainer="pedidoVendaDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.banco">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityComboBox>
+                                <entityComboBox id="transportadoraField"
+                                                property="transportadora"
+                                                itemsContainer="transportadorasDc"
+                                                dataContainer="pedidoVendaDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.transportadora">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityComboBox>
+                                <entityComboBox id="vendedorField"
+                                                property="vendedor"
+                                                itemsContainer="vendedoresDc"
+                                                dataContainer="pedidoVendaDc"
+                                                width="25%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.vendedor">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityComboBox>
+                            </hbox>
+                        </vbox>
+                    </tab>
+                    <tab id="complementosTab" label="Complementos">
+                        <vbox width="100%">
+                            <hbox width="100%" expand="complementoMensagemField">
+                                <entityComboBox id="mensagemField"
+                                                property="mensagem"
+                                                itemsContainer="mensagensDc"
+                                                dataContainer="pedidoVendaDc"
+                                                width="40%" themeNames="small"
+                                                label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.mensagem">
+                                    <actions>
+                                        <action id="entityLookupAction" type="entity_lookup"/>
+                                        <action id="entityClearAction" type="entity_clear"/>
+                                    </actions>
+                                </entityComboBox>
+                                <textArea id="complementoMensagemField"
+                                          property="complementoMensagem"
+                                          dataContainer="pedidoVendaDc"
+                                          height="6.5em" themeNames="small"
+                                          label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.complementoMensagem"/>
+                            </hbox>
+                            <hbox width="100%">
+                                <comboBox id="modFreteField"
+                                          property="modFrete"
+                                          dataContainer="pedidoVendaDc"
+                                          width="50%" themeNames="small"
+                                          label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.modFrete"/>
+                            </hbox>
+                            <hbox width="100%">
+                                <bigDecimalField id="freteField"
+                                                 property="frete"
+                                                 dataContainer="pedidoVendaDc"
+                                                 width="16%" themeNames="small"
+                                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.frete"/>
+                                <bigDecimalField id="seguroField"
+                                                 property="seguro"
+                                                 dataContainer="pedidoVendaDc"
+                                                 width="16%" themeNames="small"
+                                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.seguro"/>
+                                <bigDecimalField id="descontoField"
+                                                 property="desconto"
+                                                 dataContainer="pedidoVendaDc"
+                                                 width="16%" themeNames="small"
+                                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.desconto"/>
+                                <bigDecimalField id="despesasField"
+                                                 property="despesas"
+                                                 dataContainer="pedidoVendaDc"
+                                                 width="16%" themeNames="small"
+                                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.despesas"/>
+                                <bigDecimalField id="pesoLiquidoField"
+                                                 property="pesoLiquido"
+                                                 dataContainer="pedidoVendaDc"
+                                                 width="16%" themeNames="small"
+                                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.pesoLiquido"/>
+                                <bigDecimalField id="pesoBrutoField"
+                                                 property="pesoBruto"
+                                                 dataContainer="pedidoVendaDc"
+                                                 width="15%" themeNames="small"
+                                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.pesoBruto"/>
+                            </hbox>
+                        </vbox>
+                    </tab>
+                    <tab id="itensTab" label="Itens">
+                        <vbox width="100%">
+                            <hbox id="itensButtonsPanel" classNames="buttons-panel">
+                                <button id="itemCreateButton" action="itensPedidoVendaDataGrid.create" themeNames="small"/>
+                                <button id="itemEditButton" action="itensPedidoVendaDataGrid.edit" themeNames="small"/>
+                                <button id="itemRemoveButton" action="itensPedidoVendaDataGrid.remove" themeNames="small"/>
+                            </hbox>
+                            <dataGrid id="itensPedidoVendaDataGrid"
+                                      dataContainer="itensDc"
+                                      width="100%"
+                                      themeNames="small">
+                                <actions>
+                                    <action id="create" type="list_create">
+                                        <properties>
+                                            <property name="openMode" value="DIALOG"/>
+                                        </properties>
+                                    </action>
+                                    <action id="edit" type="list_edit">
+                                        <properties>
+                                            <property name="openMode" value="DIALOG"/>
+                                        </properties>
+                                    </action>
+                                    <action id="remove" type="list_remove"/>
+                                </actions>
+                                <columns resizable="true">
+                                    <column property="item" width="8%" textAlign="CENTER"/>
+                                    <column property="produto" width="34%"/>
+                                    <column property="cfop" width="10%" textAlign="END"/>
+                                    <column property="cst" width="8%"/>
+                                    <column property="quantidade" width="12%" textAlign="END"/>
+                                    <column property="valorUnitario" width="14%" textAlign="END"/>
+                                    <column property="subTotal" width="14%" textAlign="END"/>
+                                </columns>
+                            </dataGrid>
+                        </vbox>
+                    </tab>
+                </tabSheet>
+            </vbox>
+        </vbox>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>
