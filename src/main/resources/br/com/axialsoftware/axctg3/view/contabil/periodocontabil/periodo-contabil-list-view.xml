@@ -9,7 +9,7 @@
             <fetchPlan extends="_base"/>
             <loader id="empresasDl" readOnly="true">
                 <query>
-                    <![CDATA[select e from Empresa e]]>
+                    <![CDATA[select e from Empresa e order by e.codigo]]>
                 </query>
             </loader>
         </collection>
