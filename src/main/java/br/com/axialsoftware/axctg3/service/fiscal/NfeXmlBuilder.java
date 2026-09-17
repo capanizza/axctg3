@@ -421,6 +421,17 @@ public class NfeXmlBuilder {
         }
         det.appendChild(imposto);
 
+        // infAdProd (informação adicional do produto) — elemento do schema BASE da NFe
+        // 4.00 (TDet), tem que vir logo depois de imposto/impostoDevol e ANTES de vItem:
+        // vItem é uma extensão da Reforma Tributária (grupo acrescentado ao final do tipo
+        // base por complexContent/extension), então só é válido depois de todo o conteúdo
+        // do tipo base — colocá-lo antes de infAdProd rejeita o lote com cStat=225 "Falha
+        // no Schema XML" (confirmado em homologação-SP 2026-09-17). Só emitido quando o
+        // operador digitou algo em ItemNotaSaida.descricaoComplementar.
+        if (item.getDescricaoComplementar() != null && !item.getDescricaoComplementar().isBlank()) {
+            text(doc, det, "infAdProd", item.getDescricaoComplementar().trim());
+        }
+
         if (incluirReformaTributaria) {
             // vItem (valor total do item já com IBS/CBS somado) — grupo novo da Reforma
             // Tributária, sibling de imposto, confirmado obrigatório em 30/30 notas reais de
@@ -429,12 +440,6 @@ public class NfeXmlBuilder {
                     .add(valorIbsDoItem(item, natureza, aliquotaTeste))
                     .add(valorCbsDoItem(item, natureza, aliquotaTeste));
             text(doc, det, "vItem", dec(vItem, 2));
-        }
-
-        // infAdProd (informação adicional do produto) — só emitido quando o operador
-        // digitou algo em ItemNotaSaida.descricaoComplementar; schema trata como opcional.
-        if (item.getDescricaoComplementar() != null && !item.getDescricaoComplementar().isBlank()) {
-            text(doc, det, "infAdProd", item.getDescricaoComplementar().trim());
         }
 
         return det;
