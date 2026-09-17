@@ -18,7 +18,6 @@ import io.jmix.core.metamodel.annotation.InstanceName;
 import io.jmix.core.metamodel.annotation.JmixEntity;
 import io.jmix.core.metamodel.annotation.NumberFormat;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
@@ -39,7 +38,7 @@ import java.util.UUID;
  */
 @JmixEntity
 @Table(name = "PEDIDO_VENDA", indexes = {
-        @Index(name = "IDX_PEDIDO_VENDA_DATA_EMISSAO", columnList = "DATA_EMISSAO"),
+        @Index(name = "IDX_PEDIDO_VENDA_DATA_ENTRADA", columnList = "DATA_ENTRADA"),
         @Index(name = "IDX_PEDIDO_VENDA_PARCEIRO", columnList = "PARCEIRO_ID"),
         @Index(name = "IDX_PEDIDO_VENDA_NATUREZA", columnList = "NATUREZA_ID"),
         @Index(name = "IDX_PEDIDO_VENDA_CONDICAO_PAGAMENTO", columnList = "CONDICAO_PAGAMENTO_ID"),
@@ -48,7 +47,7 @@ import java.util.UUID;
         @Index(name = "IDX_PEDIDO_VENDA_VENDEDOR", columnList = "VENDEDOR_ID"),
         @Index(name = "IDX_PEDIDO_VENDA_CLASS_TRIB", columnList = "CLASS_TRIB_ID"),
         @Index(name = "IDX_PEDIDO_VENDA_MENSAGEM", columnList = "MENSAGEM_ID"),
-        @Index(name = "IDX_PEDIDO_VENDA_UNQ", columnList = "NUMERO, COD_EMPRESA, ESPECIE, SERIE", unique = true)
+        @Index(name = "IDX_PEDIDO_VENDA_UNQ", columnList = "NUMERO, COD_EMPRESA", unique = true)
 })
 @Entity
 public class PedidoVenda {
@@ -99,21 +98,9 @@ public class PedidoVenda {
     @NotNull
     private Integer codEmpresa;
 
-    @Column(name = "DATA_EMISSAO", nullable = false)
+    @Column(name = "DATA_ENTRADA", nullable = false)
     @NotNull
-    private LocalDate dataEmissao;
-
-    @Column(name = "DATA_SAIDA", nullable = false)
-    @NotNull
-    private LocalDate dataSaida;
-
-    @Column(name = "ESPECIE", nullable = false, length = 4)
-    @NotNull
-    private String especie;
-
-    @Column(name = "SERIE", nullable = false, length = 2)
-    @NotBlank
-    private String serie;
+    private LocalDate dataEntrada;
 
     @JoinColumn(name = "PARCEIRO_ID", nullable = false)
     @NotNull
@@ -180,9 +167,6 @@ public class PedidoVenda {
     @Column(name = "PESO_BRUTO", precision = 19, scale = 5)
     private BigDecimal pesoBruto = BigDecimal.ZERO;
 
-    @Column(name = "CANCELADO")
-    private Boolean cancelado = false;
-
     @OnDelete(DeletePolicy.CASCADE)
     @Composition
     @OrderBy("item")
@@ -195,14 +179,6 @@ public class PedidoVenda {
 
     public void setItens(List<ItemPedidoVenda> itens) {
         this.itens = itens;
-    }
-
-    public Boolean getCancelado() {
-        return cancelado;
-    }
-
-    public void setCancelado(Boolean cancelado) {
-        this.cancelado = cancelado;
     }
 
     public BigDecimal getPesoBruto() {
@@ -333,36 +309,12 @@ public class PedidoVenda {
         this.parceiro = parceiro;
     }
 
-    public @NotNull String getSerie() {
-        return serie;
+    public LocalDate getDataEntrada() {
+        return dataEntrada;
     }
 
-    public void setSerie(@NotNull String serie) {
-        this.serie = serie == null ? null : serie.trim();
-    }
-
-    public @NotNull String getEspecie() {
-        return especie;
-    }
-
-    public void setEspecie(@NotNull String especie) {
-        this.especie = especie;
-    }
-
-    public LocalDate getDataSaida() {
-        return dataSaida;
-    }
-
-    public void setDataSaida(LocalDate dataSaida) {
-        this.dataSaida = dataSaida;
-    }
-
-    public LocalDate getDataEmissao() {
-        return dataEmissao;
-    }
-
-    public void setDataEmissao(LocalDate dataEmissao) {
-        this.dataEmissao = dataEmissao;
+    public void setDataEntrada(LocalDate dataEntrada) {
+        this.dataEntrada = dataEntrada;
     }
 
     public @NotNull Integer getCodEmpresa() {

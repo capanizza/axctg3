@@ -51,13 +51,10 @@
                 <action id="removeAction" type="list_remove"/>
             </actions>
             <columns resizable="true">
-                <column property="numero" filterable="true" width="9%"/>
-                <column property="dataEmissao" filterable="true" width="11%"/>
-                <column property="especie" filterable="true" width="7%"/>
-                <column property="serie" filterable="true" width="7%"/>
-                <column property="parceiro" filterable="true" width="28%"/>
-                <column property="natureza" filterable="true" width="24%"/>
-                <column property="cancelado" width="10%" textAlign="CENTER"/>
+                <column property="numero" filterable="true" width="12%"/>
+                <column property="dataEntrada" filterable="true" width="15%"/>
+                <column property="parceiro" filterable="true" width="40%"/>
+                <column property="natureza" filterable="true" width="33%"/>
             </columns>
         </dataGrid>
         <hbox id="lookupActions" visible="false">

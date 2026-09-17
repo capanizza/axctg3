@@ -83,11 +83,11 @@
                               width="8%" themeNames="small"
                               readOnly="true"
                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.numero"/>
-                <datePicker id="dataEmissaoField"
-                            property="dataEmissao"
+                <datePicker id="dataEntradaField"
+                            property="dataEntrada"
                             dataContainer="pedidoVendaDc"
                             width="12%" themeNames="small"
-                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.dataEmissao"/>
+                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.dataEntrada"/>
                 <!-- entityComboBox com busca preguiçosa (itemsFetchCallback, ver
                      PedidoVendaDetailView.parceiroFieldItemsFetchCallback) — mesmo
                      padrão de NotaSaidaDetailView.parceiroField, evita carregar todos
@@ -101,39 +101,16 @@
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
                 </entityComboBox>
-                <checkbox id="canceladoField"
-                          property="cancelado"
-                          dataContainer="pedidoVendaDc"
-                          width="12%"
-                          alignSelf="END"
-                          label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.cancelado"/>
             </hbox>
             <vbox id="verticalBox" width="100%">
                 <tabSheet id="formTabs" width="100%" themeNames="small, bordered">
                     <tab id="informacoesGeraisTab" label="Informações gerais">
                         <vbox width="100%">
                             <hbox width="100%" expand="naturezaField">
-                                <textField id="especieField"
-                                           property="especie"
-                                           maxLength="4"
-                                           dataContainer="pedidoVendaDc"
-                                           width="8%" themeNames="small"
-                                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.especie"/>
-                                <textField id="serieField"
-                                           property="serie"
-                                           maxLength="2"
-                                           dataContainer="pedidoVendaDc"
-                                           width="5%" themeNames="small"
-                                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.serie"/>
-                                <datePicker id="dataSaidaField"
-                                            property="dataSaida"
-                                            dataContainer="pedidoVendaDc"
-                                            width="13%" themeNames="small"
-                                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.dataSaida"/>
                                 <entityComboBox id="naturezaField"
                                                 property="natureza"
                                                 itemsContainer="naturezaOperacoesDc"
-                                                width="36%"
+                                                width="50%"
                                                 dataContainer="pedidoVendaDc" themeNames="small"
                                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.natureza">
                                     <actions>
@@ -145,7 +122,7 @@
                                                 property="classTrib"
                                                 itemsContainer="classTribsDc"
                                                 dataContainer="pedidoVendaDc"
-                                                width="36%" themeNames="small"
+                                                width="50%" themeNames="small"
                                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.classTrib">
                                     <actions>
                                         <action id="entityLookupAction" type="entity_lookup"/>

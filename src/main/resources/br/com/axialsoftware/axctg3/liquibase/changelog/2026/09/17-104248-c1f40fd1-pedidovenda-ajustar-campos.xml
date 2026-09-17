@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/09/17-104248-c1f40fd1-pedidovenda-ajustar-campos.xml">
+
+    <!-- Drop do índice único antigo (NUMERO+COD_EMPRESA+ESPECIE+SERIE, de
+         17-101711-c1f40fd1-pedidovenda-itempedidovenda-criar.xml) antes de derrubar
+         ESPECIE/SERIE — não dá pra dropar a coluna com ela ainda indexada. -->
+    <changeSet id="1" author="axctg3" dbms="postgresql">
+        <dropIndex indexName="IDX_PEDIDO_VENDA_UNQ" tableName="PEDIDO_VENDA"/>
+    </changeSet>
+
+    <changeSet id="2" author="axctg3" dbms="hsqldb">
+        <dropIndex indexName="IDX_PEDIDO_VENDA_UNQ" tableName="PEDIDO_VENDA"/>
+    </changeSet>
+
+    <changeSet id="3" author="axctg3">
+        <dropColumn tableName="PEDIDO_VENDA" columnName="ESPECIE"/>
+        <dropColumn tableName="PEDIDO_VENDA" columnName="SERIE"/>
+        <dropColumn tableName="PEDIDO_VENDA" columnName="DATA_SAIDA"/>
+        <dropColumn tableName="PEDIDO_VENDA" columnName="CANCELADO"/>
+    </changeSet>
+
+    <changeSet id="4" author="axctg3">
+        <renameColumn tableName="PEDIDO_VENDA" oldColumnName="DATA_EMISSAO"
+                       newColumnName="DATA_ENTRADA" columnDataType="DATE"/>
+    </changeSet>
+
+    <changeSet id="5" author="axctg3">
+        <dropIndex indexName="IDX_PEDIDO_VENDA_DATA_EMISSAO" tableName="PEDIDO_VENDA"/>
+
+        <createIndex indexName="IDX_PEDIDO_VENDA_DATA_ENTRADA" tableName="PEDIDO_VENDA">
+            <column name="DATA_ENTRADA"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Novo índice único, só NUMERO+COD_EMPRESA (sem ESPECIE/SERIE, que deixaram de
+         existir na entidade). Postgres usa índice parcial (soft delete); HSQLDB não
+         suporta índice parcial. -->
+    <changeSet id="6" author="axctg3" dbms="postgresql">
+        <createIndex indexName="IDX_PEDIDO_VENDA_UNQ" tableName="PEDIDO_VENDA" unique="true">
+            <column name="NUMERO"/>
+            <column name="COD_EMPRESA"/>
+        </createIndex>
+
+        <modifySql>
+            <append value="where DELETED_DATE is null"/>
+        </modifySql>
+    </changeSet>
+
+    <changeSet id="7" author="axctg3" dbms="hsqldb">
+        <createIndex indexName="IDX_PEDIDO_VENDA_UNQ" tableName="PEDIDO_VENDA" unique="true">
+            <column name="NUMERO"/>
+            <column name="COD_EMPRESA"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

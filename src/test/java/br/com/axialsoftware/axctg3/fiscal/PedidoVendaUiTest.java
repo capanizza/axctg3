@@ -119,10 +119,7 @@ class PedidoVendaUiTest {
 
     private PedidoVenda criarPedido() {
         PedidoVenda pedido = dataManager.create(PedidoVenda.class);
-        pedido.setDataEmissao(LocalDate.now());
-        pedido.setDataSaida(LocalDate.now());
-        pedido.setEspecie("PV");
-        pedido.setSerie("1");
+        pedido.setDataEntrada(LocalDate.now());
         pedido.setParceiro(parceiro);
         pedido.setNatureza(natureza);
         pedido.setClassTrib(classTrib);
