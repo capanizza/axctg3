@@ -431,6 +431,12 @@ public class NfeXmlBuilder {
             text(doc, det, "vItem", dec(vItem, 2));
         }
 
+        // infAdProd (informação adicional do produto) — só emitido quando o operador
+        // digitou algo em ItemNotaSaida.descricaoComplementar; schema trata como opcional.
+        if (item.getDescricaoComplementar() != null && !item.getDescricaoComplementar().isBlank()) {
+            text(doc, det, "infAdProd", item.getDescricaoComplementar().trim());
+        }
+
         return det;
     }
 

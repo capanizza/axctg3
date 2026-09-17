@@ -144,6 +144,19 @@ public class ItemNotaSaida {
     @Column(name = "CST", length = 4)
     private String cst;
 
+    // Vai para infAdProd (informação adicional do produto) na emissão da NFe
+    // (NfeXmlBuilder.construirDet) quando não em branco.
+    @Column(name = "DESCRICAO_COMPLEMENTAR")
+    private String descricaoComplementar = "";
+
+    public String getDescricaoComplementar() {
+        return descricaoComplementar;
+    }
+
+    public void setDescricaoComplementar(String descricaoComplementar) {
+        this.descricaoComplementar = descricaoComplementar;
+    }
+
     // Código de Classificação Tributária (cClassTrib IBS/CBS) resolvido pra este item.
     // Sem valor padrão: o ItemNotaSaidaEventListener preenche na primeira gravação
     // aplicando a regra de precedência (docs/REFORMA-TRIBUTARIA-IBS-CBS.md) — CST 000 da

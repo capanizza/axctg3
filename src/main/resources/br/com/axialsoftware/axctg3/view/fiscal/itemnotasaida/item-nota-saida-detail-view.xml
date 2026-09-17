@@ -64,6 +64,14 @@
                               width="20%" themeNames="small"
                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.codClassTrib"/>
             </hbox>
+            <hbox width="100%">
+                <textField id="descricaoComplementarField"
+                           property="descricaoComplementar"
+                           maxLength="255"
+                           dataContainer="itemNotaSaidaDc"
+                           width="100%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.descricaoComplementar"/>
+            </hbox>
             <hbox width="100%" expand="valorUnitarioField">
                 <bigDecimalField id="quantidadeField"
                                  property="quantidade"

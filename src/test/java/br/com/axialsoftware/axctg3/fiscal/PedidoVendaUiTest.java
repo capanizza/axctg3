@@ -83,6 +83,7 @@ class PedidoVendaUiTest {
         assertThat(pedido.getCodEmpresa()).isEqualTo(COD_EMPRESA);
         assertThat(item.getItem()).isNotNull();
         assertThat(item.getSubTotal()).isEqualByComparingTo("31.50");
+        assertThat(item.getDescricaoComplementar()).isBlank();
     }
 
     @Test

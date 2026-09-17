@@ -84,6 +84,17 @@ public class ItemPedidoVenda {
     @Column(name = "CST", length = 4)
     private String cst;
 
+    @Column(name = "DESCRICAO_COMPLEMENTAR")
+    private String descricaoComplementar = "";
+
+    public String getDescricaoComplementar() {
+        return descricaoComplementar;
+    }
+
+    public void setDescricaoComplementar(String descricaoComplementar) {
+        this.descricaoComplementar = descricaoComplementar;
+    }
+
     @Column(name = "COD_CLASS_TRIB")
     @NumberFormat(pattern = "000000")
     private Integer codClassTrib;

@@ -63,6 +63,14 @@
                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemPedidoVenda.codClassTrib"/>
             </hbox>
             <hbox width="100%">
+                <textField id="descricaoComplementarField"
+                           property="descricaoComplementar"
+                           maxLength="255"
+                           dataContainer="itemPedidoVendaDc"
+                           width="100%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemPedidoVenda.descricaoComplementar"/>
+            </hbox>
+            <hbox width="100%">
                 <bigDecimalField id="quantidadeField"
                                  property="quantidade"
                                  dataContainer="itemPedidoVendaDc"
