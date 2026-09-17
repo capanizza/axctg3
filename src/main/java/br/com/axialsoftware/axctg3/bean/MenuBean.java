@@ -18,6 +18,7 @@ import br.com.axialsoftware.axctg3.service.financeiro.ItemReceberService;
 import br.com.axialsoftware.axctg3.service.financeiro.MovimentoBancoService;
 import br.com.axialsoftware.axctg3.service.financeiro.TituloPagarService;
 import br.com.axialsoftware.axctg3.service.financeiro.TituloReceberService;
+import br.com.axialsoftware.axctg3.service.fiscal.PedidoVendaService;
 import io.jmix.core.DataManager;
 import io.jmix.core.SaveContext;
 import io.jmix.flowui.Dialogs;
@@ -65,8 +66,9 @@ public class MenuBean {
     private final ItemPagarService itemPagarService;
     private final MovimentoBancoService movimentoBancoService;
     private final SpedEcdService spedEcdService;
+    private final PedidoVendaService pedidoVendaService;
 
-    public MenuBean(UtilGeralService utilGeralService, Dialogs dialogs, ContaContabilService contaContabilService, DataManager dataManager, LancamentoService lancamentoService, DepreciacaoService depreciacaoService, EncerramentoService encerramentoService, DiversoPagarService diversoPagarService, ItemDiversoPagarService itemDiversoPagarService, TituloReceberService tituloReceberService, ItemReceberService itemReceberService, TituloPagarService tituloPagarService, ItemPagarService itemPagarService, MovimentoBancoService movimentoBancoService, SpedEcdService spedEcdService) {
+    public MenuBean(UtilGeralService utilGeralService, Dialogs dialogs, ContaContabilService contaContabilService, DataManager dataManager, LancamentoService lancamentoService, DepreciacaoService depreciacaoService, EncerramentoService encerramentoService, DiversoPagarService diversoPagarService, ItemDiversoPagarService itemDiversoPagarService, TituloReceberService tituloReceberService, ItemReceberService itemReceberService, TituloPagarService tituloPagarService, ItemPagarService itemPagarService, MovimentoBancoService movimentoBancoService, SpedEcdService spedEcdService, PedidoVendaService pedidoVendaService) {
         this.utilGeralService = utilGeralService;
         this.dialogs = dialogs;
         this.contaContabilService = contaContabilService;
@@ -82,6 +84,19 @@ public class MenuBean {
         this.itemPagarService = itemPagarService;
         this.movimentoBancoService = movimentoBancoService;
         this.spedEcdService = spedEcdService;
+        this.pedidoVendaService = pedidoVendaService;
+    }
+
+    public void listarPedidosVenda() {
+        dialogs.createOptionDialog()
+                .withHeader("Confirmação")
+                .withText("Confirma listagem dos pedidos de venda?")
+                .withActions(
+                        new DialogAction(DialogAction.Type.YES)
+                                .withHandler(e -> pedidoVendaService.listarPedidos()),
+                        new DialogAction(DialogAction.Type.NO)
+                )
+                .open();
     }
 
     public void listarLancamentos() {

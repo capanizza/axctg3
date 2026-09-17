@@ -1,10 +1,12 @@
 package br.com.axialsoftware.axctg3.view.fiscal.pedidovenda;
 
+import br.com.axialsoftware.axctg3.bean.MenuBean;
 import br.com.axialsoftware.axctg3.entity.fiscal.PedidoVenda;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
 import com.vaadin.flow.router.Route;
+import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.*;
 
@@ -21,10 +23,17 @@ public class PedidoVendaListView extends StandardListView<PedidoVenda> {
     private CollectionLoader<PedidoVenda> pedidoVendasDl;
     @Autowired
     private UtilGeralService utilGeralService;
+    @Autowired
+    private MenuBean menuBean;
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
         pedidoVendasDl.setParameter("codEmpresa", utilGeralService.getCodEmpresa());
         pedidoVendasDl.load();
+    }
+
+    @Subscribe("pedidoVendasDataGrid.listagemAction")
+    public void onPedidoVendasDataGridListagemAction(final ActionPerformedEvent event) {
+        menuBean.listarPedidosVenda();
     }
 }

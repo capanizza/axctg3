@@ -2,12 +2,14 @@ package br.com.axialsoftware.axctg3.fiscal;
 
 import br.com.axialsoftware.axctg3.Axctg3Application;
 import br.com.axialsoftware.axctg3.entity.User;
+import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
 import br.com.axialsoftware.axctg3.entity.fiscal.ItemPedidoVenda;
 import br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao;
 import br.com.axialsoftware.axctg3.entity.fiscal.PedidoVenda;
 import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
+import br.com.axialsoftware.axctg3.service.fiscal.PedidoVendaService;
 import br.com.axialsoftware.axctg3.view.fiscal.pedidovenda.PedidoVendaDetailView;
 import br.com.axialsoftware.axctg3.view.fiscal.pedidovenda.PedidoVendaListView;
 import io.jmix.core.DataManager;
@@ -19,6 +21,7 @@ import io.jmix.flowui.component.combobox.EntityComboBox;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.textfield.JmixIntegerField;
 import io.jmix.flowui.data.grid.DataGridItems;
+import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.testassist.FlowuiTestAssistConfiguration;
 import io.jmix.flowui.testassist.UiTest;
 import io.jmix.flowui.testassist.UiTestUtils;
@@ -34,6 +37,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 /**
  * Cobre a criação de PedidoVenda/ItemPedidoVenda: numeração via
@@ -55,6 +59,8 @@ class PedidoVendaUiTest {
     private ViewNavigators viewNavigators;
     @Autowired
     private CurrentAuthentication currentAuthentication;
+    @Autowired
+    private PedidoVendaService pedidoVendaService;
 
     private Parceiro parceiro;
     private NaturezaOperacao natureza;
@@ -68,6 +74,7 @@ class PedidoVendaUiTest {
 
         limparDados();
 
+        criarEmpresa();
         parceiro = criarParceiro();
         natureza = criarNatureza();
         classTrib = criarClassTrib();
@@ -96,6 +103,21 @@ class PedidoVendaUiTest {
         DataGrid<PedidoVenda> grid = UiTestUtils.getComponent(view, "pedidoVendasDataGrid");
         DataGridItems<PedidoVenda> items = grid.getItems();
         assertThat(items.getItems()).extracting(PedidoVenda::getNumero).contains(pedido.getNumero());
+
+        JmixButton listagemButton = UiTestUtils.getComponent(view, "listagemButton");
+        assertThat(listagemButton.isVisible()).isTrue();
+    }
+
+    @Test
+    void listagemMontaDtosSemEstourarExcecao() {
+        PedidoVenda pedido = criarPedido();
+        criarItem(pedido, new BigDecimal("2"), new BigDecimal("15.00"));
+
+        // sem PedidoVenda.jasper ainda (próxima etapa) — RelatorioService.emitirRelatorio
+        // engole a exceção de template não encontrado, então isto só prova que a consulta/
+        // fetch plan/resolução de instance name (PedidoVendaService.prepararPedidos) não
+        // estoura em si.
+        assertThatCode(() -> pedidoVendaService.listarPedidos()).doesNotThrowAnyException();
     }
 
     @Test
@@ -134,6 +156,14 @@ class PedidoVendaUiTest {
         item.setQuantidade(quantidade);
         item.setValorUnitario(valorUnitario);
         return dataManager.save(item);
+    }
+
+    private void criarEmpresa() {
+        Empresa empresa = dataManager.create(Empresa.class);
+        empresa.setCodigo(COD_EMPRESA);
+        empresa.setNome("Empresa de teste");
+        empresa.setApelido("Teste");
+        dataManager.save(empresa);
     }
 
     private Parceiro criarParceiro() {
@@ -182,9 +212,9 @@ class PedidoVendaUiTest {
         limparDados();
     }
 
-    // Hard delete: o índice único de PedidoVenda (NUMERO, COD_EMPRESA, ESPECIE, SERIE)
-    // existe também no HSQLDB (changelog 17-101711), então um soft delete não libera a
-    // chave natural pra uma segunda rodada da suíte — mesmo padrão de BemUiTest.
+    // Hard delete: o índice único de PedidoVenda (NUMERO, COD_EMPRESA) existe também no
+    // HSQLDB (changelog 17-101711/17-104248), então um soft delete não libera a chave
+    // natural pra uma segunda rodada da suíte — mesmo padrão de BemUiTest.
     private void limparDados() {
         apagar(carregar(ItemPedidoVenda.class,
                 "select e from ItemPedidoVenda e where e.pedidoVenda.codEmpresa = :codEmpresa"));
@@ -192,6 +222,7 @@ class PedidoVendaUiTest {
         apagar(carregar(Produto.class, "select e from Produto e where e.codEmpresa = :codEmpresa"));
         apagar(carregar(NaturezaOperacao.class, "select e from NaturezaOperacao e where e.codEmpresa = :codEmpresa"));
         apagar(carregar(Parceiro.class, "select e from Parceiro e where e.codEmpresa = :codEmpresa"));
+        apagar(carregar(Empresa.class, "select e from Empresa e where e.codigo = :codEmpresa"));
         if (classTrib != null) {
             apagar(carregar(ClassTrib.class, "select e from ClassTrib e where e.codigo = :codigo",
                     "codigo", classTrib.getCodigo()));

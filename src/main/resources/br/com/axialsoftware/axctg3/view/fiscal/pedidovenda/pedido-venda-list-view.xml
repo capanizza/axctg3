@@ -35,6 +35,7 @@
                 <button id="createButton" action="pedidoVendasDataGrid.createAction" themeNames="small"/>
                 <button id="editButton" action="pedidoVendasDataGrid.editAction" themeNames="small"/>
                 <button id="removeButton" action="pedidoVendasDataGrid.removeAction" themeNames="small"/>
+                <button id="listagemButton" action="pedidoVendasDataGrid.listagemAction" themeNames="small"/>
             </startSlot>
             <endSlot>
                 <simplePagination id="pagination" dataLoader="pedidoVendasDl"/>
@@ -49,6 +50,9 @@
                 <action id="createAction" type="list_create"/>
                 <action id="editAction" type="list_edit"/>
                 <action id="removeAction" type="list_remove"/>
+                <action id="listagemAction"
+                        text="msg://br.com.axialsoftware.axctg3.view.fiscal.pedidovenda/pedidoVendaListView.listagemAction.text"
+                        icon="PRINT"/>
             </actions>
             <columns resizable="true">
                 <column property="numero" filterable="true" width="12%"/>
