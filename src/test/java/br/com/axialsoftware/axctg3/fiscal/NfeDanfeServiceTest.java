@@ -4,6 +4,7 @@ import br.com.axialsoftware.axctg3.entity.User;
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.fiscal.Nfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.NfeDuplicata;
+import br.com.axialsoftware.axctg3.entity.fiscal.NfeItem;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeDanfeService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeImportService;
 import br.com.axialsoftware.axctg3.test_support.AuthenticatedAsAdmin;
@@ -110,6 +111,16 @@ class NfeDanfeServiceTest {
                 .query("select e from Nfe e where e.chave = :chave")
                 .parameter("chave", CHAVE)
                 .one();
+
+        // nfe_import_sample.xml traz infAdProd="Lote 2026A" no item 1 — confirma que o
+        // parser (NfeXmlParser) preencheu NfeItem.infoAdicionalProduto antes de exercitar
+        // o merge dele em "DADOS ADICIONAIS" (NfeDanfeService.montarInfCplComItens),
+        // abaixo, via geração real do PDF.
+        NfeItem item1 = dataManager.load(NfeItem.class)
+                .query("select e from NfeItem e where e.nfe.chave = :chave and e.item = 1")
+                .parameter("chave", CHAVE)
+                .one();
+        assertThat(item1.getInfoAdicionalProduto()).isEqualTo("Lote 2026A");
 
         nfeDanfeService.emitirDanfe(nfe.getId());
 
