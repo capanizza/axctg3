@@ -223,36 +223,12 @@ public class NfeDanfeService {
         parametros.put("VALOR_IPI", formatarValor(nfe.getValorIpi()));
         parametros.put("VALOR_NF", formatarValor(nfe.getValorNf()));
 
-        parametros.put("INF_CPL", montarInfCplComItens(nfe));
+        parametros.put("INF_CPL", nvl(nfe.getInfCpl()));
 
         boolean cancelada = nfe.getProtCStat() != null && nfe.getProtCStat() == PROT_C_STAT_CANCELADA;
         parametros.put("MARCA_CANCELADA", cancelada ? MARCA_CANCELADA : null);
 
         return parametros;
-    }
-
-    /**
-     * "DADOS ADICIONAIS" do DANFE junta o {@code infCpl} do cabeçalho com o
-     * {@code infAdProd} (informação adicional do produto) de cada item, prefixado pelo
-     * número do item — o grid de itens do template não tem coluna própria pra isso (linha
-     * de altura fixa, sem espaço pra texto extra), então reaproveita a caixa de texto que
-     * já existe pro infCpl, que já cresce sozinha ({@code textAdjust="StretchHeight"} em
-     * Danfe.jrxml). Sem infAdProd em nenhum item, o comportamento não muda (só o infCpl).
-     */
-    private String montarInfCplComItens(Nfe nfe) {
-        StringBuilder sb = new StringBuilder(nvl(nfe.getInfCpl()));
-        if (nfe.getItens() != null) {
-            for (NfeItem item : nfe.getItens()) {
-                String infAdProd = item.getInfoAdicionalProduto();
-                if (infAdProd != null && !infAdProd.isBlank()) {
-                    if (!sb.isEmpty()) {
-                        sb.append("\n");
-                    }
-                    sb.append("Item ").append(item.getItem()).append(": ").append(infAdProd.trim());
-                }
-            }
-        }
-        return sb.toString();
     }
 
     private List<DanfeItemDto> montarItensDto(Nfe nfe) {
@@ -265,7 +241,7 @@ public class NfeDanfeService {
             DanfeItemDto dto = dataManager.create(DanfeItemDto.class);
             dto.setItem(item.getItem());
             dto.setCodProd(item.getCodProd());
-            dto.setDescProd(item.getDescProd());
+            dto.setDescProd(descProdComInfAdicional(item));
             dto.setNcm(item.getNcm());
             dto.setCst(item.getCstIcms() != null ? item.getCstIcms() : item.getCsosnIcms());
             dto.setCfop(item.getCfop());
@@ -281,6 +257,22 @@ public class NfeDanfeService {
             itensDto.add(dto);
         }
         return itensDto;
+    }
+
+    /**
+     * {@code infAdProd} (informação adicional do produto) se refere só a este item — não
+     * pode entrar em "DADOS ADICIONAIS" (que é o {@code infCpl} do cabeçalho, informação da
+     * nota inteira). Anexado à própria descrição do produto, numa segunda linha; a célula
+     * de {@code descProd} em Danfe.jrxml cresce sozinha ({@code textAdjust="StretchHeight"})
+     * pra caber.
+     */
+    private String descProdComInfAdicional(NfeItem item) {
+        String descProd = item.getDescProd();
+        String infAdProd = item.getInfoAdicionalProduto();
+        if (infAdProd == null || infAdProd.isBlank()) {
+            return descProd;
+        }
+        return descProd + "\n" + infAdProd.trim();
     }
 
     private static String formatarChave(String chave) {
