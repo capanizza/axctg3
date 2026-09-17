@@ -13,6 +13,9 @@ import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.service.RelatorioService;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import io.jmix.core.DataManager;
+import io.jmix.core.FetchPlan;
+import io.jmix.core.SaveContext;
+import io.jmix.data.PersistenceHints;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.stereotype.Service;
@@ -52,8 +55,10 @@ public class TituloReceberService {
      * {@code NotaSaida.condicaoPagamento} — chamado por {@code NfeEmissaoService.emitir}
      * ANTES de montar o XML (o grupo {@code cobr}/{@code dup} e {@code pag} dependem dos
      * títulos já existirem nesse momento, ver {@code NfeXmlBuilder.buscarTitulos}).
-     * Idempotente: não gera de novo se a nota já tem título — cobre reemissão depois de
-     * um erro anterior sem duplicar título.
+     * Idempotente: não gera de novo se a soma dos títulos já existentes ainda bate com
+     * {@code NotaSaida.valor} — cobre reemissão depois de um erro anterior sem duplicar
+     * título. Se a nota foi editada depois dos títulos gerados (soma não bate mais),
+     * regenera do zero, desde que nenhum item já tenha sido contabilizado.
      *
      * <p>Cada parcela vence {@code condicaoPagamento.primeira} dias após a emissão, e as
      * seguintes a cada {@code condicaoPagamento.diferenca} dias. Valor de cada parcela =
@@ -74,13 +79,43 @@ public class TituloReceberService {
      */
     @Transactional
     public String gerarTitulosDaEmissao(NotaSaida notaSaida) {
-        boolean jaTemTitulo = !dataManager.load(TituloReceber.class)
+        List<TituloReceber> titulosExistentes = dataManager.load(TituloReceber.class)
                 .query("select e from TituloReceber e where e.notaSaida = :notaSaida")
                 .parameter("notaSaida", notaSaida)
-                .list()
-                .isEmpty();
-        if (jaTemTitulo) {
-            return null;
+                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE).add("itens", FetchPlan.BASE))
+                .list();
+        if (!titulosExistentes.isEmpty()) {
+            BigDecimal somaExistente = titulosExistentes.stream()
+                    .map(TituloReceber::getValor)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal valorAtualDaNota = notaSaida.getValor() == null ? BigDecimal.ZERO : notaSaida.getValor();
+            if (somaExistente.compareTo(valorAtualDaNota) == 0) {
+                return null;
+            }
+            // Nota editada (itens alterados) depois que os títulos já tinham sido gerados —
+            // a soma antiga não bate mais com NotaSaida.valor atual (achado ao vivo
+            // 2026-09-17: XML saía com vLiq/dup divergentes, SEFAZ rejeitava cStat=851
+            // "Soma do valor das parcelas difere do Valor Líquido da Fatura"). Só
+            // regenera quando nenhum item já foi contabilizado — reverter lançamento
+            // contábil já postado é decisão do usuário, não automática.
+            boolean algumJaContabilizado = titulosExistentes.stream()
+                    .flatMap(t -> t.getItens().stream())
+                    .anyMatch(item -> Boolean.TRUE.equals(item.getContabilizado()));
+            if (algumJaContabilizado) {
+                return "Os títulos desta nota estão desatualizados (valor mudou depois de gerados), "
+                        + "mas já têm lançamento contábil — ajuste manualmente antes de emitir";
+            }
+            // Hard delete, não soft delete: o número do título reusa nota+letra (ex.
+            // "458750/A"), e o novo título recriado abaixo tem o MESMO número — um soft
+            // delete deixaria uma linha morta ocupando esse número pra sempre no índice
+            // único (NUMERO, COD_EMPRESA) do HSQLDB, que não é parcial como o do Postgres
+            // (ver jmix-create-liquibase-changelog). Título nunca contabilizado não tem
+            // valor de auditoria em manter. Os itens (composição, @OnDelete(CASCADE)) são
+            // removidos automaticamente — removê-los antes à mão faz o Jmix tentar
+            // cascatear de novo em cima de uma linha já apagada (OptimisticLockException).
+            dataManager.save(new SaveContext()
+                    .setHint(PersistenceHints.SOFT_DELETION, false)
+                    .removing(titulosExistentes.toArray()));
         }
         CondicaoPagamento condicaoPagamento = notaSaida.getCondicaoPagamento();
         if (condicaoPagamento == null) {

@@ -15,6 +15,7 @@ import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
 import br.com.axialsoftware.axctg3.service.financeiro.TituloReceberService;
 import br.com.axialsoftware.axctg3.test_support.AuthenticatedAsAdmin;
 import io.jmix.core.DataManager;
+import io.jmix.core.FetchPlan;
 import io.jmix.core.security.CurrentAuthentication;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -234,6 +235,21 @@ class TituloReceberGeracaoTest {
         return dataManager.load(NotaSaida.class).id(notaSaida.getId()).one();
     }
 
+    // notaSaida precisa vir fetched (mesmo que rasa) — ItemNotaSaidaEventListener.
+    // onItemNotaSaidaSaving lê item.getNotaSaida() logo no início; sem isso, salvar o item
+    // recarregado por uma query crua (sem fetchPlan) estoura "Cannot get unfetched
+    // attribute" num objeto detached.
+    private ItemNotaSaida carregarItemDaNota(NotaSaida notaSaida) {
+        return dataManager.load(ItemNotaSaida.class)
+                .query("select e from ItemNotaSaida e where e.notaSaida = :notaSaida")
+                .parameter("notaSaida", notaSaida)
+                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE)
+                        .add("notaSaida", fpNota -> fpNota.addFetchPlan(FetchPlan.BASE)
+                                .add("natureza", FetchPlan.BASE))
+                        .add("produto", FetchPlan.BASE))
+                .one();
+    }
+
     private List<TituloReceber> titulosDaNota(NotaSaida notaSaida) {
         return dataManager.load(TituloReceber.class)
                 .query("select e from TituloReceber e where e.notaSaida = :notaSaida order by e.dataVencimento")
@@ -306,6 +322,64 @@ class TituloReceberGeracaoTest {
         tituloReceberService.gerarTitulosDaEmissao(notaSaida); // reemissão — não duplica
 
         assertThat(titulosDaNota(notaSaida)).hasSize(1);
+    }
+
+    @Test
+    void notaEditadaDepoisRegeneraTitulos() {
+        Parceiro parceiro = criarParceiro();
+        Banco banco = criarBanco();
+        CondicaoPagamento condicaoPagamento = criarCondicaoPagamento(1, 10, 0);
+        NotaSaida notaSaida = criarNotaSaidaComItem(condicaoPagamento, banco, parceiro,
+                new BigDecimal("10"), new BigDecimal("10")); // valor 100.00
+
+        tituloReceberService.gerarTitulosDaEmissao(notaSaida);
+        assertThat(titulosDaNota(notaSaida)).hasSize(1);
+        assertThat(titulosDaNota(notaSaida).get(0).getValor()).isEqualByComparingTo("100.00");
+
+        // edita o item pra dobrar o valor da nota — mesmo cenário real que gerou
+        // cStat=851 (soma dos títulos divergindo de NotaSaida.valor)
+        ItemNotaSaida item = carregarItemDaNota(notaSaida);
+        item.setValorUnitario(new BigDecimal("20"));
+        dataManager.save(item);
+        NotaSaida notaAtualizada = dataManager.load(NotaSaida.class).id(notaSaida.getId()).one();
+        assertThat(notaAtualizada.getValor()).isEqualByComparingTo("200.00");
+
+        String erro = tituloReceberService.gerarTitulosDaEmissao(notaAtualizada);
+
+        assertThat(erro).isNull();
+        List<TituloReceber> titulos = titulosDaNota(notaAtualizada);
+        assertThat(titulos).hasSize(1);
+        assertThat(titulos.get(0).getValor()).isEqualByComparingTo("200.00");
+    }
+
+    @Test
+    void naoRegeneraQuandoItemJaContabilizado() {
+        Parceiro parceiro = criarParceiro();
+        Banco banco = criarBanco();
+        CondicaoPagamento condicaoPagamento = criarCondicaoPagamento(1, 10, 0);
+        NotaSaida notaSaida = criarNotaSaidaComItem(condicaoPagamento, banco, parceiro,
+                new BigDecimal("10"), new BigDecimal("10")); // valor 100.00
+        tituloReceberService.gerarTitulosDaEmissao(notaSaida);
+
+        TituloReceber titulo = titulosDaNota(notaSaida).get(0);
+        ItemReceber itemReceber = dataManager.load(ItemReceber.class)
+                .query("select e from ItemReceber e where e.tituloReceber = :titulo")
+                .parameter("titulo", titulo)
+                .one();
+        itemReceber.setContabilizado(true);
+        dataManager.save(itemReceber);
+
+        ItemNotaSaida item = carregarItemDaNota(notaSaida);
+        item.setValorUnitario(new BigDecimal("20"));
+        dataManager.save(item);
+        NotaSaida notaAtualizada = dataManager.load(NotaSaida.class).id(notaSaida.getId()).one();
+
+        String erro = tituloReceberService.gerarTitulosDaEmissao(notaAtualizada);
+
+        assertThat(erro).isNotNull();
+        List<TituloReceber> titulos = titulosDaNota(notaAtualizada);
+        assertThat(titulos).hasSize(1);
+        assertThat(titulos.get(0).getValor()).isEqualByComparingTo("100.00"); // não mexeu
     }
 
     @Test
