@@ -4,8 +4,10 @@ import br.com.axialsoftware.axctg3.Axctg3Application;
 import br.com.axialsoftware.axctg3.entity.User;
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
+import br.com.axialsoftware.axctg3.entity.fiscal.ItemNotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.ItemPedidoVenda;
 import br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao;
+import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.PedidoVenda;
 import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
@@ -121,6 +123,35 @@ class PedidoVendaUiTest {
     }
 
     @Test
+    void emitirNotaSaidaGeraNotaComItensAPartirDoPedido() {
+        PedidoVenda pedido = criarPedido();
+        criarItem(pedido, new BigDecimal("3"), new BigDecimal("10.50"));
+
+        PedidoVendaService.ResultadoEmitirNotaSaida resultado = pedidoVendaService.emitirNotaSaida(pedido.getId());
+
+        assertThat(resultado.sucesso()).isTrue();
+        NotaSaida notaSaida = resultado.notaSaida();
+        assertThat(notaSaida.getNumero()).isNotNull();
+        assertThat(notaSaida.getEspecie()).isEqualTo("NF");
+        assertThat(notaSaida.getSerie()).isEqualTo("1");
+        assertThat(notaSaida.getParceiro()).isEqualTo(parceiro);
+        assertThat(notaSaida.getNatureza()).isEqualTo(natureza);
+        assertThat(notaSaida.getValorMercadoria()).isEqualByComparingTo("31.50");
+        assertThat(notaSaida.getValor()).isEqualByComparingTo("31.50");
+    }
+
+    @Test
+    void emitirNotaSaidaFalhaSemItens() {
+        PedidoVenda pedido = criarPedido();
+
+        PedidoVendaService.ResultadoEmitirNotaSaida resultado = pedidoVendaService.emitirNotaSaida(pedido.getId());
+
+        assertThat(resultado.sucesso()).isFalse();
+        assertThat(resultado.motivo()).contains("sem itens");
+        assertThat(resultado.notaSaida()).isNull();
+    }
+
+    @Test
     void detailAbreComOsCamposDasAbas() {
         PedidoVenda pedido = criarPedido();
 
@@ -163,6 +194,8 @@ class PedidoVendaUiTest {
         empresa.setCodigo(COD_EMPRESA);
         empresa.setNome("Empresa de teste");
         empresa.setApelido("Teste");
+        empresa.setEspecieNfe("NF");
+        empresa.setSerieNfe("1");
         dataManager.save(empresa);
     }
 
@@ -216,6 +249,9 @@ class PedidoVendaUiTest {
     // HSQLDB (changelog 17-101711/17-104248), então um soft delete não libera a chave
     // natural pra uma segunda rodada da suíte — mesmo padrão de BemUiTest.
     private void limparDados() {
+        apagar(carregar(ItemNotaSaida.class,
+                "select e from ItemNotaSaida e where e.notaSaida.codEmpresa = :codEmpresa"));
+        apagar(carregar(NotaSaida.class, "select e from NotaSaida e where e.codEmpresa = :codEmpresa"));
         apagar(carregar(ItemPedidoVenda.class,
                 "select e from ItemPedidoVenda e where e.pedidoVenda.codEmpresa = :codEmpresa"));
         apagar(carregar(PedidoVenda.class, "select e from PedidoVenda e where e.codEmpresa = :codEmpresa"));
