@@ -98,7 +98,8 @@ public class PedidoVendaService {
         dto.setCondicaoPagamento(instanceNameOu(pedido.getCondicaoPagamento()));
         dto.setBanco(instanceNameOu(pedido.getBanco()));
         dto.setVendedor(instanceNameOu(pedido.getVendedor()));
-        dto.setMensagem(instanceNameOu(pedido.getMensagem()));
+        dto.setMensagem(pedido.getMensagem() == null ? null
+                : pedido.getMensagem().getCodigo() + " " + pedido.getMensagem().getTexto());
         dto.setComplementoMensagem(pedido.getComplementoMensagem());
         dto.setModFrete(pedido.getModFrete() == null ? null : messages.getMessage(pedido.getModFrete()));
         dto.setFrete(pedido.getFrete());
