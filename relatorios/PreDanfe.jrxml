@@ -517,8 +517,8 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$F{descProd}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight">
-				<reportElement x="145" y="0" width="50" height="14" uuid="c1d2e3f4-0004-0001-0001-000000000002"/>
+			<textField>
+				<reportElement x="145" y="0" width="50" height="14" stretchType="RelativeToTallestObject" uuid="c1d2e3f4-0004-0001-0001-000000000002"/>
 				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
 					<topPen lineWidth="0.0"/>
 					<leftPen lineWidth="0.25"/>
@@ -529,8 +529,8 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$F{ncm}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight" pattern="0000">
-				<reportElement x="195" y="0" width="35" height="14" uuid="c1d2e3f4-0004-0001-0001-000000000003"/>
+			<textField pattern="0000">
+				<reportElement x="195" y="0" width="35" height="14" stretchType="RelativeToTallestObject" uuid="c1d2e3f4-0004-0001-0001-000000000003"/>
 				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
 					<topPen lineWidth="0.0"/>
 					<leftPen lineWidth="0.25"/>
@@ -541,8 +541,8 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$F{cfop}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight">
-				<reportElement x="230" y="0" width="30" height="14" uuid="c1d2e3f4-0004-0001-0001-000000000004"/>
+			<textField>
+				<reportElement x="230" y="0" width="30" height="14" stretchType="RelativeToTallestObject" uuid="c1d2e3f4-0004-0001-0001-000000000004"/>
 				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
 					<topPen lineWidth="0.0"/>
 					<leftPen lineWidth="0.25"/>
@@ -553,8 +553,8 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$F{cst}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight" pattern="#,##0.000">
-				<reportElement x="260" y="0" width="55" height="14" uuid="c1d2e3f4-0004-0001-0001-000000000005"/>
+			<textField pattern="#,##0.000">
+				<reportElement x="260" y="0" width="55" height="14" stretchType="RelativeToTallestObject" uuid="c1d2e3f4-0004-0001-0001-000000000005"/>
 				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
 					<topPen lineWidth="0.0"/>
 					<leftPen lineWidth="0.25"/>
@@ -565,8 +565,8 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$F{quantCom}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight" pattern="#,##0.000000">
-				<reportElement x="315" y="0" width="60" height="14" uuid="c1d2e3f4-0004-0001-0001-000000000006"/>
+			<textField pattern="#,##0.000000">
+				<reportElement x="315" y="0" width="60" height="14" stretchType="RelativeToTallestObject" uuid="c1d2e3f4-0004-0001-0001-000000000006"/>
 				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
 					<topPen lineWidth="0.0"/>
 					<leftPen lineWidth="0.25"/>
@@ -577,8 +577,8 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$F{valorUnCom}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight" pattern="#,##0.00;-#,##0.00">
-				<reportElement x="375" y="0" width="65" height="14" uuid="c1d2e3f4-0004-0001-0001-000000000007"/>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement x="375" y="0" width="65" height="14" stretchType="RelativeToTallestObject" uuid="c1d2e3f4-0004-0001-0001-000000000007"/>
 				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
 					<topPen lineWidth="0.0"/>
 					<leftPen lineWidth="0.25"/>
@@ -589,8 +589,8 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$F{valorProd}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight" pattern="#,##0.00;-#,##0.00">
-				<reportElement x="440" y="0" width="55" height="14" uuid="c1d2e3f4-0004-0001-0001-000000000008"/>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement x="440" y="0" width="55" height="14" stretchType="RelativeToTallestObject" uuid="c1d2e3f4-0004-0001-0001-000000000008"/>
 				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
 					<topPen lineWidth="0.0"/>
 					<leftPen lineWidth="0.25"/>
@@ -601,8 +601,8 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$F{baseIcms}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight" pattern="#,##0.00;-#,##0.00">
-				<reportElement x="495" y="0" width="60" height="14" uuid="c1d2e3f4-0004-0001-0001-000000000009"/>
+			<textField pattern="#,##0.00;-#,##0.00">
+				<reportElement x="495" y="0" width="60" height="14" stretchType="RelativeToTallestObject" uuid="c1d2e3f4-0004-0001-0001-000000000009"/>
 				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
 					<topPen lineWidth="0.0"/>
 					<leftPen lineWidth="0.25"/>

@@ -234,7 +234,7 @@ public class NfeDanfeService {
 
     private HashMap<String, Object> montarParametrosPreDanfe(NotaSaida notaSaida, Nfe nfe) {
         var parametros = new HashMap<String, Object>();
-        parametros.put("TITULO_RELATORIO", "Prévia da nota de saída — documento sem valor fiscal, NFe ainda não emitida");
+        parametros.put("TITULO_RELATORIO", "Nota fiscal - pré-visualização");
         parametros.put("NOME_EMPRESA", utilGeralService.getNomeEmpresa());
         parametros.put("LOGO", utilGeralService.getLogoEmpresa());
 
@@ -519,11 +519,11 @@ public class NfeDanfeService {
             return "";
         }
         return switch (modFrete) {
-            case 0 -> "0 - Contratação do Frete por conta do Remetente (CIF)";
-            case 1 -> "1 - Contratação do Frete por conta do Destinatário (FOB)";
-            case 2 -> "2 - Contratação do Frete por conta de Terceiros";
-            case 3 -> "3 - Transporte Próprio por conta do Remetente";
-            case 4 -> "4 - Transporte Próprio por conta do Destinatário";
+            case 0 -> "0 - Frete por conta do Remetente (CIF)";
+            case 1 -> "1 - Frete por conta do Destinatário (FOB)";
+            case 2 -> "2 - Frete por conta de Terceiros";
+            case 3 -> "3 - Próprio por conta do Remetente";
+            case 4 -> "4 - Próprio por conta do Destinatário";
             default -> "9 - Sem Ocorrência de Transporte";
         };
     }
