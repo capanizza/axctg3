@@ -6,21 +6,31 @@ import br.com.axialsoftware.axctg3.entity.fiscal.Nfe;
 import br.com.axialsoftware.axctg3.entity.fiscal.NfeDuplicata;
 import br.com.axialsoftware.axctg3.entity.fiscal.NfeItem;
 import br.com.axialsoftware.axctg3.entity.fiscal.NfeVolume;
+import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.service.RelatorioService;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import io.jmix.core.DataManager;
 import io.jmix.core.FetchPlan;
+import io.jmix.core.MetadataTools;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.stereotype.Service;
+import org.w3c.dom.Document;
 
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.io.StringWriter;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.OffsetDateTime;
@@ -114,11 +124,18 @@ public class NfeDanfeService {
     private final DataManager dataManager;
     private final UtilGeralService utilGeralService;
     private final RelatorioService relatorioService;
+    private final MetadataTools metadataTools;
+    private final NfeXmlBuilder xmlBuilder;
+    private final NfeXmlParser xmlParser;
 
-    public NfeDanfeService(DataManager dataManager, UtilGeralService utilGeralService, RelatorioService relatorioService) {
+    public NfeDanfeService(DataManager dataManager, UtilGeralService utilGeralService, RelatorioService relatorioService,
+                            MetadataTools metadataTools, NfeXmlBuilder xmlBuilder, NfeXmlParser xmlParser) {
         this.dataManager = dataManager;
         this.utilGeralService = utilGeralService;
         this.relatorioService = relatorioService;
+        this.metadataTools = metadataTools;
+        this.xmlBuilder = xmlBuilder;
+        this.xmlParser = xmlParser;
     }
 
     /** Carrega a {@link Nfe} pelo id e emite o DANFE. Usado por {@code NfeListView}. */
@@ -157,6 +174,116 @@ public class NfeDanfeService {
         }
         emitir(nfe);
         return true;
+    }
+
+    public record ResultadoPreDanfe(boolean sucesso, String motivo) {
+    }
+
+    /**
+     * "Pré-DANFE" — listagem de {@link NotaSaida} ANTES de emitir/assinar/enviar a NFe pra
+     * SEFAZ (sem chave de acesso confirmada, sem protocolo). Reaproveita o mesmo caminho de
+     * {@code NfeEmissaoService.transmitir} até o ponto de montar o XML — {@link
+     * NfeXmlBuilder#construir} já é puro cálculo em memória, sem gravar nada — e então usa
+     * {@link NfeXmlParser} pra transformar esse XML de volta num {@link Nfe} transitório
+     * (nunca persistido, {@code dataManager.create()} só aloca o id gerado em memória),
+     * garantindo que a prévia mostra exatamente os mesmos valores (rateio de frete/seguro/
+     * desconto, ICMS por item) que a emissão de verdade vai calcular — sem duplicar essa
+     * lógica aqui. Layout próprio ({@code PreDanfe.jasper}, estilo listagem tipo
+     * {@code PedidoVenda.jasper}), não o {@code Danfe.jasper} oficial — não tenta parecer
+     * uma DANFE de verdade (sem código de barras/protocolo), evitando confusão com o
+     * documento fiscal real.
+     */
+    public ResultadoPreDanfe emitirPreDanfe(UUID notaSaidaId) {
+        NotaSaida notaSaida = dataManager.load(NotaSaida.class)
+                .id(notaSaidaId)
+                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE)
+                        .add("parceiro", fpParceiro -> fpParceiro.addFetchPlan(FetchPlan.BASE)
+                                .add("municipio", FetchPlan.BASE)
+                                .add("tipoLogradouro", FetchPlan.BASE))
+                        .add("natureza", fpNatureza -> fpNatureza.addFetchPlan(FetchPlan.BASE)
+                                .add("classTrib", FetchPlan.BASE))
+                        .add("condicaoPagamento", FetchPlan.BASE)
+                        .add("banco", FetchPlan.BASE)
+                        .add("vendedor", FetchPlan.BASE)
+                        .add("transportadora", FetchPlan.BASE)
+                        .add("mensagem", FetchPlan.BASE)
+                        .add("itens", fpItens -> fpItens.addFetchPlan(FetchPlan.BASE)
+                                .add("produto", fpProduto -> fpProduto.addFetchPlan(FetchPlan.BASE)
+                                        .add("classificacaoFiscal", FetchPlan.BASE)
+                                        .add("classTrib", FetchPlan.BASE))))
+                .one();
+
+        NfeXmlBuilder.Resultado construido;
+        try {
+            construido = xmlBuilder.construir(notaSaida);
+        } catch (Exception e) {
+            return new ResultadoPreDanfe(false, e.getMessage());
+        }
+
+        byte[] xml = serializarDocumento(construido.documento()).getBytes(StandardCharsets.UTF_8);
+        Nfe nfeTransitorio = xmlParser.parse(xml);
+
+        HashMap<String, Object> parametros = montarParametrosPreDanfe(notaSaida, nfeTransitorio);
+        List<DanfeItemDto> itensDto = montarItensDto(nfeTransitorio);
+        JRDataSource dataSource = new JRBeanCollectionDataSource(itensDto);
+
+        relatorioService.emitirRelatorio("PreDanfe.jasper", dataSource, parametros,
+                "PreDanfe_" + notaSaida.getNumero() + ".pdf");
+        return new ResultadoPreDanfe(true, null);
+    }
+
+    private HashMap<String, Object> montarParametrosPreDanfe(NotaSaida notaSaida, Nfe nfe) {
+        var parametros = new HashMap<String, Object>();
+        parametros.put("TITULO_RELATORIO", "Prévia da nota de saída — documento sem valor fiscal, NFe ainda não emitida");
+        parametros.put("NOME_EMPRESA", utilGeralService.getNomeEmpresa());
+        parametros.put("LOGO", utilGeralService.getLogoEmpresa());
+
+        parametros.put("NUMERO", String.valueOf(notaSaida.getNumero()));
+        parametros.put("DATA_EMISSAO", nfe.getDhEmi() == null ? "" : nfe.getDhEmi().format(DATA));
+        parametros.put("CLIENTE", nvl(nfe.getDestXNome()) + " — "
+                + (nfe.getDestCnpj() != null ? formatarCnpj(nfe.getDestCnpj()) : formatarCpf(nfe.getDestCpf())));
+        parametros.put("NATUREZA", nvl(nfe.getNatOp()));
+        parametros.put("COND_PAGTO", instanceNameOu(notaSaida.getCondicaoPagamento()));
+        parametros.put("BANCO", instanceNameOu(notaSaida.getBanco()));
+        parametros.put("VENDEDOR", instanceNameOu(notaSaida.getVendedor()));
+        parametros.put("MENSAGEM", notaSaida.getMensagem() == null ? ""
+                : notaSaida.getMensagem().getCodigo() + " " + nvl(notaSaida.getMensagem().getTexto()));
+        parametros.put("COMPLEMENTO", nvl(notaSaida.getComplementoMensagem()));
+        parametros.put("TRANSPORTADORA", nvl(nfe.getTranspXNome()));
+        parametros.put("MOD_FRETE", modFreteDescricao(nfe.getModFrete()));
+        parametros.put("PESO_LIQUIDO", formatarPeso(notaSaida.getPesoLiquido()));
+        parametros.put("PESO_BRUTO", formatarPeso(notaSaida.getPesoBruto()));
+        parametros.put("CHAVE_PREVISTA", formatarChave(nfe.getChave()));
+
+        parametros.put("VALOR_PROD", formatarValor(nfe.getValorProd()));
+        parametros.put("VALOR_FRETE", formatarValor(nfe.getValorFrete()));
+        BigDecimal segDescOutro = nvl(nfe.getValorSeg()).add(nvl(nfe.getValorDesc())).add(nvl(nfe.getValorOutro()));
+        parametros.put("VALOR_SEG_DESC_OUTRO", formatarValor(segDescOutro));
+        parametros.put("VALOR_BC", formatarValor(nfe.getValorBc()));
+        parametros.put("VALOR_ICMS", formatarValor(nfe.getValorIcms()));
+        parametros.put("VALOR_IPI", formatarValor(nfe.getValorIpi()));
+        parametros.put("VALOR_NF", formatarValor(nfe.getValorNf()));
+
+        return parametros;
+    }
+
+    private String instanceNameOu(Object entidade) {
+        return entidade == null ? "" : metadataTools.getInstanceName(entidade);
+    }
+
+    /** Mesmo padrão de {@code NfeEmissaoService.serializar} — {@code OMIT_XML_DECLARATION}
+     * não importa aqui porque o resultado só é reconsumido por {@link NfeXmlParser}, nunca
+     * transmitido, mas mantém a mesma configuração por consistência. */
+    private String serializarDocumento(Document doc) {
+        try {
+            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+            StringWriter writer = new StringWriter();
+            transformer.transform(new DOMSource(doc), new StreamResult(writer));
+            return writer.toString();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private void emitir(Nfe nfe) {

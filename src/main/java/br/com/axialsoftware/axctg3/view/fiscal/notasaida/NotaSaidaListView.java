@@ -161,6 +161,33 @@ public class NotaSaidaListView extends StandardListView<NotaSaida> {
                 .open();
     }
 
+    /**
+     * "Pré-DANFE": mostra os mesmos dados que a emissão de verdade vai calcular (rateio de
+     * frete/seguro/desconto, ICMS por item), mas sem gravar/assinar/enviar nada —
+     * {@code NfeDanfeService.emitirPreDanfe} monta o XML em memória
+     * ({@code NfeXmlBuilder.construir}) e o reaproveita direto, nunca chama
+     * {@code NfeEmissaoService}. Útil pro cliente que separa "fechar o pedido"/"gerar a
+     * nota" de "emitir a NFe" e quer conferir os valores antes de mandar pra SEFAZ.
+     */
+    @Subscribe("notaSaidasDataGrid.emitirPreDanfeAction")
+    public void onNotaSaidasDataGridEmitirPreDanfeAction(final ActionPerformedEvent event) {
+        NotaSaida selecionada = notaSaidasDataGrid.getSingleSelectedItem();
+        if (selecionada == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.emitirPreDanfeAction.text"))
+                    .withText(messageBundle.getMessage("notaSaidaListView.emitirPreDanfe.naoSelecionado"))
+                    .open();
+            return;
+        }
+        NfeDanfeService.ResultadoPreDanfe resultado = nfeDanfeService.emitirPreDanfe(selecionada.getId());
+        if (!resultado.sucesso()) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("notaSaidaListView.emitirPreDanfeAction.text"))
+                    .withText(messageBundle.formatMessage("notaSaidaListView.emitirPreDanfe.erro.text", resultado.motivo()))
+                    .open();
+        }
+    }
+
     @Subscribe("notaSaidasDataGrid.emitirNfeAction")
     public void onNotaSaidasDataGridEmitirNfeAction(final ActionPerformedEvent event) {
         NotaSaida selecionada = notaSaidasDataGrid.getSingleSelectedItem();

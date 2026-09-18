@@ -40,6 +40,7 @@
                 <button id="removeButton" action="notaSaidasDataGrid.removeAction" themeNames="small"/>
                 <dropdownButton id="notaSaidaAcoesDropdownButton" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.acoesDropdownButton.text" themeNames="small">
                     <items>
+                        <actionItem id="emitirPreDanfeItem" ref="notaSaidasDataGrid.emitirPreDanfeAction"/>
                         <actionItem id="emitirNfeItem" ref="notaSaidasDataGrid.emitirNfeAction"/>
                         <actionItem id="emitirDanfeItem" ref="notaSaidasDataGrid.emitirDanfeAction"/>
                         <actionItem id="cancelarNfeItem" ref="notaSaidasDataGrid.cancelarNfeAction"/>
@@ -68,6 +69,7 @@
                 <action id="createAction" type="list_create"/>
                 <action id="editAction" type="list_edit"/>
                 <action id="removeAction" type="list_remove"/>
+                <action id="emitirPreDanfeAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.emitirPreDanfeAction.text" icon="vaadin:invoice"/>
                 <action id="emitirNfeAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.emitirNfeAction.text" icon="vaadin:paperplane"/>
                 <action id="emitirDanfeAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.emitirDanfeAction.text" icon="vaadin:print"/>
                 <action id="cancelarNfeAction" text="msg://br.com.axialsoftware.axctg3.view.fiscal.notasaida/notaSaidaListView.cancelarNfeAction.text" icon="vaadin:ban"/>
