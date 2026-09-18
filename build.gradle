@@ -22,6 +22,8 @@ repositories {
 }
 
 dependencies {
+    implementation 'io.github.makssent:jmix-firebird-starter'
+
     implementation 'io.jmix.translations:jmix-translations-pt-br'
 
     implementation 'io.jmix.core:jmix-core-starter'

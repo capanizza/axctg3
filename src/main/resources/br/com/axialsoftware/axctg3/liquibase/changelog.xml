@@ -14,6 +14,7 @@
     <include file="/io/jmix/data/liquibase/changelog.xml"/>
     <include file="/io/jmix/flowuidata/liquibase/changelog.xml"/>
     <include file="/io/jmix/securitydata/liquibase/changelog.xml"/>
+    <include file="/io/github/makssent/jmix/firebird/liquibase/changelog.xml"/>
 
     <includeAll path="/br/com/axialsoftware/axctg3/liquibase/changelog"/>
 
