@@ -2,6 +2,7 @@ package br.com.axialsoftware.axctg3.service.financeiro;
 
 import br.com.axialsoftware.axctg3.entity.cadastros.CondicaoPagamento;
 import br.com.axialsoftware.axctg3.entity.cadastros.ConfigRel;
+import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
 import br.com.axialsoftware.axctg3.entity.contabil.HistoricoContabil;
 import br.com.axialsoftware.axctg3.entity.financeiro.Banco;
@@ -16,6 +17,8 @@ import io.jmix.core.DataManager;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
 import io.jmix.data.PersistenceHints;
+import io.jmix.data.Sequence;
+import io.jmix.data.Sequences;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.stereotype.Service;
@@ -42,12 +45,14 @@ public class TituloReceberService {
     private final UtilGeralService utilGeralService;
     private final RelatorioService relatorioService;
     private final UtilFinanceiroService utilFinanceiroService;
+    private final Sequences sequences;
 
-    public TituloReceberService(DataManager dataManager, UtilGeralService utilGeralService, RelatorioService relatorioService, UtilFinanceiroService utilFinanceiroService) {
+    public TituloReceberService(DataManager dataManager, UtilGeralService utilGeralService, RelatorioService relatorioService, UtilFinanceiroService utilFinanceiroService, Sequences sequences) {
         this.dataManager = dataManager;
         this.utilGeralService = utilGeralService;
         this.relatorioService = relatorioService;
         this.utilFinanceiroService = utilFinanceiroService;
+        this.sequences = sequences;
     }
 
     /**
@@ -66,10 +71,14 @@ public class TituloReceberService {
      * arredondamento (se a soma das parcelas não bater com o valor da nota) é absorvida
      * pela PRIMEIRA parcela, não pela última — pedido explícito do usuário 2026-09-14.
      *
-     * <p>Numeração do título: número da nota com 6 dígitos (zeros à esquerda). Parcela
-     * única não leva sufixo; mais de uma parcela leva "/" + uma letra maiúscula,
+     * <p>Numeração do título: por padrão, número da nota com 6 dígitos (zeros à
+     * esquerda). Quando {@code Empresa.numTitAlt} está marcado, a base sai de uma
+     * {@link Sequence} própria por empresa ({@code "numerotitulo" + codEmpresa}) em vez do
+     * número da nota — independente e nunca reaproveitada entre notas, ao contrário do
+     * número da nota que pode repetir entre séries/espécies diferentes. Nos dois casos,
+     * parcela única não leva sufixo; mais de uma parcela leva "/" + uma letra maiúscula,
      * começando em "A" pra primeira parcela (não é {@link CondicaoPagamento#getCodigo()}
-     * nem nada específico da condição, só o número da nota + posição da parcela). O
+     * nem nada específico da condição, só a base + posição da parcela). O
      * {@code nDup} do XML/DANFE é outra coisa — não usa esse número, ver
      * {@code NfeXmlBuilder.construirCobr}.
      *
@@ -140,7 +149,7 @@ public class TituloReceberService {
         BigDecimal valorDemaisParcelas = valorParcela.multiply(BigDecimal.valueOf(parcelas - 1L));
         BigDecimal valorPrimeiraParcela = valorTotal.subtract(valorDemaisParcelas);
 
-        String numeroBase = String.format("%06d", notaSaida.getNumero());
+        String numeroBase = numeroBaseTitulo(notaSaida);
         LocalDate dataVencimento = notaSaida.getDataEmissao().plusDays(condicaoPagamento.getPrimeira());
 
         for (int i = 0; i < parcelas; i++) {
@@ -158,6 +167,26 @@ public class TituloReceberService {
             dataVencimento = dataVencimento.plusDays(condicaoPagamento.getDiferenca());
         }
         return null;
+    }
+
+    /**
+     * Base do número do título (sem a letra da parcela) — ver o Javadoc de
+     * {@link #gerarTitulosDaEmissao}. Sem {@code Empresa} cadastrada pro
+     * {@code notaSaida.getCodEmpresa()} (não deveria acontecer fora de teste), cai no
+     * comportamento padrão em vez de estourar exceção.
+     */
+    private String numeroBaseTitulo(NotaSaida notaSaida) {
+        boolean numeracaoAlternativa = dataManager.load(Empresa.class)
+                .query("select e from Empresa e where e.codigo = :codEmpresa")
+                .parameter("codEmpresa", notaSaida.getCodEmpresa())
+                .optional()
+                .map(Empresa::getNumTitAlt)
+                .orElse(Boolean.FALSE);
+        if (numeracaoAlternativa) {
+            long numero = sequences.createNextValue(Sequence.withName("numerotitulo" + notaSaida.getCodEmpresa()));
+            return String.format("%06d", numero);
+        }
+        return String.format("%06d", notaSaida.getNumero());
     }
 
     /** Lança contabilmente o item de emissão (item 1) de cada título ainda não contabilizado. */

@@ -666,6 +666,13 @@
                                     </actions>
                                 </entityComboBox>
                             </hbox>
+                            <hbox width="100%">
+                                <checkbox id="numTitAltField"
+                                          property="numTitAlt"
+                                          dataContainer="empresaDc"
+                                          width="25%"
+                                          label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.numTitAlt"/>
+                            </hbox>
                         </vbox>
                     </tab>
                 </tabSheet>

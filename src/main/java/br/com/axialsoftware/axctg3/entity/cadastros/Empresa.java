@@ -358,6 +358,22 @@ public class Empresa {
     @Column(name = "MOD_FRETE_PADRAO")
     private Integer modFretePadrao;
 
+    // Decide a origem do número de TituloReceber.numero em
+    // TituloReceberService.gerarTitulosDaEmissao: false (padrão) mantém o número da
+    // NotaSaida; true troca pra uma Sequence própria ("numerotitulo" + codigo da empresa),
+    // independente do número da nota — a letra de identificação da parcela continua igual
+    // nos dois casos.
+    @Column(name = "NUM_TIT_ALT")
+    private Boolean numTitAlt = false;
+
+    public Boolean getNumTitAlt() {
+        return numTitAlt;
+    }
+
+    public void setNumTitAlt(Boolean numTitAlt) {
+        this.numTitAlt = numTitAlt;
+    }
+
     public ModFrete getModFretePadrao() {
         return modFretePadrao == null ? null : ModFrete.fromId(modFretePadrao);
     }

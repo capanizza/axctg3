@@ -2,6 +2,7 @@ package br.com.axialsoftware.axctg3.financeiro;
 
 import br.com.axialsoftware.axctg3.entity.User;
 import br.com.axialsoftware.axctg3.entity.cadastros.CondicaoPagamento;
+import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
 import br.com.axialsoftware.axctg3.entity.fiscal.ItemNotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao;
@@ -17,6 +18,8 @@ import br.com.axialsoftware.axctg3.test_support.AuthenticatedAsAdmin;
 import io.jmix.core.DataManager;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.security.CurrentAuthentication;
+import io.jmix.data.Sequence;
+import io.jmix.data.Sequences;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,6 +72,8 @@ class TituloReceberGeracaoTest {
     private TituloReceberService tituloReceberService;
     @Autowired
     private CurrentAuthentication currentAuthentication;
+    @Autowired
+    private Sequences sequences;
 
     private int codEmpresa;
 
@@ -98,6 +103,11 @@ class TituloReceberGeracaoTest {
 
     @AfterEach
     void tearDown() {
+        dataManager.load(Empresa.class)
+                .query("select e from Empresa e where e.codigo = :codEmpresa")
+                .parameter("codEmpresa", codEmpresa)
+                .list()
+                .forEach(dataManager::remove);
         dataManager.load(ItemReceber.class)
                 .query("select e from ItemReceber e where e.tituloReceber.codEmpresa = :codEmpresa")
                 .parameter("codEmpresa", codEmpresa)
@@ -406,5 +416,34 @@ class TituloReceberGeracaoTest {
 
         assertThat(erro).isNotNull();
         assertThat(titulosDaNota(notaSaida)).isEmpty();
+    }
+
+    @Test
+    void empresaComNumTitAltUsaSequenciaPropriaEmVezDoNumeroDaNota() {
+        Empresa empresa = dataManager.create(Empresa.class);
+        empresa.setCodigo(codEmpresa);
+        empresa.setNome("Empresa de teste");
+        empresa.setApelido("Teste");
+        empresa.setNumTitAlt(true);
+        dataManager.save(empresa);
+
+        // consome o primeiro valor da sequence "numerotitulo<codEmpresa>" antes de gerar o
+        // título — sem isso, ambas as sequences (a da nota e a alternativa) partiriam de 1
+        // pra uma empresa nova neste teste e o número coincidiria por acaso, mascarando um
+        // bug em que gerarTitulosDaEmissao ignorasse Empresa.numTitAlt.
+        sequences.createNextValue(Sequence.withName("numerotitulo" + codEmpresa));
+
+        Parceiro parceiro = criarParceiro();
+        Banco banco = criarBanco();
+        CondicaoPagamento condicaoPagamento = criarCondicaoPagamento(1, 10, 0);
+        NotaSaida notaSaida = criarNotaSaidaComItem(condicaoPagamento, banco, parceiro,
+                new BigDecimal("10"), new BigDecimal("10"));
+
+        String erro = tituloReceberService.gerarTitulosDaEmissao(notaSaida);
+        assertThat(erro).isNull();
+
+        TituloReceber titulo = titulosDaNota(notaSaida).get(0);
+        assertThat(titulo.getNumero()).isEqualTo("000002");
+        assertThat(titulo.getNumero()).isNotEqualTo(String.format("%06d", notaSaida.getNumero()));
     }
 }
