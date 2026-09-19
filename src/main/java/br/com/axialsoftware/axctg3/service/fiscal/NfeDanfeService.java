@@ -251,7 +251,7 @@ public class NfeDanfeService {
         parametros.put("DATA_EMISSAO", nfe.getDhEmi() == null ? "" : nfe.getDhEmi().format(DATA));
         parametros.put("CLIENTE", nvl(nfe.getDestXNome()) + " — "
                 + (nfe.getDestCnpj() != null ? formatarCnpj(nfe.getDestCnpj()) : formatarCpf(nfe.getDestCpf())));
-        parametros.put("NATUREZA", nvl(nfe.getNatOp()));
+        parametros.put("NATUREZA", instanceNameOu(notaSaida.getNatureza()));
         parametros.put("COND_PAGTO", instanceNameOu(notaSaida.getCondicaoPagamento()));
         parametros.put("BANCO", instanceNameOu(notaSaida.getBanco()));
         parametros.put("VENDEDOR", instanceNameOu(notaSaida.getVendedor()));
