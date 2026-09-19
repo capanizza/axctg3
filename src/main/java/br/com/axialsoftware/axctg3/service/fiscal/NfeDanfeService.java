@@ -75,7 +75,14 @@ public class NfeDanfeService {
     // Carimbo "NF-e CANCELADA" do parâmetro MARCA_CANCELADA do Danfe.jrxml (banda de
     // background) — sempre o mesmo bitmap, texto fixo, então gerado uma vez por classe em vez
     // de recriar a cada emissão de DANFE.
-    private static final java.awt.Image MARCA_CANCELADA = criarMarcaCancelada();
+    private static final java.awt.Image MARCA_CANCELADA = criarCarimbo("NF-e CANCELADA", new Color(190, 0, 0, 100));
+
+    // Carimbo "SEM VALOR FISCAL" do parâmetro MARCA_SEM_VALOR_FISCAL do PreDanfe.jrxml —
+    // diferente do carimbo de cancelamento, este é sempre ativo (o PreDanfe nunca tem valor
+    // fiscal, é uma prévia antes da NFe existir/ser assinada), então não há um "printWhenExpression"
+    // condicional em cima do parâmetro no .jrxml. Cinza em vez de vermelho — não é um alerta de
+    // erro, é uma informação permanente do documento.
+    private static final java.awt.Image MARCA_SEM_VALOR_FISCAL = criarCarimbo("SEM VALOR FISCAL", new Color(120, 120, 120, 110));
 
     private static DecimalFormatSymbols criarSimbolosBr() {
         DecimalFormatSymbols simbolos = new DecimalFormatSymbols();
@@ -85,15 +92,16 @@ public class NfeDanfeService {
     }
 
     /**
-     * Desenha "NF-e CANCELADA" rotacionado num {@link BufferedImage} com fundo transparente —
-     * o {@code rotation} do {@code textElement} do JasperReports só aceita múltiplos de 90°
+     * Desenha {@code texto} rotacionado num {@link BufferedImage} com fundo transparente — o
+     * {@code rotation} do {@code textElement} do JasperReports só aceita múltiplos de 90°
      * (None/Left/Right/UpsideDown), insuficiente pro carimbo diagonal de marca d'água. O
      * canvas é dimensionado a partir da largura/altura real do texto medida via
      * {@link FontMetrics} (não um tamanho "no chute"), pra não cortar as pontas do texto depois
-     * de rotacionado.
+     * de rotacionado. O bitmap resultante é colocado num {@code <image>} com
+     * {@code scaleImage="RetainShape"}, então o tamanho de fonte fixo abaixo só define a
+     * proporção do carimbo — o elemento de destino no .jrxml é quem manda no tamanho final.
      */
-    private static java.awt.Image criarMarcaCancelada() {
-        String texto = "NF-e CANCELADA";
+    private static java.awt.Image criarCarimbo(String texto, Color cor) {
         double anguloGraus = -28;
         Font fonte = new Font("SansSerif", Font.BOLD, 54);
 
@@ -114,7 +122,7 @@ public class NfeDanfeService {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g.setFont(fonte);
-        g.setColor(new Color(190, 0, 0, 100));
+        g.setColor(cor);
         g.rotate(Math.toRadians(anguloGraus), largura / 2.0, altura / 2.0);
         g.drawString(texto, (largura - textoLargura) / 2f, altura / 2f + textoAltura / 3f);
         g.dispose();
@@ -237,6 +245,7 @@ public class NfeDanfeService {
         parametros.put("TITULO_RELATORIO", "Nota fiscal - pré-visualização");
         parametros.put("NOME_EMPRESA", utilGeralService.getNomeEmpresa());
         parametros.put("LOGO", utilGeralService.getLogoEmpresa());
+        parametros.put("MARCA_SEM_VALOR_FISCAL", MARCA_SEM_VALOR_FISCAL);
 
         parametros.put("NUMERO", String.valueOf(notaSaida.getNumero()));
         parametros.put("DATA_EMISSAO", nfe.getDhEmi() == null ? "" : nfe.getDhEmi().format(DATA));

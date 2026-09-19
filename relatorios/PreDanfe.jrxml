@@ -7,6 +7,11 @@
 	<parameter name="TITULO_RELATORIO" class="java.lang.String"/>
 	<parameter name="NOME_EMPRESA" class="java.lang.String"/>
 	<parameter name="LOGO" class="java.lang.String"/>
+	<!-- Sempre preenchido por NfeDanfeService.emitirPreDanfe — o PreDanfe nunca tem valor
+	     fiscal (é a prévia da nota antes de emitir/assinar/enviar a NFe), então, diferente do
+	     MARCA_CANCELADA do Danfe.jrxml, não há printWhenExpression condicional em cima deste
+	     parâmetro: a banda de background abaixo imprime sempre. -->
+	<parameter name="MARCA_SEM_VALOR_FISCAL" class="java.awt.Image"/>
 	<parameter name="NUMERO" class="java.lang.String"/>
 	<parameter name="DATA_EMISSAO" class="java.lang.String"/>
 	<parameter name="CLIENTE" class="java.lang.String"/>
@@ -44,8 +49,18 @@
 	<field name="baseIcms" class="java.math.BigDecimal"/>
 	<field name="valorIcms" class="java.math.BigDecimal"/>
 	<field name="valorIpi" class="java.math.BigDecimal"/>
+	<!-- Carimbo "SEM VALOR FISCAL" — banda de fundo, sempre ativa (repete atrás de todas as
+	     páginas). Mesma técnica do carimbo "NF-e CANCELADA" do Danfe.jrxml: bitmap
+	     pré-rotacionado (Graphics2D em Java, ver NfeDanfeService.criarCarimbo), não
+	     rotation="Left/Right" do textElement — esse atributo só aceita múltiplos de 90°.
+	     555x802 (columnWidth x altura útil da página: pageHeight - topMargin - bottomMargin). -->
 	<background>
-		<band splitType="Stretch"/>
+		<band height="802">
+			<image scaleImage="RetainShape" hAlign="Center" vAlign="Middle">
+				<reportElement x="40" y="270" width="475" height="260" uuid="c1d2e3f4-0001-0001-0001-000000000002"/>
+				<imageExpression><![CDATA[$P{MARCA_SEM_VALOR_FISCAL}]]></imageExpression>
+			</image>
+		</band>
 	</background>
 	<pageHeader>
 		<band height="65">
@@ -56,7 +71,7 @@
 			<textField>
 				<reportElement x="89" y="0" width="397" height="15" uuid="c1d2e3f4-0002-0001-0001-000000000002"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="DejaVu Sans Mono" size="10" isBold="true"/>
+					<font fontName="DejaVu Sans Mono" size="12" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{TITULO_RELATORIO}]]></textFieldExpression>
 			</textField>
