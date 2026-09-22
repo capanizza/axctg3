@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: axctg3-postgres
+    environment:
+      POSTGRES_DB: axctg3
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    ports:
+      # 5433 (não 5432) pra não brigar com o Postgres nativo do Windows que já
+      # roda em localhost:5432 hoje.
+      - "5433:5432"
+    volumes:
+      - axctg3_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d axctg3"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  axctg3_pgdata:
+    # external: o compose não cria nem apaga este volume — protege os dados de
+    # dev contra um `docker compose down -v`. Numa máquina nova, crie antes:
+    #   docker volume create axctg3_axctg3_pgdata
+    external: true
+    name: axctg3_axctg3_pgdata
