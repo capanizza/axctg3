@@ -1,6 +1,8 @@
 package br.com.axialsoftware.axctg3.security;
 
+import br.com.axialsoftware.axctg3.entity.User;
 import br.com.axialsoftware.axctg3.entity.cadastros.ConfigRel;
+import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
 import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
 import br.com.axialsoftware.axctg3.entity.financeiro.Banco;
@@ -88,6 +90,16 @@ public interface OperadorFinanceiroRole {
     @EntityPolicy(entityClass = ContaContabil.class, actions = EntityPolicyAction.READ)
     void referenciasLookupEntities();
 
+    // SelecionarEmpresa.list grava a empresa corrente no próprio User autenticado
+    // (User.codEmpresa) e marca qual Empresa é "selecionada" — autoatendimento, não
+    // expõe outros campos.
+    @EntityAttributePolicy(entityClass = User.class, attributes = "codEmpresa", action = EntityAttributePolicyAction.MODIFY)
+    @EntityPolicy(entityClass = User.class, actions = {EntityPolicyAction.READ, EntityPolicyAction.UPDATE})
+    @EntityAttributePolicy(entityClass = Empresa.class, attributes = "*", action = EntityAttributePolicyAction.VIEW)
+    @EntityAttributePolicy(entityClass = Empresa.class, attributes = "selecionada", action = EntityAttributePolicyAction.MODIFY)
+    @EntityPolicy(entityClass = Empresa.class, actions = {EntityPolicyAction.READ, EntityPolicyAction.UPDATE})
+    void selecionarEmpresaEntities();
+
     @ViewPolicy(viewIds = {
             "Banco.list",
             "Banco.detail",
@@ -132,4 +144,8 @@ public interface OperadorFinanceiroRole {
     // de menu, o operador financeiro não navega direto pra ela.
     @ViewPolicy(viewIds = {"ContaContabil.list", "Parceiro.list"})
     void referenciasLookupScreens();
+
+    @ViewPolicy(viewIds = "SelecionarEmpresa.list")
+    @MenuPolicy(menuIds = "SelecionarEmpresa.list")
+    void selecionarEmpresaScreen();
 }

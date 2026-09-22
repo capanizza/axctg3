@@ -70,15 +70,18 @@ public interface OperadorContabilRole {
     @EntityPolicy(entityClass = ConfigRel.class, actions = {EntityPolicyAction.READ, EntityPolicyAction.CREATE, EntityPolicyAction.UPDATE})
     void configRelEntity();
 
-    // PeriodoContabil.list grava ano/mês contábil no próprio User autenticado
-    // (PeriodoContabilListView) — autoatendimento, não expõe outros campos do User.
-    @EntityAttributePolicy(entityClass = User.class, attributes = {"anoContabil", "mesContabil"}, action = EntityAttributePolicyAction.MODIFY)
+    // PeriodoContabil.list grava ano/mês contábil, e SelecionarEmpresa.list grava a
+    // empresa corrente, ambos no próprio User autenticado — autoatendimento, não expõe
+    // outros campos do User.
+    @EntityAttributePolicy(entityClass = User.class, attributes = {"anoContabil", "mesContabil", "codEmpresa"}, action = EntityAttributePolicyAction.MODIFY)
     @EntityPolicy(entityClass = User.class, actions = {EntityPolicyAction.READ, EntityPolicyAction.UPDATE})
     void userPeriodoEntity();
 
-    // Somente leitura, pra listar as empresas em PeriodoContabil.list.
+    // Listagem em PeriodoContabil.list/SelecionarEmpresa.list; "selecionada" também é
+    // gravado por SelecionarEmpresaListView (marca qual empresa é a corrente).
     @EntityAttributePolicy(entityClass = Empresa.class, attributes = "*", action = EntityAttributePolicyAction.VIEW)
-    @EntityPolicy(entityClass = Empresa.class, actions = EntityPolicyAction.READ)
+    @EntityAttributePolicy(entityClass = Empresa.class, attributes = "selecionada", action = EntityAttributePolicyAction.MODIFY)
+    @EntityPolicy(entityClass = Empresa.class, actions = {EntityPolicyAction.READ, EntityPolicyAction.UPDATE})
     void empresaEntity();
 
     // Referenciadas via entityComboBox (lookup), mas não geridas por este role.
@@ -101,6 +104,7 @@ public interface OperadorContabilRole {
             "HistoricoContabil.list",
             "HistoricoContabil.detail",
             "PeriodoContabil.list",
+            "SelecionarEmpresa.list",
     })
     @MenuPolicy(menuIds = {
             "Lancamento.list",
@@ -108,6 +112,7 @@ public interface OperadorContabilRole {
             "Bem.list",
             "HistoricoContabil.list",
             "PeriodoContabil.list",
+            "SelecionarEmpresa.list",
     })
     void moduloContabilScreens();
 
