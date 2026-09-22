@@ -20,7 +20,12 @@ are kept identical apart from this header — mirror any change to all three.
 ./gradlew bootRun                     # http://localhost:8085/axctg3 — admin/admin
 ```
 
-- Dev DB: PostgreSQL `jdbc:postgresql://localhost/axctg3` (postgres/root). Liquibase
+- Dev DB: PostgreSQL 16 in Docker — `jdbc:postgresql://localhost:5433/axctg3`
+  (postgres/root), container `axctg3-postgres` from `docker-compose.yml`, data in the
+  **external** volume `axctg3_axctg3_pgdata` (so `docker compose down -v` can't wipe it; on
+  a fresh machine `docker volume create axctg3_axctg3_pgdata` before the first `up`).
+  Port 5433, not 5432: the native Windows Postgres still listens on 5432 with the
+  pre-Docker copy of the dev DB — it is no longer the one the app uses. Liquibase
   runs on every startup from `br/com/axialsoftware/axctg3/liquibase/changelog.xml`.
 - Tests use a file-backed HSQLDB at `.jmix/hsqldb/axctg3_test` (`@ActiveProfiles("test")`).
 - NEVER use `bootRun` as a verification gate — it does not exit and will hang the turn.
@@ -51,9 +56,16 @@ powershell.exe -NoProfile -Command "Get-CimInstance Win32_Process -Filter \"Name
 
 Then confirm port 8085 is free before reporting the app stopped.
 
-To inspect the dev Postgres directly, `psql` is at
-`C:\Program Files\Postgresql\16\bin\psql.exe`. Quoting it through `cmd.exe /c` fails —
-write a small `.bat` under `%TEMP%` and run that instead. A booted app proves only that
+To inspect the dev Postgres directly, run `psql` inside the container. `docker` is not
+on the PATH of WSL nor of `cmd.exe` — call the Docker Desktop binary by full path:
+
+```bash
+"/mnt/c/Program Files/Docker/Docker/resources/bin/docker.exe" exec axctg3-postgres psql -U postgres -d axctg3 -c "select ..."
+```
+
+(The native `C:\Program Files\Postgresql\16\bin\psql.exe` also works with `-p 5433`;
+quoting it through `cmd.exe /c` fails, so write a small `.bat` under `%TEMP%` and run
+that instead.) A booted app proves only that
 Liquibase did not throw; query `pg_indexes` / `information_schema.columns` to confirm the
 schema actually changed.
 
