@@ -1,0 +1,58 @@
+# Servidor de teste: Postgres + axctg3. Fica numa pasta do servidor (ex.: C:\axctg3)
+# junto com o .env (copiado de .env.example). Ver docs/SERVIDOR-TESTE.md.
+#
+#   docker compose up -d          sobe / aplica mudanças (ex.: nova AXCTG3_VERSAO no .env)
+#   docker compose ps             estado dos dois containers
+#   docker compose logs -f app    log do axctg3 (Ctrl+C sai do log, o app continua)
+name: axctg3
+
+services:
+  postgres:
+    image: postgres:16
+    # Mesmo nome do container de dev: o scripts/backup-dev-db.ps1 funciona aqui sem mudar nada.
+    container_name: axctg3-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: axctg3
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_SENHA}
+    # Sem "ports": o banco só é visível para o app, pela rede interna do compose.
+    # Para abrir no DBeaver/IntelliJ a partir de outra máquina, descomente:
+    # ports:
+    #   - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d axctg3"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    image: axctg3:${AXCTG3_VERSAO}
+    container_name: axctg3-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://postgres:5432/axctg3
+      DB_USUARIO: postgres
+      DB_SENHA: ${DB_SENHA}
+    ports:
+      - "8085:8085"
+    volumes:
+      - arquivos:/opt/axctg3/work
+
+volumes:
+  # external: o compose não cria nem apaga — protege os dados contra `docker compose down -v`.
+  # Criar uma vez, antes do primeiro `up`:
+  #   docker volume create axctg3_pgdata
+  #   docker volume create axctg3_arquivos
+  pgdata:
+    external: true
+    name: axctg3_pgdata
+  arquivos:
+    external: true
+    name: axctg3_arquivos

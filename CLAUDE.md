@@ -35,6 +35,10 @@ three files are kept identical apart from this header — mirror any change to a
   copy outside it. Liquibase
   runs on every startup from `br/com/axialsoftware/axctg3/liquibase/changelog.xml`.
 - Tests use a file-backed HSQLDB at `.jmix/hsqldb/axctg3_test` (`@ActiveProfiles("test")`).
+- Test server (Docker Desktop on a separate Windows 10 box): `docs/SERVIDOR-TESTE.md`.
+  `scripts/gerar-imagem.ps1 -Versao X` builds the production jar + `axctg3:X` image + a
+  `.tar`; the server runs `deploy/servidor-teste/docker-compose.yml` with profile `prod`
+  (`application-prod.properties`: DB from env vars, blank login defaults).
 - NEVER use `bootRun` as a verification gate — it does not exit and will hang the turn.
   Gate 2 is `clean test`. See below for the cases where starting the app IS the point.
 

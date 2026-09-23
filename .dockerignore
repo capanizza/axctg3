@@ -1,0 +1,4 @@
+# O Dockerfile só copia o jar de build/libs — o resto (node_modules, .gradle, src, ...)
+# não entra no contexto do build, que senão passaria de 1 GB.
+*
+!build/libs/*.jar

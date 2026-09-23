@@ -33,3 +33,6 @@ webpack.generated.js
 
 # Workspace local do Jaspersoft Studio (link solto pro relatorios/*.jrxml, sem conteúdo próprio)
 /MyReports/
+
+# .env do servidor de teste (senha do banco) — só o .env.example vai pro git
+deploy/servidor-teste/.env
