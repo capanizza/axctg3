@@ -2,6 +2,8 @@ services:
   postgres:
     image: postgres:16
     container_name: axctg3-postgres
+    # Volta sozinho depois de um reboot, assim que o Docker Desktop subir.
+    restart: unless-stopped
     environment:
       POSTGRES_DB: axctg3
       POSTGRES_USER: postgres

@@ -25,7 +25,12 @@ three files are kept identical apart from this header — mirror any change to a
   **external** volume `axctg3_axctg3_pgdata` (so `docker compose down -v` can't wipe it; on
   a fresh machine `docker volume create axctg3_axctg3_pgdata` before the first `up`).
   Port 5433, not 5432: the native Windows Postgres still listens on 5432 with the
-  pre-Docker copy of the dev DB — it is no longer the one the app uses. Liquibase
+  pre-Docker copy of the dev DB — it is no longer the one the app uses.
+  `restart: unless-stopped`, so it comes back on its own once Docker Desktop is up.
+  Backup: `scripts/backup-dev-db.ps1` (`pg_dump -Fc` via `docker exec`, checked with
+  `pg_restore -l`, keeps the 14 newest in `C:\backups\axctg3`, log in `backup.log` there).
+  The volume lives inside the WSL2 VM, not in a Windows folder — those dumps are the only
+  copy outside it. Liquibase
   runs on every startup from `br/com/axialsoftware/axctg3/liquibase/changelog.xml`.
 - Tests use a file-backed HSQLDB at `.jmix/hsqldb/axctg3_test` (`@ActiveProfiles("test")`).
 - NEVER use `bootRun` as a verification gate — it does not exit and will hang the turn.
