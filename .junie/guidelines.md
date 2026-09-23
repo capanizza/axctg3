@@ -24,8 +24,10 @@ are kept identical apart from this header — mirror any change to all three.
   (postgres/root), container `axctg3-postgres` from `docker-compose.yml`, data in the
   **external** volume `axctg3_axctg3_pgdata` (so `docker compose down -v` can't wipe it; on
   a fresh machine `docker volume create axctg3_axctg3_pgdata` before the first `up`).
-  Port 5433, not 5432: the native Windows Postgres still listens on 5432 with the
-  pre-Docker copy of the dev DB — it is no longer the one the app uses.
+  Port 5433, not 5432, on purpose: the native Windows Postgres (service
+  `postgresql-x64-16`, holding the pre-Docker copy of the dev DB) is stopped with
+  startup type Manual — but if anyone starts it, it takes 5432, and sharing that port
+  would let the app silently connect to the stale copy. 5433 keeps them apart.
   `restart: unless-stopped`, so it comes back on its own once Docker Desktop is up.
   Backup: `scripts/backup-dev-db.ps1` (`pg_dump -Fc` via `docker exec`, checked with
   `pg_restore -l`, keeps the 14 newest in `C:\backups\axctg3`, log in `backup.log` there).
