@@ -52,6 +52,7 @@ class ItemNotaSaidaDetailViewIcmsPreviewUiTest {
 
     private static final int COD_EMPRESA = 9112;
     private static final int CLASS_TRIB_CODIGO_TESTE = 9990003;
+    private static final int CLASS_TRIB_DOACAO_TESTE = 9990004;
 
     @Autowired
     private DataManager dataManager;
@@ -81,10 +82,62 @@ class ItemNotaSaidaDetailViewIcmsPreviewUiTest {
                 .list()
                 .forEach(dataManager::remove);
         dataManager.load(ClassTrib.class)
-                .query("select e from ClassTrib e where e.codigo = :codigo")
-                .parameter("codigo", CLASS_TRIB_CODIGO_TESTE)
+                .query("select e from ClassTrib e where e.codigo in :codigo")
+                .parameter("codigo", java.util.List.of(CLASS_TRIB_CODIGO_TESTE, CLASS_TRIB_DOACAO_TESTE))
                 .list()
                 .forEach(dataManager::remove);
+    }
+
+    // Pedido do usuário 2026-09-24: item de doação abre com CST 41 (natureza) e 410999
+    // (cabeçalho) já preenchidos, antes de escolher o produto.
+    @Test
+    void itemNovoAbreComCstDaNaturezaEClassTribDoCabecalho() {
+        ClassTrib doacao = dataManager.create(ClassTrib.class);
+        doacao.setCodigo(CLASS_TRIB_DOACAO_TESTE);
+        doacao.setCst(410);
+        doacao.setDescricao("Doação de teste");
+        doacao.setTipoAliquota("Sem alíquota");
+        doacao.setNomenclatura("Teste");
+        doacao.setDescricaoTratamentoTributario("Teste");
+        doacao = dataManager.save(doacao);
+
+        NaturezaOperacao natureza = dataManager.create(NaturezaOperacao.class);
+        natureza.setCodigo(1);
+        natureza.setCodEmpresa(COD_EMPRESA);
+        natureza.setNome("Doação de teste");
+        natureza.setCfop(5910);
+        natureza.setCst(carregarCst("41"));
+        natureza = dataManager.save(natureza);
+
+        Parceiro parceiro = dataManager.create(Parceiro.class);
+        parceiro.setCodigo(1L);
+        parceiro.setCodEmpresa(COD_EMPRESA);
+        parceiro.setNome("Cliente de Teste");
+        parceiro.setApelido("Cliente Teste");
+        parceiro.setCnpj("12345678000190");
+        parceiro = dataManager.save(parceiro);
+
+        NotaSaida notaSaida = dataManager.create(NotaSaida.class);
+        notaSaida.setCodEmpresa(COD_EMPRESA);
+        notaSaida.setDataEmissao(LocalDate.now());
+        notaSaida.setDataSaida(LocalDate.now());
+        notaSaida.setEspecie("NF");
+        notaSaida.setSerie("1");
+        notaSaida.setParceiro(parceiro);
+        notaSaida.setNatureza(natureza);
+        notaSaida.setClassTrib(doacao);
+        NotaSaida notaSaidaFinal = dataManager.save(notaSaida);
+
+        DialogWindow<ItemNotaSaidaDetailView> dialogWindow = dialogWindows.detail(UiTestUtils.getCurrentView(), ItemNotaSaida.class)
+                .withViewClass(ItemNotaSaidaDetailView.class)
+                .newEntity()
+                .withInitializer(item -> item.setNotaSaida(notaSaidaFinal))
+                .open();
+        ItemNotaSaidaDetailView view = dialogWindow.getView();
+
+        TypedTextField<String> cstField = UiTestUtils.getComponent(view, "cstField");
+        assertThat(cstField.getValue()).isEqualTo("41");
+        assertThat(view.getEditedEntity().getCodClassTrib()).isEqualTo(CLASS_TRIB_DOACAO_TESTE);
     }
 
     private Cst carregarCst(String codigo) {

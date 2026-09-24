@@ -40,6 +40,7 @@ class ItemNotaSaidaEdicaoPelaNotaTest {
     private static final int COD_EMPRESA = 9432;
     // Tabela global com índice único sem filtro de soft delete no HSQLDB — base variável.
     private final int classTribCodigoTeste = 9980000 + (int) (System.currentTimeMillis() % 9000);
+    private final int classTribDoacaoTeste = 9960000 + (int) (System.currentTimeMillis() % 9000);
 
     @Autowired
     private DataManager dataManager;
@@ -80,6 +81,43 @@ class ItemNotaSaidaEdicaoPelaNotaTest {
         ItemNotaSaida recarregado = dataManager.load(ItemNotaSaida.class).id(item.getId()).one();
         assertThat(recarregado.getCodClassTrib()).isEqualTo(410999);
         assertThat(recarregado.getQuantidade()).isEqualByComparingTo("2");
+    }
+
+    // Pedido do usuário 2026-09-24: cClassTrib do cabeçalho que não é o de tributação
+    // integral (ex.: 410999 na doação) vence o do produto; CST 41 vem da natureza.
+    @Test
+    void itemNovoPegaCstDaNaturezaEClassTribDoCabecalho() {
+        NotaSaida nota = criarNotaComItem();
+        ClassTrib doacao = dataManager.create(ClassTrib.class);
+        doacao.setCodigo(classTribDoacaoTeste);
+        doacao.setCst(410);
+        doacao.setDescricao("Doação de teste");
+        doacao.setTipoAliquota("Sem alíquota");
+        doacao.setNomenclatura("Teste");
+        doacao.setDescricaoTratamentoTributario("Teste");
+        dataManager.save(doacao);
+
+        NaturezaOperacao natureza = dataManager.load(NaturezaOperacao.class).id(nota.getNatureza().getId()).one();
+        natureza.setCst(dataManager.load(br.com.axialsoftware.axctg3.entity.tabelas.Cst.class)
+                .query("select e from Cst e where e.codigo = '41'").one());
+        natureza.setAliqIcms(new BigDecimal("7"));
+        dataManager.save(natureza);
+        NotaSaida carregada = dataManager.load(NotaSaida.class).id(nota.getId()).one();
+        carregada.setClassTrib(doacao);
+        carregada = dataManager.save(carregada);
+
+        ItemNotaSaida item = dataManager.create(ItemNotaSaida.class);
+        item.setNotaSaida(carregada);
+        item.setItem(2);
+        item.setProduto(dataManager.load(Produto.class)
+                .query("select e from Produto e where e.codEmpresa = :c").parameter("c", COD_EMPRESA).one());
+        item.setQuantidade(new BigDecimal("1"));
+        item.setValorUnitario(new BigDecimal("50"));
+        item = dataManager.save(item);
+
+        assertThat(item.getCst()).isEqualTo("41");
+        assertThat(item.getCodClassTrib()).isEqualTo(classTribDoacaoTeste);
+        assertThat(item.getValorIcms()).isZero();
     }
 
     private NotaSaida criarNotaComItem() {
@@ -149,7 +187,8 @@ class ItemNotaSaidaEdicaoPelaNotaTest {
         apagar(dataManager.load(Parceiro.class)
                 .query("select e from Parceiro e where e.codEmpresa = :c").parameter("c", COD_EMPRESA).list());
         apagar(dataManager.load(ClassTrib.class)
-                .query("select e from ClassTrib e where e.codigo = :c").parameter("c", classTribCodigoTeste).list());
+                .query("select e from ClassTrib e where e.codigo in :c")
+                .parameter("c", List.of(classTribCodigoTeste, classTribDoacaoTeste)).list());
     }
 
     private void apagar(List<?> entidades) {

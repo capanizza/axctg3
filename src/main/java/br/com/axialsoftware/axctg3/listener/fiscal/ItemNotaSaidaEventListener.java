@@ -76,7 +76,8 @@ public class ItemNotaSaidaEventListener {
                 itemNotaSaida.setCfop(naturezaRef.getCfop());
             }
             if (itemNotaSaida.getCodClassTrib() == null) {
-                itemNotaSaida.setCodClassTrib(tributacaoService.resolverCodClassTrib(natureza, produto));
+                itemNotaSaida.setCodClassTrib(tributacaoService.resolverCodClassTrib(
+                        notaSaida == null ? null : notaSaida.getClassTrib(), natureza, produto));
             }
             if (itemNotaSaida.getCst() == null) {
                 String cst = tributacaoService.resolverCstIcms(natureza, produto);
@@ -147,10 +148,11 @@ public class ItemNotaSaidaEventListener {
         Optional<UUID> notaSaidaId;
         if (entityStates.isLoaded(item, "notaSaida")) {
             NotaSaida notaSaida = item.getNotaSaida();
-            // Mesmo problema um nível acima: a nota pode vir sem a natureza/finNfe (que é
-            // o que este listener lê dela) — aí vale só o id.
+            // Mesmo problema um nível acima: a nota pode vir sem a natureza/finNfe/classTrib
+            // (que é o que este listener lê dela) — aí vale só o id.
             if (notaSaida == null
-                    || (entityStates.isLoaded(notaSaida, "natureza") && entityStates.isLoaded(notaSaida, "finNfe"))) {
+                    || (entityStates.isLoaded(notaSaida, "natureza") && entityStates.isLoaded(notaSaida, "finNfe")
+                    && entityStates.isLoaded(notaSaida, "classTrib"))) {
                 return notaSaida;
             }
             notaSaidaId = Optional.of((UUID) notaSaida.getId());
@@ -163,7 +165,9 @@ public class ItemNotaSaidaEventListener {
         return notaSaidaId
                 .flatMap(id -> dataManager.load(NotaSaida.class)
                         .id(id)
-                        .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE).add("natureza", FetchPlan.BASE))
+                        .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE)
+                                .add("natureza", FetchPlan.BASE)
+                                .add("classTrib", FetchPlan.BASE))
                         .optional())
                 .orElse(null);
     }

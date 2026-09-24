@@ -11,6 +11,7 @@ import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.PedidoVenda;
 import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
+import br.com.axialsoftware.axctg3.entity.tabelas.Cst;
 import br.com.axialsoftware.axctg3.service.fiscal.PedidoVendaService;
 import br.com.axialsoftware.axctg3.view.fiscal.pedidovenda.PedidoVendaDetailView;
 import br.com.axialsoftware.axctg3.view.fiscal.pedidovenda.PedidoVendaListView;
@@ -54,6 +55,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 class PedidoVendaUiTest {
 
     private static final int COD_EMPRESA = 9420;
+    private static final int CLASS_TRIB_DOACAO = 9990103;
 
     @Autowired
     private DataManager dataManager;
@@ -138,6 +140,57 @@ class PedidoVendaUiTest {
         assertThat(notaSaida.getNatureza()).isEqualTo(natureza);
         assertThat(notaSaida.getValorMercadoria()).isEqualByComparingTo("31.50");
         assertThat(notaSaida.getValor()).isEqualByComparingTo("31.50");
+    }
+
+    // Pedido do usuário 2026-09-24: na doação, CST 41 (natureza) e 410999 (cabeçalho)
+    // já vêm no item, em vez do CST/cClassTrib de venda do produto.
+    @Test
+    void itemNovoPegaCstDaNaturezaEClassTribDoCabecalho() {
+        ClassTrib doacao = criarClassTribDoacao();
+        natureza.setCst(dataManager.load(Cst.class).query("select e from Cst e where e.codigo = '41'").one());
+        natureza = dataManager.save(natureza);
+        PedidoVenda pedido = dataManager.create(PedidoVenda.class);
+        pedido.setDataEntrada(LocalDate.now());
+        pedido.setParceiro(parceiro);
+        pedido.setNatureza(natureza);
+        pedido.setClassTrib(doacao);
+        pedido = dataManager.save(pedido);
+
+        ItemPedidoVenda item = criarItem(pedido, new BigDecimal("1"), new BigDecimal("10"));
+
+        assertThat(item.getCst()).isEqualTo("41");
+        assertThat(item.getCodClassTrib()).isEqualTo(CLASS_TRIB_DOACAO);
+    }
+
+    @Test
+    void escolherNaturezaTrazOClassTribDelaProCabecalho() {
+        ClassTrib doacao = criarClassTribDoacao();
+        natureza.setClassTrib(doacao);
+        natureza = dataManager.save(natureza);
+
+        viewNavigators.detailView(UiTestUtils.getCurrentView(), PedidoVenda.class)
+                .newEntity()
+                .withViewClass(PedidoVendaDetailView.class)
+                .navigate();
+        PedidoVendaDetailView view = UiTestUtils.getCurrentView();
+
+        EntityComboBox<NaturezaOperacao> naturezaField = UiTestUtils.getComponent(view, "naturezaField");
+        naturezaField.setValue(natureza);
+
+        EntityComboBox<ClassTrib> classTribField = UiTestUtils.getComponent(view, "classTribField");
+        assertThat(classTribField.getValue()).isNotNull();
+        assertThat(classTribField.getValue().getCodigo()).isEqualTo(CLASS_TRIB_DOACAO);
+    }
+
+    private ClassTrib criarClassTribDoacao() {
+        ClassTrib c = dataManager.create(ClassTrib.class);
+        c.setCodigo(CLASS_TRIB_DOACAO);
+        c.setCst(410);
+        c.setDescricao("Doação de teste");
+        c.setTipoAliquota("Sem alíquota");
+        c.setNomenclatura("Teste");
+        c.setDescricaoTratamentoTributario("Teste");
+        return dataManager.save(c);
     }
 
     @Test
@@ -263,6 +316,8 @@ class PedidoVendaUiTest {
             apagar(carregar(ClassTrib.class, "select e from ClassTrib e where e.codigo = :codigo",
                     "codigo", classTrib.getCodigo()));
         }
+        apagar(carregar(ClassTrib.class, "select e from ClassTrib e where e.codigo = :codigo",
+                "codigo", CLASS_TRIB_DOACAO));
     }
 
     private <E> List<E> carregar(Class<E> entityClass, String query) {

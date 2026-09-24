@@ -9,7 +9,9 @@ import br.com.axialsoftware.axctg3.entity.cadastros.Vendedor;
 import br.com.axialsoftware.axctg3.entity.financeiro.Banco;
 import br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
+import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
+import br.com.axialsoftware.axctg3.service.fiscal.ItemNotaSaidaTributacaoService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.router.Route;
@@ -17,6 +19,7 @@ import io.jmix.core.DataManager;
 import io.jmix.core.EntityStates;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.model.CollectionLoader;
+import io.jmix.flowui.model.InstanceContainer;
 import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -30,6 +33,8 @@ public class NotaSaidaDetailView extends StandardDetailView<NotaSaida> {
 
     @Autowired
     private UtilGeralService utilGeralService;
+    @Autowired
+    private ItemNotaSaidaTributacaoService tributacaoService;
     @Autowired
     private Dialogs dialogs;
     @Autowired
@@ -145,6 +150,23 @@ public class NotaSaidaDetailView extends StandardDetailView<NotaSaida> {
                     .withHeader(messageBundle.getMessage("notaSaidaDetailView.especieSerieNaoConfigurada.header"))
                     .withText(messageBundle.getMessage("notaSaidaDetailView.especieSerieNaoConfigurada.text"))
                     .open();
+        }
+    }
+
+    /**
+     * Ao escolher a natureza, o cClassTrib do cabeçalho vem com o dela (quando a natureza
+     * tem um cadastrado) — continua editável. Pedido do usuário 2026-09-24: o cabeçalho
+     * é quem decide o cClassTrib dos itens quando não é o de tributação integral (ver
+     * ItemNotaSaidaTributacaoService.resolverCodClassTrib).
+     */
+    @Subscribe(id = "notaSaidaDc", target = Target.DATA_CONTAINER)
+    public void onNotaSaidaDcItemPropertyChange(final InstanceContainer.ItemPropertyChangeEvent<NotaSaida> event) {
+        if (!"natureza".equals(event.getProperty())) {
+            return;
+        }
+        ClassTrib classTrib = tributacaoService.classTribDaNatureza(event.getItem().getNatureza());
+        if (classTrib != null) {
+            event.getItem().setClassTrib(getViewData().getDataContext().merge(classTrib));
         }
     }
 }

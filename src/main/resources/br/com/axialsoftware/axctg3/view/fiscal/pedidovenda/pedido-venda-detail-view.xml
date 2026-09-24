@@ -6,8 +6,11 @@
         <instance id="pedidoVendaDc"
                   class="br.com.axialsoftware.axctg3.entity.fiscal.PedidoVenda">
             <fetchPlan extends="_base">
+                <!-- pedidoVenda (referência de volta): a tela do item lê item.getPedidoVenda()
+                     pra resolver CST/cClassTrib — mesmo motivo do fetch plan da nota. -->
                 <property name="itens" fetchPlan="_base">
                     <property name="produto" fetchPlan="_instance_name"/>
+                    <property name="pedidoVenda" fetchPlan="_instance_name"/>
                 </property>
                 <property name="parceiro" fetchPlan="_instance_name"/>
                 <property name="natureza" fetchPlan="_instance_name"/>

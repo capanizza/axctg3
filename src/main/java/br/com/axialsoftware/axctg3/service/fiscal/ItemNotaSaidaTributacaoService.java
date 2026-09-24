@@ -95,6 +95,22 @@ public class ItemNotaSaidaTributacaoService {
      * ser String, não FK).
      */
     public Integer resolverCodClassTrib(NaturezaOperacao naturezaIn, Produto produtoIn) {
+        return resolverCodClassTrib(null, naturezaIn, produtoIn);
+    }
+
+    /**
+     * Mesma precedência, com o cClassTrib do cabeçalho da nota/pedido na frente
+     * (pedido do usuário 2026-09-24): quando o cabeçalho traz uma classificação que não é
+     * a de tributação integral (ex.: 410999 numa doação), ela vale pra todos os itens,
+     * acima da natureza e do produto. Cabeçalho vazio ou "000xxx" cai na regra de sempre.
+     */
+    public Integer resolverCodClassTrib(ClassTrib classTribCabecalhoIn, NaturezaOperacao naturezaIn,
+                                        Produto produtoIn) {
+        ClassTrib classTribCabecalho = comCstCarregado(classTribCabecalhoIn);
+        if (classTribCabecalho != null && classTribCabecalho.getCst() != null
+                && classTribCabecalho.getCst() != CST_TRIBUTACAO_INTEGRAL) {
+            return classTribCabecalho.getCodigo();
+        }
         NaturezaOperacao natureza = comTributacaoFetched(naturezaIn);
         Produto produto = comTributacaoFetched(produtoIn);
         ClassTrib classTribNatureza = natureza == null ? null : natureza.getClassTrib();
@@ -135,6 +151,23 @@ public class ItemNotaSaidaTributacaoService {
 
     // Sem CST o item sai como "40" na emissão (NfeXmlBuilder.resolverCstIcms) — mesmo
     // tratamento aqui, pra o valor gravado bater com o XML.
+    /**
+     * cClassTrib cadastrado na natureza — usado pra pré-preencher o cClassTrib do
+     * cabeçalho da nota/pedido quando o operador escolhe a natureza (a natureza que vem
+     * do combo da tela não traz a referência carregada).
+     */
+    public ClassTrib classTribDaNatureza(NaturezaOperacao naturezaIn) {
+        NaturezaOperacao natureza = comTributacaoFetched(naturezaIn);
+        return natureza == null ? null : natureza.getClassTrib();
+    }
+
+    private ClassTrib comCstCarregado(ClassTrib classTrib) {
+        if (classTrib == null || entityStates.isLoaded(classTrib, "cst")) {
+            return classTrib;
+        }
+        return dataManager.load(ClassTrib.class).id(classTrib.getId()).optional().orElse(classTrib);
+    }
+
     private boolean semIcmsProprio(String cst) {
         if (cst == null || cst.isBlank()) {
             return true;

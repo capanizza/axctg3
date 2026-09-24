@@ -60,6 +60,10 @@ public class ItemNotaSaidaDetailView extends StandardDetailView<ItemNotaSaida> {
         if (item.getCfop() == null && notaSaida != null && notaSaida.getNatureza() != null) {
             item.setCfop(notaSaida.getNatureza().getCfop());
         }
+        // CST/cClassTrib já na abertura quando o cabeçalho/natureza decidem sozinhos
+        // (ex.: doação — CST 41 na natureza, 410999 no cabeçalho), sem esperar o
+        // produto; o que ficar em branco aqui é resolvido quando o produto for escolhido.
+        resolverTributacao(item);
     }
 
     /**
@@ -77,25 +81,31 @@ public class ItemNotaSaidaDetailView extends StandardDetailView<ItemNotaSaida> {
             return;
         }
         ItemNotaSaida item = event.getItem();
+        resolverTributacao(item);
+        NotaSaida notaSaida = item.getNotaSaida();
+        NaturezaOperacao natureza = notaSaida == null ? null : notaSaida.getNatureza();
+        tributacaoService.aplicarCalculoIcms(item, natureza, item.getProduto());
+    }
+
+    // Mesma precedência do save (ItemNotaSaidaEventListener.onItemNotaSaidaSaving) —
+    // cabeçalho/natureza/produto, ver ItemNotaSaidaTributacaoService — só preenche o
+    // que ainda está em branco, nunca sobrescreve o que o operador digitou.
+    private void resolverTributacao(ItemNotaSaida item) {
         NotaSaida notaSaida = item.getNotaSaida();
         NaturezaOperacao natureza = notaSaida == null ? null : notaSaida.getNatureza();
         Produto produto = item.getProduto();
-
         if (item.getCst() == null) {
             String cst = tributacaoService.resolverCstIcms(natureza, produto);
             if (cst != null) {
                 item.setCst(cst);
             }
         }
-        // Mesma precedência natureza/produto do CST (ver reforma-tributaria-cclasstrib-
-        // precedencia), preview em vez de só resolver no save (ItemNotaSaidaEventListener.
-        // onItemNotaSaidaSaving já faz isso, mas só depois de salvar).
         if (item.getCodClassTrib() == null) {
-            Integer codClassTrib = tributacaoService.resolverCodClassTrib(natureza, produto);
+            Integer codClassTrib = tributacaoService.resolverCodClassTrib(
+                    notaSaida == null ? null : notaSaida.getClassTrib(), natureza, produto);
             if (codClassTrib != null) {
                 item.setCodClassTrib(codClassTrib);
             }
         }
-        tributacaoService.aplicarCalculoIcms(item, natureza, produto);
     }
 }
