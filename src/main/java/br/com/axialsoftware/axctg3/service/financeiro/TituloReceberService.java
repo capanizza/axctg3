@@ -10,6 +10,7 @@ import br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro;
 import br.com.axialsoftware.axctg3.entity.financeiro.ItemReceber;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceberDto;
+import br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.service.RelatorioService;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
@@ -83,36 +84,47 @@ public class TituloReceberService {
      * {@code NfeXmlBuilder.construirCobr}.
      *
      * @return mensagem de erro (sem gerar nada) quando falta um pré-requisito; {@code null}
-     * em caso de sucesso ou quando não há nada a fazer (nota já tem título, ou não tem
-     * condição de pagamento configurada — mesmo comportamento de hoje, sem duplicata no XML)
+     * em caso de sucesso ou quando não há nada a fazer (nota já tem título, não é de venda,
+     * ou não tem condição de pagamento configurada — sem duplicata no XML)
      */
     @Transactional
     public String gerarTitulosDaEmissao(NotaSaida notaSaida) {
+        // Só nota de venda gera título a receber (pedido do usuário 2026-09-24): doação,
+        // remessa, retorno, brinde etc. não cobram nada do destinatário, mesmo que a nota
+        // tenha condição de pagamento preenchida por engano. Industrialização por
+        // encomenda (5124/5125) está cadastrada como venda, então continua gerando.
+        NaturezaOperacao natureza = notaSaida.getNatureza();
+        boolean notaDeVenda = natureza != null && Boolean.TRUE.equals(natureza.getVenda());
+        CondicaoPagamento condicaoPagamento = notaDeVenda ? notaSaida.getCondicaoPagamento() : null;
+
         List<TituloReceber> titulosExistentes = dataManager.load(TituloReceber.class)
                 .query("select e from TituloReceber e where e.notaSaida = :notaSaida")
                 .parameter("notaSaida", notaSaida)
-                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE).add("itens", FetchPlan.BASE))
+                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE)
+                        .add("itens", FetchPlan.BASE)
+                        .add("banco", FetchPlan.INSTANCE_NAME))
                 .list();
         if (!titulosExistentes.isEmpty()) {
-            BigDecimal somaExistente = titulosExistentes.stream()
-                    .map(TituloReceber::getValor)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-            BigDecimal valorAtualDaNota = notaSaida.getValor() == null ? BigDecimal.ZERO : notaSaida.getValor();
-            if (somaExistente.compareTo(valorAtualDaNota) == 0) {
+            if (titulosAindaValem(titulosExistentes, notaSaida, condicaoPagamento)) {
                 return null;
             }
-            // Nota editada (itens alterados) depois que os títulos já tinham sido gerados —
-            // a soma antiga não bate mais com NotaSaida.valor atual (achado ao vivo
-            // 2026-09-17: XML saía com vLiq/dup divergentes, SEFAZ rejeitava cStat=851
-            // "Soma do valor das parcelas difere do Valor Líquido da Fatura"). Só
-            // regenera quando nenhum item já foi contabilizado — reverter lançamento
+            // Títulos gerados numa tentativa anterior que não batem mais com a nota:
+            // - valor mudou (itens editados; achado ao vivo 2026-09-17: XML saía com
+            //   vLiq/dup divergentes, SEFAZ rejeitava cStat=851 "Soma do valor das
+            //   parcelas difere do Valor Líquido da Fatura");
+            // - condição de pagamento/banco trocados ou apagados, ou a natureza deixou de
+            //   ser de venda (achado ao vivo 2026-09-24: nota de doação rejeitada na 1ª
+            //   tentativa, condição e banco apagados, e a duplicata antiga continuava
+            //   saindo no XML).
+            // Só regenera quando nenhum item já foi contabilizado — reverter lançamento
             // contábil já postado é decisão do usuário, não automática.
             boolean algumJaContabilizado = titulosExistentes.stream()
                     .flatMap(t -> t.getItens().stream())
                     .anyMatch(item -> Boolean.TRUE.equals(item.getContabilizado()));
             if (algumJaContabilizado) {
-                return "Os títulos desta nota estão desatualizados (valor mudou depois de gerados), "
-                        + "mas já têm lançamento contábil — ajuste manualmente antes de emitir";
+                return "Os títulos desta nota estão desatualizados (valor, condição de pagamento, banco "
+                        + "ou natureza mudaram depois de gerados), mas já têm lançamento contábil — "
+                        + "ajuste manualmente antes de emitir";
             }
             // Hard delete, não soft delete: o número do título reusa nota+letra (ex.
             // "458750/A"), e o novo título recriado abaixo tem o MESMO número — um soft
@@ -126,7 +138,6 @@ public class TituloReceberService {
                     .setHint(PersistenceHints.SOFT_DELETION, false)
                     .removing(titulosExistentes.toArray()));
         }
-        CondicaoPagamento condicaoPagamento = notaSaida.getCondicaoPagamento();
         if (condicaoPagamento == null) {
             return null;
         }
@@ -167,6 +178,29 @@ public class TituloReceberService {
             dataVencimento = dataVencimento.plusDays(condicaoPagamento.getDiferenca());
         }
         return null;
+    }
+
+    /**
+     * Títulos já gerados continuam valendo se a nota ainda deve ter título (venda com
+     * condição de pagamento) e eles batem com ela: mesma quantidade de parcelas, mesmo
+     * banco e soma igual ao valor da nota.
+     */
+    private boolean titulosAindaValem(List<TituloReceber> titulos, NotaSaida notaSaida,
+                                      CondicaoPagamento condicaoPagamento) {
+        if (condicaoPagamento == null || titulos.size() != condicaoPagamento.getParcelas()) {
+            return false;
+        }
+        Banco banco = notaSaida.getBanco();
+        boolean mesmoBanco = titulos.stream().allMatch(t -> t.getBanco() != null && banco != null
+                && t.getBanco().getId().equals(banco.getId()));
+        if (!mesmoBanco) {
+            return false;
+        }
+        BigDecimal soma = titulos.stream()
+                .map(TituloReceber::getValor)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal valorAtualDaNota = notaSaida.getValor() == null ? BigDecimal.ZERO : notaSaida.getValor();
+        return soma.compareTo(valorAtualDaNota) == 0;
     }
 
     /**

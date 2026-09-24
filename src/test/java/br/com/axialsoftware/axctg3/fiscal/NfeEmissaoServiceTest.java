@@ -100,6 +100,7 @@ class NfeEmissaoServiceTest {
         natureza.setCodEmpresa(COD_EMPRESA);
         natureza.setNome("Venda de teste");
         natureza.setCfop(5102);
+        natureza.setVenda(true);
         return dataManager.save(natureza);
     }
 

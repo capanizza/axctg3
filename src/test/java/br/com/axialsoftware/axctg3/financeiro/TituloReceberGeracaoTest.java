@@ -196,7 +196,7 @@ class TituloReceberGeracaoTest {
 
     private CondicaoPagamento criarCondicaoPagamento(int parcelas, int primeira, int diferenca) {
         CondicaoPagamento condicaoPagamento = dataManager.create(CondicaoPagamento.class);
-        condicaoPagamento.setCodigo(1);
+        condicaoPagamento.setCodigo(parcelas * 1000 + primeira);
         condicaoPagamento.setCodEmpresa(codEmpresa);
         condicaoPagamento.setNome(parcelas + "x");
         condicaoPagamento.setParcelas(parcelas);
@@ -207,11 +207,18 @@ class TituloReceberGeracaoTest {
 
     private NotaSaida criarNotaSaidaComItem(CondicaoPagamento condicaoPagamento, Banco banco,
                                              Parceiro parceiro, BigDecimal quantidade, BigDecimal valorUnitario) {
+        return criarNotaSaidaComItem(condicaoPagamento, banco, parceiro, quantidade, valorUnitario, true);
+    }
+
+    private NotaSaida criarNotaSaidaComItem(CondicaoPagamento condicaoPagamento, Banco banco,
+                                             Parceiro parceiro, BigDecimal quantidade, BigDecimal valorUnitario,
+                                             boolean venda) {
         NaturezaOperacao natureza = dataManager.create(NaturezaOperacao.class);
-        natureza.setCodigo(1);
+        natureza.setCodigo(venda ? 1 : 2);
         natureza.setCodEmpresa(codEmpresa);
-        natureza.setNome("Venda de teste");
-        natureza.setCfop(5102);
+        natureza.setNome(venda ? "Venda de teste" : "Doação de teste");
+        natureza.setCfop(venda ? 5102 : 5910);
+        natureza.setVenda(venda);
         natureza = dataManager.save(natureza);
 
         Produto produto = dataManager.create(Produto.class);
@@ -390,6 +397,62 @@ class TituloReceberGeracaoTest {
         List<TituloReceber> titulos = titulosDaNota(notaAtualizada);
         assertThat(titulos).hasSize(1);
         assertThat(titulos.get(0).getValor()).isEqualByComparingTo("100.00"); // não mexeu
+    }
+
+    @Test
+    void naturezaQueNaoEhVendaNaoGeraTituloMesmoComCondicaoPagamento() {
+        Parceiro parceiro = criarParceiro();
+        Banco banco = criarBanco();
+        CondicaoPagamento condicaoPagamento = criarCondicaoPagamento(1, 10, 0);
+        NotaSaida notaSaida = criarNotaSaidaComItem(condicaoPagamento, banco, parceiro,
+                new BigDecimal("10"), new BigDecimal("10"), false);
+
+        String erro = tituloReceberService.gerarTitulosDaEmissao(notaSaida);
+
+        assertThat(erro).isNull();
+        assertThat(titulosDaNota(notaSaida)).isEmpty();
+    }
+
+    // Cenário real 2026-09-24: 1ª tentativa de emissão gerou o título e foi rejeitada;
+    // o usuário apagou condição de pagamento e banco, e a duplicata continuava no XML.
+    @Test
+    void condicaoPagamentoApagadaDepoisDaPrimeiraTentativaRemoveTitulos() {
+        Parceiro parceiro = criarParceiro();
+        Banco banco = criarBanco();
+        CondicaoPagamento condicaoPagamento = criarCondicaoPagamento(1, 10, 0);
+        NotaSaida notaSaida = criarNotaSaidaComItem(condicaoPagamento, banco, parceiro,
+                new BigDecimal("10"), new BigDecimal("10"));
+        tituloReceberService.gerarTitulosDaEmissao(notaSaida);
+        assertThat(titulosDaNota(notaSaida)).hasSize(1);
+
+        notaSaida.setCondicaoPagamento(null);
+        notaSaida.setBanco(null);
+        dataManager.save(notaSaida);
+        NotaSaida notaAtualizada = dataManager.load(NotaSaida.class).id(notaSaida.getId()).one();
+
+        String erro = tituloReceberService.gerarTitulosDaEmissao(notaAtualizada);
+
+        assertThat(erro).isNull();
+        assertThat(titulosDaNota(notaAtualizada)).isEmpty();
+    }
+
+    @Test
+    void condicaoPagamentoTrocadaRegeneraComONovoNumeroDeParcelas() {
+        Parceiro parceiro = criarParceiro();
+        Banco banco = criarBanco();
+        NotaSaida notaSaida = criarNotaSaidaComItem(criarCondicaoPagamento(1, 10, 0), banco, parceiro,
+                new BigDecimal("10"), new BigDecimal("10"));
+        tituloReceberService.gerarTitulosDaEmissao(notaSaida);
+        assertThat(titulosDaNota(notaSaida)).hasSize(1);
+
+        notaSaida.setCondicaoPagamento(criarCondicaoPagamento(2, 30, 30));
+        dataManager.save(notaSaida);
+        NotaSaida notaAtualizada = dataManager.load(NotaSaida.class).id(notaSaida.getId()).one();
+
+        String erro = tituloReceberService.gerarTitulosDaEmissao(notaAtualizada);
+
+        assertThat(erro).isNull();
+        assertThat(titulosDaNota(notaAtualizada)).hasSize(2);
     }
 
     @Test
