@@ -39,7 +39,7 @@
 	<variable name="SUBTOTAL" class="java.math.BigDecimal" resetType="Group" resetGroup="Pedido" calculation="Sum">
 		<variableExpression><![CDATA[$F{subTotal}]]></variableExpression>
 	</variable>
-	<group name="Pedido" keepTogether="true">
+	<group name="Pedido" isStartNewPage="true" keepTogether="true">
 		<groupExpression><![CDATA[$F{numero}]]></groupExpression>
 		<groupHeader>
 			<band height="190">
