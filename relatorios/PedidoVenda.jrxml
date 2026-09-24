@@ -39,7 +39,7 @@
 	<variable name="SUBTOTAL" class="java.math.BigDecimal" resetType="Group" resetGroup="Pedido" calculation="Sum">
 		<variableExpression><![CDATA[$F{subTotal}]]></variableExpression>
 	</variable>
-	<group name="Pedido">
+	<group name="Pedido" keepTogether="true">
 		<groupExpression><![CDATA[$F{numero}]]></groupExpression>
 		<groupHeader>
 			<band height="190">
@@ -55,7 +55,7 @@
 					</textElement>
 					<text><![CDATA[Pedido nº: ]]></text>
 				</staticText>
-				<textField>
+				<textField isBlankWhenNull="true">
 					<reportElement x="70" y="0" width="169" height="15" uuid="b1c2d3e4-0002-0001-0001-000000000002"/>
 					<box leftPadding="2" rightPadding="2">
 						<topPen lineWidth="0.25"/>
@@ -79,7 +79,7 @@
 					</textElement>
 					<text><![CDATA[Data entrada: ]]></text>
 				</staticText>
-				<textField>
+				<textField isBlankWhenNull="true">
 					<reportElement x="320" y="0" width="235" height="15" uuid="b1c2d3e4-0002-0001-0001-000000000004"/>
 					<box leftPadding="2" rightPadding="2">
 						<topPen lineWidth="0.25"/>
@@ -103,7 +103,7 @@
 					</textElement>
 					<text><![CDATA[Cliente: ]]></text>
 				</staticText>
-				<textField>
+				<textField isBlankWhenNull="true">
 					<reportElement x="70" y="15" width="485" height="15" uuid="b1c2d3e4-0002-0001-0001-000000000006"/>
 					<box leftPadding="2" rightPadding="2">
 						<leftPen lineWidth="0.25"/>
@@ -126,7 +126,7 @@
 					</textElement>
 					<text><![CDATA[Natureza: ]]></text>
 				</staticText>
-				<textField>
+				<textField isBlankWhenNull="true">
 					<reportElement x="70" y="30" width="250" height="15" uuid="b1c2d3e4-0002-0001-0001-000000000008"/>
 					<box leftPadding="2" rightPadding="2">
 						<leftPen lineWidth="0.25"/>
@@ -148,7 +148,7 @@
 					</textElement>
 					<text><![CDATA[Class. trib.: ]]></text>
 				</staticText>
-				<textField>
+				<textField isBlankWhenNull="true">
 					<reportElement x="410" y="30" width="145" height="15" uuid="b1c2d3e4-0002-0001-0001-00000000000a"/>
 					<box leftPadding="2" rightPadding="2">
 						<leftPen lineWidth="0.25"/>
@@ -171,7 +171,7 @@
 					</textElement>
 					<text><![CDATA[Cond. pagto.: ]]></text>
 				</staticText>
-				<textField>
+				<textField isBlankWhenNull="true">
 					<reportElement x="70" y="45" width="250" height="15" uuid="b1c2d3e4-0002-0001-0001-00000000000c"/>
 					<box leftPadding="2" rightPadding="2">
 						<leftPen lineWidth="0.25"/>
@@ -193,7 +193,7 @@
 					</textElement>
 					<text><![CDATA[Banco: ]]></text>
 				</staticText>
-				<textField>
+				<textField isBlankWhenNull="true">
 					<reportElement x="410" y="45" width="145" height="15" uuid="b1c2d3e4-0002-0001-0001-00000000000e"/>
 					<box leftPadding="2" rightPadding="2">
 						<leftPen lineWidth="0.25"/>
@@ -216,7 +216,7 @@
 					</textElement>
 					<text><![CDATA[Vendedor: ]]></text>
 				</staticText>
-				<textField>
+				<textField isBlankWhenNull="true">
 					<reportElement x="70" y="60" width="485" height="15" uuid="b1c2d3e4-0002-0001-0001-000000000010"/>
 					<box leftPadding="2" rightPadding="2">
 						<leftPen lineWidth="0.25"/>
@@ -285,7 +285,7 @@
 					</textElement>
 					<text><![CDATA[Mod. frete: ]]></text>
 				</staticText>
-				<textField>
+				<textField isBlankWhenNull="true">
 					<reportElement x="70" y="155" width="250" height="15" uuid="b1c2d3e4-0002-0001-0001-000000000016"/>
 					<box leftPadding="2" rightPadding="2">
 						<leftPen lineWidth="0.25"/>
@@ -308,7 +308,7 @@
 					</textElement>
 					<text><![CDATA[Peso líq./bruto: ]]></text>
 				</staticText>
-				<textField pattern="#,##0.00000">
+				<textField isBlankWhenNull="true" pattern="#,##0.00000">
 					<reportElement x="410" y="155" width="65" height="15" uuid="b1c2d3e4-0002-0001-0001-000000000018"/>
 					<box leftPadding="2" rightPadding="2">
 						<leftPen lineWidth="0.25"/>
@@ -319,7 +319,7 @@
 					</textElement>
 					<textFieldExpression><![CDATA[$F{pesoLiquido}]]></textFieldExpression>
 				</textField>
-				<textField pattern="#,##0.00000">
+				<textField isBlankWhenNull="true" pattern="#,##0.00000">
 					<reportElement x="475" y="155" width="80" height="15" uuid="b1c2d3e4-0002-0001-0001-000000000019"/>
 					<box leftPadding="2" rightPadding="2">
 						<leftPen lineWidth="0.25"/>
@@ -432,7 +432,7 @@
 					</textElement>
 					<text><![CDATA[Subtotal itens: ]]></text>
 				</staticText>
-				<textField pattern="#,##0.00;-#,##0.00">
+				<textField isBlankWhenNull="true" pattern="#,##0.00;-#,##0.00">
 					<reportElement x="475" y="0" width="80" height="14" uuid="b1c2d3e4-0003-0001-0001-000000000002"/>
 					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
 						<topPen lineWidth="0.0"/>
@@ -457,7 +457,7 @@
 					</textElement>
 					<text><![CDATA[(-) Desconto / (+) Frete+Despesas: ]]></text>
 				</staticText>
-				<textField pattern="#,##0.00;-#,##0.00">
+				<textField isBlankWhenNull="true" pattern="#,##0.00;-#,##0.00">
 					<reportElement x="475" y="14" width="80" height="14" uuid="b1c2d3e4-0003-0001-0001-000000000004"/>
 					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
 						<topPen lineWidth="0.0"/>
@@ -482,7 +482,7 @@
 					</textElement>
 					<text><![CDATA[Valor líquido: ]]></text>
 				</staticText>
-				<textField pattern="#,##0.00;-#,##0.00">
+				<textField isBlankWhenNull="true" pattern="#,##0.00;-#,##0.00">
 					<reportElement x="475" y="28" width="80" height="14" uuid="b1c2d3e4-0003-0001-0001-000000000006"/>
 					<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
 						<topPen lineWidth="0.0"/>
@@ -507,35 +507,35 @@
 				<reportElement x="0" y="0" width="88" height="40" uuid="b1c2d3e4-0004-0001-0001-000000000001"/>
 				<imageExpression><![CDATA[$P{LOGO}]]></imageExpression>
 			</image>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement x="89" y="0" width="397" height="15" uuid="b1c2d3e4-0004-0001-0001-000000000002"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="DejaVu Sans Mono" size="12" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{TITULO_RELATORIO}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement x="89" y="15" width="397" height="15" uuid="b1c2d3e4-0004-0001-0001-000000000003"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="DejaVu Sans Mono" size="12" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{NOME_EMPRESA}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement x="486" y="0" width="69" height="15" uuid="b1c2d3e4-0004-0001-0001-000000000004"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="DejaVu Sans Mono"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Folha: " + $V{PAGE_NUMBER}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement x="486" y="15" width="69" height="15" uuid="b1c2d3e4-0004-0001-0001-000000000005"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="DejaVu Sans Mono"/>
 				</textElement>
 				<textFieldExpression><![CDATA[new SimpleDateFormat("dd/MM/yyyy").format(new Date())]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement x="486" y="30" width="69" height="15" uuid="b1c2d3e4-0004-0001-0001-000000000006"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font fontName="DejaVu Sans Mono"/>
@@ -546,7 +546,7 @@
 	</pageHeader>
 	<detail>
 		<band height="28" splitType="Stretch">
-			<textField textAdjust="StretchHeight">
+			<textField isBlankWhenNull="true" textAdjust="StretchHeight">
 				<reportElement x="0" y="0" width="240" height="14" uuid="b1c2d3e4-0005-0001-0001-000000000001"/>
 				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
 					<topPen lineWidth="0.0"/>
@@ -558,7 +558,7 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$F{produto}]]></textFieldExpression>
 			</textField>
-			<textField pattern="0000">
+			<textField isBlankWhenNull="true" pattern="0000">
 				<reportElement x="240" y="0" width="35" height="14" uuid="b1c2d3e4-0005-0001-0001-000000000002"/>
 				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
 					<topPen lineWidth="0.0"/>
@@ -570,7 +570,7 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$F{cfop}]]></textFieldExpression>
 			</textField>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement x="275" y="0" width="30" height="14" uuid="b1c2d3e4-0005-0001-0001-000000000003"/>
 				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
 					<topPen lineWidth="0.0"/>
@@ -582,7 +582,7 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$F{cst}]]></textFieldExpression>
 			</textField>
-			<textField pattern="000000">
+			<textField isBlankWhenNull="true" pattern="000000">
 				<reportElement x="305" y="0" width="45" height="14" uuid="b1c2d3e4-0005-0001-0001-000000000004"/>
 				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
 					<topPen lineWidth="0.0"/>
@@ -594,7 +594,7 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$F{codClassTrib}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.000">
+			<textField isBlankWhenNull="true" pattern="#,##0.000">
 				<reportElement x="350" y="0" width="60" height="14" uuid="b1c2d3e4-0005-0001-0001-000000000006"/>
 				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
 					<topPen lineWidth="0.0"/>
@@ -606,7 +606,7 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$F{quantidade}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.000000">
+			<textField isBlankWhenNull="true" pattern="#,##0.000000">
 				<reportElement x="410" y="0" width="65" height="14" uuid="b1c2d3e4-0005-0001-0001-000000000007"/>
 				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
 					<topPen lineWidth="0.0"/>
@@ -618,7 +618,7 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$F{valorUnitario}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.00;-#,##0.00">
+			<textField isBlankWhenNull="true" pattern="#,##0.00;-#,##0.00">
 				<reportElement x="475" y="0" width="80" height="14" uuid="b1c2d3e4-0005-0001-0001-000000000008"/>
 				<box topPadding="0" leftPadding="2" bottomPadding="0" rightPadding="2">
 					<topPen lineWidth="0.0"/>

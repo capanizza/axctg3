@@ -40,7 +40,14 @@ public class ItemPedidoVendaDetailView extends StandardDetailView<ItemPedidoVend
      */
     @Subscribe
     public void onInitEntity(final InitEntityEvent<ItemPedidoVenda> event) {
-        resolverTributacao(event.getEntity());
+        ItemPedidoVenda item = event.getEntity();
+        // CFOP padrão da natureza, igual ao item da nota (ItemNotaSaidaDetailView) —
+        // continua editável.
+        PedidoVenda pedido = item.getPedidoVenda();
+        if (item.getCfop() == null && pedido != null && pedido.getNatureza() != null) {
+            item.setCfop(pedido.getNatureza().getCfop());
+        }
+        resolverTributacao(item);
     }
 
     @Subscribe(id = "itemPedidoVendaDc", target = Target.DATA_CONTAINER)

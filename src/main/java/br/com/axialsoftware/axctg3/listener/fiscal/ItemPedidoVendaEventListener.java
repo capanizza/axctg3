@@ -46,9 +46,13 @@ public class ItemPedidoVendaEventListener {
             long numero = sequences.createNextValue(Sequence.withName("item_pedido_venda_seq_" + codEmpresa));
             item.setItem(Math.toIntExact(numero));
         }
-        if (event.isNewEntity() && (item.getCst() == null || item.getCodClassTrib() == null)) {
+        if (event.isNewEntity()
+                && (item.getCfop() == null || item.getCst() == null || item.getCodClassTrib() == null)) {
             PedidoVenda pedido = pedidoComTributacao(item.getPedidoVenda());
             NaturezaOperacao natureza = pedido == null ? null : pedido.getNatureza();
+            if (item.getCfop() == null && natureza != null) {
+                item.setCfop(natureza.getCfop());
+            }
             if (item.getCst() == null) {
                 item.setCst(tributacaoService.resolverCstIcms(natureza, item.getProduto()));
             }

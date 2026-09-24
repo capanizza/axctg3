@@ -45,7 +45,7 @@ public class PedidoVendaListView extends StandardListView<PedidoVenda> {
 
     @Subscribe("pedidoVendasDataGrid.listagemAction")
     public void onPedidoVendasDataGridListagemAction(final ActionPerformedEvent event) {
-        menuBean.listarPedidosVenda();
+        menuBean.listarPedidosVenda(pedidoVendasDataGrid.getSingleSelectedItem());
     }
 
     /**

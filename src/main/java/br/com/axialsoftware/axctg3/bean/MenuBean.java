@@ -5,6 +5,7 @@ import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
 import br.com.axialsoftware.axctg3.entity.contabil.HistoricoContabil;
 import br.com.axialsoftware.axctg3.entity.financeiro.Banco;
+import br.com.axialsoftware.axctg3.entity.fiscal.PedidoVenda;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.contabil.ContaContabilService;
 import br.com.axialsoftware.axctg3.service.contabil.DepreciacaoService;
@@ -87,13 +88,16 @@ public class MenuBean {
         this.pedidoVendaService = pedidoVendaService;
     }
 
-    public void listarPedidosVenda() {
+    public void listarPedidosVenda(PedidoVenda selecionado) {
         dialogs.createOptionDialog()
                 .withHeader("Confirmação")
-                .withText("Confirma listagem dos pedidos de venda?")
+                .withText(selecionado == null
+                        ? "Nenhum pedido selecionado. Confirma listagem de todos os pedidos de venda?"
+                        : "Confirma listagem do pedido de venda nº " + selecionado.getNumero() + "?")
                 .withActions(
                         new DialogAction(DialogAction.Type.YES)
-                                .withHandler(e -> pedidoVendaService.listarPedidos()),
+                                .withHandler(e -> pedidoVendaService.listarPedidos(
+                                        selecionado == null ? null : selecionado.getId())),
                         new DialogAction(DialogAction.Type.NO)
                 )
                 .open();

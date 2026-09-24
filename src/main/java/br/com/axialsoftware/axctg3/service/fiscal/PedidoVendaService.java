@@ -50,6 +50,15 @@ public class PedidoVendaService {
      * de item em branco), pra não sumir da listagem.
      */
     public void listarPedidos() {
+        listarPedidos(null);
+    }
+
+    /**
+     * Listagem de um pedido só (o selecionado na tela) ou de todos quando
+     * {@code pedidoId} é {@code null} — antes a tela ignorava a seleção e listava sempre
+     * todos, com o pedido 1 abrindo o PDF (relato do usuário 2026-09-24).
+     */
+    public void listarPedidos(UUID pedidoId) {
         String nomeRelatorio = "PedidoVenda.jasper";
         String nomeSaida = "PedidoVenda.pdf";
 
@@ -58,18 +67,25 @@ public class PedidoVendaService {
         parametros.put("NOME_EMPRESA", utilGeralService.getNomeEmpresa());
         parametros.put("LOGO", utilGeralService.getLogoEmpresa());
 
-        List<PedidoVendaDto> pedidosDto = prepararPedidos();
+        List<PedidoVendaDto> pedidosDto = montarLinhasListagem(pedidoId);
 
         JRDataSource dataSource = new JRBeanCollectionDataSource(pedidosDto);
 
         relatorioService.emitirRelatorio(nomeRelatorio, dataSource, parametros, nomeSaida);
     }
 
-    private List<PedidoVendaDto> prepararPedidos() {
+    /** Linhas (pedido × item) da listagem — público só pra o teste conferir o filtro. */
+    public List<PedidoVendaDto> montarLinhasListagem(UUID pedidoId) {
         Integer codEmpresa = utilGeralService.getCodEmpresa();
-        List<PedidoVenda> pedidos = dataManager.load(PedidoVenda.class)
-                .query("select e from PedidoVenda e where e.codEmpresa = :codEmpresa order by e.numero")
-                .parameter("codEmpresa", codEmpresa)
+        var consulta = dataManager.load(PedidoVenda.class)
+                .query("select e from PedidoVenda e where e.codEmpresa = :codEmpresa"
+                        + (pedidoId == null ? "" : " and e.id = :pedidoId")
+                        + " order by e.numero")
+                .parameter("codEmpresa", codEmpresa);
+        if (pedidoId != null) {
+            consulta = consulta.parameter("pedidoId", pedidoId);
+        }
+        List<PedidoVenda> pedidos = consulta
                 .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE)
                         .add("parceiro", FetchPlan.BASE)
                         .add("natureza", FetchPlan.BASE)

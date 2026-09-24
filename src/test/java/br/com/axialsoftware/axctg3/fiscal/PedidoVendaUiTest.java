@@ -124,6 +124,25 @@ class PedidoVendaUiTest {
         assertThatCode(() -> pedidoVendaService.listarPedidos()).doesNotThrowAnyException();
     }
 
+    // Relato do usuário 2026-09-24: a listagem ignorava a seleção e saía sempre com
+    // todos os pedidos (o 1 abrindo o PDF).
+    @Test
+    void listagemComPedidoSelecionadoTrazSoEle() {
+        PedidoVenda pedido1 = criarPedido();
+        criarItem(pedido1, new BigDecimal("1"), new BigDecimal("10"));
+        PedidoVenda pedido2 = criarPedido();
+        criarItem(pedido2, new BigDecimal("2"), new BigDecimal("10"));
+        criarItem(pedido2, new BigDecimal("3"), new BigDecimal("10"));
+
+        assertThat(pedidoVendaService.montarLinhasListagem(pedido2.getId()))
+                .hasSize(2)
+                .allSatisfy(linha -> assertThat(linha.getNumero()).isEqualTo(pedido2.getNumero()));
+        assertThat(pedidoVendaService.montarLinhasListagem(null))
+                .extracting(br.com.axialsoftware.axctg3.entity.fiscal.PedidoVendaDto::getNumero)
+                .contains(pedido1.getNumero(), pedido2.getNumero());
+        assertThatCode(() -> pedidoVendaService.listarPedidos(pedido2.getId())).doesNotThrowAnyException();
+    }
+
     @Test
     void emitirNotaSaidaGeraNotaComItensAPartirDoPedido() {
         PedidoVenda pedido = criarPedido();
@@ -160,6 +179,7 @@ class PedidoVendaUiTest {
 
         assertThat(item.getCst()).isEqualTo("41");
         assertThat(item.getCodClassTrib()).isEqualTo(CLASS_TRIB_DOACAO);
+        assertThat(item.getCfop()).isEqualTo(5102); // CFOP da natureza
     }
 
     @Test
