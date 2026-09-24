@@ -1,5 +1,6 @@
 package br.com.axialsoftware.axctg3.service.fiscal;
 
+import br.com.axialsoftware.axctg3.entity.cadastros.ConfigRel;
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.fiscal.ItemNotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.ItemPedidoVenda;
@@ -22,6 +23,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -54,9 +56,11 @@ public class PedidoVendaService {
     }
 
     /**
-     * Listagem de um pedido só (o selecionado na tela) ou de todos quando
-     * {@code pedidoId} é {@code null} — antes a tela ignorava a seleção e listava sempre
-     * todos, com o pedido 1 abrindo o PDF (relato do usuário 2026-09-24).
+     * Listagem de um pedido só (o selecionado na tela) ou, com {@code pedidoId}
+     * {@code null}, de todos os pedidos do período delimitado na tela (ConfigRel,
+     * botão "Delimitar" de PedidoVendaListView) — os mesmos que aparecem no grid. Antes a
+     * tela ignorava a seleção e listava sempre todos os pedidos da empresa, com o pedido 1
+     * abrindo o PDF (relato do usuário 2026-09-24).
      */
     public void listarPedidos(UUID pedidoId) {
         String nomeRelatorio = "PedidoVenda.jasper";
@@ -79,11 +83,20 @@ public class PedidoVendaService {
         Integer codEmpresa = utilGeralService.getCodEmpresa();
         var consulta = dataManager.load(PedidoVenda.class)
                 .query("select e from PedidoVenda e where e.codEmpresa = :codEmpresa"
-                        + (pedidoId == null ? "" : " and e.id = :pedidoId")
+                        + (pedidoId == null
+                                ? " and e.dataEntrada between :dataEntradaInicial and :dataEntradaFinal"
+                                : " and e.id = :pedidoId")
                         + " order by e.numero")
                 .parameter("codEmpresa", codEmpresa);
         if (pedidoId != null) {
             consulta = consulta.parameter("pedidoId", pedidoId);
+        } else {
+            ConfigRel configRel = utilGeralService.prepararConfigRel();
+            consulta = consulta
+                    .parameter("dataEntradaInicial", Optional.ofNullable(configRel.getDataEntradaPedidoVendaInicial())
+                            .orElse(LocalDate.now()))
+                    .parameter("dataEntradaFinal", Optional.ofNullable(configRel.getDataEntradaPedidoVendaFinal())
+                            .orElse(LocalDate.now()));
         }
         List<PedidoVenda> pedidos = consulta
                 .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE)

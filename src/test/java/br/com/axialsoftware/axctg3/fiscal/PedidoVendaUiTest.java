@@ -2,6 +2,7 @@ package br.com.axialsoftware.axctg3.fiscal;
 
 import br.com.axialsoftware.axctg3.Axctg3Application;
 import br.com.axialsoftware.axctg3.entity.User;
+import br.com.axialsoftware.axctg3.entity.cadastros.ConfigRel;
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
 import br.com.axialsoftware.axctg3.entity.fiscal.ItemNotaSaida;
@@ -13,6 +14,7 @@ import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
 import br.com.axialsoftware.axctg3.entity.tabelas.Cst;
 import br.com.axialsoftware.axctg3.service.fiscal.PedidoVendaService;
+import br.com.axialsoftware.axctg3.test_support.AdminUiTestAuthenticator;
 import br.com.axialsoftware.axctg3.view.fiscal.pedidovenda.PedidoVendaDetailView;
 import br.com.axialsoftware.axctg3.view.fiscal.pedidovenda.PedidoVendaListView;
 import io.jmix.core.DataManager;
@@ -49,7 +51,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
  * listagem e a abertura do detail view com os campos das abas "Informações gerais"
  * e "Complementos".
  */
-@UiTest
+@UiTest(authenticator = AdminUiTestAuthenticator.class)
 @SpringBootTest(classes = {Axctg3Application.class, FlowuiTestAssistConfiguration.class})
 @ActiveProfiles("test")
 class PedidoVendaUiTest {
@@ -65,6 +67,8 @@ class PedidoVendaUiTest {
     private CurrentAuthentication currentAuthentication;
     @Autowired
     private PedidoVendaService pedidoVendaService;
+    @Autowired
+    private br.com.axialsoftware.axctg3.service.UtilGeralService utilGeralService;
 
     private Parceiro parceiro;
     private NaturezaOperacao natureza;
@@ -141,6 +145,37 @@ class PedidoVendaUiTest {
                 .extracting(br.com.axialsoftware.axctg3.entity.fiscal.PedidoVendaDto::getNumero)
                 .contains(pedido1.getNumero(), pedido2.getNumero());
         assertThatCode(() -> pedidoVendaService.listarPedidos(pedido2.getId())).doesNotThrowAnyException();
+    }
+
+    // Pedido do usuário 2026-09-24: sem seleção, "todos" = os do período delimitado
+    // (botão Delimitar), os mesmos do grid — não todos os pedidos da empresa.
+    @Test
+    void listagemSemSelecaoRespeitaOPeriodoDelimitado() {
+        PedidoVenda antigo = criarPedido();
+        antigo.setDataEntrada(LocalDate.now().minusDays(40));
+        antigo = dataManager.save(antigo);
+        criarItem(antigo, new BigDecimal("1"), new BigDecimal("10"));
+        PedidoVenda recente = criarPedido();
+        criarItem(recente, new BigDecimal("1"), new BigDecimal("10"));
+
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
+        configRel.setDataEntradaPedidoVendaInicial(LocalDate.now().minusDays(5));
+        configRel.setDataEntradaPedidoVendaFinal(LocalDate.now());
+        dataManager.save(configRel);
+
+        List<Integer> numeros = pedidoVendaService.montarLinhasListagem(null).stream()
+                .map(br.com.axialsoftware.axctg3.entity.fiscal.PedidoVendaDto::getNumero)
+                .toList();
+        assertThat(numeros).contains(recente.getNumero()).doesNotContain(antigo.getNumero());
+
+        viewNavigators.view(UiTestUtils.getCurrentView(), PedidoVendaListView.class).navigate();
+        PedidoVendaListView view = UiTestUtils.getCurrentView();
+        DataGrid<PedidoVenda> grid = UiTestUtils.getComponent(view, "pedidoVendasDataGrid");
+        assertThat(grid.getItems().getItems()).extracting(PedidoVenda::getNumero)
+                .contains(recente.getNumero()).doesNotContain(antigo.getNumero());
+        assertThat(view.getPageTitle()).contains("entrada:");
+        JmixButton delimitarButton = UiTestUtils.getComponent(view, "delimitarButton");
+        assertThat(delimitarButton.getText()).isEqualTo("Delimitar");
     }
 
     @Test
@@ -315,6 +350,12 @@ class PedidoVendaUiTest {
 
     @AfterEach
     void tearDown() {
+        // ConfigRel do admin é gravado no HSQLDB compartilhado — não deixa período
+        // delimitado vazar pra outro teste/rodada.
+        ConfigRel configRel = utilGeralService.prepararConfigRel();
+        configRel.setDataEntradaPedidoVendaInicial(null);
+        configRel.setDataEntradaPedidoVendaFinal(null);
+        dataManager.save(configRel);
         limparDados();
     }
 

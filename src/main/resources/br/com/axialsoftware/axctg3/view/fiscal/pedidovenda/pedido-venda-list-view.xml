@@ -14,6 +14,7 @@
                 <query>
                     <![CDATA[select e from PedidoVenda e
                     where e.codEmpresa = :codEmpresa
+                    and e.dataEntrada between :dataEntradaInicial and :dataEntradaFinal
                     order by e.numero desc]]>
                 </query>
             </loader>
@@ -35,6 +36,7 @@
                 <button id="createButton" action="pedidoVendasDataGrid.createAction" themeNames="small"/>
                 <button id="editButton" action="pedidoVendasDataGrid.editAction" themeNames="small"/>
                 <button id="removeButton" action="pedidoVendasDataGrid.removeAction" themeNames="small"/>
+                <button id="delimitarButton" action="pedidoVendasDataGrid.delimitarAction" themeNames="small"/>
                 <button id="listagemButton" action="pedidoVendasDataGrid.listagemAction" themeNames="small"/>
                 <button id="emitirNotaSaidaButton" action="pedidoVendasDataGrid.emitirNotaSaidaAction" themeNames="small"/>
             </startSlot>
@@ -51,6 +53,9 @@
                 <action id="createAction" type="list_create"/>
                 <action id="editAction" type="list_edit"/>
                 <action id="removeAction" type="list_remove"/>
+                <action id="delimitarAction"
+                        text="msg://br.com.axialsoftware.axctg3.view.fiscal.pedidovenda/pedidoVendaListView.delimitarAction.text"
+                        icon="vaadin:calendar"/>
                 <action id="listagemAction"
                         text="msg://br.com.axialsoftware.axctg3.view.fiscal.pedidovenda/pedidoVendaListView.listagemAction.text"
                         icon="PRINT"/>

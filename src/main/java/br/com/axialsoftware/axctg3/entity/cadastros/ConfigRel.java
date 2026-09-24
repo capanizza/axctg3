@@ -222,6 +222,14 @@ public class ConfigRel {
     @Column(name = "justificativa_inutilizacao_nfe")
     private String justificativaInutilizacaoNfe;
 
+    // Período delimitado na lista de pedidos de venda (botão "Delimitar" de
+    // PedidoVendaListView) — filtra o grid e a listagem sem pedido selecionado.
+    @Column(name = "data_entrada_pedido_venda_inicial")
+    private LocalDate dataEntradaPedidoVendaInicial;
+
+    @Column(name = "data_entrada_pedido_venda_final")
+    private LocalDate dataEntradaPedidoVendaFinal;
+
     public UUID getId() {
         return id;
     }
@@ -656,6 +664,22 @@ public class ConfigRel {
 
     public Integer getBancoMovimentoBanco() {
         return bancoMovimentoBanco;
+    }
+
+    public LocalDate getDataEntradaPedidoVendaInicial() {
+        return dataEntradaPedidoVendaInicial;
+    }
+
+    public void setDataEntradaPedidoVendaInicial(LocalDate dataEntradaPedidoVendaInicial) {
+        this.dataEntradaPedidoVendaInicial = dataEntradaPedidoVendaInicial;
+    }
+
+    public LocalDate getDataEntradaPedidoVendaFinal() {
+        return dataEntradaPedidoVendaFinal;
+    }
+
+    public void setDataEntradaPedidoVendaFinal(LocalDate dataEntradaPedidoVendaFinal) {
+        this.dataEntradaPedidoVendaFinal = dataEntradaPedidoVendaFinal;
     }
 
     public LocalDate getDataEmissaoNotaSaidaInicial() {

@@ -92,7 +92,8 @@ public class MenuBean {
         dialogs.createOptionDialog()
                 .withHeader("Confirmação")
                 .withText(selecionado == null
-                        ? "Nenhum pedido selecionado. Confirma listagem de todos os pedidos de venda?"
+                        ? "Nenhum pedido selecionado. Confirma listagem de todos os pedidos de venda do período "
+                                + "delimitado na tela?"
                         : "Confirma listagem do pedido de venda nº " + selecionado.getNumero() + "?")
                 .withActions(
                         new DialogAction(DialogAction.Type.YES)
