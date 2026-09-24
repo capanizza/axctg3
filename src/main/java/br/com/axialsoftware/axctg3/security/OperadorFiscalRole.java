@@ -29,6 +29,7 @@ import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
 import br.com.axialsoftware.axctg3.entity.fiscal.SaldoProduto;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassificacaoFiscal;
+import br.com.axialsoftware.axctg3.entity.tabelas.TabelaIbpt;
 import br.com.axialsoftware.axctg3.entity.tabelas.Cst;
 import io.jmix.security.model.EntityAttributePolicyAction;
 import io.jmix.security.model.EntityPolicyAction;
@@ -161,6 +162,9 @@ public interface OperadorFiscalRole {
     @EntityPolicy(entityClass = ClassTrib.class, actions = EntityPolicyAction.READ)
     @EntityAttributePolicy(entityClass = ClassificacaoFiscal.class, attributes = "*", action = EntityAttributePolicyAction.VIEW)
     @EntityPolicy(entityClass = ClassificacaoFiscal.class, actions = EntityPolicyAction.READ)
+    // Só leitura: a emissão da NFe lê a tabela pra calcular o vTotTrib (Lei 12.741).
+    @EntityAttributePolicy(entityClass = TabelaIbpt.class, attributes = "*", action = EntityAttributePolicyAction.VIEW)
+    @EntityPolicy(entityClass = TabelaIbpt.class, actions = EntityPolicyAction.READ)
     @EntityAttributePolicy(entityClass = Cst.class, attributes = "*", action = EntityAttributePolicyAction.VIEW)
     @EntityPolicy(entityClass = Cst.class, actions = EntityPolicyAction.READ)
     @EntityAttributePolicy(entityClass = ContaContabil.class, attributes = "*", action = EntityAttributePolicyAction.VIEW)

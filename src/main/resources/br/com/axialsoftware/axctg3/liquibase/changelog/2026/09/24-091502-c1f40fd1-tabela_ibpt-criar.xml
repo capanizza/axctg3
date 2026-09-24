@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/09/24-091502-c1f40fd1-tabela_ibpt-criar.xml">
+    <!--
+        Tabela IBPT (Lei 12.741/2012, vTotTrib da NFe) — ver Javadoc de
+        entity.tabelas.TabelaIbpt. Sem auditoria/soft delete, mesma exceção da
+        CLASSIFICACAO_FISCAL, então o índice único não precisa de versão parcial
+        (where DELETED_DATE is null) pro Postgres — um só changeSet serve aos dois bancos.
+    -->
+    <changeSet id="1" author="axctg3">
+        <createTable tableName="TABELA_IBPT">
+            <column name="ID" type="${uuid.type}">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_TABELA_IBPT"/>
+            </column>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="UF" type="VARCHAR(2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CODIGO" type="VARCHAR(9)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="EX" type="VARCHAR(2)"/>
+            <column name="TIPO" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DESCRICAO" type="VARCHAR(500)"/>
+            <column name="ALIQ_NACIONAL_FEDERAL" type="NUMERIC(7, 2)"/>
+            <column name="ALIQ_IMPORTADOS_FEDERAL" type="NUMERIC(7, 2)"/>
+            <column name="ALIQ_ESTADUAL" type="NUMERIC(7, 2)"/>
+            <column name="ALIQ_MUNICIPAL" type="NUMERIC(7, 2)"/>
+            <column name="VIGENCIA_INICIO" type="DATE"/>
+            <column name="VIGENCIA_FIM" type="DATE"/>
+            <column name="CHAVE" type="VARCHAR(10)"/>
+            <column name="VERSAO" type="VARCHAR(10)"/>
+            <column name="FONTE" type="VARCHAR(60)"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="2" author="axctg3">
+        <createIndex indexName="IDX_TABELA_IBPT_UNQ" tableName="TABELA_IBPT" unique="true">
+            <column name="UF"/>
+            <column name="CODIGO"/>
+            <column name="EX"/>
+            <column name="TIPO"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

@@ -13,6 +13,8 @@ import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber;
 import br.com.axialsoftware.axctg3.entity.tabelas.AliquotaIbsCbs;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
+import br.com.axialsoftware.axctg3.entity.tabelas.ClassificacaoFiscal;
+import br.com.axialsoftware.axctg3.entity.tabelas.TabelaIbpt;
 import io.jmix.core.DataManager;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Constrói o XML da NFe 4.00 (grupo {@code infNFe}, ainda sem assinatura — ver {@link
@@ -55,6 +58,7 @@ public class NfeXmlBuilder {
 
     private final DataManager dataManager;
     private final NfeChaveService chaveService;
+    private final TributosAproximadosService tributosAproximadosService;
 
     // DIAGNÓSTICO TEMPORÁRIO (2026-08-17, ver [[emissao-nfe-propria]]): homologação SEFAZ-SP
     // ainda valida a nota contra o pacote de schema PL_008i2 (anterior à Reforma
@@ -66,9 +70,11 @@ public class NfeXmlBuilder {
     @Value("${axctg3.nfe.incluir-reforma-tributaria:true}")
     private boolean incluirReformaTributaria;
 
-    public NfeXmlBuilder(DataManager dataManager, NfeChaveService chaveService) {
+    public NfeXmlBuilder(DataManager dataManager, NfeChaveService chaveService,
+                         TributosAproximadosService tributosAproximadosService) {
         this.dataManager = dataManager;
         this.chaveService = chaveService;
+        this.tributosAproximadosService = tributosAproximadosService;
     }
 
     public record Resultado(Document documento, String chave) {
@@ -158,10 +164,37 @@ public class NfeXmlBuilder {
         BigDecimal totalVIbsMun = BigDecimal.ZERO;
         BigDecimal totalVCbs = BigDecimal.ZERO;
         RateioItem totalRateio = RateioItem.ZERO;
+
+        // Tributos aproximados (Lei 12.741/2012) — ver TributosAproximadosService. Tabela
+        // IBPT carregada uma vez só pros NCMs da nota inteira.
+        Map<String, TabelaIbpt> ibptPorNcm = tributosAproximadosService.carregar(
+                empresa.getMunicipio().getUf(),
+                notaSaida.getItens().stream()
+                        .map(i -> i.getProduto().getClassificacaoFiscal())
+                        .filter(java.util.Objects::nonNull)
+                        .map(ClassificacaoFiscal::getCodNcm)
+                        .collect(java.util.stream.Collectors.toSet()));
+        TributosAproximadosService.Valor totalTributos = TributosAproximadosService.Valor.ZERO;
+        BigDecimal baseTributos = BigDecimal.ZERO;
+        String chaveIbpt = null;
+
         int nItem = 1;
         for (ItemNotaSaida item : notaSaida.getItens()) {
             RateioItem rateio = calcularRateioItem(item, notaSaida);
-            Element det = construirDet(doc, item, empresa, notaSaida.getNatureza(), nItem, aliquotaTeste, rateio);
+            TributosAproximadosService.Valor tributosItem = TributosAproximadosService.Valor.ZERO;
+            if (tributosAproximadosService.aplicavel(notaSaida.getNatureza(), item.getCfop())) {
+                ClassificacaoFiscal cf = item.getProduto().getClassificacaoFiscal();
+                TabelaIbpt linhaIbpt = cf == null ? null : ibptPorNcm.get(cf.getCodNcm());
+                BigDecimal vItem = valorVItem(item, notaSaida.getNatureza(), aliquotaTeste);
+                tributosItem = tributosAproximadosService.calcular(linhaIbpt, vItem);
+                if (linhaIbpt != null) {
+                    baseTributos = baseTributos.add(vItem);
+                    chaveIbpt = linhaIbpt.getChave();
+                }
+            }
+            totalTributos = totalTributos.somar(tributosItem);
+            Element det = construirDet(doc, item, empresa, notaSaida.getNatureza(), nItem, aliquotaTeste, rateio,
+                    tributosItem.total());
             infNFe.appendChild(det);
             totalVIbsUf = totalVIbsUf.add(valorIbsUfDoItem(item, notaSaida.getNatureza(), aliquotaTeste));
             totalVIbsMun = totalVIbsMun.add(valorIbsMunDoItem(item, notaSaida.getNatureza(), aliquotaTeste));
@@ -171,7 +204,8 @@ public class NfeXmlBuilder {
             nItem++;
         }
 
-        infNFe.appendChild(construirTotal(doc, notaSaida, totalVIbs, totalVIbsUf, totalVIbsMun, totalVCbs, totalRateio));
+        infNFe.appendChild(construirTotal(doc, notaSaida, totalVIbs, totalVIbsUf, totalVIbsMun, totalVCbs, totalRateio,
+                totalTributos.total()));
         infNFe.appendChild(construirTransp(doc, notaSaida));
         List<TituloReceber> titulos = buscarTitulos(notaSaida);
         Element cobr = construirCobr(doc, notaSaida, titulos);
@@ -179,7 +213,8 @@ public class NfeXmlBuilder {
             infNFe.appendChild(cobr);
         }
         infNFe.appendChild(construirPag(doc, titulos));
-        Element infAdic = construirInfAdic(doc, notaSaida);
+        Element infAdic = construirInfAdic(doc,
+                tributosAproximadosService.textoInfCpl(totalTributos, baseTributos, chaveIbpt));
         if (infAdic != null) {
             infNFe.appendChild(infAdic);
         }
@@ -356,7 +391,7 @@ public class NfeXmlBuilder {
     // ---- det (item) ----
 
     private Element construirDet(Document doc, ItemNotaSaida item, Empresa empresa, NaturezaOperacao natureza, int nItem,
-                                  AliquotaIbsCbs aliquotaTeste, RateioItem rateio) {
+                                  AliquotaIbsCbs aliquotaTeste, RateioItem rateio, BigDecimal vTotTrib) {
         Element det = doc.createElementNS(NS_NFE, "det");
         det.setAttribute("nItem", String.valueOf(nItem));
 
@@ -408,7 +443,7 @@ public class NfeXmlBuilder {
         det.appendChild(prod);
 
         Element imposto = doc.createElementNS(NS_NFE, "imposto");
-        text(doc, imposto, "vTotTrib", "0.00");
+        text(doc, imposto, "vTotTrib", dec(vTotTrib, 2));
         imposto.appendChild(construirIcms(doc, item, empresa, rateio));
         Element ipi = construirIpi(doc, item);
         if (ipi != null) {
@@ -436,13 +471,18 @@ public class NfeXmlBuilder {
             // vItem (valor total do item já com IBS/CBS somado) — grupo novo da Reforma
             // Tributária, sibling de imposto, confirmado obrigatório em 30/30 notas reais de
             // teste com IBSCBS (ver conversa 2026-08-17); mesma fórmula do vNFTot do total.
-            BigDecimal vItem = (item.getSubTotal() == null ? BigDecimal.ZERO : item.getSubTotal())
-                    .add(valorIbsDoItem(item, natureza, aliquotaTeste))
-                    .add(valorCbsDoItem(item, natureza, aliquotaTeste));
-            text(doc, det, "vItem", dec(vItem, 2));
+            text(doc, det, "vItem", dec(valorVItem(item, natureza, aliquotaTeste), 2));
         }
 
         return det;
+    }
+
+    // Também é a base do vTotTrib (tributos aproximados), calculada mesmo com a flag de
+    // Reforma Tributária desligada — aí só a tag vItem deixa de sair no XML.
+    private BigDecimal valorVItem(ItemNotaSaida item, NaturezaOperacao natureza, AliquotaIbsCbs aliquotaTeste) {
+        return (item.getSubTotal() == null ? BigDecimal.ZERO : item.getSubTotal())
+                .add(valorIbsDoItem(item, natureza, aliquotaTeste))
+                .add(valorCbsDoItem(item, natureza, aliquotaTeste));
     }
 
     /**
@@ -861,7 +901,8 @@ public class NfeXmlBuilder {
     // ---- total ----
 
     private Element construirTotal(Document doc, NotaSaida notaSaida, BigDecimal totalVIbs, BigDecimal totalVIbsUf,
-                                    BigDecimal totalVIbsMun, BigDecimal totalVCbs, RateioItem totalRateio) {
+                                    BigDecimal totalVIbsMun, BigDecimal totalVCbs, RateioItem totalRateio,
+                                    BigDecimal totalVTotTrib) {
         Element total = doc.createElementNS(NS_NFE, "total");
         Element icmsTot = doc.createElementNS(NS_NFE, "ICMSTot");
         // vBC/vICMS/vFrete/vSeg/vDesc/vOutro vêm da SOMA do rateio por item (totalRateio),
@@ -887,7 +928,7 @@ public class NfeXmlBuilder {
         text(doc, icmsTot, "vCOFINS", "0.00");
         text(doc, icmsTot, "vOutro", dec(totalRateio.despesas(), 2));
         text(doc, icmsTot, "vNF", dec(notaSaida.getValor(), 2));
-        text(doc, icmsTot, "vTotTrib", "0.00");
+        text(doc, icmsTot, "vTotTrib", dec(totalVTotTrib, 2));
         total.appendChild(icmsTot);
 
         if (incluirReformaTributaria) {
@@ -1041,8 +1082,15 @@ public class NfeXmlBuilder {
 
     // ---- infAdic ----
 
-    private Element construirInfAdic(Document doc, NotaSaida notaSaida) {
-        return null;
+    // Hoje só leva o texto dos tributos aproximados — NotaSaida não tem campo de
+    // observação. Sem texto, o grupo inteiro fica de fora (é opcional no schema).
+    private Element construirInfAdic(Document doc, String infCpl) {
+        if (infCpl == null) {
+            return null;
+        }
+        Element infAdic = doc.createElementNS(NS_NFE, "infAdic");
+        text(doc, infAdic, "infCpl", infCpl);
+        return infAdic;
     }
 
     // ---- utilitários ----

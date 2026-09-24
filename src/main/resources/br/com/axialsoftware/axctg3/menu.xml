@@ -119,6 +119,8 @@
               title="msg://br.com.axialsoftware.axctg3.view.tabelas.aliquotaibscbs/aliquotaIbsCbsListView.title"/>
         <item view="Cst.list"
               title="msg://br.com.axialsoftware.axctg3.view.tabelas.cst/cstListView.title"/>
+        <item view="TabelaIbpt.list"
+              title="msg://br.com.axialsoftware.axctg3.view.tabelas.tabelaibpt/tabelaIbptListView.title"/>
     </menu>
 
 </menu-config>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://tabelaIbptListView.title"
+      focusComponent="tabelaIbptsDataGrid">
+    <data>
+        <collection id="tabelaIbptsDc"
+                    class="br.com.axialsoftware.axctg3.entity.tabelas.TabelaIbpt">
+            <fetchPlan extends="_base"/>
+            <loader id="tabelaIbptsDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from TabelaIbpt e
+                        order by e.uf, e.tipo, e.codigo, e.ex]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+        <urlQueryParameters>
+            <pagination component="pagination"/>
+        </urlQueryParameters>
+    </facets>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <startSlot>
+                <fileUploadField id="importField" width="18em" themeNames="small"
+                                 acceptedFileTypes="text/csv,.csv"
+                                 uploadText="msg://tabelaIbptListView.import.uploadText"/>
+                <button id="importButton" text="msg://tabelaIbptListView.import.button" themeNames="small"/>
+            </startSlot>
+            <endSlot>
+                <simplePagination id="pagination" dataLoader="tabelaIbptsDl"/>
+            </endSlot>
+        </hbox>
+        <dataGrid id="tabelaIbptsDataGrid"
+                  width="100%"
+                  minHeight="20em"
+                  dataContainer="tabelaIbptsDc"
+                  columnReorderingAllowed="true"
+                  themeNames="small">
+            <columns resizable="true">
+                <column property="uf" width="4%" filterable="true"/>
+                <column property="tipo" width="4%" filterable="true"/>
+                <column property="codigo" width="8%" filterable="true"/>
+                <column property="ex" width="4%" filterable="true"/>
+                <column property="descricao" width="36%" filterable="true"/>
+                <column property="aliqNacionalFederal" width="7%" textAlign="END"/>
+                <column property="aliqImportadosFederal" width="7%" textAlign="END"/>
+                <column property="aliqEstadual" width="7%" textAlign="END"/>
+                <column property="aliqMunicipal" width="7%" textAlign="END"/>
+                <column property="vigenciaInicio" width="8%"/>
+                <column property="vigenciaFim" width="8%"/>
+                <column property="versao" width="6%" filterable="true"/>
+            </columns>
+        </dataGrid>
+    </layout>
+</view>
