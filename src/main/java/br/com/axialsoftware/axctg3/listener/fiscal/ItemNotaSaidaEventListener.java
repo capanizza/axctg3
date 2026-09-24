@@ -19,6 +19,7 @@ import io.jmix.data.Sequences;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -143,15 +144,25 @@ public class ItemNotaSaidaEventListener {
      * vêm por lazy-load do NotaSaidaEventListener).
      */
     private NotaSaida notaSaidaDoItem(ItemNotaSaida item) {
+        Optional<UUID> notaSaidaId;
         if (entityStates.isLoaded(item, "notaSaida")) {
-            return item.getNotaSaida();
+            NotaSaida notaSaida = item.getNotaSaida();
+            // Mesmo problema um nível acima: a nota pode vir sem a natureza/finNfe (que é
+            // o que este listener lê dela) — aí vale só o id.
+            if (notaSaida == null
+                    || (entityStates.isLoaded(notaSaida, "natureza") && entityStates.isLoaded(notaSaida, "finNfe"))) {
+                return notaSaida;
+            }
+            notaSaidaId = Optional.of((UUID) notaSaida.getId());
+        } else {
+            notaSaidaId = dataManager.loadValue(
+                            "select i.notaSaida.id from ItemNotaSaida i where i.id = :id", UUID.class)
+                    .parameter("id", item.getId())
+                    .optional();
         }
-        return dataManager.loadValue(
-                        "select i.notaSaida.id from ItemNotaSaida i where i.id = :id", UUID.class)
-                .parameter("id", item.getId())
-                .optional()
-                .flatMap(notaSaidaId -> dataManager.load(NotaSaida.class)
-                        .id(notaSaidaId)
+        return notaSaidaId
+                .flatMap(id -> dataManager.load(NotaSaida.class)
+                        .id(id)
                         .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE).add("natureza", FetchPlan.BASE))
                         .optional())
                 .orElse(null);

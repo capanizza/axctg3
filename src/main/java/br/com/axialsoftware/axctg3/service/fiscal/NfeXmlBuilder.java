@@ -163,6 +163,7 @@ public class NfeXmlBuilder {
         BigDecimal totalVIbsUf = BigDecimal.ZERO;
         BigDecimal totalVIbsMun = BigDecimal.ZERO;
         BigDecimal totalVCbs = BigDecimal.ZERO;
+        BigDecimal totalBaseIbsCbs = BigDecimal.ZERO;
         RateioItem totalRateio = RateioItem.ZERO;
 
         // Tributos aproximados (Lei 12.741/2012) — ver TributosAproximadosService. Tabela
@@ -200,12 +201,13 @@ public class NfeXmlBuilder {
             totalVIbsMun = totalVIbsMun.add(valorIbsMunDoItem(item, notaSaida.getNatureza(), aliquotaTeste));
             totalVIbs = totalVIbs.add(valorIbsDoItem(item, notaSaida.getNatureza(), aliquotaTeste));
             totalVCbs = totalVCbs.add(valorCbsDoItem(item, notaSaida.getNatureza(), aliquotaTeste));
+            totalBaseIbsCbs = totalBaseIbsCbs.add(baseIbsCbsDoItem(item));
             totalRateio = totalRateio.somar(rateio);
             nItem++;
         }
 
         infNFe.appendChild(construirTotal(doc, notaSaida, totalVIbs, totalVIbsUf, totalVIbsMun, totalVCbs, totalRateio,
-                totalTributos.total()));
+                totalTributos.total(), totalBaseIbsCbs));
         infNFe.appendChild(construirTransp(doc, notaSaida));
         List<TituloReceber> titulos = buscarTitulos(notaSaida);
         Element cobr = construirCobr(doc, notaSaida, titulos);
@@ -795,13 +797,11 @@ public class NfeXmlBuilder {
      * cStat=1080 "Total de IBS UF difere da soma dos itens", confirmado 2026-08-18 — o
      * total vinha cravado em zero, nunca somando os itens). */
     private BigDecimal valorIbsUfDoItem(ItemNotaSaida item, NaturezaOperacao natureza, AliquotaIbsCbs aliquotaTeste) {
-        BigDecimal base = item.getSubTotal() == null ? BigDecimal.ZERO : item.getSubTotal();
-        return valorPercentual(base, aliqIbsUfEfetiva(natureza, aliquotaTeste));
+        return valorPercentual(baseIbsCbsDoItem(item), aliqIbsUfEfetiva(natureza, aliquotaTeste));
     }
 
     private BigDecimal valorIbsMunDoItem(ItemNotaSaida item, NaturezaOperacao natureza, AliquotaIbsCbs aliquotaTeste) {
-        BigDecimal base = item.getSubTotal() == null ? BigDecimal.ZERO : item.getSubTotal();
-        return valorPercentual(base, aliqIbsMunEfetiva(natureza, aliquotaTeste));
+        return valorPercentual(baseIbsCbsDoItem(item), aliqIbsMunEfetiva(natureza, aliquotaTeste));
     }
 
     // Soma de vIBSUF + vIBSMun já arredondados (não recalcula sobre a alíquota somada) —
@@ -812,8 +812,27 @@ public class NfeXmlBuilder {
 
     private BigDecimal valorCbsDoItem(ItemNotaSaida item, NaturezaOperacao natureza, AliquotaIbsCbs aliquotaTeste) {
         BigDecimal aliqCbs = aliqCbsEfetiva(natureza, aliquotaTeste);
-        BigDecimal base = item.getSubTotal() == null ? BigDecimal.ZERO : item.getSubTotal();
-        return base.multiply(aliqCbs).divide(new BigDecimal(100), 2, RoundingMode.HALF_UP);
+        return baseIbsCbsDoItem(item).multiply(aliqCbs).divide(new BigDecimal(100), 2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Base de IBS/CBS do item — zero quando o cClassTrib é "Sem alíquota" (CST 4xx/5xx/8xx:
+     * o item sai só com CST+cClassTrib, sem gIBSCBS, ver construirIbsCbs). Tudo que soma
+     * IBS/CBS (vItem, totais de IBSCBSTot, vNFTot) passa por aqui: a SEFAZ confere cada
+     * total contra a soma dos itens, e um item sem gIBSCBS vale zero nessa soma (cStat=1076
+     * "Total da BC do IBS e da CBS difere da soma dos itens", nota de doação 410999 em
+     * homologação 2026-09-24 — o total usava o valor da mercadoria da nota inteira).
+     */
+    private BigDecimal baseIbsCbsDoItem(ItemNotaSaida item) {
+        if (itemSemAliquotaIbsCbs(item)) {
+            return BigDecimal.ZERO;
+        }
+        return item.getSubTotal() == null ? BigDecimal.ZERO : item.getSubTotal();
+    }
+
+    private boolean itemSemAliquotaIbsCbs(ItemNotaSaida item) {
+        ClassTrib classTrib = buscarClassTrib(item.getCodClassTrib() != null ? item.getCodClassTrib() : 1);
+        return classTrib != null && "Sem alíquota".equals(classTrib.getTipoAliquota());
     }
 
     private Element construirIbsCbs(Document doc, ItemNotaSaida item, NaturezaOperacao natureza, AliquotaIbsCbs aliquotaTeste) {
@@ -838,7 +857,7 @@ public class NfeXmlBuilder {
         // pra "tributação só de ICMS" é 410029, tipoAliquota "Sem alíquota", ver
         // NfeEmissaoService.gerarItemComplementar). "Padrão" continua preenchendo o grupo
         // inteiro, igual sempre foi.
-        if (classTrib != null && "Sem alíquota".equals(classTrib.getTipoAliquota())) {
+        if (itemSemAliquotaIbsCbs(item)) {
             return ibsCbs;
         }
 
@@ -902,7 +921,7 @@ public class NfeXmlBuilder {
 
     private Element construirTotal(Document doc, NotaSaida notaSaida, BigDecimal totalVIbs, BigDecimal totalVIbsUf,
                                     BigDecimal totalVIbsMun, BigDecimal totalVCbs, RateioItem totalRateio,
-                                    BigDecimal totalVTotTrib) {
+                                    BigDecimal totalVTotTrib, BigDecimal totalBaseIbsCbs) {
         Element total = doc.createElementNS(NS_NFE, "total");
         Element icmsTot = doc.createElementNS(NS_NFE, "ICMSTot");
         // vBC/vICMS/vFrete/vSeg/vDesc/vOutro vêm da SOMA do rateio por item (totalRateio),
@@ -938,7 +957,7 @@ public class NfeXmlBuilder {
             // mesma simplificação já documentada em docs/EMISSAO-NFE.md (sem
             // diferimento/devolução/crédito presumido nesta versão).
             Element ibsCbsTot = doc.createElementNS(NS_NFE, "IBSCBSTot");
-            text(doc, ibsCbsTot, "vBCIBSCBS", dec(notaSaida.getValorMercadoria(), 2));
+            text(doc, ibsCbsTot, "vBCIBSCBS", dec(totalBaseIbsCbs, 2));
             Element gIbs = doc.createElementNS(NS_NFE, "gIBS");
             Element gIbsUf = doc.createElementNS(NS_NFE, "gIBSUF");
             text(doc, gIbsUf, "vDif", "0.00");

@@ -35,14 +35,15 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Cobre o vTotTrib (Lei 12.741/2012, Tabela IBPT) montado pelo {@link NfeXmlBuilder}:
- * item a item sobre o vItem, só natureza de venda e fora dos CFOPs de remessa/retorno,
- * totalizado em ICMSTot e descrito no infCpl.
+ * Totais montados pelo {@link NfeXmlBuilder} contra a soma dos itens (a SEFAZ confere
+ * cada um): o vTotTrib (Lei 12.741/2012, Tabela IBPT — item a item sobre o vItem, só
+ * natureza de venda e fora dos CFOPs de remessa/retorno, totalizado em ICMSTot e descrito
+ * no infCpl) e o IBSCBSTot com item de cClassTrib "Sem alíquota" (cStat=1076).
  */
 @SpringBootTest
 @ExtendWith(AuthenticatedAsAdmin.class)
 @ActiveProfiles("test")
-class NfeTributosAproximadosTest {
+class NfeXmlBuilderTotaisTest {
 
     private static final String NS = "http://www.portalfiscal.inf.br/nfe";
     private static final int COD_EMPRESA = 9431;
@@ -52,6 +53,7 @@ class NfeTributosAproximadosTest {
     // Tabelas globais com índice único sem filtro de soft delete no HSQLDB — base variável.
     private final int codigoMunicipioTeste = 9000000 + (int) (System.currentTimeMillis() % 900000);
     private final int classTribCodigoTeste = 9990000 + (int) (System.currentTimeMillis() % 9000);
+    private final int classTribSemAliquotaTeste = 9970000 + (int) (System.currentTimeMillis() % 9000);
     private final int classificacaoCodigoTeste = 900000 + (int) (System.currentTimeMillis() % 90000);
 
     @Autowired
@@ -196,6 +198,57 @@ class NfeTributosAproximadosTest {
     }
 
     @Test
+    void itemSemAliquotaIbsCbsFicaForaDosTotaisDeIbsCbs() {
+        prepararFixtures();
+        ClassTrib semAliquota = dataManager.create(ClassTrib.class);
+        semAliquota.setCodigo(classTribSemAliquotaTeste);
+        semAliquota.setCst(410);
+        semAliquota.setDescricao("Sem alíquota de teste");
+        semAliquota.setTipoAliquota("Sem alíquota");
+        semAliquota.setNomenclatura("Teste");
+        semAliquota.setDescricaoTratamentoTributario("Teste");
+        dataManager.save(semAliquota);
+
+        NotaSaida nota = criarNota(false);
+        // item 1 passa a ser "Sem alíquota"; itens 2 e 3 continuam com o ClassTrib "Padrão"
+        ItemNotaSaida item1 = dataManager.load(ItemNotaSaida.class)
+                .query("select e from ItemNotaSaida e where e.notaSaida = :nota and e.item = 1")
+                .parameter("nota", nota)
+                .fetchPlan(fp -> fp.addFetchPlan(io.jmix.core.FetchPlan.BASE)
+                        .add("produto", io.jmix.core.FetchPlan.BASE)
+                        .add("notaSaida", fn -> fn.addFetchPlan(io.jmix.core.FetchPlan.BASE)
+                                .add("natureza", io.jmix.core.FetchPlan.BASE)))
+                .one();
+        item1.setCodClassTrib(classTribSemAliquotaTeste);
+        dataManager.save(item1);
+        nota = dataManager.load(NotaSaida.class).id(nota.getId()).one();
+
+        Document doc = nfeXmlBuilder.construir(nota).documento();
+        List<Element> dets = elementos(doc.getDocumentElement(), "det");
+
+        Element det1 = porNItem(dets, "1");
+        assertThat(elementos(det1, "gIBSCBS")).isEmpty();
+        assertThat(new BigDecimal(texto(det1, "vItem"))).isEqualByComparingTo("31.50");
+
+        BigDecimal somaVbc = BigDecimal.ZERO;
+        BigDecimal somaVIbs = BigDecimal.ZERO;
+        BigDecimal somaVCbs = BigDecimal.ZERO;
+        for (Element det : dets) {
+            for (Element g : elementos(det, "gIBSCBS")) {
+                somaVbc = somaVbc.add(new BigDecimal(texto(g, "vBC")));
+                somaVIbs = somaVIbs.add(new BigDecimal(texto(g, "vIBS")));
+                somaVCbs = somaVCbs.add(new BigDecimal(texto(g, "vCBS")));
+            }
+        }
+        assertThat(somaVbc).isEqualByComparingTo("114.00");
+
+        Element tot = elementos(doc.getDocumentElement(), "IBSCBSTot").get(0);
+        assertThat(new BigDecimal(texto(tot, "vBCIBSCBS"))).isEqualByComparingTo(somaVbc);
+        assertThat(new BigDecimal(texto(tot, "vIBS"))).isEqualByComparingTo(somaVIbs);
+        assertThat(new BigDecimal(texto(tot, "vCBS"))).isEqualByComparingTo(somaVCbs);
+    }
+
+    @Test
     void naturezaQueNaoEhVendaZeraTudoESemInfCpl() {
         prepararFixtures();
         Document doc = nfeXmlBuilder.construir(criarNota(false)).documento();
@@ -255,6 +308,8 @@ class NfeTributosAproximadosTest {
                 .query("select e from Municipio e where e.codigo = :c").parameter("c", codigoMunicipioTeste).list());
         apagar(dataManager.load(ClassTrib.class)
                 .query("select e from ClassTrib e where e.codigo = :c").parameter("c", classTribCodigoTeste).list());
+        apagar(dataManager.load(ClassTrib.class)
+                .query("select e from ClassTrib e where e.codigo = :c").parameter("c", classTribSemAliquotaTeste).list());
         apagar(dataManager.load(ClassificacaoFiscal.class)
                 .query("select e from ClassificacaoFiscal e where e.codigo = :c").parameter("c", classificacaoCodigoTeste).list());
         apagar(dataManager.load(TabelaIbpt.class)
