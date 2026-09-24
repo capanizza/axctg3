@@ -181,7 +181,7 @@ public class NfeXmlBuilder {
 
         int nItem = 1;
         for (ItemNotaSaida item : notaSaida.getItens()) {
-            RateioItem rateio = calcularRateioItem(item, notaSaida);
+            RateioItem rateio = calcularRateioItem(item, notaSaida, simplesNacional(empresa));
             TributosAproximadosService.Valor tributosItem = TributosAproximadosService.Valor.ZERO;
             if (tributosAproximadosService.aplicavel(notaSaida.getNatureza(), item.getCfop())) {
                 ClassificacaoFiscal cf = item.getProduto().getClassificacaoFiscal();
@@ -518,7 +518,7 @@ public class NfeXmlBuilder {
         }
     }
 
-    private RateioItem calcularRateioItem(ItemNotaSaida item, NotaSaida notaSaida) {
+    private RateioItem calcularRateioItem(ItemNotaSaida item, NotaSaida notaSaida, boolean simples) {
         BigDecimal totalVProd = notaSaida.getValorMercadoria();
         BigDecimal vProdItem = item.getSubTotal() == null ? BigDecimal.ZERO : item.getSubTotal();
         // nota com vProd total zerado (ex.: todos os itens a custo zero) — sem base pra
@@ -532,12 +532,31 @@ public class NfeXmlBuilder {
         BigDecimal desconto = rateado(notaSaida.getDesconto(), fator);
         BigDecimal despesas = rateado(notaSaida.getDespesas(), fator);
 
+        // Base/valor de ICMS só entram no rateio (e daí no ICMSTot) quando o grupo ICMS do
+        // item leva vBC/vICMS do rateio no XML — ver construirIcms. CST 40/41/50/60, 51
+        // (vBC 0.00 fixo) e qualquer CSOSN do Simples saem sem isso, e somar a base
+        // deles no total dá cStat=531 "Total da BC ICMS difere do somatório dos itens"
+        // (nota de doação CST 41 em homologação, 2026-09-24).
+        if (!icmsProprioNoXml(item, simples)) {
+            return new RateioItem(frete, seguro, desconto, despesas, BigDecimal.ZERO, BigDecimal.ZERO);
+        }
         BigDecimal baseIcmsPuro = item.getBaseIcms() == null ? BigDecimal.ZERO : item.getBaseIcms();
         BigDecimal baseIcms = baseIcmsPuro.add(frete).add(seguro).add(despesas).subtract(desconto);
         BigDecimal aliq = item.getAliqIcms() == null ? BigDecimal.ZERO : item.getAliqIcms();
         BigDecimal valorIcms = baseIcms.multiply(aliq).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
 
         return new RateioItem(frete, seguro, desconto, despesas, baseIcms, valorIcms);
+    }
+
+    // Espelha os ramos de construirIcms que escrevem vBC/vICMS a partir do rateio.
+    private boolean icmsProprioNoXml(ItemNotaSaida item, boolean simples) {
+        if (simples) {
+            return false;
+        }
+        return switch (resolverCstIcms(item, false)) {
+            case "40", "41", "50", "51", "60" -> false;
+            default -> true;
+        };
     }
 
     private BigDecimal rateado(BigDecimal valorTotal, BigDecimal fator) {

@@ -118,12 +118,31 @@ public class ItemNotaSaidaTributacaoService {
     public void aplicarCalculoIcms(ItemNotaSaida item, NaturezaOperacao natureza, Produto produto) {
         TributacaoIcms tributacao = resolverTributacaoIcms(natureza, produto);
         BigDecimal aliqIcms = tributacao == null ? BigDecimal.ZERO : tributacao.aliqIcms();
+        // Isenta/não tributada/suspensão/ST retido: sem ICMS próprio, mesmo que a
+        // natureza tenha alíquota (bug real 2026-09-24: doação com CST 41 gravava ICMS de
+        // 7% da natureza). O CST vale o do item, que o usuário pode ter trocado à mão.
+        // 51 (diferimento) continua calculando — o XML usa o valor em vICMSOp.
+        if (semIcmsProprio(item.getCst())) {
+            aliqIcms = BigDecimal.ZERO;
+        }
         BigDecimal baseIcms = item.getSubTotal() == null ? BigDecimal.ZERO : item.getSubTotal();
         BigDecimal valorIcms = baseIcms.multiply(aliqIcms)
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         item.setAliqIcms(aliqIcms);
         item.setBaseIcms(baseIcms);
         item.setValorIcms(valorIcms);
+    }
+
+    // Sem CST o item sai como "40" na emissão (NfeXmlBuilder.resolverCstIcms) — mesmo
+    // tratamento aqui, pra o valor gravado bater com o XML.
+    private boolean semIcmsProprio(String cst) {
+        if (cst == null || cst.isBlank()) {
+            return true;
+        }
+        return switch (cst.trim()) {
+            case "40", "41", "50", "60" -> true;
+            default -> false;
+        };
     }
 
     /**

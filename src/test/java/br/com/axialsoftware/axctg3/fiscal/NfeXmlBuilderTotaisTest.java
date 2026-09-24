@@ -211,14 +211,7 @@ class NfeXmlBuilderTotaisTest {
 
         NotaSaida nota = criarNota(false);
         // item 1 passa a ser "Sem alíquota"; itens 2 e 3 continuam com o ClassTrib "Padrão"
-        ItemNotaSaida item1 = dataManager.load(ItemNotaSaida.class)
-                .query("select e from ItemNotaSaida e where e.notaSaida = :nota and e.item = 1")
-                .parameter("nota", nota)
-                .fetchPlan(fp -> fp.addFetchPlan(io.jmix.core.FetchPlan.BASE)
-                        .add("produto", io.jmix.core.FetchPlan.BASE)
-                        .add("notaSaida", fn -> fn.addFetchPlan(io.jmix.core.FetchPlan.BASE)
-                                .add("natureza", io.jmix.core.FetchPlan.BASE)))
-                .one();
+        ItemNotaSaida item1 = carregarItem(nota, 1);
         item1.setCodClassTrib(classTribSemAliquotaTeste);
         dataManager.save(item1);
         nota = dataManager.load(NotaSaida.class).id(nota.getId()).one();
@@ -246,6 +239,57 @@ class NfeXmlBuilderTotaisTest {
         assertThat(new BigDecimal(texto(tot, "vBCIBSCBS"))).isEqualByComparingTo(somaVbc);
         assertThat(new BigDecimal(texto(tot, "vIBS"))).isEqualByComparingTo(somaVIbs);
         assertThat(new BigDecimal(texto(tot, "vCBS"))).isEqualByComparingTo(somaVCbs);
+    }
+
+    // cStat=531 real (doação CST 41, 2026-09-24): ICMSTot somava a base/valor de ICMS de
+    // item cujo grupo ICMS40 sai sem vBC/vICMS.
+    @Test
+    void icmsTotSoSomaItensComIcmsProprioNoXml() {
+        prepararFixtures();
+        NotaSaida nota = criarNota(true);
+        NaturezaOperacao natureza = dataManager.load(NaturezaOperacao.class).id(nota.getNatureza().getId()).one();
+        // Como a natureza de doação real: CST 41 e alíquota de 7% cadastrados nela.
+        natureza.setCst(dataManager.load(br.com.axialsoftware.axctg3.entity.tabelas.Cst.class)
+                .query("select e from Cst e where e.codigo = '41'").one());
+        natureza.setAliqIcms(new BigDecimal("7"));
+        dataManager.save(natureza);
+
+        ItemNotaSaida item1 = carregarItem(nota, 1);  // 3 x 10,50 = 31,50
+        item1.setCst("41");
+        dataManager.save(item1);
+        ItemNotaSaida item3 = carregarItem(nota, 3);  // 2 x 7,00 = 14,00 — CST trocado à mão
+        item3.setCst("00");
+        dataManager.save(item3);
+        // item 2 fica sem CST — sai como ICMS40/CST 40 (default da emissão)
+
+        assertThat(carregarItem(nota, 1).getValorIcms()).isZero();
+        assertThat(carregarItem(nota, 3).getValorIcms()).isEqualByComparingTo("0.98");
+
+        nota = dataManager.load(NotaSaida.class).id(nota.getId()).one();
+        Document doc = nfeXmlBuilder.construir(nota).documento();
+
+        List<Element> dets = elementos(doc.getDocumentElement(), "det");
+        assertThat(elementos(porNItem(dets, "1"), "ICMS40")).hasSize(1);
+        assertThat(elementos(porNItem(dets, "2"), "ICMS40")).hasSize(1);
+        Element icms00 = elementos(porNItem(dets, "3"), "ICMS00").get(0);
+        assertThat(new BigDecimal(texto(icms00, "vBC"))).isEqualByComparingTo("14.00");
+        assertThat(new BigDecimal(texto(icms00, "vICMS"))).isEqualByComparingTo("0.98");
+
+        Element icmsTot = elementos(doc.getDocumentElement(), "ICMSTot").get(0);
+        assertThat(new BigDecimal(texto(icmsTot, "vBC"))).isEqualByComparingTo("14.00");
+        assertThat(new BigDecimal(texto(icmsTot, "vICMS"))).isEqualByComparingTo("0.98");
+    }
+
+    private ItemNotaSaida carregarItem(NotaSaida nota, int numero) {
+        return dataManager.load(ItemNotaSaida.class)
+                .query("select e from ItemNotaSaida e where e.notaSaida = :nota and e.item = :n")
+                .parameter("nota", nota)
+                .parameter("n", numero)
+                .fetchPlan(fp -> fp.addFetchPlan(io.jmix.core.FetchPlan.BASE)
+                        .add("produto", io.jmix.core.FetchPlan.BASE)
+                        .add("notaSaida", fn -> fn.addFetchPlan(io.jmix.core.FetchPlan.BASE)
+                                .add("natureza", io.jmix.core.FetchPlan.BASE)))
+                .one();
     }
 
     @Test
