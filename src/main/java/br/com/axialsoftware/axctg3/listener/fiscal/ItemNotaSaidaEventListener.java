@@ -52,7 +52,7 @@ public class ItemNotaSaidaEventListener {
     @EventListener
     public void onItemNotaSaidaSaving(final EntitySavingEvent<ItemNotaSaida> event) {
         ItemNotaSaida itemNotaSaida = event.getEntity();
-        NotaSaida notaSaida = itemNotaSaida.getNotaSaida();
+        NotaSaida notaSaida = notaSaidaDoItem(itemNotaSaida);
         NaturezaOperacao naturezaRef = notaSaida == null ? null : notaSaida.getNatureza();
         // Recarrega natureza/produto com classTrib+cst garantidamente fetched: as
         // referências que chegam aqui (via notaSaida.getNatureza()/item.getProduto())
@@ -129,6 +129,32 @@ public class ItemNotaSaidaEventListener {
         ItemNotaSaida item = dataManager.load(event.getEntityId()).one();
         NotaSaida notaSaida = item.getNotaSaida();
         return notaSaida == null ? null : (UUID) notaSaida.getId();
+    }
+
+    /**
+     * Item já gravado que chega aqui com um fetch plan sem a referência de volta
+     * {@code notaSaida} (ex.: itens da tela da nota carregados com {@code _base}) não
+     * faz lazy-load dentro do save — estoura "unfetched attribute"/"null Session" (bug
+     * real 2026-09-24, editando o cClassTrib de um item e salvando a nota). Nesse caso
+     * busca a nota gravada, com a natureza, direto do banco. Pelo id numa consulta
+     * escalar, e NÃO recarregando o próprio item: recarregar o item com fetch plan parcial
+     * na mesma transação marca a instância gerenciada como parcial e quebra a leitura de
+     * quantidade/valorUnitario logo depois (visto no PedidoVendaUiTest, onde os itens
+     * vêm por lazy-load do NotaSaidaEventListener).
+     */
+    private NotaSaida notaSaidaDoItem(ItemNotaSaida item) {
+        if (entityStates.isLoaded(item, "notaSaida")) {
+            return item.getNotaSaida();
+        }
+        return dataManager.loadValue(
+                        "select i.notaSaida.id from ItemNotaSaida i where i.id = :id", UUID.class)
+                .parameter("id", item.getId())
+                .optional()
+                .flatMap(notaSaidaId -> dataManager.load(NotaSaida.class)
+                        .id(notaSaidaId)
+                        .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE).add("natureza", FetchPlan.BASE))
+                        .optional())
+                .orElse(null);
     }
 
     private NaturezaOperacao carregarNaturezaComTributacao(NaturezaOperacao natureza) {

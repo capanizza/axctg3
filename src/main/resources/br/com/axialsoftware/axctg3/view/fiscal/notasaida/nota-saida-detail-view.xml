@@ -6,8 +6,12 @@
         <instance id="notaSaidaDc"
                   class="br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida">
             <fetchPlan extends="_base">
+                <!-- notaSaida (referência de volta) no fetch plan dos itens: o
+                     ItemNotaSaidaEventListener lê item.getNotaSaida() ao salvar um item
+                     editado — sem ela estourava "unfetched attribute" (bug 2026-09-24). -->
                 <property name="itens" fetchPlan="_base">
                     <property name="produto" fetchPlan="_instance_name"/>
+                    <property name="notaSaida" fetchPlan="_instance_name"/>
                 </property>
                 <property name="parceiro" fetchPlan="_instance_name"/>
                 <property name="natureza" fetchPlan="_instance_name"/>
