@@ -33,10 +33,10 @@
     <layout>
         <hbox id="buttonsPanel" wrap="true" width="100%">
             <startSlot>
+                <button id="delimitarButton" action="pedidoVendasDataGrid.delimitarAction" themeNames="small"/>
                 <button id="createButton" action="pedidoVendasDataGrid.createAction" themeNames="small"/>
                 <button id="editButton" action="pedidoVendasDataGrid.editAction" themeNames="small"/>
                 <button id="removeButton" action="pedidoVendasDataGrid.removeAction" themeNames="small"/>
-                <button id="delimitarButton" action="pedidoVendasDataGrid.delimitarAction" themeNames="small"/>
                 <button id="listagemButton" action="pedidoVendasDataGrid.listagemAction" themeNames="small"/>
                 <button id="emitirNotaSaidaButton" action="pedidoVendasDataGrid.emitirNotaSaidaAction" themeNames="small"/>
             </startSlot>
