@@ -53,6 +53,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static io.jmix.flowui.app.inputdialog.InputParameter.booleanParameter;
 import static io.jmix.flowui.app.inputdialog.InputParameter.enumParameter;
 import static io.jmix.flowui.app.inputdialog.InputParameter.intParameter;
 import static io.jmix.flowui.app.inputdialog.InputParameter.localDateParameter;
@@ -204,7 +205,11 @@ public class NfeListView extends StandardListView<Nfe> {
                         localDateParameter("dataFinal")
                                 .withLabel(messageBundle.getMessage("nfeListView.exportarXmls.dataFinal"))
                                 .withRequired(true)
-                                .withDefaultValue(inicioMesAnterior.withDayOfMonth(inicioMesAnterior.lengthOfMonth()))
+                                .withDefaultValue(inicioMesAnterior.withDayOfMonth(inicioMesAnterior.lengthOfMonth())),
+                        // provisório, só pra testar com as notas de homologação do dev
+                        booleanParameter("incluirHomologacao")
+                                .withLabel(messageBundle.getMessage("nfeListView.exportarXmls.incluirHomologacao"))
+                                .withDefaultValue(false)
                 )
                 .withActions(DialogActions.OK_CANCEL)
                 .withValidator(context -> {
@@ -217,14 +222,17 @@ public class NfeListView extends StandardListView<Nfe> {
                 })
                 .withCloseListener(closeEvent -> {
                     if (closeEvent.closedWith(DialogOutcome.OK)) {
-                        exportarXmlsContador(closeEvent.getValue("dataInicial"), closeEvent.getValue("dataFinal"));
+                        Boolean incluirHomologacao = closeEvent.getValue("incluirHomologacao");
+                        exportarXmlsContador(closeEvent.getValue("dataInicial"), closeEvent.getValue("dataFinal"),
+                                Boolean.TRUE.equals(incluirHomologacao));
                     }
                 })
                 .open();
     }
 
-    private void exportarXmlsContador(LocalDate inicio, LocalDate fim) {
-        NfeExportacaoContadorService.Resultado resultado = nfeExportacaoContadorService.exportar(inicio, fim);
+    private void exportarXmlsContador(LocalDate inicio, LocalDate fim, boolean incluirHomologacao) {
+        NfeExportacaoContadorService.Resultado resultado =
+                nfeExportacaoContadorService.exportar(inicio, fim, incluirHomologacao);
         if (resultado.vazio()) {
             dialogs.createMessageDialog()
                     .withHeader(messageBundle.getMessage("nfeListView.exportarXmlsContadorAction.text"))

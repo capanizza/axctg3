@@ -96,7 +96,7 @@ class NfeExportacaoContadorServiceTest {
         criarInutilizacao(1, 10, 12, "2026-09-05T10:00:00-03:00");
         criarInutilizacao(2, 20, 21, "2026-09-05T10:00:00-03:00"); // fora: homologação
 
-        NfeExportacaoContadorService.Resultado resultado = service.exportar(INICIO, FIM);
+        NfeExportacaoContadorService.Resultado resultado = service.exportar(INICIO, FIM, false);
 
         assertThat(resultado.nomeArquivo()).isEqualTo("NFe_12345678000199_2026-09.zip");
         assertThat(resultado.nfes()).isEqualTo(2);
@@ -122,10 +122,21 @@ class NfeExportacaoContadorServiceTest {
     void periodoSemNadaDevolveVazioSemZip() {
         criarNfe(1, 2, 100, "2026-09-10T10:00:00-03:00", "<nfeProc>homologacao</nfeProc>");
 
-        NfeExportacaoContadorService.Resultado resultado = service.exportar(INICIO, FIM);
+        NfeExportacaoContadorService.Resultado resultado = service.exportar(INICIO, FIM, false);
 
         assertThat(resultado.vazio()).isTrue();
         assertThat(resultado.zip()).isNull();
+    }
+
+    @Test
+    void incluirHomologacaoTrazAsNotasEInutilizacoesDeTeste() {
+        criarNfe(1, 2, 100, "2026-09-10T10:00:00-03:00", "<nfeProc>homologacao</nfeProc>");
+        criarInutilizacao(2, 20, 21, "2026-09-05T10:00:00-03:00");
+
+        NfeExportacaoContadorService.Resultado resultado = service.exportar(INICIO, FIM, true);
+
+        assertThat(resultado.nfes()).isEqualTo(1);
+        assertThat(resultado.inutilizacoes()).isEqualTo(1);
     }
 
     private String chave(int n) {

@@ -39,7 +39,8 @@ import java.util.zip.ZipOutputStream;
  *   inutilizacoes/inut-&lt;ano&gt;-&lt;serie&gt;-&lt;ini&gt;-&lt;fim&gt;.xml  retorno da SEFAZ
  *   Conferencia.pdf                          relatório de conferência (ExportacaoContador.jasper)
  * </pre>
- * Só produção (tpAmb=1). NFe importada não entra (não guarda XML — já veio de um XML).
+ * Só produção (tpAmb=1), salvo {@code incluirHomologacao} — opção provisória, só pra testar
+ * com as notas de homologação do ambiente de dev (retirar quando houver emissão real). NFe importada não entra (não guarda XML — já veio de um XML).
  * Cada evento entra pela <b>própria</b> data, não pela da nota: uma CC-e de outubro sobre
  * nota de setembro vai no zip de outubro, e o de setembro, já enviado, não muda. NFe emitida
  * e cancelada no período aparece nas duas pastas.
@@ -51,6 +52,7 @@ public class NfeExportacaoContadorService {
     private static final ZoneOffset FUSO = ZoneOffset.of("-03:00");
     private static final DateTimeFormatter DATA_BR = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final int AMBIENTE_PRODUCAO = 1;
+    private static final int AMBIENTE_HOMOLOGACAO = 2;
     private static final int PROT_AUTORIZADA = 100;
     private static final int PROT_CANCELADA = 101;
     private static final int EVENTO_REGISTRADO = 135;
@@ -76,15 +78,18 @@ public class NfeExportacaoContadorService {
     }
 
     /** Período fechado nas duas pontas ({@code inicio} e {@code fim} inclusos). */
-    public Resultado exportar(LocalDate inicio, LocalDate fim) {
+    public Resultado exportar(LocalDate inicio, LocalDate fim, boolean incluirHomologacao) {
         Integer codEmpresa = utilGeralService.getCodEmpresa();
+        List<Integer> ambientes = incluirHomologacao
+                ? List.of(AMBIENTE_PRODUCAO, AMBIENTE_HOMOLOGACAO)
+                : List.of(AMBIENTE_PRODUCAO);
         OffsetDateTime de = inicio.atStartOfDay().atOffset(FUSO);
         OffsetDateTime ate = fim.plusDays(1).atStartOfDay().atOffset(FUSO);
 
-        List<Nfe> nfes = buscarNfes(codEmpresa, de, ate);
-        List<Nfe> canceladas = buscarCanceladas(codEmpresa, de, ate);
-        List<NfeCartaCorrecao> cartas = buscarCartasCorrecao(codEmpresa, de, ate);
-        List<NfeInutilizacao> inutilizacoes = buscarInutilizacoes(codEmpresa, de, ate);
+        List<Nfe> nfes = buscarNfes(codEmpresa, ambientes, de, ate);
+        List<Nfe> canceladas = buscarCanceladas(codEmpresa, ambientes, de, ate);
+        List<NfeCartaCorrecao> cartas = buscarCartasCorrecao(codEmpresa, ambientes, de, ate);
+        List<NfeInutilizacao> inutilizacoes = buscarInutilizacoes(codEmpresa, ambientes, de, ate);
 
         Empresa empresa = utilGeralService.getEmpresa();
         String periodo = descreverPeriodo(inicio, fim);
@@ -128,7 +133,8 @@ public class NfeExportacaoContadorService {
             }
 
             HashMap<String, Object> parametros = new HashMap<>();
-            parametros.put("TITULO_RELATORIO", "Conferência de XMLs de NFe");
+            parametros.put("TITULO_RELATORIO", incluirHomologacao
+                    ? "Conferência de XMLs de NFe (inclui homologação)" : "Conferência de XMLs de NFe");
             parametros.put("NOME_EMPRESA", empresa.getNome());
             parametros.put("PERIODO_RELATORIO", "Período: " + inicio.format(DATA_BR) + " a " + fim.format(DATA_BR));
             parametros.put("LOGO", utilGeralService.getLogoEmpresa());
@@ -146,41 +152,41 @@ public class NfeExportacaoContadorService {
     }
 
     /** NFe emitidas pelo sistema (têm o nfeProc gravado) — inclui as canceladas depois. */
-    private List<Nfe> buscarNfes(Integer codEmpresa, OffsetDateTime de, OffsetDateTime ate) {
+    private List<Nfe> buscarNfes(Integer codEmpresa, List<Integer> ambientes, OffsetDateTime de, OffsetDateTime ate) {
         return dataManager.load(Nfe.class)
-                .query("select e from Nfe e where e.codEmpresa = :codEmpresa and e.protTpAmb = :producao "
+                .query("select e from Nfe e where e.codEmpresa = :codEmpresa and e.protTpAmb in :ambientes "
                         + "and e.protCStat in :situacoes and e.xmlRetorno is not null "
                         + "and e.dhEmi >= :de and e.dhEmi < :ate order by e.serie, e.numeroNf")
                 .parameter("codEmpresa", codEmpresa)
-                .parameter("producao", AMBIENTE_PRODUCAO)
+                .parameter("ambientes", ambientes)
                 .parameter("situacoes", List.of(PROT_AUTORIZADA, PROT_CANCELADA))
                 .parameter("de", de)
                 .parameter("ate", ate)
                 .list();
     }
 
-    private List<Nfe> buscarCanceladas(Integer codEmpresa, OffsetDateTime de, OffsetDateTime ate) {
+    private List<Nfe> buscarCanceladas(Integer codEmpresa, List<Integer> ambientes, OffsetDateTime de, OffsetDateTime ate) {
         return dataManager.load(Nfe.class)
-                .query("select e from Nfe e where e.codEmpresa = :codEmpresa and e.protTpAmb = :producao "
+                .query("select e from Nfe e where e.codEmpresa = :codEmpresa and e.protTpAmb in :ambientes "
                         + "and e.cancCStat = :registrado and e.cancXmlRetorno is not null "
                         + "and e.cancDhRegEvento >= :de and e.cancDhRegEvento < :ate order by e.serie, e.numeroNf")
                 .parameter("codEmpresa", codEmpresa)
-                .parameter("producao", AMBIENTE_PRODUCAO)
+                .parameter("ambientes", ambientes)
                 .parameter("registrado", EVENTO_REGISTRADO)
                 .parameter("de", de)
                 .parameter("ate", ate)
                 .list();
     }
 
-    private List<NfeCartaCorrecao> buscarCartasCorrecao(Integer codEmpresa, OffsetDateTime de, OffsetDateTime ate) {
+    private List<NfeCartaCorrecao> buscarCartasCorrecao(Integer codEmpresa, List<Integer> ambientes, OffsetDateTime de, OffsetDateTime ate) {
         return dataManager.load(NfeCartaCorrecao.class)
                 .query("select e from NfeCartaCorrecao e where e.nfe.codEmpresa = :codEmpresa "
-                        + "and e.nfe.protTpAmb = :producao and e.cceCStat = :registrado "
+                        + "and e.nfe.protTpAmb in :ambientes and e.cceCStat = :registrado "
                         + "and e.cceXmlRetorno is not null "
                         + "and e.cceDhRegEvento >= :de and e.cceDhRegEvento < :ate "
                         + "order by e.nfe.numeroNf, e.numeroSequencial")
                 .parameter("codEmpresa", codEmpresa)
-                .parameter("producao", AMBIENTE_PRODUCAO)
+                .parameter("ambientes", ambientes)
                 .parameter("registrado", EVENTO_REGISTRADO)
                 .parameter("de", de)
                 .parameter("ate", ate)
@@ -192,7 +198,7 @@ public class NfeExportacaoContadorService {
      * NfeInutilizacao não grava o ambiente em coluna própria — o tpAmb vem do retInutNFe
      * guardado em xmlRetorno.
      */
-    private List<NfeInutilizacao> buscarInutilizacoes(Integer codEmpresa, OffsetDateTime de, OffsetDateTime ate) {
+    private List<NfeInutilizacao> buscarInutilizacoes(Integer codEmpresa, List<Integer> ambientes, OffsetDateTime de, OffsetDateTime ate) {
         return dataManager.load(NfeInutilizacao.class)
                 .query("select e from NfeInutilizacao e where e.codEmpresa = :codEmpresa "
                         + "and e.retCStat = :homologada and e.xmlRetorno is not null "
@@ -204,7 +210,7 @@ public class NfeExportacaoContadorService {
                 .parameter("ate", ate)
                 .list()
                 .stream()
-                .filter(i -> i.getXmlRetorno().contains("<tpAmb>" + AMBIENTE_PRODUCAO + "</tpAmb>"))
+                .filter(i -> ambientes.stream().anyMatch(a -> i.getXmlRetorno().contains("<tpAmb>" + a + "</tpAmb>")))
                 .toList();
     }
 
