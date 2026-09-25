@@ -8,6 +8,7 @@ import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeCancelamentoService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeCartaCorrecaoService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeDanfeService;
+import br.com.axialsoftware.axctg3.service.fiscal.NfeExportacaoContadorService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeImportService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeInutilizacaoService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeWebserviceClient;
@@ -44,6 +45,7 @@ import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,6 +55,7 @@ import java.util.concurrent.TimeUnit;
 
 import static io.jmix.flowui.app.inputdialog.InputParameter.enumParameter;
 import static io.jmix.flowui.app.inputdialog.InputParameter.intParameter;
+import static io.jmix.flowui.app.inputdialog.InputParameter.localDateParameter;
 import static io.jmix.flowui.app.inputdialog.InputParameter.stringParameter;
 
 @Route(value = "nfes", layout = MainView.class)
@@ -89,6 +92,8 @@ public class NfeListView extends StandardListView<Nfe> {
     private NfeDanfeService nfeDanfeService;
     @Autowired
     private Downloader downloader;
+    @Autowired
+    private NfeExportacaoContadorService nfeExportacaoContadorService;
     @Autowired
     private NfeCancelamentoService nfeCancelamentoService;
     @Autowired
@@ -180,6 +185,54 @@ public class NfeListView extends StandardListView<Nfe> {
             return;
         }
         downloader.download(xml.getBytes(StandardCharsets.UTF_8), nfe.getChave() + "-nfe.xml", DownloadFormat.XML);
+    }
+
+    /**
+     * Zip mensal pro contador (NfeExportacaoContadorService): pede o período, já vindo com o
+     * mês anterior — o caso normal, fechar o mês que acabou.
+     */
+    @Subscribe("nfesDataGrid.exportarXmlsContadorAction")
+    public void onNfesDataGridExportarXmlsContadorAction(final ActionPerformedEvent event) {
+        LocalDate inicioMesAnterior = LocalDate.now().minusMonths(1).withDayOfMonth(1);
+        dialogs.createInputDialog(this)
+                .withHeader(messageBundle.getMessage("nfeListView.exportarXmlsContadorAction.text"))
+                .withParameters(
+                        localDateParameter("dataInicial")
+                                .withLabel(messageBundle.getMessage("nfeListView.exportarXmls.dataInicial"))
+                                .withRequired(true)
+                                .withDefaultValue(inicioMesAnterior),
+                        localDateParameter("dataFinal")
+                                .withLabel(messageBundle.getMessage("nfeListView.exportarXmls.dataFinal"))
+                                .withRequired(true)
+                                .withDefaultValue(inicioMesAnterior.withDayOfMonth(inicioMesAnterior.lengthOfMonth()))
+                )
+                .withActions(DialogActions.OK_CANCEL)
+                .withValidator(context -> {
+                    LocalDate inicio = context.getValue("dataInicial");
+                    LocalDate fim = context.getValue("dataFinal");
+                    if (inicio != null && fim != null && fim.isBefore(inicio)) {
+                        return ValidationErrors.of(messageBundle.getMessage("nfeListView.exportarXmls.periodoInvalido"));
+                    }
+                    return ValidationErrors.none();
+                })
+                .withCloseListener(closeEvent -> {
+                    if (closeEvent.closedWith(DialogOutcome.OK)) {
+                        exportarXmlsContador(closeEvent.getValue("dataInicial"), closeEvent.getValue("dataFinal"));
+                    }
+                })
+                .open();
+    }
+
+    private void exportarXmlsContador(LocalDate inicio, LocalDate fim) {
+        NfeExportacaoContadorService.Resultado resultado = nfeExportacaoContadorService.exportar(inicio, fim);
+        if (resultado.vazio()) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("nfeListView.exportarXmlsContadorAction.text"))
+                    .withText(messageBundle.getMessage("nfeListView.exportarXmls.vazio"))
+                    .open();
+            return;
+        }
+        downloader.download(resultado.zip(), resultado.nomeArquivo(), DownloadFormat.ZIP);
     }
 
     /*

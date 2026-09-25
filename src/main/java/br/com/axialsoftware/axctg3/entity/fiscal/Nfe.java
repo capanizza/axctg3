@@ -574,8 +574,8 @@ public class Nfe {
     @Column(name = "CANC_X_JUST", length = 255)
     private String cancXJust;
 
-    // XML de retorno do evento (retEvento) — útil pra reconsulta/auditoria, mesmo padrão de
-    // xmlEnvio/xmlRetorno abaixo
+    // XML completo do cancelamento (procEventoNFe = evento assinado + retEvento) desde
+    // 2026-09-25; cancelamentos anteriores guardam só o retEvento
     @Column(name = "CANC_XML_RETORNO")
     @Lob
     private String cancXmlRetorno;

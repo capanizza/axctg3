@@ -37,6 +37,7 @@
                         <actionItem id="emitirNfeItem" ref="nfesDataGrid.emitirNfeAction"/>
                         <actionItem id="emitirDanfeItem" ref="nfesDataGrid.emitirDanfeAction"/>
                         <actionItem id="baixarXmlItem" ref="nfesDataGrid.baixarXmlAction"/>
+                        <actionItem id="exportarXmlsContadorItem" ref="nfesDataGrid.exportarXmlsContadorAction"/>
                         <actionItem id="cancelarNfeItem" ref="nfesDataGrid.cancelarNfeAction"/>
                         <actionItem id="emitirCceItem" ref="nfesDataGrid.emitirCceAction"/>
                         <actionItem id="verCartasCorrecaoItem" ref="nfesDataGrid.verCartasCorrecaoAction"/>
@@ -65,6 +66,7 @@
                 <action id="emitirNfeAction" text="msg://nfeListView.emitirNfeAction.text" icon="vaadin:paperplane"/>
                 <action id="emitirDanfeAction" text="msg://nfeListView.emitirDanfeAction.text" icon="vaadin:print"/>
                 <action id="baixarXmlAction" text="msg://nfeListView.baixarXmlAction.text" icon="vaadin:download"/>
+                <action id="exportarXmlsContadorAction" text="msg://nfeListView.exportarXmlsContadorAction.text" icon="vaadin:download"/>
                 <action id="cancelarNfeAction" text="msg://nfeListView.cancelarNfeAction.text" icon="vaadin:ban"/>
                 <action id="emitirCceAction" text="msg://nfeListView.emitirCceAction.text" icon="vaadin:file-text"/>
                 <action id="verCartasCorrecaoAction" text="msg://nfeListView.verCartasCorrecaoAction.text" icon="vaadin:list"/>

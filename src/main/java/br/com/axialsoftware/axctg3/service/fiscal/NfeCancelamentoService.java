@@ -131,7 +131,11 @@ public class NfeCancelamentoService {
                 nfe.setCancNProt(resposta.nProt());
                 nfe.setCancDhRegEvento(OffsetDateTime.now(ZoneOffset.of("-03:00")));
                 nfe.setCancXJust(justificativa);
-                nfe.setCancXmlRetorno(resposta.xmlRetEvento());
+                // Arquivo oficial do cancelamento (procEventoNFe = evento assinado + retEvento),
+                // não só o retorno — é o que vai pro contador (NfeExportacaoContadorService)
+                nfe.setCancXmlRetorno("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                        + "<procEventoNFe versao=\"1.00\" xmlns=\"http://www.portalfiscal.inf.br/nfe\">"
+                        + xmlEventoAssinado + resposta.xmlRetEvento() + "</procEventoNFe>");
                 // Código canônico de "NFe cancelada" — mesmo valor já documentado no
                 // Javadoc de Nfe.protCStat ("100=autorizada, 101/151=cancelada..."). O
                 // protocolo de AUTORIZAÇÃO original (protNProt/protDhRecbto) fica intocado;
