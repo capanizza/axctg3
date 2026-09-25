@@ -427,7 +427,9 @@ public class NfeEmissaoService {
                 + "</nfeProc>";
         Nfe nfeSalva = importService.salvarEmitida(nfeProcXml.getBytes(StandardCharsets.UTF_8));
         nfeSalva.setXmlEnvio(xmlNfeAssinada);
-        nfeSalva.setXmlRetorno(resposta.xmlProtNFe());
+        // XML autorizado oficial (nfeProc: NFe + protNFe), não só o protocolo — é o
+        // arquivo que se entrega ao destinatário/contador
+        nfeSalva.setXmlRetorno(nfeProcXml);
         dataManager.save(nfeSalva);
 
         notaSaida.setChave(construido.chave());

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/09/25-114726-c1f40fd1-nfe-xml_retorno-nfeproc.xml">
+    <!-- NFe emitidas antes de NfeEmissaoService gravar o nfeProc: XML_RETORNO tinha só o
+         protNFe. Reconstrói o XML autorizado oficial (nfeProc = NFe assinada + protNFe),
+         o mesmo que NfeEmissaoService.transmitir monta na emissão. Só dados, sem schema. -->
+    <changeSet id="1" author="axctg3">
+        <sql>
+            update NFE
+               set XML_RETORNO = '&lt;?xml version="1.0" encoding="UTF-8"?&gt;'
+                   || '&lt;nfeProc versao="4.00" xmlns="http://www.portalfiscal.inf.br/nfe"&gt;'
+                   || XML_ENVIO || XML_RETORNO || '&lt;/nfeProc&gt;'
+             where XML_ENVIO like '&lt;NFe%'
+               and XML_RETORNO like '&lt;protNFe%'
+        </sql>
+    </changeSet>
+</databaseChangeLog>

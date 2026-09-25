@@ -586,6 +586,8 @@ public class Nfe {
     @Lob
     private String xmlEnvio;
 
+    // XML autorizado completo (nfeProc = NFe assinada + protNFe) nas emitidas; antes de
+    // 2026-09-25 guardava só o protNFe (convertido pelo changelog 2026/09/25-114726)
     @Column(name = "XML_RETORNO")
     @Lob
     private String xmlRetorno;
