@@ -35,12 +35,15 @@ import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.textarea.JmixTextArea;
 import io.jmix.flowui.component.validation.ValidationErrors;
+import io.jmix.flowui.download.DownloadFormat;
+import io.jmix.flowui.download.Downloader;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
@@ -84,6 +87,8 @@ public class NfeListView extends StandardListView<Nfe> {
     private NfeImportService nfeImportService;
     @Autowired
     private NfeDanfeService nfeDanfeService;
+    @Autowired
+    private Downloader downloader;
     @Autowired
     private NfeCancelamentoService nfeCancelamentoService;
     @Autowired
@@ -148,6 +153,33 @@ public class NfeListView extends StandardListView<Nfe> {
             return;
         }
         nfeDanfeService.emitirDanfe(selecionada.getId());
+    }
+
+    /**
+     * Baixa o XML autorizado ({@code nfeProc}) gravado em {@code Nfe.xmlRetorno} como
+     * {@code <chave>-nfe.xml}. Só existe nas NFe emitidas pelo sistema — as importadas não
+     * guardam o XML bruto. Recarrega a NFe porque o grid é só leitura e o campo é @Lob.
+     */
+    @Subscribe("nfesDataGrid.baixarXmlAction")
+    public void onNfesDataGridBaixarXmlAction(final ActionPerformedEvent event) {
+        Nfe selecionada = nfesDataGrid.getSingleSelectedItem();
+        if (selecionada == null) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("nfeListView.baixarXmlAction.text"))
+                    .withText(messageBundle.getMessage("nfeListView.baixarXml.naoSelecionado"))
+                    .open();
+            return;
+        }
+        Nfe nfe = dataManager.load(Nfe.class).id(selecionada.getId()).one();
+        String xml = nfe.getXmlRetorno();
+        if (xml == null || !xml.contains("<nfeProc")) {
+            dialogs.createMessageDialog()
+                    .withHeader(messageBundle.getMessage("nfeListView.baixarXmlAction.text"))
+                    .withText(messageBundle.getMessage("nfeListView.baixarXml.semXml"))
+                    .open();
+            return;
+        }
+        downloader.download(xml.getBytes(StandardCharsets.UTF_8), nfe.getChave() + "-nfe.xml", DownloadFormat.XML);
     }
 
     /*
