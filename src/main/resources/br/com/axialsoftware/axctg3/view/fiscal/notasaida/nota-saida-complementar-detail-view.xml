@@ -87,22 +87,30 @@
                 <bigDecimalField id="valorField"
                                  property="valor"
                                  dataContainer="notaSaidaDc"
-                                 width="25%" themeNames="small"
+                                 width="20%" themeNames="small"
                                  label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.valor"/>
                 <bigDecimalField id="valorMercadoriaField"
                                  property="valorMercadoria"
                                  dataContainer="notaSaidaDc"
-                                 width="25%" themeNames="small"
+                                 width="20%" themeNames="small"
                                  label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.valorMercadoria"/>
                 <bigDecimalField id="baseIcmsField"
                                  property="baseIcms"
                                  dataContainer="notaSaidaDc"
-                                 width="25%" themeNames="small"
+                                 width="20%" themeNames="small"
                                  label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.baseIcms"/>
+                <!-- sem property: NotaSaida não guarda alíquota. Pré-preenchida com a
+                     NaturezaOperacao.aliqIcms (ou valor÷base, reabrindo uma nota já salva);
+                     só serve pra conferir base × alíquota = valor no save
+                     (NotaSaidaComplementarDetailView.onValidation). Na emissão o pICMS é
+                     derivado de valorIcms/baseIcms (NfeEmissaoService.gerarItemComplementar). -->
+                <bigDecimalField id="aliqIcmsField"
+                                 width="20%" themeNames="small"
+                                 label="msg://notaSaidaComplementarDetailView.aliqIcmsField.label"/>
                 <bigDecimalField id="valorIcmsField"
                                  property="valorIcms"
                                  dataContainer="notaSaidaDc"
-                                 width="25%" themeNames="small"
+                                 width="20%" themeNames="small"
                                  label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NotaSaida.valorIcms"/>
             </hbox>
             <hbox width="100%">

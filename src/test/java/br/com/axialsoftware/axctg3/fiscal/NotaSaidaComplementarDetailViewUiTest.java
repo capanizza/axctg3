@@ -8,6 +8,7 @@ import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
 import br.com.axialsoftware.axctg3.test_support.AuthenticatedAsAdmin;
 import br.com.axialsoftware.axctg3.view.fiscal.notasaida.NotaSaidaComplementarDetailView;
 import io.jmix.core.DataManager;
+import io.jmix.flowui.util.OperationResult;
 import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.component.datepicker.TypedDatePicker;
 import io.jmix.flowui.component.textfield.JmixBigDecimalField;
@@ -151,6 +152,29 @@ class NotaSaidaComplementarDetailViewUiTest {
         assertThat(despesasField.isReadOnly()).isFalse();
 
         assertThat(valorMercadoriaField.getValue()).isEqualByComparingTo("100.00");
+    }
+
+    /** Base × alíquota que não fecha com o valor do ICMS barra o save (aliqIcmsField não é gravado). */
+    @Test
+    void icmsQueNaoConfereComBaseVezesAliquotaNaoSalva() {
+        viewNavigators.detailView(UiTestUtils.getCurrentView(), NotaSaida.class)
+                .withViewClass(NotaSaidaComplementarDetailView.class)
+                .newEntity()
+                .navigate();
+        NotaSaidaComplementarDetailView view = UiTestUtils.getCurrentView();
+
+        JmixBigDecimalField aliqIcmsField = UiTestUtils.getComponent(view, "aliqIcmsField");
+        assertThat(aliqIcmsField.isReadOnly()).isFalse();
+        JmixBigDecimalField baseIcmsField = UiTestUtils.getComponent(view, "baseIcmsField");
+        JmixBigDecimalField valorIcmsField = UiTestUtils.getComponent(view, "valorIcmsField");
+
+        baseIcmsField.setValue(new BigDecimal("1000.00"));
+        aliqIcmsField.setValue(new BigDecimal("6"));
+        valorIcmsField.setValue(new BigDecimal("59.00")); // 1000 × 6% = 60,00
+
+        OperationResult resultado = view.closeWithSave();
+
+        assertThat(resultado.getStatus()).isEqualTo(OperationResult.Status.FAIL);
     }
 
     private Parceiro criarParceiro() {

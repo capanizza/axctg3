@@ -219,22 +219,20 @@ public class NfeEmissaoService {
         item.setQuantidade(BigDecimal.ONE);
         item.setValorUnitario(valorMercadoria);
 
+        // Base e valor do ICMS vêm do cabeçalho, digitados pelo operador junto com a
+        // alíquota em NotaSaidaComplementarDetailView (pré-preenchida pela natureza, que
+        // confere base × alíquota = valor no save). A alíquota não é gravada: pICMS é
+        // derivado de valor÷base e por isso bate com a digitada. Substitui a convenção
+        // antiga de complementar só de imposto (vBC = vICMS, pICMS = 100%), aceita pela
+        // SEFAZ em 2026-09-24 mas que não representa a operação real — erro de alíquota
+        // (base original × diferença de alíquota) ou erro de base (diferença de base ×
+        // alíquota cheia).
         item.setValorIcms(nvl(notaSaida.getValorIcms()));
-        if (valorMercadoria.compareTo(BigDecimal.ZERO) == 0) {
-            // Convenção usada em complementar SÓ de imposto (sem diferença de mercadoria):
-            // declarar o próprio valor a complementar como base, com alíquota 100% — em vez
-            // de uma base "real" (ex.: o valor original do produto) combinada com a alíquota
-            // real do produto, que não representa o que está sendo corrigido aqui. vBC =
-            // vICMS = valor complementado; pICMS = 100,00. Testar depois de o usuário achar
-            // essa orientação numa referência externa (a mesma alíquota real, 18% sobre uma
-            // base arbitrária, gerou cStat=225 em 2026-09-15 — ainda não confirmado se essa
-            // é a causa, ver [[axctg3-nfe-complementar-cstat225]]).
-            item.setBaseIcms(item.getValorIcms());
-            item.setAliqIcms(BigDecimal.valueOf(100));
-        } else {
-            item.setBaseIcms(nvl(notaSaida.getBaseIcms()));
-            item.setAliqIcms(aliquotaEfetiva(item.getValorIcms(), item.getBaseIcms()));
+        item.setBaseIcms(nvl(notaSaida.getBaseIcms()));
+        if (item.getValorIcms().signum() != 0 && item.getBaseIcms().signum() == 0) {
+            return "Nota complementar com valor de ICMS sem base de cálculo — informe a base do ICMS na nota.";
         }
+        item.setAliqIcms(aliquotaEfetiva(item.getValorIcms(), item.getBaseIcms()));
 
         // CST 10 (ICMS com ST) quando a complementar carrega baseSt/valorSt no cabeçalho —
         // mesmos campos já editáveis em NotaSaidaComplementarDetailView, mesma mecânica do

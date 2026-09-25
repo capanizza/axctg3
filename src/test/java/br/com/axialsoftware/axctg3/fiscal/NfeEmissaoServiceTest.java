@@ -253,11 +253,10 @@ class NfeEmissaoServiceTest {
         assertThat(item.getCfop()).isEqualTo(5102);
         assertThat(item.getQuantidade()).isEqualByComparingTo(BigDecimal.ONE);
         assertThat(item.getValorUnitario()).isEqualByComparingTo(BigDecimal.ZERO);
-        // base = valorIcms / alíquota = 100% — convenção pra complementar só de imposto
-        // (declarar o próprio valor a complementar como base, ver gerarItemComplementar).
-        assertThat(item.getBaseIcms()).isEqualByComparingTo(new BigDecimal("18.00"));
+        // base e valor do cabeçalho; pICMS = valor÷base (não mais a convenção de 100%)
+        assertThat(item.getBaseIcms()).isEqualByComparingTo(new BigDecimal("100.00"));
         assertThat(item.getValorIcms()).isEqualByComparingTo(new BigDecimal("18.00"));
-        assertThat(item.getAliqIcms()).isEqualByComparingTo(new BigDecimal("100"));
+        assertThat(item.getAliqIcms()).isEqualByComparingTo(new BigDecimal("18"));
         assertThat(item.getCst()).isEqualTo("00");
         // classTrib não é mais um código especial "Sem alíquota" pra complemento só de
         // imposto (teste 2026-09-15 rejeitou 410029 mesmo com pICMS=100%) — sem
@@ -287,8 +286,23 @@ class NfeEmissaoServiceTest {
         assertThat(item.getCst()).isEqualTo("10");
         assertThat(item.getBaseSt()).isEqualByComparingTo(new BigDecimal("50.00"));
         assertThat(item.getValorSt()).isEqualByComparingTo(new BigDecimal("9.00"));
-        assertThat(item.getBaseIcms()).isEqualByComparingTo(new BigDecimal("18.00"));
+        assertThat(item.getBaseIcms()).isEqualByComparingTo(new BigDecimal("100.00"));
         assertThat(item.getValorIcms()).isEqualByComparingTo(new BigDecimal("18.00"));
+    }
+
+    /** Valor de ICMS sem base: não gera item nem transmite (pICMS seria indeterminado). */
+    @Test
+    void complementarComValorIcmsSemBaseNaoGeraItem() {
+        Produto placeholder = criarProdutoPlaceholder();
+        criarEmpresa(placeholder);
+        NotaSaida notaSaida = criarNotaSaida(FinNfe.COMPLEMENTAR, CHAVE_ORIGINAL_VALIDA,
+                BigDecimal.ZERO, BigDecimal.ZERO, new BigDecimal("18.00"));
+
+        NfeEmissaoService.ResultadoEmissao resultado = nfeEmissaoService.emitir(notaSaida.getId());
+
+        assertThat(resultado.sucesso()).isFalse();
+        assertThat(resultado.motivo()).contains("sem base de cálculo");
+        assertThat(itensDaNota(notaSaida)).isEmpty();
     }
 
     /** Complemento de preço (valorMercadoria != 0) — item nasce com quantidade=1/valorUnitario=diferença. */
