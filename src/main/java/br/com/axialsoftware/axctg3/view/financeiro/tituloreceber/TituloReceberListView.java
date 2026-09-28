@@ -309,8 +309,10 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
             String nomeArquivo = titulos.size() == 1
                     ? "Boleto " + titulos.get(0).getNumero() + ".pdf"
                     : "Boletos.pdf";
-            // OCTET_STREAM, não PDF: com PDF o Downloader abre o boleto numa aba nova (como os
-            // relatórios); boleto é pra salvar/enviar ao cliente, então vai como download.
+            // As duas coisas, a pedido do usuário: PDF abre numa aba nova (pra conferir/imprimir,
+            // como os relatórios) e OCTET_STREAM força o download do mesmo arquivo (pra
+            // salvar/enviar ao cliente) — com um formato só, o Downloader faz uma ou a outra.
+            downloader.download(pdf, nomeArquivo, DownloadFormat.PDF);
             downloader.download(pdf, nomeArquivo, DownloadFormat.OCTET_STREAM);
         } catch (IllegalArgumentException | UncheckedIOException ex) {
             dialogs.createMessageDialog()
