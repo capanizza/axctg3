@@ -40,6 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.UncheckedIOException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -305,15 +306,18 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
             return;
         }
         try {
-            byte[] pdf = boletoService.emitirBoletos(titulos);
-            String nomeArquivo = titulos.size() == 1
-                    ? "Boleto " + titulos.get(0).getNumero() + ".pdf"
-                    : "Boletos.pdf";
-            // As duas coisas, a pedido do usuário: PDF abre numa aba nova (pra conferir/imprimir,
-            // como os relatórios) e OCTET_STREAM força o download do mesmo arquivo (pra
-            // salvar/enviar ao cliente) — com um formato só, o Downloader faz uma ou a outra.
-            downloader.download(pdf, nomeArquivo, DownloadFormat.PDF);
-            downloader.download(pdf, nomeArquivo, DownloadFormat.OCTET_STREAM);
+            // Um título: o boleto abre numa aba nova, sem download. Vários: um zip com um PDF por
+            // título (vão por e-mail, um pra cada cliente) — um download só, porque o navegador
+            // bloqueia/pergunta quando a página dispara vários downloads de uma vez.
+            if (titulos.size() == 1) {
+                TituloReceber titulo = titulos.get(0);
+                downloader.download(boletoService.emitirBoleto(titulo), BoletoService.nomeArquivo(titulo),
+                        DownloadFormat.PDF);
+            } else {
+                downloader.download(boletoService.emitirBoletosZip(titulos),
+                        "Boletos " + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".zip",
+                        DownloadFormat.ZIP);
+            }
         } catch (IllegalArgumentException | UncheckedIOException ex) {
             dialogs.createMessageDialog()
                     .withHeader("Emissão de boleto")

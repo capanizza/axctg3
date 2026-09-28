@@ -11,9 +11,11 @@ import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -22,7 +24,11 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Emissão do boleto (Recibo do Pagador + Ficha de Compensação) a partir de
@@ -34,9 +40,11 @@ import java.util.List;
  * leiaute impresso varia de banco pra banco (só a formatação da linha digitável a partir do
  * código de barras de 44 dígitos é padrão Febraban, comum a todos).
  *
- * <p>Um PDF único com os boletos de todos os títulos da seleção, na ordem recebida, pronto
- * pra ser entregue ao navegador — nada é gravado em disco nem no FileStorage: o boleto é
- * regerado a qualquer momento pelo mesmo botão.
+ * <p>Um PDF por título, como no legado — os boletos vão por e-mail, um pra cada cliente.
+ * {@link #emitirBoleto} devolve o PDF de um título só (a view mostra na tela);
+ * {@link #emitirBoletosZip} empacota vários num zip, um {@code Boleto <número>.pdf} por
+ * título. Nada é gravado em disco nem no FileStorage: o boleto é regerado a qualquer
+ * momento pelo mesmo botão.
  */
 @Service
 public class BoletoService {
@@ -65,25 +73,52 @@ public class BoletoService {
                         "Banco código " + codGeral + " ainda não emite boleto"));
     }
 
+    /** PDF do boleto de um título, com o template do banco dele. */
+    public byte[] emitirBoleto(TituloReceber tituloReceber) {
+        return relatorioService.exportarPdf(List.of(preencherBoleto(utilGeralService.getEmpresa(), tituloReceber)));
+    }
+
     /**
-     * Um PDF só com um boleto por título — cada título usa o template do seu próprio banco,
-     * e os boletos saem na ordem da lista recebida (sem reagrupar por banco).
+     * Zip com um PDF por título ({@link #nomeArquivo}), na ordem recebida. Todos os títulos
+     * são preenchidos antes de montar o zip, então um título inválido (sem Nosso Número,
+     * banco sem handler) derruba a geração inteira em vez de sair um zip incompleto.
      */
-    public byte[] emitirBoletos(List<TituloReceber> titulos) {
+    public byte[] emitirBoletosZip(List<TituloReceber> titulos) {
         Empresa empresa = utilGeralService.getEmpresa();
-        List<JasperPrint> boletos = new ArrayList<>();
+        Map<String, JasperPrint> boletos = new LinkedHashMap<>();
         for (TituloReceber tituloReceber : titulos) {
-            Integer codGeral = tituloReceber.getBanco().getCodGeral();
-            BancoCobrancaHandler handler = resolverHandler(codGeral);
-
-            HashMap<String, Object> parametros = new HashMap<>();
-            parametros.put("LOGO", logoBanco(codGeral));
-
-            BoletoDto boleto = montarDto(empresa, tituloReceber, handler);
-            boletos.add(relatorioService.preencherRelatorio("boleto" + codGeral + ".jasper",
-                    new JRBeanCollectionDataSource(List.of(boleto)), parametros));
+            // Número é único por empresa (IDX_TITULO_RECEBER_UNQ_NUMERO_COD_EMPRESA), então o
+            // nome da entrada não colide.
+            boletos.put(nomeArquivo(tituloReceber), preencherBoleto(empresa, tituloReceber));
         }
-        return relatorioService.exportarPdf(boletos);
+
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try (ZipOutputStream zip = new ZipOutputStream(bytes, StandardCharsets.UTF_8)) {
+            for (Map.Entry<String, JasperPrint> boleto : boletos.entrySet()) {
+                zip.putNextEntry(new ZipEntry(boleto.getKey()));
+                zip.write(relatorioService.exportarPdf(List.of(boleto.getValue())));
+                zip.closeEntry();
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return bytes.toByteArray();
+    }
+
+    public static String nomeArquivo(TituloReceber tituloReceber) {
+        return "Boleto " + tituloReceber.getNumero() + ".pdf";
+    }
+
+    private JasperPrint preencherBoleto(Empresa empresa, TituloReceber tituloReceber) {
+        Integer codGeral = tituloReceber.getBanco().getCodGeral();
+        BancoCobrancaHandler handler = resolverHandler(codGeral);
+
+        HashMap<String, Object> parametros = new HashMap<>();
+        parametros.put("LOGO", logoBanco(codGeral));
+
+        BoletoDto boleto = montarDto(empresa, tituloReceber, handler);
+        return relatorioService.preencherRelatorio("boleto" + codGeral + ".jasper",
+                new JRBeanCollectionDataSource(List.of(boleto)), parametros);
     }
 
     /**

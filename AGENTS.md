@@ -161,11 +161,13 @@ model.
 A sibling pipeline to the one above, not a variant of it — no `ConfigRel`/`InputDialog`,
 because there's no filter to remember: `TituloReceberListView`'s "Emitir boleto" (in the
 `cobrancaBancariaDropdownButton` dropdown) acts on whatever rows are multi-selected in the
-grid, same selection pattern as `gerarRemessaAction`. `BoletoService.emitirBoletos` fills
-one boleto per título (`RelatorioService.preencherRelatorio`) and joins them all, in
-selection order, into **one PDF** (`RelatorioService.exportarPdf(List<JasperPrint>)`), which
-the view hands to the `Downloader` — nothing is kept; re-running "Emitir boleto" regenerates
-it. Each título resolves its template as `"boleto" + codGeral + ".jasper"` — a **template
+grid, same selection pattern as `gerarRemessaAction`. **One PDF per título**, as in the
+legacy system — boletos are e-mailed by hand, one per customer. With a single row selected,
+`BoletoService.emitirBoleto` returns its PDF and the view opens it in a new tab (no
+download); with several, `BoletoService.emitirBoletosZip` returns a zip with one
+`Boleto <número>.pdf` per título, delivered as a single download (browsers block or prompt
+when a page fires many downloads at once). Nothing is kept; re-running "Emitir boleto"
+regenerates it. Each título resolves its template as `"boleto" + codGeral + ".jasper"` — a **template
 per bank**, not a shared one, because Febraban only standardizes the barcode's outer shape
 (banco+moeda+DV+fator de vencimento+valor); the 25-digit "campo livre" inside it and the
 printed layout are bank-specific. Requires `TituloReceber.getNumBanco()` (Nosso Número)

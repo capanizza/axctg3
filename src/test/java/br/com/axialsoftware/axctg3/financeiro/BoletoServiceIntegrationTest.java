@@ -20,11 +20,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.regex.Pattern;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -36,7 +41,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * {@code BoletoServiceTest} (unitário, sem Spring). Prova que
  * {@code JasperFillManager.fillReport} + {@code JasperExportManager.exportReportToPdf}
  * rodam sem exceção contra o {@code boleto748.jrxml} de verdade, e que vários títulos saem
- * num PDF único (um boleto por título). A entrega ao navegador ({@code Downloader}) fica na
+ * num zip com um PDF por título. A entrega ao navegador ({@code Downloader}) fica na
  * view, fora deste teste.
  */
 @SpringBootTest
@@ -120,14 +125,14 @@ class BoletoServiceIntegrationTest {
         titulo.setNumBanco("262000458"); // normalmente preenchido por RemessaBancoService.gerarRemessa
         titulo = dataManager.save(titulo);
 
-        byte[] pdf = boletoService.emitirBoletos(List.of(titulo));
+        byte[] pdf = boletoService.emitirBoleto(titulo);
 
         assertThat(pdf).isNotEmpty();
         assertThat(new String(pdf, 0, 4, StandardCharsets.US_ASCII)).isEqualTo("%PDF");
     }
 
     @Test
-    void test_emitirBoletosVariosTitulosGeraUmPdfSoComUmBoletoPorTitulo() {
+    void test_emitirBoletosZipGeraUmPdfPorTitulo() throws IOException {
         TituloReceber titulo1 = criarTitulo("0000191", new BigDecimal("1200.00"));
         titulo1.setNumBanco("262000458");
         titulo1 = dataManager.save(titulo1);
@@ -135,12 +140,11 @@ class BoletoServiceIntegrationTest {
         titulo2.setNumBanco("262000024");
         titulo2 = dataManager.save(titulo2);
 
-        byte[] umBoleto = boletoService.emitirBoletos(List.of(titulo1));
-        byte[] doisBoletos = boletoService.emitirBoletos(List.of(titulo1, titulo2));
+        Map<String, byte[]> arquivos = lerZip(boletoService.emitirBoletosZip(List.of(titulo1, titulo2)));
 
-        assertThat(new String(doisBoletos, 0, 4, StandardCharsets.US_ASCII)).isEqualTo("%PDF");
-        assertThat(contarPaginas(umBoleto)).isPositive();
-        assertThat(contarPaginas(doisBoletos)).isEqualTo(2 * contarPaginas(umBoleto));
+        assertThat(arquivos).containsOnlyKeys("Boleto 0000191.pdf", "Boleto 0000193.pdf");
+        assertThat(arquivos.values())
+                .allSatisfy(pdf -> assertThat(new String(pdf, 0, 4, StandardCharsets.US_ASCII)).isEqualTo("%PDF"));
     }
 
     @Test
@@ -149,7 +153,7 @@ class BoletoServiceIntegrationTest {
         titulo = dataManager.save(titulo);
 
         List<TituloReceber> titulos = List.of(titulo);
-        assertThatThrownBy(() -> boletoService.emitirBoletos(titulos))
+        assertThatThrownBy(() -> boletoService.emitirBoletosZip(titulos))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -168,7 +172,7 @@ class BoletoServiceIntegrationTest {
         titulo = dataManager.save(titulo);
 
         List<TituloReceber> titulos = List.of(titulo);
-        assertThatThrownBy(() -> boletoService.emitirBoletos(titulos))
+        assertThatThrownBy(() -> boletoService.emitirBoletosZip(titulos))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -183,16 +187,18 @@ class BoletoServiceIntegrationTest {
         titulo.setNumBanco("00036");
         titulo = dataManager.save(titulo);
 
-        byte[] pdf = boletoService.emitirBoletos(List.of(titulo));
+        byte[] pdf = boletoService.emitirBoleto(titulo);
         assertThat(new String(pdf, 0, 4, StandardCharsets.US_ASCII)).isEqualTo("%PDF");
     }
 
-    /** Conta os objetos {@code /Type /Page} (não {@code /Pages}) — o PDF do Jasper não os comprime. */
-    private long contarPaginas(byte[] pdf) {
-        return Pattern.compile("/Type\\s*/Page(?![a-zA-Z])")
-                .matcher(new String(pdf, StandardCharsets.ISO_8859_1))
-                .results()
-                .count();
+    private Map<String, byte[]> lerZip(byte[] zip) throws IOException {
+        Map<String, byte[]> arquivos = new LinkedHashMap<>();
+        try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(zip), StandardCharsets.UTF_8)) {
+            for (ZipEntry entrada = zis.getNextEntry(); entrada != null; entrada = zis.getNextEntry()) {
+                arquivos.put(entrada.getName(), zis.readAllBytes());
+            }
+        }
+        return arquivos;
     }
 
     private TituloReceber criarTitulo(String numero, BigDecimal valor) {
