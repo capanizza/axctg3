@@ -29,11 +29,11 @@ import io.jmix.flowui.app.inputdialog.DialogOutcome;
 import io.jmix.flowui.backgroundtask.BackgroundTask;
 import io.jmix.flowui.backgroundtask.TaskLifeCycle;
 import io.jmix.flowui.component.UiComponentUtils;
+import io.jmix.flowui.download.DownloadFormat;
+import io.jmix.flowui.download.Downloader;
 import io.jmix.flowui.view.View;
 import org.springframework.stereotype.Component;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
@@ -68,8 +68,9 @@ public class MenuBean {
     private final MovimentoBancoService movimentoBancoService;
     private final SpedEcdService spedEcdService;
     private final PedidoVendaService pedidoVendaService;
+    private final Downloader downloader;
 
-    public MenuBean(UtilGeralService utilGeralService, Dialogs dialogs, ContaContabilService contaContabilService, DataManager dataManager, LancamentoService lancamentoService, DepreciacaoService depreciacaoService, EncerramentoService encerramentoService, DiversoPagarService diversoPagarService, ItemDiversoPagarService itemDiversoPagarService, TituloReceberService tituloReceberService, ItemReceberService itemReceberService, TituloPagarService tituloPagarService, ItemPagarService itemPagarService, MovimentoBancoService movimentoBancoService, SpedEcdService spedEcdService, PedidoVendaService pedidoVendaService) {
+    public MenuBean(UtilGeralService utilGeralService, Dialogs dialogs, ContaContabilService contaContabilService, DataManager dataManager, LancamentoService lancamentoService, DepreciacaoService depreciacaoService, EncerramentoService encerramentoService, DiversoPagarService diversoPagarService, ItemDiversoPagarService itemDiversoPagarService, TituloReceberService tituloReceberService, ItemReceberService itemReceberService, TituloPagarService tituloPagarService, ItemPagarService itemPagarService, MovimentoBancoService movimentoBancoService, SpedEcdService spedEcdService, PedidoVendaService pedidoVendaService, Downloader downloader) {
         this.utilGeralService = utilGeralService;
         this.dialogs = dialogs;
         this.contaContabilService = contaContabilService;
@@ -86,6 +87,7 @@ public class MenuBean {
         this.movimentoBancoService = movimentoBancoService;
         this.spedEcdService = spedEcdService;
         this.pedidoVendaService = pedidoVendaService;
+        this.downloader = downloader;
     }
 
     public void listarPedidosVenda(PedidoVenda selecionado) {
@@ -873,7 +875,6 @@ public class MenuBean {
         optData = Optional.ofNullable(configRel.getDataSpedEcdFinal());
         LocalDate dataFinal = optData.orElse(LocalDate.of(anoContabil, 12, 31));
         String versao = Optional.ofNullable(configRel.getVersaoSpedEcd()).orElse("9.00");
-        String pastaPadrao = Optional.ofNullable(configRel.getPastaSpedEcd()).orElse("");
 
         dialogs.createInputDialog(ownerView)
                 .withHeader("Sped ECD")
@@ -894,10 +895,6 @@ public class MenuBean {
                                 .withLabel("Versão do leiaute (COD_VER_LC)")
                                 .withDefaultValue(versao)
                                 .withRequired(true),
-                        stringParameter("pasta")
-                                .withLabel("Pasta de destino")
-                                .withDefaultValue(pastaPadrao)
-                                .withRequired(true),
                         stringParameter("nomeArquivo")
                                 .withLabel("Nome do arquivo")
                                 .withDefaultValue("ECD_" + dataInicial.getYear() + ".txt")
@@ -912,7 +909,6 @@ public class MenuBean {
                     LocalDate dtFin = closeEvent.getValue("dataFinal");
                     Integer numOrdemLivro = closeEvent.getValue("numOrdemLivro");
                     String versaoInformada = closeEvent.getValue("versao");
-                    String pasta = closeEvent.getValue("pasta");
                     String nomeArquivo = closeEvent.getValue("nomeArquivo");
 
                     if (!numOrdemLivro.equals(empresa.getNumOrdemLivroEcd())) {
@@ -922,13 +918,12 @@ public class MenuBean {
                     configRel.setDataSpedEcdInicial(dtIni);
                     configRel.setDataSpedEcdFinal(dtFin);
                     configRel.setVersaoSpedEcd(versaoInformada);
-                    configRel.setPastaSpedEcd(pasta);
                     SaveContext saveContext = new SaveContext();
                     saveContext.saving(configRel);
                     dataManager.save(saveContext);
 
                     dialogs.createBackgroundTaskDialog(
-                                    new GerarSpedEcdTask(ownerView, dtIni, dtFin, versaoInformada, pasta, nomeArquivo))
+                                    new GerarSpedEcdTask(ownerView, dtIni, dtFin, versaoInformada, nomeArquivo))
                             .withHeader("Sped ECD")
                             .withText("Gerando arquivo...")
                             .withCancelAllowed(false)
@@ -938,46 +933,37 @@ public class MenuBean {
     }
 
     /**
-     * Roda {@link SpedEcdService#gerarArquivo} numa thread separada e grava o resultado
-     * direto em disco — arquivo de um exercício inteiro pode demorar, daí o diálogo de
-     * progresso; sem etapas discretas pra publicar (é uma chamada só), a barra fica
-     * indeterminada. Mesmo raciocínio de "nada de UI dentro de run()" das outras
-     * BackgroundTask do arquivo.
+     * Roda {@link SpedEcdService#gerarArquivo} numa thread separada e entrega o resultado
+     * ao navegador no {@link #done} — arquivo de um exercício inteiro pode demorar, daí o
+     * diálogo de progresso; sem etapas discretas pra publicar (é uma chamada só), a barra
+     * fica indeterminada. Mesmo raciocínio de "nada de UI dentro de run()" das outras
+     * BackgroundTask do arquivo: o {@code Downloader} só é chamado em {@code done}, na
+     * thread da UI.
      */
-    protected class GerarSpedEcdTask extends BackgroundTask<Integer, Path> {
+    protected class GerarSpedEcdTask extends BackgroundTask<Integer, byte[]> {
 
         private final LocalDate dtIni;
         private final LocalDate dtFin;
         private final String versao;
-        private final String pasta;
         private final String nomeArquivo;
 
         protected GerarSpedEcdTask(View<?> ownerView, LocalDate dtIni, LocalDate dtFin, String versao,
-                                    String pasta, String nomeArquivo) {
+                                    String nomeArquivo) {
             super(TIMEOUT_SPED_ECD_MINUTOS, TimeUnit.MINUTES, ownerView);
             this.dtIni = dtIni;
             this.dtFin = dtFin;
             this.versao = versao;
-            this.pasta = pasta;
             this.nomeArquivo = nomeArquivo;
         }
 
         @Override
-        public Path run(TaskLifeCycle<Integer> taskLifeCycle) throws Exception {
-            byte[] arquivo = spedEcdService.gerarArquivo(utilGeralService.getCodEmpresa(), dtIni, dtFin, versao);
-            Path pastaDestino = Path.of(pasta);
-            Files.createDirectories(pastaDestino);
-            Path destino = pastaDestino.resolve(nomeArquivo);
-            Files.write(destino, arquivo);
-            return destino;
+        public byte[] run(TaskLifeCycle<Integer> taskLifeCycle) throws Exception {
+            return spedEcdService.gerarArquivo(utilGeralService.getCodEmpresa(), dtIni, dtFin, versao);
         }
 
         @Override
-        public void done(Path destino) {
-            dialogs.createMessageDialog()
-                    .withHeader("Sped ECD")
-                    .withText("Arquivo gravado em " + destino)
-                    .open();
+        public void done(byte[] arquivo) {
+            downloader.download(arquivo, nomeArquivo, DownloadFormat.OCTET_STREAM);
         }
     }
 

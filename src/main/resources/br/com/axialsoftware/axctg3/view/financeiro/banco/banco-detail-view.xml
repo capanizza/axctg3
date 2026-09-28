@@ -68,8 +68,6 @@
             <textField id="nossoNumInicialField" property="nossoNumInicial"/>
             <textField id="nossoNumFinalField" property="nossoNumFinal"/>
             <textField id="nossoNumAtualField" property="nossoNumAtual"/>
-            <textField id="pastaRemessaField" property="pastaRemessa"/>
-            <textField id="pastaRetornoField" property="pastaRetorno"/>
             <textField id="numRemessaField" property="numRemessa"/>
             <textField id="especieField" property="especie"/>
         </formLayout-->
@@ -201,16 +199,6 @@
                            dataContainer="bancoDc"
                            width="12%" themeNames="small"
                            label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.nossoNumAtual"/>
-                <textField id="pastaRemessaField"
-                           property="pastaRemessa"
-                           dataContainer="bancoDc"
-                           width="32%" themeNames="small"
-                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.pastaRemessa"/>
-                <textField id="pastaRetornoField"
-                           property="pastaRetorno"
-                           dataContainer="bancoDc"
-                           width="32%" themeNames="small"
-                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.pastaRetorno"/>
             </hbox>
         </vbox>
         <hbox width="100%">

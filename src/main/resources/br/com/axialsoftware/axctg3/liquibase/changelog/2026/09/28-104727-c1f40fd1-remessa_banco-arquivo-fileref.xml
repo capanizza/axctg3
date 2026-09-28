@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/09/28-104727-c1f40fd1-remessa_banco-arquivo-fileref.xml">
+    <!--
+        Remessa, boleto e SPED ECD deixam de gravar em pasta do servidor e passam a ser
+        entregues ao navegador (Downloader) — com a aplicação na nuvem, a pasta fica na VM,
+        fora do alcance do usuário.
+
+        - REMESSA_BANCO.ARQUIVO: FileRef (io.jmix.core.FileRef, serializado como String) com
+          a cópia do arquivo de remessa no FileStorage, pra baixar de novo pela lista de
+          remessas. Substitui CAMINHO_ARQUIVO (caminho em disco): um caminho antigo não é um
+          FileRef válido, então as remessas geradas antes desta migração ficam sem arquivo
+          (os arquivos continuam onde foram gravados).
+        - TITULO_RECEBER.CAMINHO_BOLETO_PDF: sai sem substituto — o boleto é regerado a
+          qualquer momento pelo "Emitir boleto".
+        - BANCO.PASTA_REMESSA/PASTA_RETORNO e CONFIG_REL.pasta_sped_ecd/pasta_remessa: as
+          pastas configuradas não têm mais uso (PASTA_RETORNO e CONFIG_REL.pasta_remessa já
+          não eram lidas por nenhum código).
+    -->
+    <changeSet id="1" author="axctg3">
+        <addColumn tableName="REMESSA_BANCO">
+            <column name="ARQUIVO" type="VARCHAR(1000)"/>
+        </addColumn>
+        <dropColumn tableName="REMESSA_BANCO" columnName="CAMINHO_ARQUIVO"/>
+    </changeSet>
+
+    <changeSet id="2" author="axctg3">
+        <dropColumn tableName="TITULO_RECEBER" columnName="CAMINHO_BOLETO_PDF"/>
+    </changeSet>
+
+    <changeSet id="3" author="axctg3">
+        <dropColumn tableName="BANCO" columnName="PASTA_REMESSA"/>
+        <dropColumn tableName="BANCO" columnName="PASTA_RETORNO"/>
+    </changeSet>
+
+    <changeSet id="4" author="axctg3">
+        <dropColumn tableName="CONFIG_REL" columnName="pasta_sped_ecd"/>
+        <dropColumn tableName="CONFIG_REL" columnName="pasta_remessa"/>
+    </changeSet>
+</databaseChangeLog>

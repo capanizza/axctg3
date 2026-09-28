@@ -7,7 +7,7 @@ import br.com.axialsoftware.axctg3.entity.financeiro.BoletoDto;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber;
 import br.com.axialsoftware.axctg3.service.RelatorioService;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
-import io.jmix.core.DataManager;
+import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.stereotype.Service;
 
@@ -22,9 +22,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Emissão do boleto (Recibo do Pagador + Ficha de Compensação) a partir de
@@ -36,27 +34,25 @@ import java.util.Map;
  * leiaute impresso varia de banco pra banco (só a formatação da linha digitável a partir do
  * código de barras de 44 dígitos é padrão Febraban, comum a todos).
  *
- * <p>Um PDF por título (não um único PDF combinado), gravado em disco na mesma pasta da
- * remessa — {@code <pastaRemessa>/<codGeral>/<aaaamm>/pdf/} (ver {@link PastaCobrancaBanco},
- * o manual do Sicredi capítulo 5 não define nome de arquivo pro boleto, só o leiaute).
+ * <p>Um PDF único com os boletos de todos os títulos da seleção, na ordem recebida, pronto
+ * pra ser entregue ao navegador — nada é gravado em disco nem no FileStorage: o boleto é
+ * regerado a qualquer momento pelo mesmo botão.
  */
 @Service
 public class BoletoService {
 
     private final RelatorioService relatorioService;
     private final UtilGeralService utilGeralService;
-    private final DataManager dataManager;
     private final List<BancoCobrancaHandler> handlers;
 
     // Data já formatada "dd/MM/yyyy" — o atributo pattern do JasperReports não formata
     // campo java.time.LocalDate como esperado nesse projeto (ver Javadoc de BoletoDto).
     private static final DateTimeFormatter DATA_BR = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-    public BoletoService(RelatorioService relatorioService, UtilGeralService utilGeralService, DataManager dataManager,
+    public BoletoService(RelatorioService relatorioService, UtilGeralService utilGeralService,
                           List<BancoCobrancaHandler> handlers) {
         this.relatorioService = relatorioService;
         this.utilGeralService = utilGeralService;
-        this.dataManager = dataManager;
         this.handlers = handlers;
     }
 
@@ -70,54 +66,24 @@ public class BoletoService {
     }
 
     /**
-     * Um PDF por título (cada banco presente na seleção usa seu próprio template), gravado
-     * na subpasta {@code pdf} da pasta cadastrada no {@link Banco} — o mês/ano
-     * ({@code aaaamm}) é o de emissão de cada título, não o do dia da emissão do boleto (ver
-     * {@link PastaCobrancaBanco}), então títulos de meses diferentes numa mesma seleção
-     * caem em pastas diferentes — sem problema aqui, ao contrário da remessa, porque cada
-     * boleto já é um arquivo isolado. O caminho completo fica gravado em
-     * {@link TituloReceber#getCaminhoBoletoPdf()} — sobrescrito a cada reemissão.
+     * Um PDF só com um boleto por título — cada título usa o template do seu próprio banco,
+     * e os boletos saem na ordem da lista recebida (sem reagrupar por banco).
      */
-    public void emitirBoletos(List<TituloReceber> titulos) {
+    public byte[] emitirBoletos(List<TituloReceber> titulos) {
         Empresa empresa = utilGeralService.getEmpresa();
-        Map<Integer, List<TituloReceber>> porBanco = new LinkedHashMap<>();
+        List<JasperPrint> boletos = new ArrayList<>();
         for (TituloReceber tituloReceber : titulos) {
-            porBanco.computeIfAbsent(tituloReceber.getBanco().getCodGeral(), k -> new ArrayList<>()).add(tituloReceber);
-        }
-
-        for (Map.Entry<Integer, List<TituloReceber>> entry : porBanco.entrySet()) {
-            Integer codGeral = entry.getKey();
+            Integer codGeral = tituloReceber.getBanco().getCodGeral();
             BancoCobrancaHandler handler = resolverHandler(codGeral);
-            List<TituloReceber> titulosDoBanco = entry.getValue();
-            Banco banco = titulosDoBanco.get(0).getBanco();
 
-            String template = "boleto" + codGeral + ".jasper";
             HashMap<String, Object> parametros = new HashMap<>();
             parametros.put("LOGO", logoBanco(codGeral));
 
-            for (TituloReceber tituloReceber : titulosDoBanco) {
-                Path pastaPdf = PastaCobrancaBanco.resolver(banco, tituloReceber.getDataEmissao()).resolve("pdf");
-                try {
-                    Files.createDirectories(pastaPdf);
-                } catch (IOException e) {
-                    throw new UncheckedIOException("Não foi possível criar a pasta " + pastaPdf + ": " + e.getMessage(), e);
-                }
-
-                BoletoDto boleto = montarDto(empresa, tituloReceber, handler);
-                byte[] pdf = relatorioService.gerarRelatorioPdf(template, new JRBeanCollectionDataSource(List.of(boleto)), parametros);
-                String nomeArquivo = "Boleto " + boleto.getNumeroDocumento() + ".pdf";
-                Path caminhoArquivo = pastaPdf.resolve(nomeArquivo);
-                try {
-                    Files.write(caminhoArquivo, pdf);
-                } catch (IOException e) {
-                    throw new UncheckedIOException(
-                            "Não foi possível gravar " + nomeArquivo + " em " + pastaPdf + ": " + e.getMessage(), e);
-                }
-
-                tituloReceber.setCaminhoBoletoPdf(caminhoArquivo.toString());
-                dataManager.save(tituloReceber);
-            }
+            BoletoDto boleto = montarDto(empresa, tituloReceber, handler);
+            boletos.add(relatorioService.preencherRelatorio("boleto" + codGeral + ".jasper",
+                    new JRBeanCollectionDataSource(List.of(boleto)), parametros));
         }
+        return relatorioService.exportarPdf(boletos);
     }
 
     /**
