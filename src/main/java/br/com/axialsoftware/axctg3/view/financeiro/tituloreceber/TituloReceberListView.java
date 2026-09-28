@@ -31,6 +31,8 @@ import io.jmix.flowui.backgroundtask.TaskLifeCycle;
 import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.checkbox.JmixCheckbox;
 import io.jmix.flowui.component.grid.DataGrid;
+import io.jmix.flowui.download.DownloadFormat;
+import io.jmix.flowui.download.Downloader;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.view.*;
@@ -46,7 +48,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static io.jmix.flowui.app.inputdialog.InputParameter.localDateParameter;
 
@@ -78,6 +79,8 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
     private DialogWindows dialogWindows;
     @Autowired
     private RemessaBancoService remessaBancoService;
+    @Autowired
+    private Downloader downloader;
     @Autowired
     private RetornoBancoService retornoBancoService;
     @Autowired
@@ -263,11 +266,13 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
         try {
             RemessaBanco remessaBanco = remessaBancoService.gerarRemessa(titulos);
             tituloRecebersDl.load();
+            downloader.download(remessaBanco.getArquivo(), DownloadFormat.OCTET_STREAM);
             dialogs.createMessageDialog()
                     .withHeader("Remessa bancária")
                     .withText("Remessa nº " + remessaBanco.getNumRemessa() + " gerada com "
-                            + remessaBanco.getQuantidadeTitulos() + " título(s) em "
-                            + remessaBanco.getCaminhoArquivo())
+                            + remessaBanco.getQuantidadeTitulos() + " título(s) — arquivo "
+                            + remessaBanco.getArquivo().getFileName()
+                            + " baixado. Pode ser baixado de novo em Remessas bancárias.")
                     .open();
         } catch (IllegalArgumentException | UncheckedIOException ex) {
             dialogs.createMessageDialog()
@@ -300,15 +305,11 @@ public class TituloReceberListView extends StandardListView<TituloReceber> {
             return;
         }
         try {
-            boletoService.emitirBoletos(titulos);
-            tituloRecebersDl.load();
-            String caminhos = titulos.stream()
-                    .map(t -> t.getNumero() + ": " + t.getCaminhoBoletoPdf())
-                    .collect(Collectors.joining("\n"));
-            dialogs.createMessageDialog()
-                    .withHeader("Emissão de boleto")
-                    .withText(titulos.size() + " boleto(s) gerado(s):\n" + caminhos)
-                    .open();
+            byte[] pdf = boletoService.emitirBoletos(titulos);
+            String nomeArquivo = titulos.size() == 1
+                    ? "Boleto " + titulos.get(0).getNumero() + ".pdf"
+                    : "Boletos.pdf";
+            downloader.download(pdf, nomeArquivo, DownloadFormat.PDF);
         } catch (IllegalArgumentException | UncheckedIOException ex) {
             dialogs.createMessageDialog()
                     .withHeader("Emissão de boleto")

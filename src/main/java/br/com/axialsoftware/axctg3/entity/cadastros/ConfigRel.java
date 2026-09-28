@@ -203,14 +203,6 @@ public class ConfigRel {
     @Column(name = "versao_sped_ecd")
     private String versaoSpedEcd;
 
-    @Column(name = "pasta_sped_ecd")
-    private String pastaSpedEcd;
-
-    // Última pasta usada pra gravar o arquivo de remessa bancária (TituloReceberListView),
-    // mesmo raciocínio de prefill de pastaSpedEcd acima.
-    @Column(name = "pasta_remessa")
-    private String pastaRemessa;
-
     // Último texto de justificativa usado ao cancelar uma NFe (service/fiscal/
     // NfeCancelamentoService) — prefill no diálogo de NfeListView/NotaSaidaListView, mesmo
     // padrão de reaproveitar o último valor já usado nos outros filtros deste registro.
@@ -734,21 +726,6 @@ public class ConfigRel {
         this.versaoSpedEcd = versaoSpedEcd;
     }
 
-    public String getPastaSpedEcd() {
-        return pastaSpedEcd;
-    }
-
-    public void setPastaSpedEcd(String pastaSpedEcd) {
-        this.pastaSpedEcd = pastaSpedEcd;
-    }
-
-    public String getPastaRemessa() {
-        return pastaRemessa;
-    }
-
-    public void setPastaRemessa(String pastaRemessa) {
-        this.pastaRemessa = pastaRemessa;
-    }
 
     public String getJustificativaCancelamentoNfe() {
         return justificativaCancelamentoNfe;

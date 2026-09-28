@@ -161,9 +161,11 @@ model.
 A sibling pipeline to the one above, not a variant of it — no `ConfigRel`/`InputDialog`,
 because there's no filter to remember: `TituloReceberListView`'s "Emitir boleto" (in the
 `cobrancaBancariaDropdownButton` dropdown) acts on whatever rows are multi-selected in the
-grid, same selection pattern as `gerarRemessaAction`. `BoletoService.emitirBoletos` groups
-the selection by `Banco.codGeral`, one `RelatorioService.emitirRelatorio` call (one PDF) per
-bank present, and resolves the template as `"boleto" + codGeral + ".jasper"` — a **template
+grid, same selection pattern as `gerarRemessaAction`. `BoletoService.emitirBoletos` fills
+one boleto per título (`RelatorioService.preencherRelatorio`) and joins them all, in
+selection order, into **one PDF** (`RelatorioService.exportarPdf(List<JasperPrint>)`), which
+the view hands to the `Downloader` — nothing is kept; re-running "Emitir boleto" regenerates
+it. Each título resolves its template as `"boleto" + codGeral + ".jasper"` — a **template
 per bank**, not a shared one, because Febraban only standardizes the barcode's outer shape
 (banco+moeda+DV+fator de vencimento+valor); the 25-digit "campo livre" inside it and the
 printed layout are bank-specific. Requires `TituloReceber.getNumBanco()` (Nosso Número)
@@ -211,6 +213,18 @@ No entity/schema change was needed to add this: `TituloReceber`/`Banco` already 
 everything the boleto prints. There's no desconto/mora/multa/juros line on the boleto —
 those only exist on the baixa (`ItemReceber.juros`/`.desconto`), not on emission, matching
 the legacy boleto (those lines print blank there too).
+
+### Files: upload in, Downloader out — never a server folder
+
+The app is meant to run in the cloud, where the server's disk is out of the user's reach.
+So files **coming in** (NFe/NFCom XML, retorno CNAB, IBPT/ClassTrib/ContaReferencial
+spreadsheets) arrive through an upload field, and files **going out** (reports, DANFE,
+XMLs, remessa, boletos, SPED ECD) go to the browser through the Jmix `Downloader`. A file
+the app itself must keep goes to the `FileStorage` as a `FileRef` column (`Empresa.logo`,
+`Empresa.certificadoArquivo`, `RemessaBanco.arquivo`) — never a path typed into a field, and
+never `Files.write` to a configured folder (`Banco.pastaRemessa`/`pastaRetorno` and
+`ConfigRel.pastaSpedEcd` were removed for this reason on 2026-09-28). Writing to
+`java.io.tmpdir` for Jasper's `$P{LOGO}` is fine — it's scratch, not delivery.
 
 ### Accounting posting and balance rollup
 

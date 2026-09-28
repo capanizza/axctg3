@@ -10,6 +10,8 @@ import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber;
 import br.com.axialsoftware.axctg3.service.financeiro.RemessaBancoService;
 import br.com.axialsoftware.axctg3.test_support.AuthenticatedAsAdmin;
 import io.jmix.core.DataManager;
+import io.jmix.core.FileRef;
+import io.jmix.core.FileStorage;
 import io.jmix.core.SaveContext;
 import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.data.PersistenceHints;
@@ -17,28 +19,25 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Cobre a orquestração bank-agnostic de {@link RemessaBancoService} — a codificação CNAB e o
- * nome do arquivo em si já são testados em {@code SicrediCnab400HandlerTest}. O arquivo é
- * gravado de verdade num {@code @TempDir} (mesma pasta cadastrada no {@link Banco}), não
- * baixado — não há mais {@code Downloader} envolvido nesse fluxo.
+ * nome do arquivo em si já são testados em {@code SicrediCnab400HandlerTest}. O arquivo vai
+ * de verdade pro FileStorage ({@link RemessaBanco#getArquivo()}) e é lido de volta daqui —
+ * a entrega ao navegador ({@code Downloader}) fica na view, fora deste teste.
  */
 @SpringBootTest
 @ExtendWith(AuthenticatedAsAdmin.class)
@@ -58,8 +57,8 @@ class RemessaBancoServiceTest {
     @Autowired
     RemessaBancoService remessaBancoService;
 
-    @TempDir
-    Path tempDir;
+    @Autowired
+    FileStorage fileStorage;
 
     private Parceiro parceiro;
     private Banco bancoSicredi;
@@ -98,7 +97,6 @@ class RemessaBancoServiceTest {
         bancoSicredi.setAgencia("165");
         bancoSicredi.setPosto("2");
         bancoSicredi.setByteGeracaoNossoNumero(2);
-        bancoSicredi.setPastaRemessa(tempDir.toString());
         bancoSicredi = dataManager.save(bancoSicredi);
 
         // TituloReceberEventListener exige um HistoricoFinanceiro codigo=1 (emissão) pra
@@ -129,22 +127,25 @@ class RemessaBancoServiceTest {
         Banco bancoRecarregado = dataManager.load(Banco.class).id(bancoSicredi.getId()).one();
         assertThat(bancoRecarregado.getNumRemessa()).isEqualTo(1);
 
-        Path arquivo = arquivoRemessaGravado();
-        assertThat(arquivo).exists();
-        assertThat(arquivo.getFileName().toString()).matches("00623[0-9A-Z]\\d{2}\\.001");
-        assertThat(remessaBanco.getCaminhoArquivo()).isEqualTo(arquivo.toString());
+        FileRef arquivo = remessaBanco.getArquivo();
+        assertThat(arquivo).isNotNull();
+        assertThat(arquivo.getFileName()).matches("00623[0-9A-Z]\\d{2}\\.001");
+        assertThat(lerArquivo(arquivo)).startsWith("01REMESSA");
+
+        RemessaBanco remessaRecarregada = dataManager.load(RemessaBanco.class).id(remessaBanco.getId()).one();
+        assertThat(remessaRecarregada.getArquivo()).isEqualTo(arquivo);
     }
 
     @Test
-    void test_segundaRemessaIncrementaNumero() throws IOException {
-        remessaBancoService.gerarRemessa(List.of(criarTitulo("0000001", BigDecimal.TEN)));
+    void test_segundaRemessaIncrementaNumero() {
+        RemessaBanco primeira = remessaBancoService.gerarRemessa(List.of(criarTitulo("0000001", BigDecimal.TEN)));
         RemessaBanco segunda = remessaBancoService.gerarRemessa(List.of(criarTitulo("0000002", BigDecimal.ONE)));
 
         assertThat(segunda.getNumRemessa()).isEqualTo(2);
-        // duas remessas no mesmo dia: dois arquivos na pasta aaaamm, extensão (nº da
-        // remessa) é o que garante não colidir — ver seção 6.1 do manual.
-        assertThat(pastaAaaamm()).isDirectoryContaining(p -> p.getFileName().toString().endsWith(".001"))
-                .isDirectoryContaining(p -> p.getFileName().toString().endsWith(".002"));
+        // duas remessas no mesmo dia: a extensão (nº da remessa) é o que distingue os nomes
+        // — ver seção 6.1 do manual.
+        assertThat(primeira.getArquivo().getFileName()).endsWith(".001");
+        assertThat(segunda.getArquivo().getFileName()).endsWith(".002");
     }
 
     @Test
@@ -167,15 +168,17 @@ class RemessaBancoServiceTest {
     }
 
     @Test
-    void test_titulosComMesEmissaoDiferenteLancaExcecao() {
+    void test_titulosComMesEmissaoDiferenteGeramUmaRemessaSo() {
+        // A restrição de mesmo mês/ano de emissão só existia pela pasta <aaaamm> do servidor,
+        // que deixou de existir — títulos de meses diferentes agora vão na mesma remessa.
         TituloReceber titulo1 = criarTitulo("0000001", BigDecimal.TEN);
         TituloReceber titulo2 = criarTitulo("0000002", BigDecimal.ONE);
         titulo2.setDataEmissao(LocalDate.of(ANO, MES + 1, 5));
         titulo2 = dataManager.save(titulo2);
 
-        List<TituloReceber> titulos = List.of(titulo1, titulo2);
-        assertThatThrownBy(() -> remessaBancoService.gerarRemessa(titulos))
-                .isInstanceOf(IllegalArgumentException.class);
+        RemessaBanco remessaBanco = remessaBancoService.gerarRemessa(List.of(titulo1, titulo2));
+
+        assertThat(remessaBanco.getQuantidadeTitulos()).isEqualTo(2);
     }
 
     @Test
@@ -216,26 +219,20 @@ class RemessaBancoServiceTest {
         return dataManager.load(TituloReceber.class).id(tituloReceber.getId()).one();
     }
 
-    /**
-     * {@code <tempDir>/748/<aaaamm de emissão dos títulos>} — mesma resolução de
-     * {@code PastaCobrancaBanco}; usa {@code ANO}/{@code MES} (data de emissão gravada por
-     * {@code criarTitulo}), não a data de hoje — a pasta é pela competência do título.
-     */
-    private Path pastaAaaamm() {
-        return tempDir.resolve("748").resolve(LocalDate.of(ANO, MES, 1).format(DateTimeFormatter.ofPattern("yyyyMM")));
-    }
-
-    private Path arquivoRemessaGravado() throws IOException {
-        try (Stream<Path> arquivos = Files.list(pastaAaaamm())) {
-            return arquivos.filter(p -> p.getFileName().toString().startsWith("00623"))
-                    .findFirst()
-                    .orElseThrow(() -> new AssertionError("Nenhum arquivo de remessa encontrado em " + pastaAaaamm()));
+    private String lerArquivo(FileRef arquivo) throws IOException {
+        try (InputStream is = fileStorage.openStream(arquivo)) {
+            return new String(is.readAllBytes(), StandardCharsets.ISO_8859_1);
         }
     }
 
     private void limparDadosDaEmpresa() {
         apagar(carregar(TituloReceber.class, "select e from TituloReceber e where e.codEmpresa = :codEmpresa"));
-        apagar(carregar(RemessaBanco.class, "select e from RemessaBanco e where e.codEmpresa = :codEmpresa"));
+        List<RemessaBanco> remessas = carregar(RemessaBanco.class, "select e from RemessaBanco e where e.codEmpresa = :codEmpresa");
+        remessas.stream()
+                .map(RemessaBanco::getArquivo)
+                .filter(arquivo -> arquivo != null && fileStorage.fileExists(arquivo))
+                .forEach(fileStorage::removeFile);
+        apagar(remessas);
         apagar(carregar(Banco.class, "select e from Banco e where e.codEmpresa = :codEmpresa"));
         apagar(carregar(HistoricoFinanceiro.class, "select e from HistoricoFinanceiro e where e.codEmpresa = :codEmpresa"));
         apagar(carregar(Parceiro.class, "select e from Parceiro e where e.codEmpresa = :codEmpresa"));

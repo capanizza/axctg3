@@ -1,5 +1,6 @@
 package br.com.axialsoftware.axctg3.entity.financeiro;
 
+import io.jmix.core.FileRef;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.annotation.DeletedBy;
 import io.jmix.core.annotation.DeletedDate;
@@ -85,12 +86,13 @@ public class RemessaBanco {
     @NotNull
     private Integer numRemessa;
 
-    // Caminho completo (pasta + nome do arquivo) onde a remessa foi gravada em disco —
-    // RemessaBancoService.gerarRemessa monta com PastaCobrancaBanco +
-    // BancoCobrancaHandler.nomeArquivoRemessa. Diferente de RetornoBanco.nomeArquivo (só o
-    // nome, porque ali o arquivo vem de upload do navegador, sem caminho fixo em disco).
-    @Column(name = "CAMINHO_ARQUIVO", length = 255)
-    private String caminhoArquivo;
+    // Cópia do arquivo de remessa no FileStorage do Jmix (jmix-localfs), com o nome padrão
+    // do banco (BancoCobrancaHandler.nomeArquivoRemessa) — entregue ao navegador na hora da
+    // geração e baixável de novo pelo RemessaBanco.list. Era um caminho de pasta do
+    // servidor até 2026-09-28, o que não serve com a aplicação rodando na nuvem (a pasta
+    // fica na VM, fora do alcance do usuário).
+    @Column(name = "ARQUIVO", length = 1000)
+    private FileRef arquivo;
 
     @NumberFormat(pattern = "##0")
     @Column(name = "QUANTIDADE_TITULOS", nullable = false)
@@ -118,12 +120,12 @@ public class RemessaBanco {
         this.banco = banco;
     }
 
-    public String getCaminhoArquivo() {
-        return caminhoArquivo;
+    public FileRef getArquivo() {
+        return arquivo;
     }
 
-    public void setCaminhoArquivo(String caminhoArquivo) {
-        this.caminhoArquivo = caminhoArquivo;
+    public void setArquivo(FileRef arquivo) {
+        this.arquivo = arquivo;
     }
 
     public LocalDate getDataGeracao() {
