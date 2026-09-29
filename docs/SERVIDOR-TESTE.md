@@ -79,6 +79,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\gerar-imagem.ps1 -Ve
 Leva uns 2 minutos e gera `C:\axctg3-imagens\axctg3-1.0.0.tar` (cerca de 240 MB). Cada
 entrega precisa de uma versão nova: o script recusa uma versão que já existe.
 
+Servidor **ARM** (ex.: VM Ampere A1 do Oracle Always Free): acrescente `-Plataforma arm64`.
+Sai `axctg3-1.0.0-arm64.tar`, montado por emulação (mais lento, uns minutos a mais) e sem
+passar pelo Docker local. Dentro dele a imagem continua `axctg3:1.0.0`, então o
+`docker load` e o `.env` do servidor são os mesmos.
+
 Leve para o servidor, numa pasta `C:\axctg3` (por pendrive ou pasta compartilhada):
 - `C:\axctg3-imagens\axctg3-1.0.0.tar`
 - `deploy\servidor-teste\docker-compose.yml`
