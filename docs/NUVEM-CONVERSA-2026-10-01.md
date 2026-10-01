@@ -231,8 +231,8 @@ docker compose start app
 docker compose logs -f app
 ```
 
-O app subiu com a base de dev. **Pendente:** trocar de novo a senha do admin na nuvem (e
-dos usuários de teste, se for o caso).
+O app subiu com a base de dev. A senha do admin já tinha sido trocada no dev, então veio
+trocada junto com o dump.
 
 ---
 
@@ -269,4 +269,3 @@ Nenhum foi feito ainda.
   esperança.
 - **B. Ciclo de atualização:** gerar a 1.0.1, `scp`, `docker load`, trocar `AXCTG3_VERSAO`
   no `.env`, `docker compose up -d`, e treinar a volta para a 1.0.0.
-- Senhas: trocar a do admin na nuvem (desfeita pelo restore).
