@@ -179,7 +179,7 @@ usuário `capan`, só com sessão aberta. Testada disparando à mão: `LastTaskR
 Backup que nunca foi restaurado é só esperança. O dump de 06/10 (12,9 MB) foi restaurado num
 banco descartável no Postgres de dev (`createdb axctg3_restore_teste` + `pg_restore
 --no-owner`, depois `dropdb`): 64 tabelas, 6.867 lançamentos, 3.080 contas, 4 empresas, sem
-erro. O `arquivos.tgz` tinha os 7 arquivos esperados (certificados `.pfx`, logos `.bmp`, uma
+erro. O `arquivos.tgz` tinha os 8 arquivos esperados (certificados `.pfx`, logos `.bmp`, uma
 remessa).
 
 Para restaurar **na VM** (substitui o banco inteiro dela), mesma receita da seção 7 de
@@ -197,9 +197,25 @@ docker exec axctg3-postgres dropdb -U postgres axctg3
 docker exec axctg3-postgres createdb -U postgres axctg3
 docker exec axctg3-postgres pg_restore -U postgres -d axctg3 --no-owner /tmp/base.dump
 docker exec axctg3-postgres rm /tmp/base.dump
-docker run --rm -v axctg3_arquivos:/dados -v ~/axctg3:/origem postgres:16 tar xzf /origem/arquivos.tgz -C /dados
+docker run --rm -v axctg3_arquivos:/dados -v ~/axctg3:/origem postgres:16 sh -c "rm -rf /dados/* && tar xzf /origem/arquivos.tgz -C /dados"
 docker compose start app
+docker compose logs -f app             # "Started Axctg3Application"; Ctrl+C sai
+rm axctg3.dump arquivos.tgz
 ```
+
+O `rm -rf /dados/*` esvazia o volume antes de desempacotar: sem ele, um arquivo criado
+depois do backup continuaria lá, apontado por nenhum registro do banco restaurado.
+
+**Restore na VM treinado em 06/10**, com prova de que o tempo voltou: backup
+`20261006-160302` → cadastrado o Centro de Custo "TESTE RESTORE" no site → restore com a
+receita acima → o "TESTE RESTORE" sumiu (conferido no banco), 6.867 lançamentos e os 8
+arquivos do volume no lugar, app de pé em 23 s. Site fora do ar (502) do `stop` ao
+`Started`. Se algo falhar no meio, o backup continua no Windows: é só repetir.
+
+Tropeço do treino: a linha longa do `scp` foi quebrada ao colar, e o pedaço final
+(`ubuntu@...:~/axctg3/`) rodou sozinho como comando ("não é reconhecido como nome de
+cmdlet"). A cópia em si tinha funcionado: olhe se o `scp` mostrou os arquivos com 100%
+antes de repetir.
 
 ---
 
@@ -266,6 +282,7 @@ o rollback.
 
 ## 8. Próximos passos
 
-- Treinar um restore **na VM** de verdade (o de 06/10 foi só no Postgres local).
 - Opcional: travar a regra da porta 22 na Magalu para o IP de casa/escritório, agora que o
   acesso do dia a dia não depende mais do túnel.
+- Antes de virar produção: base própria, sem os usuários, senhas e certificados do dev
+  (seção 4).
