@@ -48,6 +48,8 @@ are kept identical apart from this header — mirror any change to all three.
   HTTPS/Let's Encrypt from `deploy/nuvem/Caddyfile`; app port bound to `127.0.0.1` only,
   `SERVER_FORWARDHEADERSSTRATEGY=native`). DNS is the registro.br zone (A record `axctg3`).
   Setup history: `docs/NUVEM-CONVERSA-2026-10-01.md` and `-2026-10-06.md`.
+  Daily backup from Windows over SSH: `scripts/backup-nuvem.ps1` (task "axctg3 backup
+  nuvem", 12:45, needs the key in the Windows ssh-agent) → `C:\backups\axctg3-nuvem`.
 - NEVER use `bootRun` as a verification gate — it does not exit and will hang the turn.
   Gate 2 is `clean test`. See below for the cases where starting the app IS the point.
 

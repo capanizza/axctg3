@@ -132,12 +132,81 @@ produção, entra aqui uma base própria, sem os dados de dev.
 
 ---
 
-## 5. Próximos passos
+## 5. Backup da VM (item A)
 
-- **A. Backup via SSH** (pendente desde 01/10): script `.ps1` no Windows que roda
-  `pg_dump -Fc` no container da VM, copia o volume `axctg3_arquivos` e traz os dois para
-  `C:\backups\axctg3-nuvem`, guardando os N mais recentes. Depois, treinar o restore.
+`scripts\backup-nuvem.ps1`, irmão do `backup-dev-db.ps1`, roda **no Windows** e conversa
+com a VM por SSH:
+
+1. Na VM, numa pasta temporária em `/tmp`: `pg_dump -Fc` do banco, **conferido com
+   `pg_restore -l`** ali mesmo; o volume `axctg3_arquivos` empacotado (`tar czf`) por um
+   container descartável da imagem `postgres:16` (que já está na VM); `sha256sum` dos dois.
+2. `scp` traz tudo para `C:\backups\axctg3-nuvem\<yyyyMMdd-HHmmss>\` (`axctg3.dump`,
+   `arquivos.tgz`, `sha256.txt`), e o script confere cada arquivo contra o sha256 da VM.
+3. Apaga a pasta temporária da VM (o disco dela é de 20 GB) e mantém as **14** pastas mais
+   recentes. Log em `C:\backups\axctg3-nuvem\backup.log`. Backup que falha no meio tem a
+   pasta local removida, para não confundir num restore.
+
+Detalhe do PowerShell 5.1: o dump binário nunca passa por ele (o `>` roda no bash da VM, e o
+`scp` copia o arquivo). Redirecionar a saída de um `ssh` para arquivo no PowerShell 5.1
+corrompe binário (ele converte para texto UTF-16).
+
+### ssh-agent: a passphrase uma vez só
+
+O script chama `ssh`/`scp` três vezes, e o backup agendado não tem quem digite passphrase.
+O **ssh-agent** do Windows guarda a chave destravada (sobrevive a reinício; a proteção
+passa a ser a senha do usuário do Windows). Ele vem **desativado** de fábrica:
+
+```powershell
+# PowerShell como ADMINISTRADOR, uma vez:
+Set-Service ssh-agent -StartupType Automatic
+Start-Service ssh-agent
+# PowerShell normal:
+ssh-add                                     # pede a passphrase uma vez
+ssh ubuntu@201.23.79.163 "echo ok"          # tem que responder ok sem pedir nada
+```
+
+O script usa `ssh -o BatchMode=yes`: se a chave não estiver no agente, falha na hora com
+"Permission denied" (fica no `backup.log`) em vez de travar esperando a passphrase.
+
+### Agendamento
+
+Tarefa do Agendador do Windows **"axctg3 backup nuvem"**: diária às **12:45** (a do dev é às
+12:30), `StartWhenAvailable` (se o PC estava desligado, roda quando ligar), limite de 30 min,
+usuário `capan`, só com sessão aberta. Testada disparando à mão: `LastTaskResult = 0`.
+
+### Restore testado
+
+Backup que nunca foi restaurado é só esperança. O dump de 06/10 (12,9 MB) foi restaurado num
+banco descartável no Postgres de dev (`createdb axctg3_restore_teste` + `pg_restore
+--no-owner`, depois `dropdb`): 64 tabelas, 6.867 lançamentos, 3.080 contas, 4 empresas, sem
+erro. O `arquivos.tgz` tinha os 7 arquivos esperados (certificados `.pfx`, logos `.bmp`, uma
+remessa).
+
+Para restaurar **na VM** (substitui o banco inteiro dela), mesma receita da seção 7 de
+`NUVEM-CONVERSA-2026-10-01.md`, trocando a origem:
+
+```powershell
+scp C:\backups\axctg3-nuvem\<pasta>\axctg3.dump C:\backups\axctg3-nuvem\<pasta>\arquivos.tgz ubuntu@201.23.79.163:~/axctg3/
+```
+
+```bash
+cd ~/axctg3
+docker compose stop app
+docker cp axctg3.dump axctg3-postgres:/tmp/base.dump
+docker exec axctg3-postgres dropdb -U postgres axctg3
+docker exec axctg3-postgres createdb -U postgres axctg3
+docker exec axctg3-postgres pg_restore -U postgres -d axctg3 --no-owner /tmp/base.dump
+docker exec axctg3-postgres rm /tmp/base.dump
+docker run --rm -v axctg3_arquivos:/dados -v ~/axctg3:/origem postgres:16 tar xzf /origem/arquivos.tgz -C /dados
+docker compose start app
+```
+
+---
+
+## 6. Próximos passos
+
 - **B. Ciclo de atualização:** gerar a 1.0.1, `scp`, `docker load`, trocar `AXCTG3_VERSAO`
   no `.env`, `docker compose up -d`, e treinar a volta para a 1.0.0.
+- Treinar um restore **na VM** de verdade (o de 06/10 foi só no Postgres local).
 - Opcional: travar a regra da porta 22 na Magalu para o IP de casa/escritório, agora que o
   acesso do dia a dia não depende mais do túnel.
