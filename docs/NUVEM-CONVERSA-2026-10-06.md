@@ -203,10 +203,69 @@ docker compose start app
 
 ---
 
-## 6. Próximos passos
+## 6. Versão na tela
 
-- **B. Ciclo de atualização:** gerar a 1.0.1, `scp`, `docker load`, trocar `AXCTG3_VERSAO`
-  no `.env`, `docker compose up -d`, e treinar a volta para a 1.0.0.
+Antes do ciclo de atualização, o app ganhou a **versão no rodapé do menu lateral**
+("Versão 1.0.1 · 06/10/2026 15:38" = versão + hora do build). É o que prova, olhando a tela,
+qual imagem o servidor está rodando.
+
+- Uma fonte só: `scripts\gerar-imagem.ps1 -Versao X` passa `-Pversao=X` ao Gradle, e o
+  `build.gradle` usa como `version`. A tag da imagem e o número na tela não divergem.
+- Sem o script (bootRun, IntelliJ) aparece "Versão dev · …".
+- O plugin do Jmix já gerava o `META-INF/build-info.properties` (tarefa `bootBuildInfo`); a
+  `MainView` só lê o bean `BuildProperties`.
+- A 1.0.0 é anterior a isso: com ela, o rodapé fica **vazio**.
+
+---
+
+## 7. Ciclo de atualização (item B)
+
+Treinado em 06/10: 1.0.0 → **1.0.1** → volta para 1.0.0 → 1.0.1 de novo. A 1.0.1 trouxe o
+Jmix 3.0.3 e a versão na tela, **sem changelog do Liquibase**.
+
+**No Windows:**
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\gerar-imagem.ps1 -Versao 1.0.1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\backup-nuvem.ps1   # SEMPRE antes
+scp C:\axctg3-imagens\axctg3-1.0.1.tar ubuntu@201.23.79.163:~/axctg3/
+ssh ubuntu@201.23.79.163
+```
+
+**Na VM:**
+
+```bash
+cd ~/axctg3
+docker load -i axctg3-1.0.1.tar        # "Loaded image: axctg3:1.0.1"
+docker images axctg3                   # a antiga continua lá: é o que permite voltar
+sed -i 's/^AXCTG3_VERSAO=.*/AXCTG3_VERSAO=1.0.1/' .env
+grep AXCTG3_VERSAO .env
+docker compose up -d                   # recria só o app; Postgres e Caddy não são tocados
+docker compose logs -f app             # "Started Axctg3Application"; Ctrl+C sai
+```
+
+Durante o boot o site dá **502** por um ou dois minutos: é a janela de indisponibilidade da
+atualização. Conferência: o rodapé do menu mostra a versão nova.
+
+**Rollback** = os mesmos comandos com a versão antiga no `sed` (a imagem já está na VM, não
+precisa mandar nada). Só é simples assim quando a versão nova **não trouxe changelog**: o
+Liquibase altera o banco ao subir, e a versão antiga pode não funcionar com o banco
+alterado. Nesse caso, voltar = versão antiga **+ restaurar o backup** feito antes da
+atualização (receita na seção 5). Antes de gerar uma versão, conferir:
+`git log <commit da versão anterior>..HEAD -- src/main/resources/br/com/axialsoftware/axctg3/liquibase`.
+
+Cada versão gerada fica registrada com uma **tag no git** (`v1.0.1`), para saber
+exatamente qual código está em cada imagem. A 1.0.0 é anterior a essa regra e ficou sem tag.
+
+Depois de confirmar a versão nova, o `.tar` na VM pode ser apagado (`rm axctg3-1.0.1.tar`):
+a imagem já está carregada no Docker, e o disco da VM é de 20 GB. As imagens antigas também
+se apagam (`docker image rm axctg3:1.0.0`), mas guardar a anterior à atual é o que permite
+o rollback.
+
+---
+
+## 8. Próximos passos
+
 - Treinar um restore **na VM** de verdade (o de 06/10 foi só no Postgres local).
 - Opcional: travar a regra da porta 22 na Magalu para o IP de casa/escritório, agora que o
   acesso do dia a dia não depende mais do túnel.
