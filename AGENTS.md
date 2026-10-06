@@ -43,6 +43,11 @@ three files are kept identical apart from this header — mirror any change to a
   via Docker Desktop's QEMU straight into `axctg3-X-arm64.tar` (`buildx --output
   type=docker,dest=`), never loaded locally; the tag inside is still `axctg3:X`. Under
   emulation the app takes ~7 min to boot — normal, not a hang.
+- Cloud test VM (Magalu, `br-se1`, x86): https://axctg3.axialsoftware.com.br — runs
+  `deploy/nuvem/docker-compose.yml` (same Postgres+app pair plus a Caddy container doing
+  HTTPS/Let's Encrypt from `deploy/nuvem/Caddyfile`; app port bound to `127.0.0.1` only,
+  `SERVER_FORWARDHEADERSSTRATEGY=native`). DNS is the registro.br zone (A record `axctg3`).
+  Setup history: `docs/NUVEM-CONVERSA-2026-10-01.md` and `-2026-10-06.md`.
 - NEVER use `bootRun` as a verification gate — it does not exit and will hang the turn.
   Gate 2 is `clean test`. See below for the cases where starting the app IS the point.
 

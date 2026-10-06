@@ -1,0 +1,12 @@
+# Caddy: recebe HTTPS na 443 e repassa para o axctg3 pela rede interna do compose.
+# O certificado do Let's Encrypt é obtido e renovado sozinho, para o nome abaixo — que
+# precisa estar apontando (registro A) para o IP da VM antes do primeiro `up`.
+# A porta 80 só serve para o Let's Encrypt validar o nome e para redirecionar http -> https.
+
+axctg3.axialsoftware.com.br {
+	# A raiz do site vai direto para o app, que vive em /axctg3 (context-path).
+	redir / /axctg3/
+
+	# WebSocket do Vaadin passa sem configuração extra.
+	reverse_proxy app:8085
+}

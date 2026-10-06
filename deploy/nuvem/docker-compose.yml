@@ -1,0 +1,77 @@
+# VM na nuvem (Magalu): Postgres + axctg3 + Caddy (HTTPS). Fica em ~/axctg3 na VM, junto
+# com o Caddyfile e o .env (mesmo .env.example de deploy/servidor-teste).
+# Ver docs/NUVEM-CONVERSA-2026-10-01.md e docs/NUVEM-CONVERSA-2026-10-06.md.
+#
+#   docker compose up -d          sobe / aplica mudanças (ex.: nova AXCTG3_VERSAO no .env)
+#   docker compose ps             estado dos três containers
+#   docker compose logs -f app    log do axctg3 (Ctrl+C sai do log, o app continua)
+#   docker compose logs caddy     log do Caddy (emissão do certificado aparece aqui)
+name: axctg3
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: axctg3-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: axctg3
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_SENHA}
+    # Sem "ports": o banco só é visível para o app, pela rede interna do compose.
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d axctg3"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    image: axctg3:${AXCTG3_VERSAO}
+    container_name: axctg3-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://postgres:5432/axctg3
+      DB_USUARIO: postgres
+      DB_SENHA: ${DB_SENHA}
+      # Atrás do Caddy: o app passa a confiar nos cabeçalhos X-Forwarded-* para saber que o
+      # acesso original foi https://axctg3.axialsoftware.com.br (redirects saem certos).
+      # (= server.forward-headers-strategy; em variável de ambiente o Spring tira os hífens.)
+      SERVER_FORWARDHEADERSSTRATEGY: native
+    # Só no localhost da VM: o túnel SSH (ssh -L 8085:localhost:8085) continua funcionando,
+    # mas a 8085 não fica exposta nem se alguém abrir a porta no grupo de segurança.
+    ports:
+      - "127.0.0.1:8085:8085"
+    volumes:
+      - arquivos:/opt/axctg3/work
+
+  caddy:
+    image: caddy:2
+    container_name: axctg3-caddy
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Certificados e chaves do Let's Encrypt. Perder este volume não é grave (o Caddy
+      # pede outro certificado), mas evite: o Let's Encrypt limita emissões por semana.
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  # external: o compose não cria nem apaga — protege os dados contra `docker compose down -v`.
+  pgdata:
+    external: true
+    name: axctg3_pgdata
+  arquivos:
+    external: true
+    name: axctg3_arquivos
+  caddy_data:
+  caddy_config:
