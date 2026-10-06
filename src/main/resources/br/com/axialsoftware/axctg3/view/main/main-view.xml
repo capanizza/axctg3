@@ -43,6 +43,7 @@
                      ariaLabel="msg://navigation.ariaLabel">
                     <listMenu id="menu" themeNames="toggle-reverse"/>
                 </nav>
+                <span id="versaoLabel" classNames="axctg3-main-view-versao"/>
             </section>
         </drawerLayout>
         <initialLayout id="initialLayout" classNames="jmix-initial-layout">

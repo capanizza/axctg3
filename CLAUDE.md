@@ -39,6 +39,9 @@ three files are kept identical apart from this header — mirror any change to a
   `scripts/gerar-imagem.ps1 -Versao X` builds the production jar + `axctg3:X` image + a
   `.tar`; the server runs `deploy/servidor-teste/docker-compose.yml` with profile `prod`
   (`application-prod.properties`: DB from env vars, blank login defaults).
+  `-Versao` also stamps the jar (`-Pversao=X` → `build.gradle` `version`, else `dev`), which
+  the MainView drawer footer shows with the build time (Jmix's own `bootBuildInfo` →
+  `BuildProperties`) — so the screen proves which image a server is running.
   `-Plataforma arm64` (for an ARM VM such as Oracle Always Free's Ampere A1) cross-builds
   via Docker Desktop's QEMU straight into `axctg3-X-arm64.tar` (`buildx --output
   type=docker,dest=`), never loaded locally; the tag inside is still `axctg3:X`. Under

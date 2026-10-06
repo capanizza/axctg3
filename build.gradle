@@ -12,7 +12,10 @@ jmix {
 }
 
 group = 'br.com.axialsoftware'
-version = '1.0.0'
+// Versao do app: vem do scripts/gerar-imagem.ps1 (-Pversao=X, mesma da tag da imagem).
+// Sem ela (bootRun, testes, IntelliJ) fica "dev". Aparece no rodape do menu (MainView), lida
+// do META-INF/build-info.properties que o plugin do Jmix ja gera (bootBuildInfo).
+version = findProperty('versao') ?: 'dev'
 
 repositories {
     mavenCentral()

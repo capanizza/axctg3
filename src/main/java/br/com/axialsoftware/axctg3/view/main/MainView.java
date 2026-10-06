@@ -14,12 +14,18 @@ import io.jmix.core.usersubstitution.CurrentUserSubstitution;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.app.main.StandardMainView;
 import io.jmix.flowui.view.Install;
+import io.jmix.flowui.view.MessageBundle;
 import io.jmix.flowui.view.Subscribe;
 import io.jmix.flowui.view.ViewComponent;
 import io.jmix.flowui.view.ViewController;
 import io.jmix.flowui.view.ViewDescriptor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 @Route("")
 @ViewController(id = "MainView")
@@ -34,12 +40,34 @@ public class MainView extends StandardMainView {
     private CurrentUserSubstitution currentUserSubstitution;
     @Autowired
     private UtilGeralService utilGeralService;
+    // Ausente quando o build nao gerou META-INF/build-info.properties (ex.: build do IntelliJ).
+    @Autowired
+    private ObjectProvider<BuildProperties> buildProperties;
     @ViewComponent
     private Span empresaLabel;
+    @ViewComponent
+    private Span versaoLabel;
+    @ViewComponent
+    private MessageBundle messageBundle;
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
         empresaLabel.setText(utilGeralService.getApelidoEmpresa());
+        versaoLabel.setText(messageBundle.formatMessage("mainView.versao", textoVersao()));
+    }
+
+    // "1.0.1 · 06/10/2026 15:20" (versao + hora do build); "dev · ..." fora do gerar-imagem.ps1.
+    private String textoVersao() {
+        BuildProperties build = buildProperties.getIfAvailable();
+        if (build == null) {
+            return "dev";
+        }
+        if (build.getTime() == null) {
+            return build.getVersion();
+        }
+        return build.getVersion() + " · " + DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+                .withZone(ZoneId.of("America/Sao_Paulo"))
+                .format(build.getTime());
     }
 
     @Install(to = "userMenu", subject = "buttonRenderer")

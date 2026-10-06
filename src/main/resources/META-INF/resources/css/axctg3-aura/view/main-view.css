@@ -127,6 +127,15 @@ vaadin-app-layout.jmix-main-view-app-layout[has-drawer][drawer-opened]:not([over
     margin-inline-start: 0;
 }
 
+/* Versao do app: rodape do menu lateral (a navigation acima tem flex-grow) */
+
+.axctg3-main-view-versao {
+    padding: var(--vaadin-padding-s) var(--vaadin-padding-m);
+    color: var(--vaadin-text-color-secondary);
+    font-size: var(--aura-font-size-xs);
+    white-space: nowrap;
+}
+
 /* User Menu */
 
 .jmix-main-view-user-menu {

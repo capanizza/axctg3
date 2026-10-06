@@ -52,7 +52,7 @@ try {
     }
 
     Passo "Compilando o jar de producao"
-    Executar ".\gradlew.bat" --no-daemon "-Pvaadin.productionMode=true" clean bootJar
+    Executar ".\gradlew.bat" --no-daemon "-Pvaadin.productionMode=true" "-Pversao=$Versao" clean bootJar
 
     $jars = @(Get-ChildItem "build\libs\*.jar" | Where-Object { $_.Name -notlike "*-plain.jar" })
     if ($jars.Count -ne 1) { throw "Esperava 1 jar em build\libs, achei $($jars.Count)" }
