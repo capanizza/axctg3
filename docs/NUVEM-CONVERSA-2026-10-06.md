@@ -280,9 +280,34 @@ o rollback.
 
 ---
 
-## 8. Próximos passos
+## 8. SSH restrito ao IP de casa
 
-- Opcional: travar a regra da porta 22 na Magalu para o IP de casa/escritório, agora que o
-  acesso do dia a dia não depende mais do túnel.
+A regra da porta **22** no grupo de segurança passou de `0.0.0.0/0` para
+**`187.106.241.7/32`** (o IP público de hoje; `/32` = só esse endereço). Os robôs que varrem
+a internet tentando senha no SSH deixam de chegar à VM. As regras da **80/443** continuam
+com `0.0.0.0/0`: o site é público.
+
+Ordem segura: **criar a regra nova primeiro**, só depois apagar a antiga. Apagar antes e
+errar um dígito tranca você para fora (resolve pelo console, que é web, mas dá susto).
+Tropeço: a primeira exclusão da regra antiga não foi efetivada no console; o teste de fora
+mostrou a 22 ainda aberta, e foi preciso excluir de novo.
+
+Conferência: do próprio IP, o SSH tem que continuar funcionando. Para ver como o **resto do
+mundo** enxerga a porta, `https://check-host.net/check-tcp?host=201.23.79.163:22` testa a
+partir de servidores em vários países: tem que dar `Connection timed out` na 22 e conectar
+na 443.
+
+**O IP é dinâmico** (Claro/NET residencial, `…virtua.com.br`): pode mudar depois de queda de
+energia, troca de modem ou quando a operadora quiser. Quando mudar:
+
+- `ssh` dá `Connection timed out`, e o **backup diário falha** (erro no `backup.log`);
+- o site **não** é afetado;
+- conserto: ver o IP novo em `https://api.ipify.org` e editar a origem da regra da 22 no
+  console da Magalu.
+
+---
+
+## 9. Próximos passos
+
 - Antes de virar produção: base própria, sem os usuários, senhas e certificados do dev
   (seção 4).
