@@ -2,6 +2,7 @@ package br.com.axialsoftware.axctg3.view.fiscal.periodofiscal;
 
 import br.com.axialsoftware.axctg3.entity.User;
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
+import br.com.axialsoftware.axctg3.service.UtilGeralService;
 
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
@@ -25,6 +26,7 @@ import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 @Route(value = "periodo-fiscais", layout = MainView.class)
 @ViewController(id = "PeriodoFiscal.list")
@@ -51,12 +53,14 @@ public class PeriodoFiscalListView extends StandardListView<Empresa> {
     private CurrentAuthentication currentAuthentication;
     @Autowired
     private UiComponents uiComponents;
+    @Autowired
+    private UtilGeralService utilGeralService;
 
     @Supply(to = "empresasDataGrid.selecionada", subject = "renderer")
     private Renderer<Empresa> empresasDataGridSelecionadaRenderer() {
         return new ComponentRenderer<>(empresa -> {
             JmixCheckbox checkbox = uiComponents.create(JmixCheckbox.class);
-            checkbox.setValue(Boolean.TRUE.equals(empresa.getSelecionada()));
+            checkbox.setValue(empresaSelecionada(empresa));
             checkbox.setReadOnly(true);
             checkbox.addClassName("grid-value-checkbox");
             return checkbox;
@@ -69,7 +73,7 @@ public class PeriodoFiscalListView extends StandardListView<Empresa> {
         if (empresa == null) {
             return;
         }
-        if (!Boolean.TRUE.equals(empresa.getSelecionada())) {
+        if (!empresaSelecionada(empresa)) {
             dialogs.createMessageDialog()
                     .withHeader(messageBundle.getMessage("periodoFiscalListView.periodo.header"))
                     .withText(messageBundle.getMessage("periodoFiscalListView.apenasSelecionada.text"))
@@ -116,5 +120,10 @@ public class PeriodoFiscalListView extends StandardListView<Empresa> {
         dataManager.saveWithoutReload(usuario);
         sidePanelLayout.closeSidePanel();
         UI.getCurrent().getPage().reload();
+    }
+
+    // Empresa corrente do usuário logado (User.codEmpresa) — cada usuário tem a sua.
+    private boolean empresaSelecionada(Empresa empresa) {
+        return Objects.equals(empresa.getCodigo(), utilGeralService.getCodEmpresa());
     }
 }

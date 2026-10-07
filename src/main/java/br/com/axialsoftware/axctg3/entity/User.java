@@ -14,6 +14,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.UUID;
@@ -21,7 +22,8 @@ import java.util.UUID;
 @JmixEntity
 @Entity
 @Table(name = "USER_", indexes = {
-        @Index(name = "IDX_USER__ON_USERNAME", columnList = "USERNAME", unique = true)
+        @Index(name = "IDX_USER__ON_USERNAME", columnList = "USERNAME", unique = true),
+        @Index(name = "IDX_USER__COD_GRUPO", columnList = "COD_GRUPO")
 })
 public class User implements JmixUserDetails, HasTimeZone {
 
@@ -61,6 +63,13 @@ public class User implements JmixUserDetails, HasTimeZone {
     @PasswordChangeRequired
     @Column(name = "PASSWORD_CHANGE_REQUIRED")
     private Boolean passwordChangeRequired = false;
+
+    // Grupo (cliente da Axial) a que o usuário pertence — Grupo.codigo. 0 é a própria
+    // Axial: enxerga todos os grupos. Lido por IsolamentoGrupoRole como
+    // :current_user_codGrupo; preenchido/forçado pelo UserEventListener.
+    @Column(name = "COD_GRUPO", nullable = false)
+    @NotNull
+    private Integer codGrupo;
 
     @Column(name = "COD_EMPRESA")
     private Integer codEmpresa;
@@ -155,6 +164,14 @@ public class User implements JmixUserDetails, HasTimeZone {
 
     public void setPasswordChangeRequired(final Boolean passwordChangeRequired) {
         this.passwordChangeRequired = passwordChangeRequired;
+    }
+
+    public Integer getCodGrupo() {
+        return codGrupo;
+    }
+
+    public void setCodGrupo(final Integer codGrupo) {
+        this.codGrupo = codGrupo;
     }
 
     public Integer getCodEmpresa() {

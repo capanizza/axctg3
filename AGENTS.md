@@ -133,6 +133,33 @@ by hand**. Entities store a plain `Integer codEmpresa` — not a FK to `Empresa`
 row *and* mutates the in-memory principal (so the header updates), then calls
 `UI.getCurrent().getPage().reload()`. Follow that pattern if you add another switcher.
 
+### Grupo (client of Axial) sits above the company
+
+`Grupo` is the tenant level: one per Axial client. `User.codGrupo` and `Empresa.codGrupo`
+hold `Grupo.codigo` (plain `Integer`, same style as `codEmpresa`). Group **0 is Axial
+itself** and sees every group. The isolation rests on two facts:
+
+- **`Empresa.codigo` is unique across the whole DB** (`IDX_EMPRESA_UNQ`, Postgres partial
+  index) and comes from the global Jmix `Sequence` `empresa_codigo`
+  (`GrupoService.proximoCodigoEmpresa()`, which skips codes already used — soft-deleted
+  ones included). So every table filtered by `codEmpresa` is already per-client; nothing
+  else needed a `codGrupo` column.
+- **What used to leak was only the choice of company.** `IsolamentoGrupoRole`
+  (`@RowLevelRole`, JPQL on `:current_user_codGrupo`) limits `Empresa`, `User`, `Grupo` and
+  `sec_RoleAssignmentEntity` to the user's own group; `DatabaseUserRepository.createAuthorities`
+  adds it to **every** login in code, so it can't be forgotten or removed from the role
+  screen. `UserEventListener` rejects a `User.codEmpresa` pointing to another group's
+  company, and both `UserEventListener`/`EmpresaEventListener` force `codGrupo` to the
+  saver's group unless the saver is group 0.
+
+`AdminGrupoRole` is the client-side administrator: users and companies of the own group,
+and may only assign the roles in `AdminGrupoRole.PAPEIS_ATRIBUIVEIS` (a predicate in
+`IsolamentoGrupoRole` blocks e.g. `system-full-access`). New groups are created only by
+Axial in `Grupo.detail`, which saves the group, its first company and its admin (with
+`passwordChangeRequired`) in one `SaveContext` via `GrupoService.criarGrupo`. Usernames
+stay unique across all groups. "Selected company" is per user (`codigo == User.codEmpresa`)
+— the old global `Empresa.selecionada` column was dropped.
+
 ### Reports: view action → MenuBean → service → JasperReports
 
 `MenuBean` (`@Component("MenuBean")`) is the entry point for every report. Today every
@@ -453,6 +480,7 @@ Reference implementations already in the tree, worth reading before writing a ne
 | List view with custom renderer, side panel, dialogs | `view/cadastros/empresa/SelecionarEmpresaListView.java` |
 | Menu-invoked bean + InputDialog | `bean/MenuBean.java` |
 | Resource role | `security/FullAccessRole.java` |
+| Row-level role (group isolation) | `security/IsolamentoGrupoRole.java` |
 | UI integration test | `src/test/java/.../user/UserUiTest.java` |
 | Changelog | `liquibase/changelog/2026/08/02-231248-c1f40fd1-empresa-criar.xml` |
 

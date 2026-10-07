@@ -7,9 +7,11 @@ import br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro;
 import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeWebserviceClient;
+import br.com.axialsoftware.axctg3.view.cadastros.grupo.GrupoComboSupport;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
 import com.vaadin.flow.component.ClickEvent;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.Messages;
 import io.jmix.flowui.Dialogs;
@@ -45,6 +47,20 @@ public class EmpresaDetailView extends StandardDetailView<Empresa> {
     private CollectionLoader<HistoricoContabil> historicosContabeisDl;
     @ViewComponent
     private CollectionLoader<HistoricoFinanceiro> historicosFinanceirosDl;
+    @ViewComponent
+    private ComboBox<Integer> codGrupoField;
+    @Autowired
+    private GrupoComboSupport grupoComboSupport;
+
+    @Subscribe
+    public void onInit(final InitEvent event) {
+        grupoComboSupport.configurar(codGrupoField);
+    }
+
+    @Subscribe
+    public void onInitEntity(final InitEntityEvent<Empresa> event) {
+        event.getEntity().setCodGrupo(grupoComboSupport.grupoPadrao());
+    }
 
     /**
      * Carrega manualmente os itemsContainer dos entityComboBox de conta/histórico/

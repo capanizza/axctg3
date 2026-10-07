@@ -1,12 +1,14 @@
 package br.com.axialsoftware.axctg3.view.user;
 
 import br.com.axialsoftware.axctg3.entity.User;
+import br.com.axialsoftware.axctg3.view.cadastros.grupo.GrupoComboSupport;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
 import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.component.checkbox.JmixCheckbox;
+import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -18,6 +20,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class UserListView extends StandardListView<User> {
     @Autowired
     private UiComponents uiComponents;
+    @Autowired
+    private GrupoComboSupport grupoComboSupport;
+    @ViewComponent
+    private DataGrid<User> usersDataGrid;
+
+    @Subscribe
+    public void onInit(final InitEvent event) {
+        usersDataGrid.getColumnByKey("codGrupo").setVisible(grupoComboSupport.usuarioAtualEnxergaTodosGrupos());
+    }
 
     @Supply(to = "usersDataGrid.active", subject = "renderer")
     private Renderer<User> usersDataGridActiveRenderer() {
