@@ -15,6 +15,7 @@ import io.jmix.security.model.RowLevelRoleModel;
 import io.jmix.security.role.annotation.EntityAttributePolicy;
 import io.jmix.security.role.annotation.EntityPolicy;
 import io.jmix.security.role.annotation.ResourceRole;
+import io.jmix.security.role.assignment.RoleAssignmentModel;
 import io.jmix.securitydata.entity.RoleAssignmentEntity;
 import io.jmix.securityflowui.role.annotation.MenuPolicy;
 import io.jmix.securityflowui.role.annotation.ViewPolicy;
@@ -45,6 +46,9 @@ public interface AdminGrupoRole {
     @EntityPolicy(entityClass = User.class, actions = EntityPolicyAction.ALL)
     @EntityAttributePolicy(entityClass = RoleAssignmentEntity.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
     @EntityPolicy(entityClass = RoleAssignmentEntity.class, actions = EntityPolicyAction.ALL)
+    // modelo de tela dos dois grids de RoleAssignmentView (sem ele: "Acesso negado")
+    @EntityAttributePolicy(entityClass = RoleAssignmentModel.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
+    @EntityPolicy(entityClass = RoleAssignmentModel.class, actions = EntityPolicyAction.ALL)
     // grids dos lookups de papéis (sem leitura nessas entidades a lista abre em branco);
     // quais papéis aparecem é filtrado por PapeisAtribuiveisCandidatePredicate
     @EntityAttributePolicy(entityClass = ResourceRoleModel.class, attributes = "*", action = EntityAttributePolicyAction.VIEW)
