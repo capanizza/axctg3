@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.Objects;
 
 @Route(value = "periodo-contabeis", layout = MainView.class)
 @ViewController(id = "PeriodoContabil.list")
@@ -61,7 +62,7 @@ public class PeriodoContabilListView extends StandardListView<Empresa> {
     private Renderer<Empresa> empresasDataGridSelecionadaRenderer() {
         return new ComponentRenderer<>(empresa -> {
             JmixCheckbox checkbox = uiComponents.create(JmixCheckbox.class);
-            checkbox.setValue(Boolean.TRUE.equals(empresa.getSelecionada()));
+            checkbox.setValue(empresaSelecionada(empresa));
             checkbox.setReadOnly(true);
             checkbox.addClassName("grid-value-checkbox");
             return checkbox;
@@ -74,7 +75,7 @@ public class PeriodoContabilListView extends StandardListView<Empresa> {
         if (empresa == null) {
             return;
         }
-        if (!Boolean.TRUE.equals(empresa.getSelecionada())) {
+        if (!empresaSelecionada(empresa)) {
             dialogs.createMessageDialog()
                     .withHeader(messageBundle.getMessage("periodoContabilListView.periodo.header"))
                     .withText(messageBundle.getMessage("periodoContabilListView.apenasSelecionada.text"))
@@ -126,5 +127,10 @@ public class PeriodoContabilListView extends StandardListView<Empresa> {
         dataManager.saveWithoutReload(configRel);
         sidePanelLayout.closeSidePanel();
         UI.getCurrent().getPage().reload();
+    }
+
+    // Empresa corrente do usuário logado (User.codEmpresa) — cada usuário tem a sua.
+    private boolean empresaSelecionada(Empresa empresa) {
+        return Objects.equals(empresa.getCodigo(), utilGeralService.getCodEmpresa());
     }
 }

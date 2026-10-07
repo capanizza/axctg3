@@ -140,10 +140,10 @@ public interface OperadorFiscalRole {
     @EntityPolicy(entityClass = User.class, actions = {EntityPolicyAction.READ, EntityPolicyAction.UPDATE})
     void userPeriodoEntity();
 
-    // "selecionada" por SelecionarEmpresa.list; "ambienteNfe" pelo botão "Alternar
+    // "ambienteNfe" pelo botão "Alternar
     // ambiente" (homologação/produção) do Nfe.list/NotaSaida.list.
     @EntityAttributePolicy(entityClass = Empresa.class, attributes = "*", action = EntityAttributePolicyAction.VIEW)
-    @EntityAttributePolicy(entityClass = Empresa.class, attributes = {"selecionada", "ambienteNfe"}, action = EntityAttributePolicyAction.MODIFY)
+    @EntityAttributePolicy(entityClass = Empresa.class, attributes = "ambienteNfe", action = EntityAttributePolicyAction.MODIFY)
     @EntityPolicy(entityClass = Empresa.class, actions = {EntityPolicyAction.READ, EntityPolicyAction.UPDATE})
     void empresaEntity();
 

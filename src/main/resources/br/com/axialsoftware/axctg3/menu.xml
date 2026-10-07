@@ -101,6 +101,8 @@
     </menu>
     <menu id="administracao" title="msg://br.com.axialsoftware.axctg3/menu.administracao.title">
         <item view="User.list" title="msg://br.com.axialsoftware.axctg3.view.user/UserListView.title"/>
+        <item view="Grupo.list"
+              title="msg://br.com.axialsoftware.axctg3.view.cadastros.grupo/grupoListView.title"/>
         <item view="Empresa.list"
               title="msg://br.com.axialsoftware.axctg3.view.cadastros.empresa/empresaListView.title"/>
         <item view="Sequencia.list"

@@ -91,12 +91,10 @@ public interface OperadorFinanceiroRole {
     void referenciasLookupEntities();
 
     // SelecionarEmpresa.list grava a empresa corrente no próprio User autenticado
-    // (User.codEmpresa) e marca qual Empresa é "selecionada" — autoatendimento, não
-    // expõe outros campos.
+    // (User.codEmpresa) — autoatendimento, não expõe outros campos.
     @EntityAttributePolicy(entityClass = User.class, attributes = "codEmpresa", action = EntityAttributePolicyAction.MODIFY)
     @EntityPolicy(entityClass = User.class, actions = {EntityPolicyAction.READ, EntityPolicyAction.UPDATE})
     @EntityAttributePolicy(entityClass = Empresa.class, attributes = "*", action = EntityAttributePolicyAction.VIEW)
-    @EntityAttributePolicy(entityClass = Empresa.class, attributes = "selecionada", action = EntityAttributePolicyAction.MODIFY)
     @EntityPolicy(entityClass = Empresa.class, actions = {EntityPolicyAction.READ, EntityPolicyAction.UPDATE})
     void selecionarEmpresaEntities();
 

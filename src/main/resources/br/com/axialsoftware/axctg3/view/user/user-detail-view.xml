@@ -32,6 +32,7 @@
             <textField id="emailField" property="email"/>
             <comboBox id="timeZoneField" property="timeZoneId" clearButtonVisible="true"/>
             <checkbox id="activeField" property="active"/>
+            <comboBox id="codGrupoField" property="codGrupo" visible="false"/>
             <integerField id="codEmpresaField" property="codEmpresa"/>
             <integerField id="anoContabilField" property="anoContabil"/>
             <integerField id="mesContabilField" property="mesContabil"/>

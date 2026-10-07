@@ -46,7 +46,7 @@
                     <column property="codigo" width="10%"/>
                     <column property="nome" width="50%"/>
                     <column property="apelido" width="20%"/>
-                    <column property="selecionada" width="20%" textAlign="CENTER"/>
+                    <column key="selecionada" header="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.selecionada" width="20%" textAlign="CENTER"/>
                 </columns>
             </dataGrid>
             <vbox>

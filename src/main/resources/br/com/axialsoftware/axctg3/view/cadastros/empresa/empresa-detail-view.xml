@@ -87,11 +87,20 @@
     <layout>
         <vbox id="form" width="100%" spacing="true">
             <hbox width="100%" expand="nomeField">
+                <!-- código vem da Sequence global (EmpresaEventListener), não é digitado -->
                 <integerField id="codigoField"
                               property="codigo"
                               dataContainer="empresaDc"
+                              readOnly="true"
                               width="10%" themeNames="small"
                               label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.codigo"/>
+                <!-- só a Axial (grupo 0) escolhe o grupo; para os demais é sempre o próprio -->
+                <comboBox id="codGrupoField"
+                          property="codGrupo"
+                          dataContainer="empresaDc"
+                          visible="false"
+                          width="20%" themeNames="small"
+                          label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.codGrupo"/>
                 <textField id="apelidoField"
                            property="apelido"
                            dataContainer="empresaDc"

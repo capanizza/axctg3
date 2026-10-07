@@ -1,6 +1,7 @@
 package br.com.axialsoftware.axctg3.view.user;
 
 import br.com.axialsoftware.axctg3.entity.User;
+import br.com.axialsoftware.axctg3.view.cadastros.grupo.GrupoComboSupport;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.notification.Notification;
@@ -33,6 +34,10 @@ public class UserDetailView extends StandardDetailView<User> {
     @ViewComponent
     private ComboBox<String> timeZoneField;
     @ViewComponent
+    private ComboBox<Integer> codGrupoField;
+    @Autowired
+    private GrupoComboSupport grupoComboSupport;
+    @ViewComponent
     private MessageBundle messageBundle;
     @Autowired
     private Notifications notifications;
@@ -47,11 +52,13 @@ public class UserDetailView extends StandardDetailView<User> {
     @Subscribe
     public void onInit(final InitEvent event) {
         timeZoneField.setItems(List.of(TimeZone.getAvailableIDs()));
+        grupoComboSupport.configurar(codGrupoField);
     }
 
     @Subscribe
     public void onInitEntity(final InitEntityEvent<User> event) {
         usernameField.setReadOnly(false);
+        event.getEntity().setCodGrupo(grupoComboSupport.grupoPadrao());
         passwordField.setVisible(true);
         confirmPasswordField.setVisible(true);
     }

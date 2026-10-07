@@ -29,7 +29,10 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @JmixEntity
-@Table(name = "EMPRESA")
+@Table(name = "EMPRESA", indexes = {
+        @Index(name = "IDX_EMPRESA_UNQ", columnList = "CODIGO", unique = true),
+        @Index(name = "IDX_EMPRESA_COD_GRUPO", columnList = "COD_GRUPO")
+})
 @Entity
 public class Empresa {
     @JmixGeneratedValue
@@ -307,8 +310,12 @@ public class Empresa {
     @ManyToOne(fetch = FetchType.LAZY)
     private HistoricoFinanceiro histFinBaixaDescontoPagar;
 
-    @Column(name = "SELECIONADA")
-    private Boolean selecionada = false;
+    // Grupo (cliente da Axial) dono da empresa — Grupo.codigo, Integer solto como o
+    // codEmpresa das demais entidades. Preenchido pelo EmpresaEventListener com o grupo
+    // do usuário logado; a regra IsolamentoGrupoRole esconde as empresas dos outros grupos.
+    @Column(name = "COD_GRUPO", nullable = false)
+    @NotNull
+    private Integer codGrupo;
 
     // FileRef (io.jmix.core.FileRef, serializado como String pelo Jmix) — mesmo padrão de
     // certificadoArquivo abaixo. Era um caminho de texto solto até 2026-08-25 (ver
@@ -438,12 +445,12 @@ public class Empresa {
         this.logo = logo;
     }
 
-    public Boolean getSelecionada() {
-        return selecionada;
+    public Integer getCodGrupo() {
+        return codGrupo;
     }
 
-    public void setSelecionada(Boolean selecionada) {
-        this.selecionada = selecionada;
+    public void setCodGrupo(Integer codGrupo) {
+        this.codGrupo = codGrupo;
     }
 
     public Integer getCodigo() {

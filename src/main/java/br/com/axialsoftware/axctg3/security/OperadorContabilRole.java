@@ -77,10 +77,8 @@ public interface OperadorContabilRole {
     @EntityPolicy(entityClass = User.class, actions = {EntityPolicyAction.READ, EntityPolicyAction.UPDATE})
     void userPeriodoEntity();
 
-    // Listagem em PeriodoContabil.list/SelecionarEmpresa.list; "selecionada" também é
-    // gravado por SelecionarEmpresaListView (marca qual empresa é a corrente).
+    // Listagem em PeriodoContabil.list/SelecionarEmpresa.list.
     @EntityAttributePolicy(entityClass = Empresa.class, attributes = "*", action = EntityAttributePolicyAction.VIEW)
-    @EntityAttributePolicy(entityClass = Empresa.class, attributes = "selecionada", action = EntityAttributePolicyAction.MODIFY)
     @EntityPolicy(entityClass = Empresa.class, actions = {EntityPolicyAction.READ, EntityPolicyAction.UPDATE})
     void empresaEntity();
 

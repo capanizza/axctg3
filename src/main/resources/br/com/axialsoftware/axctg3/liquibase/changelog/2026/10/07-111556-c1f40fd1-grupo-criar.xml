@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/10/07-111556-c1f40fd1-grupo-criar.xml">
+    <!--
+        Grupo = cliente da Axial, o nível acima da empresa. USER_ e EMPRESA ganham
+        COD_GRUPO; o grupo 0 é a própria Axial (enxerga todos). Usuários e empresas que já
+        existem caem no grupo 0 — os dados de hoje são de desenvolvimento, a produção entra
+        com os grupos cadastrados pela tela.
+
+        EMPRESA.SELECIONADA sai: era uma marca global (um usuário selecionava a empresa e
+        ela aparecia "selecionada" para todos). A empresa selecionada é a do
+        User.codEmpresa de cada um, e as telas passam a comparar com ela.
+    -->
+    <changeSet id="1" author="axctg3">
+        <createTable tableName="GRUPO">
+            <column name="ID" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_GRUPO"/>
+            </column>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="${offsetDateTime.type}"/>
+            <column name="LAST_MODIFIED_BY" type="VARCHAR(255)"/>
+            <column name="LAST_MODIFIED_DATE" type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY" type="VARCHAR(255)"/>
+            <column name="DELETED_DATE" type="${offsetDateTime.type}"/>
+            <column name="CODIGO" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="NOME" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2" author="axctg3" dbms="postgresql">
+        <createIndex indexName="IDX_GRUPO_UNQ" tableName="GRUPO" unique="true">
+            <column name="CODIGO"/>
+        </createIndex>
+
+        <modifySql>
+            <append value="where DELETED_DATE is null"/>
+        </modifySql>
+    </changeSet>
+
+    <changeSet id="3" author="axctg3">
+        <insert tableName="GRUPO">
+            <column name="ID" value="4f1d7c2a-0b6e-4e57-9a51-3c8f0d2b7e10"/>
+            <column name="VERSION" valueNumeric="1"/>
+            <column name="CODIGO" valueNumeric="0"/>
+            <column name="NOME" value="Axial Software"/>
+        </insert>
+    </changeSet>
+
+    <!-- default 0 só para preencher as linhas existentes; sai logo em seguida, para que
+         nenhum INSERT fora da aplicação caia sem querer no grupo da Axial. -->
+    <changeSet id="4" author="axctg3">
+        <addColumn tableName="USER_">
+            <column name="COD_GRUPO" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="USER_" columnName="COD_GRUPO"/>
+        <createIndex indexName="IDX_USER__COD_GRUPO" tableName="USER_">
+            <column name="COD_GRUPO"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="5" author="axctg3">
+        <addColumn tableName="EMPRESA">
+            <column name="COD_GRUPO" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="EMPRESA" columnName="COD_GRUPO"/>
+        <createIndex indexName="IDX_EMPRESA_COD_GRUPO" tableName="EMPRESA">
+            <column name="COD_GRUPO"/>
+        </createIndex>
+        <dropColumn tableName="EMPRESA" columnName="SELECIONADA"/>
+    </changeSet>
+
+    <changeSet id="6" author="axctg3" dbms="postgresql">
+        <createIndex indexName="IDX_EMPRESA_UNQ" tableName="EMPRESA" unique="true">
+            <column name="CODIGO"/>
+        </createIndex>
+
+        <modifySql>
+            <append value="where DELETED_DATE is null"/>
+        </modifySql>
+    </changeSet>
+</databaseChangeLog>

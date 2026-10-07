@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <view xmlns="http://jmix.io/schema/flowui/view"
-      xmlns:c="http://jmix.io/schema/flowui/jpql-condition"
-      title="msg://selecionarEmpresaListView.title"
-      focusComponent="empresasDataGrid">
+      title="msg://grupoListView.title"
+      focusComponent="gruposDataGrid">
     <data>
-        <collection id="empresasDc"
-                    class="br.com.axialsoftware.axctg3.entity.cadastros.Empresa">
+        <collection id="gruposDc"
+                    class="br.com.axialsoftware.axctg3.entity.cadastros.Grupo">
             <fetchPlan extends="_base"/>
-            <loader id="empresasDl" readOnly="true">
+            <loader id="gruposDl" readOnly="true">
                 <query>
-                    <![CDATA[select e from Empresa e order by e.codigo]]>
+                    <![CDATA[select e from Grupo e order by e.codigo]]>
                 </query>
             </loader>
         </collection>
@@ -27,25 +26,25 @@
     <layout>
         <hbox id="buttonsPanel" wrap="true" width="100%">
             <startSlot>
-                <button id="selecionarButton" action="empresasDataGrid.selecionarAction" themeNames="small"/>
+                <button id="createButton" action="gruposDataGrid.createAction" themeNames="small"/>
+                <button id="editButton" action="gruposDataGrid.editAction" themeNames="small"/>
             </startSlot>
             <endSlot>
-                <simplePagination id="pagination" dataLoader="empresasDl"/>
+                <simplePagination id="pagination" dataLoader="gruposDl"/>
             </endSlot>
         </hbox>
-        <dataGrid id="empresasDataGrid"
+        <dataGrid id="gruposDataGrid"
                   width="100%"
                   minHeight="20em"
-                  dataContainer="empresasDc"
+                  dataContainer="gruposDc"
                   columnReorderingAllowed="true" themeNames="small">
             <actions>
-                <action id="selecionarAction" type="list_itemTracking" text="msg://selecionarEmpresaListView.selecionarAction.text" icon="lumo:checkmark"/>
+                <action id="createAction" type="list_create"/>
+                <action id="editAction" type="list_edit"/>
             </actions>
             <columns resizable="true">
-                <column property="codigo" width="10%"/>
-                <column property="nome" width="50%"/>
-                <column property="apelido" width="20%"/>
-                <column key="selecionada" header="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.selecionada" width="20%" textAlign="CENTER"/>
+                <column property="codigo" width="15%" filterable="true"/>
+                <column property="nome" width="85%" filterable="true"/>
             </columns>
         </dataGrid>
         <hbox id="lookupActions" visible="false">
