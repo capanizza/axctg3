@@ -18,6 +18,11 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.textfield.PasswordField;
 import io.jmix.core.DataManager;
 import io.jmix.core.SaveContext;
+import io.jmix.core.security.SystemAuthenticator;
+import io.jmix.security.role.ResourceRoleRepository;
+import br.com.axialsoftware.axctg3.security.FullAccessRole;
+import br.com.axialsoftware.axctg3.security.PapeisAtribuiveisCandidatePredicate;
+import br.com.axialsoftware.axctg3.service.cadastros.GrupoService;
 import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.component.textfield.JmixIntegerField;
 import io.jmix.flowui.component.textfield.TypedTextField;
@@ -51,6 +56,14 @@ class GrupoUiTest {
     DataManager dataManager;
     @Autowired
     ViewNavigators viewNavigators;
+    @Autowired
+    SystemAuthenticator systemAuthenticator;
+    @Autowired
+    GrupoService grupoService;
+    @Autowired
+    PapeisAtribuiveisCandidatePredicate papeisAtribuiveis;
+    @Autowired
+    ResourceRoleRepository resourceRoleRepository;
 
     @AfterEach
     void tearDown() {
@@ -138,5 +151,34 @@ class GrupoUiTest {
                 .one();
         assertThat(empresa.getCodGrupo()).isEqualTo(COD_GRUPO);
         assertThat(empresa.getApelido()).isEqualTo("CLIUI");
+    }
+
+    @Test
+    void administradorDoGrupoEditaOProprioUsuarioESoVePapeisAtribuiveis() {
+        Grupo grupo = dataManager.create(Grupo.class);
+        grupo.setCodigo(COD_GRUPO);
+        grupo.setNome("Cliente teste UI");
+        grupoService.criarGrupo(new SaveContext(), grupo, new GrupoService.PrimeiraEmpresaEAdmin(
+                "Cliente teste UI Ltda", "CLIUI", null, ADMIN, "senha123"));
+
+        systemAuthenticator.begin(ADMIN);
+        try {
+            User admin = dataManager.load(User.class)
+                    .query("select u from User u where u.username = :username")
+                    .parameter("username", ADMIN)
+                    .one();
+            // abria com IllegalStateException: combo de grupo escondido e sem itens
+            viewNavigators.detailView(UiTestUtils.getCurrentView(), User.class)
+                    .editEntity(admin).withViewClass(UserDetailView.class).navigate();
+            UserDetailView view = UiTestUtils.getCurrentView();
+            ComboBox<Integer> grupoUsuario = UiTestUtils.getComponent(view, "codGrupoField");
+            assertThat(grupoUsuario.isVisible()).isFalse();
+            assertThat(grupoUsuario.getValue()).isEqualTo(COD_GRUPO);
+
+            assertThat(papeisAtribuiveis.test(admin, resourceRoleRepository.getRoleByCode(FullAccessRole.CODE))).isFalse();
+            assertThat(papeisAtribuiveis.test(admin, resourceRoleRepository.getRoleByCode("operador-contabil"))).isTrue();
+        } finally {
+            systemAuthenticator.end();
+        }
     }
 }

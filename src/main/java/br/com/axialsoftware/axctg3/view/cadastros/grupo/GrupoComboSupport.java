@@ -29,6 +29,9 @@ public class GrupoComboSupport {
         boolean axial = grupoAcesso.usuarioAtualEnxergaTodosGrupos();
         combo.setVisible(axial);
         if (!axial) {
+            // escondido, mas o binding ainda grava o valor nele — e o ComboBox do Vaadin
+            // recusa valor sem itens
+            combo.setItems(grupoPadrao());
             return;
         }
         Map<Integer, String> grupos = new LinkedHashMap<>();

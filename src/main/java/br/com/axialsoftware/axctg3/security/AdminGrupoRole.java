@@ -10,6 +10,8 @@ import br.com.axialsoftware.axctg3.entity.tabelas.Municipio;
 import br.com.axialsoftware.axctg3.entity.tabelas.TipoLogradouro;
 import io.jmix.security.model.EntityAttributePolicyAction;
 import io.jmix.security.model.EntityPolicyAction;
+import io.jmix.security.model.ResourceRoleModel;
+import io.jmix.security.model.RowLevelRoleModel;
 import io.jmix.security.role.annotation.EntityAttributePolicy;
 import io.jmix.security.role.annotation.EntityPolicy;
 import io.jmix.security.role.annotation.ResourceRole;
@@ -43,6 +45,12 @@ public interface AdminGrupoRole {
     @EntityPolicy(entityClass = User.class, actions = EntityPolicyAction.ALL)
     @EntityAttributePolicy(entityClass = RoleAssignmentEntity.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
     @EntityPolicy(entityClass = RoleAssignmentEntity.class, actions = EntityPolicyAction.ALL)
+    // grids dos lookups de papéis (sem leitura nessas entidades a lista abre em branco);
+    // quais papéis aparecem é filtrado por PapeisAtribuiveisCandidatePredicate
+    @EntityAttributePolicy(entityClass = ResourceRoleModel.class, attributes = "*", action = EntityAttributePolicyAction.VIEW)
+    @EntityPolicy(entityClass = ResourceRoleModel.class, actions = EntityPolicyAction.READ)
+    @EntityAttributePolicy(entityClass = RowLevelRoleModel.class, attributes = "*", action = EntityAttributePolicyAction.VIEW)
+    @EntityPolicy(entityClass = RowLevelRoleModel.class, actions = EntityPolicyAction.READ)
     void usuarios();
 
     @EntityAttributePolicy(entityClass = Empresa.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
