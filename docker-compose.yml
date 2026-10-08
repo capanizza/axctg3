@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16
+    image: postgres:18
     container_name: axctg3-postgres
     # Volta sozinho depois de um reboot, assim que o Docker Desktop subir.
     restart: unless-stopped
@@ -13,7 +13,9 @@ services:
       # roda em localhost:5432 hoje.
       - "5433:5432"
     volumes:
-      - axctg3_pgdata:/var/lib/postgresql/data
+      # A partir da imagem 18 o volume vai em /var/lib/postgresql (o PGDATA fica
+      # em /var/lib/postgresql/18/docker), não mais em .../data.
+      - axctg3_pgdata:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d axctg3"]
       interval: 5s
@@ -24,6 +26,8 @@ volumes:
   axctg3_pgdata:
     # external: o compose não cria nem apaga este volume — protege os dados de
     # dev contra um `docker compose down -v`. Numa máquina nova, crie antes:
-    #   docker volume create axctg3_axctg3_pgdata
+    #   docker volume create axctg3_axctg3_pgdata18
+    # O volume antigo (axctg3_axctg3_pgdata, Postgres 16, até 2026-10-08) foi
+    # mantido intacto; o último dump dele está em C:\backups\axctg3-pg16-final.
     external: true
-    name: axctg3_axctg3_pgdata
+    name: axctg3_axctg3_pgdata18
