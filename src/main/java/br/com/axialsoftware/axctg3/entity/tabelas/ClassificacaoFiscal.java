@@ -19,7 +19,8 @@ import java.util.UUID;
 // a descrição montada com os níveis acima do NCM (posição > subposição > item).
 @JmixEntity
 @Table(name = "CLASSIFICACAO_FISCAL", indexes = {
-        @Index(name = "IDX_CLASSIFICACAO_FISCAL_UNQ", columnList = "CODIGO", unique = true)
+        @Index(name = "IDX_CLASSIFICACAO_FISCAL_UNQ", columnList = "CODIGO", unique = true),
+        @Index(name = "IDX_CLASSIFICACAO_FISCAL_COD_NCM", columnList = "COD_NCM")
 })
 @Entity
 public class ClassificacaoFiscal {
