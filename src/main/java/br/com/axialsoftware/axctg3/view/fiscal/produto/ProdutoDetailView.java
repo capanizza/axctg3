@@ -42,7 +42,7 @@ public class ProdutoDetailView extends StandardDetailView<Produto> {
     /**
      * Busca preguiçosa de {@code classificacaoFiscalField} (entityComboBox, troca de
      * entityPicker) — tabela NCM global (~10 mil linhas), não dá pra carregar via
-     * itemsContainer.
+     * itemsContainer. Acha tanto pelo começo do NCM quanto por trecho da descrição.
      */
     @Install(to = "classificacaoFiscalField", subject = "itemsFetchCallback")
     private Stream<ClassificacaoFiscal> classificacaoFiscalFieldItemsFetchCallback(
@@ -50,7 +50,8 @@ public class ProdutoDetailView extends StandardDetailView<Produto> {
         String texto = query.getFilter().orElse("");
         return dataManager.load(ClassificacaoFiscal.class)
                 .query("select e from ClassificacaoFiscal e "
-                        + "where upper(e.descricao) like upper(concat('%', :texto, '%')) order by e.codigo")
+                        + "where e.codNcm like concat(:texto, '%') "
+                        + "or upper(e.descricao) like upper(concat('%', :texto, '%')) order by e.codNcm")
                 .parameter("texto", texto)
                 .firstResult(query.getOffset())
                 .maxResults(query.getLimit())

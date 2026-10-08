@@ -10,7 +10,7 @@
             <loader id="classificacaoFiscalsDl" readOnly="true">
                 <query>
                     <![CDATA[select e from ClassificacaoFiscal e
-                    order by e.codigo]]>
+                    order by e.codNcm]]>
                 </query>
             </loader>
         </collection>
@@ -31,6 +31,10 @@
                 <button id="createButton" action="classificacaoFiscalsDataGrid.createAction" themeNames="small"/>
                 <button id="editButton" action="classificacaoFiscalsDataGrid.editAction" themeNames="small"/>
                 <button id="removeButton" action="classificacaoFiscalsDataGrid.removeAction" themeNames="small"/>
+                <fileUploadField id="importField" width="18em" themeNames="small"
+                                 acceptedFileTypes="application/json,.json"
+                                 uploadText="msg://classificacaoFiscalListView.import.uploadText"/>
+                <button id="importButton" text="msg://classificacaoFiscalListView.import.button" themeNames="small"/>
             </startSlot>
             <endSlot>
                 <simplePagination id="pagination" dataLoader="classificacaoFiscalsDl"/>
@@ -54,9 +58,8 @@
                     <action id="removeAction" type="list_remove"/>
                 </actions>
                 <columns resizable="true">
-                    <column property="codigo" width="15%"/>
-                    <column property="codNcm" width="20%"/>
-                    <column property="descricao" width="65%"/>
+                    <column property="codNcm" width="15%"/>
+                    <column property="descricao" width="85%"/>
                 </columns>
             </dataGrid>
 
@@ -71,8 +74,8 @@
                                   label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassificacaoFiscal.codigo"/>
                     <textField id="codNcmField" width="50%" maxLength="10"
                                label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassificacaoFiscal.codNcm"/>
-                    <textField id="descricaoField" width="100%" maxLength="30"
-                               label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassificacaoFiscal.descricao"/>
+                    <textArea id="descricaoField" width="100%" height="12em" maxLength="2000"
+                              label="msg://br.com.axialsoftware.axctg3.entity.tabelas/ClassificacaoFiscal.descricao"/>
                     <hbox id="detailActions">
                         <button id="saveAndCloseBtn" text="msg://br.com.axialsoftware.axctg3/actions.ok" themeNames="primary, small" icon="CHECK"/>
                         <button id="closeBtn" text="msg://br.com.axialsoftware.axctg3/actions.cancelar" themeNames="small" icon="CANCEL"/>
