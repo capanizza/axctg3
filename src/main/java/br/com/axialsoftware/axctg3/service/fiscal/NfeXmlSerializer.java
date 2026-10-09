@@ -823,12 +823,14 @@ public class NfeXmlSerializer {
         return valor;
     }
 
-    // o schema rejeita texto com espaço à frente/atrás; vazio vira null pra tag sumir
+    // TString do schema não aceita quebra de linha/tabulação nem espaço à frente/atrás —
+    // quebra de linha digitada numa caixa de texto (infCpl, por exemplo) deu cStat=225 em
+    // homologação-SP em 2026-10-09; vira espaço. Vazio vira null pra tag sumir.
     private static String aparar(String texto) {
         if (texto == null) {
             return null;
         }
-        String aparado = texto.trim();
+        String aparado = texto.replaceAll("[\\r\\n\\t]+", " ").trim();
         return aparado.isEmpty() ? null : aparado;
     }
 

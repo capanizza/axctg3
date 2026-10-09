@@ -202,6 +202,9 @@ public interface OperadorFiscalRole {
             "NfeDuplicata.detail",
             "NfePagamento.detail",
             "NfeVolume.detail",
+            // DI/adições: só leitura aqui (a Nfe abre travada); editar é do gerente, no rascunho
+            "NfeDi.detail",
+            "NfeDiAdicao.detail",
             "NfeCartaCorrecao.list",
             "NfeInutilizacao.list",
             "PeriodoFiscal.list",

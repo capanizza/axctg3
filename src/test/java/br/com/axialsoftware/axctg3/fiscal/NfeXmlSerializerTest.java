@@ -97,7 +97,7 @@ class NfeXmlSerializerTest {
         byte[] xml = paraBytes(serializer.serializar(nfe));
         validarContraXsd(xml);
         String texto = new String(xml, java.nio.charset.StandardCharsets.UTF_8);
-        assertThat(texto).contains("<idEstrangeiro/>", "<UF>EX</UF>", "<cPais>1600</cPais>", "<tpNF>0</tpNF>",
+        assertThat(texto).contains("<idEstrangeiro/>", "<UF>EX</UF>", "<cPais>230</cPais>", "<tpNF>0</tpNF>",
                 "<idDest>3</idDest>", "<ICMSSN900>", "<orig>1</orig>", "<pRedBC>51.1111</pRedBC>",
                 "<vBC>51900.71</vBC>", "<vICMS>9342.13</vICMS>", "<nDI>2608986187</nDI>",
                 "<tpViaTransp>4</tpViaTransp>", "<tpIntermedio>1</tpIntermedio>", "<nSeqAdic>1</nSeqAdic>",
@@ -112,6 +112,22 @@ class NfeXmlSerializerTest {
         assertThat(di.getFormaImportacao()).isEqualTo(FormaImportacao.CONTA_PROPRIA);
         assertThat(di.getAdicoes()).hasSize(1);
         assertThat(di.getAdicoes().get(0).getCodFabricante()).isEqualTo("KJELLBERG");
+    }
+
+    // quebra de linha digitada em caixa de texto: TString não aceita (cStat=225 em
+    // homologação-SP, 2026-10-09) — vira espaço
+    @Test
+    void quebraDeLinhaNoTextoViraEspacoEPassaNoXsd() throws Exception {
+        Nfe nfe = notaDeImportacao();
+        nfe.setInfCpl("DI 2608986187. PIS R$ 1.533,77;\r\nCOFINS R$ 7.486,27;\n\tTaxa Siscomex R$ 154,23.\r\n");
+        nfe.getItens().get(0).setInfoAdicionalProduto("linha 1\nlinha 2");
+
+        byte[] xml = paraBytes(serializer.serializar(nfe));
+        validarContraXsd(xml);
+
+        String texto = new String(xml, java.nio.charset.StandardCharsets.UTF_8);
+        assertThat(texto).contains("<infCpl>DI 2608986187. PIS R$ 1.533,77; COFINS R$ 7.486,27; Taxa Siscomex R$ 154,23.</infCpl>",
+                "<infAdProd>linha 1 linha 2</infAdProd>");
     }
 
     @Test
@@ -179,7 +195,7 @@ class NfeXmlSerializerTest {
         nfe.setDestCMun(9999999);
         nfe.setDestXMun("EXTERIOR");
         nfe.setDestUf("EX");
-        nfe.setDestCPais(1600);
+        nfe.setDestCPais(230);
         nfe.setDestXPais("ALEMANHA");
         nfe.setDestIndIe(9);
 

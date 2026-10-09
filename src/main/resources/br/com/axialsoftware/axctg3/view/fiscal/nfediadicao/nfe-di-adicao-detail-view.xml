@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://nfeDiAdicaoDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="nfeDiAdicaoDc"
+                  class="br.com.axialsoftware.axctg3.entity.fiscal.NfeDiAdicao">
+            <fetchPlan extends="_base"/>
+            <loader id="nfeDiAdicaoDl"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <vbox id="form" width="100%">
+            <hbox width="100%" expand="codFabricanteField">
+                <integerField id="numeroAdicaoField" property="numeroAdicao" dataContainer="nfeDiAdicaoDc"
+                              width="14%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeDiAdicao.numeroAdicao"/>
+                <integerField id="sequencialField" property="sequencial" dataContainer="nfeDiAdicaoDc"
+                              width="12%" themeNames="small" required="true"
+                              label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeDiAdicao.sequencial"/>
+                <textField id="codFabricanteField" property="codFabricante" dataContainer="nfeDiAdicaoDc"
+                           maxLength="60" themeNames="small" required="true"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeDiAdicao.codFabricante"/>
+            </hbox>
+            <hbox width="100%">
+                <bigDecimalField id="valorDescontoField" property="valorDesconto" dataContainer="nfeDiAdicaoDc"
+                                 width="25%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeDiAdicao.valorDesconto"/>
+                <textField id="numDrawbackField" property="numDrawback" dataContainer="nfeDiAdicaoDc"
+                           maxLength="20" width="35%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeDiAdicao.numDrawback"/>
+            </hbox>
+        </vbox>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

@@ -16,7 +16,9 @@ import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.PedidoVenda;
 import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
 import br.com.axialsoftware.axctg3.entity.fiscal.SaldoProduto;
+import io.jmix.security.model.EntityAttributePolicyAction;
 import io.jmix.security.model.EntityPolicyAction;
+import io.jmix.security.role.annotation.EntityAttributePolicy;
 import io.jmix.security.role.annotation.EntityPolicy;
 import io.jmix.security.role.annotation.ResourceRole;
 
@@ -53,4 +55,17 @@ public interface GerenteFiscalRole extends OperadorFiscalRole {
     @EntityPolicy(entityClass = NfeDi.class, actions = EntityPolicyAction.DELETE)
     @EntityPolicy(entityClass = NfeDiAdicao.class, actions = EntityPolicyAction.DELETE)
     void excluirNfeECascata();
+
+    // NFe digitada (desde 2026-10-09): o rascunho abre editável em Nfe.detail só pra quem pode
+    // excluir NFe — este papel e o admin (NfeDetailView.podeDigitar). O operador tem VIEW nos
+    // atributos; aqui sobe pra MODIFY, senão os campos do rascunho ficariam travados também
+    // pro gerente. Nota emitida/importada continua só leitura pela própria tela.
+    @EntityAttributePolicy(entityClass = Nfe.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
+    @EntityAttributePolicy(entityClass = NfeItem.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
+    @EntityAttributePolicy(entityClass = NfeDi.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
+    @EntityAttributePolicy(entityClass = NfeDiAdicao.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
+    @EntityAttributePolicy(entityClass = NfeVolume.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
+    @EntityAttributePolicy(entityClass = NfeDuplicata.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
+    @EntityAttributePolicy(entityClass = NfePagamento.class, attributes = "*", action = EntityAttributePolicyAction.MODIFY)
+    void digitarNfe();
 }
