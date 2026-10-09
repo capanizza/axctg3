@@ -18,8 +18,11 @@ import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -190,6 +193,84 @@ public class NfeDigitadaService {
         } catch (NumberFormatException e) {
             nfe.setSerie(null);
         }
+    }
+
+    /**
+     * Texto sugerido pro {@code infCpl} de uma nota de importação, a partir das DIs e dos
+     * valores digitados nos itens — {@code null} quando nenhum item tem DI. O manual do DANFE
+     * (MOC 7.0, Anexo II) não tem campo pro II, PIS e COFINS no quadro "Cálculo do Imposto",
+     * e o {@code infCpl} é de impressão obrigatória: é por ele que esses valores chegam ao
+     * DANFE, como o despachante faz no espelho.
+     *
+     * <p>A Taxa Siscomex não tem campo próprio na NF-e; segue a convenção da nota de
+     * importação digitada, em que "outras despesas" = PIS + COFINS + Siscomex + ICMS, e sai
+     * como a diferença — só quando der positiva.
+     */
+    public String textoImportacao(Nfe nfe) {
+        List<NfeItem> itens = lista(nfe.getItens());
+        List<NfeDi> dis = itens.stream().flatMap(i -> lista(i.getDis()).stream()).toList();
+        if (dis.isEmpty()) {
+            return null;
+        }
+        DateTimeFormatter data = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        List<String> declaracoes = new ArrayList<>();
+        for (NfeDi di : dis) {
+            StringBuilder d = new StringBuilder("DI ").append(di.getNumeroDi() == null ? "" : di.getNumeroDi().trim());
+            if (di.getDataDi() != null) {
+                d.append(" de ").append(di.getDataDi().format(data));
+            }
+            if (di.getLocalDesembaraco() != null && !di.getLocalDesembaraco().isBlank()) {
+                d.append(", desembaraço em ").append(di.getLocalDesembaraco().trim());
+                if (di.getUfDesembaraco() != null && !di.getUfDesembaraco().isBlank()) {
+                    d.append("/").append(di.getUfDesembaraco().trim());
+                }
+            }
+            if (di.getDataDesembaraco() != null) {
+                d.append(" em ").append(di.getDataDesembaraco().format(data));
+            }
+            declaracoes.add(d.toString());
+        }
+
+        BigDecimal pis = somar(itens, NfeItem::getValorPis);
+        BigDecimal cofins = somar(itens, NfeItem::getValorCofins);
+        BigDecimal icms = somar(itens, NfeItem::getValorIcms);
+        BigDecimal siscomex = somar(itens, NfeItem::getValorOutro).subtract(pis).subtract(cofins).subtract(icms);
+        BigDecimal afrmm = dis.stream().map(NfeDi::getValorAfrmm).map(NfeDigitadaService::nvl)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        List<String> valores = new ArrayList<>();
+        valores.add("Valor aduaneiro " + reais(somar(itens, NfeItem::getBaseIi)));
+        valores.add("II " + reais(somar(itens, NfeItem::getValorIi)));
+        BigDecimal ipi = somar(itens, NfeItem::getValorIpi);
+        if (ipi.signum() != 0) {
+            valores.add("IPI " + reais(ipi));
+        }
+        valores.add("PIS " + reais(pis));
+        valores.add("COFINS " + reais(cofins));
+        valores.add("ICMS " + reais(icms));
+        BigDecimal iof = somar(itens, NfeItem::getValorIof);
+        if (iof.signum() != 0) {
+            valores.add("IOF " + reais(iof));
+        }
+        BigDecimal despesasAduaneiras = somar(itens, NfeItem::getValorDespAdu);
+        if (despesasAduaneiras.signum() != 0) {
+            valores.add("Despesas aduaneiras " + reais(despesasAduaneiras));
+        }
+        if (afrmm.signum() != 0) {
+            valores.add("AFRMM " + reais(afrmm));
+        }
+        if (siscomex.signum() > 0) {
+            valores.add("Taxa Siscomex " + reais(siscomex));
+        }
+        return "Importação: " + String.join("; ", declaracoes) + ". " + String.join("; ", valores) + ".";
+    }
+
+    // separadores fixos, sem depender do locale da JVM (mesmo critério do NfeDanfeService)
+    private static String reais(BigDecimal valor) {
+        DecimalFormatSymbols simbolos = new DecimalFormatSymbols();
+        simbolos.setDecimalSeparator(',');
+        simbolos.setGroupingSeparator('.');
+        return "R$ " + new DecimalFormat("#,##0.00", simbolos).format(nvl(valor));
     }
 
     /**

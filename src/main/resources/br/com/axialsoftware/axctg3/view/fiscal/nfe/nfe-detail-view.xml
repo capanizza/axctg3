@@ -410,6 +410,7 @@
         <hbox id="detailActions">
             <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
             <button id="recalcularTotaisButton" text="msg://nfeDetailView.recalcularTotaisButton.text" icon="vaadin:calc" themeNames="small"/>
+            <button id="textoImportacaoButton" text="msg://nfeDetailView.textoImportacaoButton.text" icon="vaadin:file-text" themeNames="small"/>
             <button id="closeButton" action="closeAction" themeNames="small"/>
         </hbox>
     </layout>

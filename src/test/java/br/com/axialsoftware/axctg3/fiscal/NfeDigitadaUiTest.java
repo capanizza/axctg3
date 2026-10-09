@@ -166,6 +166,19 @@ class NfeDigitadaUiTest {
     }
 
     @Test
+    void textoImportacao_preencheInfCplVazio() {
+        Nfe rascunho = rascunhoComItemEDi();
+        viewNavigators.detailView(UiTestUtils.getCurrentView(), Nfe.class).editEntity(rascunho).navigate();
+        NfeDetailView detalhe = UiTestUtils.getCurrentView();
+        assertThat(((JmixButton) UiTestUtils.getComponent(detalhe, "textoImportacaoButton")).isVisible()).isTrue();
+
+        detalhe.onTextoImportacaoButtonClick(null);
+
+        assertThat(detalhe.getEditedEntity().getInfCpl()).startsWith("Importação: DI 2608986187 de 06/10/2026");
+        assertThat(campo(detalhe, "infCplField").getValue()).isEqualTo(detalhe.getEditedEntity().getInfCpl());
+    }
+
+    @Test
     void telasDoItemEDaDi_mostramDiEAdicoes() {
         Nfe rascunho = rascunhoComItemEDi();
         NfeItem item = nfeDigitadaService.carregarCompleta(rascunho.getId()).getItens().get(0);

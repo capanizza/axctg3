@@ -112,6 +112,24 @@ class NfeDigitadaServiceTest {
     }
 
     @Test
+    void textoImportacao_montaOInfCplComDiEValores() {
+        Nfe nfe = rascunhoDeImportacao();
+
+        assertThat(nfeDigitadaService.textoImportacao(nfe)).isEqualTo(
+                "Importação: DI 2608986187 de 06/10/2026, desembaraço em Aeroporto Internacional de Viracopos/SP "
+                        + "em 08/10/2026. Valor aduaneiro R$ 73.036,78; II R$ 14.607,36; PIS R$ 1.533,77; "
+                        + "COFINS R$ 7.486,27; ICMS R$ 9.342,13; Despesas aduaneiras R$ 154,23; Taxa Siscomex R$ 154,23.");
+    }
+
+    @Test
+    void textoImportacao_semDiNaoSugereNada() {
+        Nfe nfe = rascunhoDeImportacao();
+        nfe.getItens().get(0).setDis(new ArrayList<>());
+
+        assertThat(nfeDigitadaService.textoImportacao(nfe)).isNull();
+    }
+
+    @Test
     void divergenciasDeTotais_apontaTotalDesatualizado() {
         Nfe nfe = rascunhoDeImportacao();
         nfeDigitadaService.recalcularTotais(nfe);

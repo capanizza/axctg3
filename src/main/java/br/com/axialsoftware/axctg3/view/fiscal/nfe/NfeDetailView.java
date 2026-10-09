@@ -13,6 +13,7 @@ import io.jmix.core.Metadata;
 import io.jmix.core.accesscontext.CrudEntityContext;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.Notifications;
+import io.jmix.flowui.action.DialogAction;
 import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
@@ -68,6 +69,8 @@ public class NfeDetailView extends StandardDetailView<Nfe> {
     private JmixButton saveAndCloseButton;
     @ViewComponent
     private JmixButton recalcularTotaisButton;
+    @ViewComponent
+    private JmixButton textoImportacaoButton;
     @Autowired
     private NfeCartaCorrecaoComprovanteService nfeCartaCorrecaoComprovanteService;
     @Autowired
@@ -105,6 +108,7 @@ public class NfeDetailView extends StandardDetailView<Nfe> {
         }
         saveAndCloseButton.setVisible(!isReadOnly());
         recalcularTotaisButton.setVisible(!isReadOnly());
+        textoImportacaoButton.setVisible(!isReadOnly());
     }
 
     @Subscribe(id = "recalcularTotaisButton", subject = "clickListener")
@@ -113,6 +117,34 @@ public class NfeDetailView extends StandardDetailView<Nfe> {
         notifications.create(messageBundle.getMessage("nfeDetailView.recalcularTotais.feito"))
                 .withType(Notifications.Type.SUCCESS)
                 .show();
+    }
+
+    /**
+     * Sugere o infCpl de uma nota de importação a partir das DIs e valores dos itens
+     * ({@link NfeDigitadaService#textoImportacao}). É só sugestão: o texto fica no campo
+     * pra ser editado, e substituir um texto já digitado pede confirmação.
+     */
+    @Subscribe(id = "textoImportacaoButton", subject = "clickListener")
+    public void onTextoImportacaoButtonClick(final ClickEvent<JmixButton> event) {
+        Nfe nfe = getEditedEntity();
+        String texto = nfeDigitadaService.textoImportacao(nfe);
+        if (texto == null) {
+            notifications.create(messageBundle.getMessage("nfeDetailView.textoImportacao.semDi"))
+                    .withType(Notifications.Type.WARNING)
+                    .show();
+            return;
+        }
+        if (nfe.getInfCpl() == null || nfe.getInfCpl().isBlank()) {
+            nfe.setInfCpl(texto);
+            return;
+        }
+        dialogs.createOptionDialog()
+                .withHeader(messageBundle.getMessage("nfeDetailView.textoImportacaoButton.text"))
+                .withText(messageBundle.getMessage("nfeDetailView.textoImportacao.substituir"))
+                .withActions(
+                        new DialogAction(DialogAction.Type.YES).withHandler(e -> nfe.setInfCpl(texto)),
+                        new DialogAction(DialogAction.Type.NO))
+                .open();
     }
 
     @Subscribe("nfeCartasCorrecaoDataGrid.imprimirCceAction")
