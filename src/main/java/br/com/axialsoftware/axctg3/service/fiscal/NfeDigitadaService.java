@@ -38,6 +38,12 @@ import java.util.function.Function;
 @Service
 public class NfeDigitadaService {
 
+    /**
+     * Razão social que a SEFAZ exige no destinatário em homologação (cStat=598) — gravada na
+     * nota de teste junto com o resto do XML autorizado. Nunca pode sair em produção.
+     */
+    public static final String HOMOLOGACAO_X_NOME = "NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL";
+
     // Fora da cópia: identidade/auditoria, protocolo, cancelamento e XMLs gravados — tudo o
     // que pertence à nota já emitida, não ao conteúdo que se quer reaproveitar
     private static final Set<String> NAO_COPIAR = Set.of(
@@ -94,6 +100,12 @@ public class NfeDigitadaService {
         nova.setDigitada(true);
         nova.setCodEmpresa(empresa.getCodigo());
         preencherEmitente(nova, empresa);
+        // copiada de uma nota de homologação: o nome real do destinatário não existe mais ali
+        // (a NF-e 12781 da GB saiu em produção com esse texto, 2026-10-09) — fica em branco
+        // pra ser digitado
+        if (HOMOLOGACAO_X_NOME.equals(nova.getDestXNome())) {
+            nova.setDestXNome(null);
+        }
 
         SaveContext saveContext = new SaveContext().saving(nova);
         List<NfeItem> itens = new ArrayList<>();

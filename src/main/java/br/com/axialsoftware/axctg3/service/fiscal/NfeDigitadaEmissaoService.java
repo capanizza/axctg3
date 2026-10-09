@@ -42,8 +42,6 @@ import java.util.UUID;
 @Service
 public class NfeDigitadaEmissaoService {
 
-    private static final String HOMOLOGACAO_X_NOME = "NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL";
-
     private final DataManager dataManager;
     private final NfeDigitadaService nfeDigitadaService;
     private final NfeXmlSerializer serializer;
@@ -82,6 +80,14 @@ public class NfeDigitadaEmissaoService {
                 .parameter("codigo", nfe.getCodEmpresa())
                 .optional()
                 .orElse(null);
+        if (empresa != null && empresa.getAmbienteNfe() == AmbienteNfe.PRODUCAO
+                && (nfe.getDestXNome() == null || nfe.getDestXNome().isBlank()
+                || NfeDigitadaService.HOMOLOGACAO_X_NOME.equals(nfe.getDestXNome().trim()))) {
+            // a SEFAZ de produção aceita esse texto sem reclamar — foi assim que a NF-e 12781
+            // da GB saiu com ele (2026-10-09); a trava tem de ser daqui
+            return falha("Informe o nome do destinatário — a nota não pode ir para produção com o texto "
+                    + "de homologação nem sem nome");
+        }
         String erroEmpresa = validarEmpresa(empresa);
         if (erroEmpresa != null) {
             return falha(erroEmpresa);
@@ -102,7 +108,7 @@ public class NfeDigitadaEmissaoService {
         }
         if (empresa.getAmbienteNfe() == AmbienteNfe.HOMOLOGACAO) {
             // exigência da própria SEFAZ em homologação (cStat=598), igual ao NfeXmlBuilder
-            nfe.setDestXNome(HOMOLOGACAO_X_NOME);
+            nfe.setDestXNome(NfeDigitadaService.HOMOLOGACAO_X_NOME);
         }
         if (nfe.getSerie() == null) {
             return falha("Série da NFe não configurada na empresa (aba \"Emissão NFe\")");

@@ -160,6 +160,38 @@ class NfeDigitadaServiceTest {
     }
 
     @Test
+    void copiarComoRascunho_naoTrazONomeDeHomologacao() {
+        Nfe origem = rascunhoDeImportacao();
+        origem.setDestXNome(NfeDigitadaService.HOMOLOGACAO_X_NOME);
+        salvarComFilhos(origem);
+
+        Nfe copia = nfeDigitadaService.copiarComoRascunho(origem.getId());
+
+        assertThat(copia.getDestXNome()).isNull();
+        assertThat(copia.getDestXLgr()).isEqualTo("Oscar-Kjellberg-Strasse");
+    }
+
+    @Test
+    void transmitir_emProducaoRecusaDestinatarioDeHomologacao() {
+        Empresa empresa = dataManager.load(Empresa.class)
+                .query("select e from Empresa e where e.codigo = :codigo")
+                .parameter("codigo", COD_EMPRESA)
+                .one();
+        empresa.setAmbienteNfe(AmbienteNfe.PRODUCAO);
+        dataManager.save(empresa);
+        Nfe nfe = rascunhoDeImportacao();
+        nfeDigitadaService.recalcularTotais(nfe);
+        nfe.setDestXNome(NfeDigitadaService.HOMOLOGACAO_X_NOME);
+        salvarComFilhos(nfe);
+
+        NfeDigitadaEmissaoService.Resultado resultado = nfeDigitadaEmissaoService.transmitir(nfe.getId());
+
+        assertThat(resultado.sucesso()).isFalse();
+        assertThat(resultado.motivo()).contains("nome do destinatário");
+        assertThat(dataManager.load(Nfe.class).id(nfe.getId()).one().getNumeroNf()).isNull();
+    }
+
+    @Test
     void transmitir_recusaNotaQueNaoEDigitada() {
         Nfe nfe = rascunhoDeImportacao();
         nfe.setDigitada(false);
