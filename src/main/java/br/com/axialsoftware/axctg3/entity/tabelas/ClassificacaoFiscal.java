@@ -14,9 +14,13 @@ import java.util.UUID;
 // Tabela global de classificação fiscal (NCM), sem codEmpresa — mesmo padrão de
 // Municipio/TipoLogradouro/ClassTrib nisso, MAS ao contrário deles, sem trilha de
 // auditoria/soft delete (pedido explícito: tabela pequena, importada em bulk).
+// Desde 2026-10-08 é carregada da tabela NCM oficial do Siscomex
+// (ClassificacaoFiscalImportService): codigo = o próprio NCM como número, descricao =
+// a descrição montada com os níveis acima do NCM (posição > subposição > item).
 @JmixEntity
 @Table(name = "CLASSIFICACAO_FISCAL", indexes = {
-        @Index(name = "IDX_CLASSIFICACAO_FISCAL_UNQ", columnList = "CODIGO", unique = true)
+        @Index(name = "IDX_CLASSIFICACAO_FISCAL_UNQ", columnList = "CODIGO", unique = true),
+        @Index(name = "IDX_CLASSIFICACAO_FISCAL_COD_NCM", columnList = "COD_NCM")
 })
 @Entity
 public class ClassificacaoFiscal {
@@ -34,7 +38,7 @@ public class ClassificacaoFiscal {
     @NotNull
     private String codNcm;
 
-    @Column(name = "DESCRICAO", length = 30)
+    @Column(name = "DESCRICAO", length = 2000)
     private String descricao;
 
     public String getDescricao() {
@@ -70,10 +74,9 @@ public class ClassificacaoFiscal {
     }
 
     @InstanceName
-    @DependsOnProperties({"codigo", "codNcm", "descricao"})
+    @DependsOnProperties({"codNcm", "descricao"})
     public String getInstanceName(MetadataTools metadataTools) {
-        return String.format("%d %s %s",
-                codigo,
+        return String.format("%s %s",
                 metadataTools.format(codNcm),
                 metadataTools.format(descricao));
     }

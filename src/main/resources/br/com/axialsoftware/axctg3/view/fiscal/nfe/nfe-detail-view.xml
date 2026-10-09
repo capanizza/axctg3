@@ -6,7 +6,12 @@
         <instance id="nfeDc"
                   class="br.com.axialsoftware.axctg3.entity.fiscal.Nfe">
             <fetchPlan extends="_base">
-                <property name="itens" fetchPlan="_base"/>
+                <!-- DI/adições: a NfeItem.detail (diálogo, mesmo contexto de dados) mostra e edita -->
+                <property name="itens" fetchPlan="_base">
+                    <property name="dis" fetchPlan="_base">
+                        <property name="adicoes" fetchPlan="_base"/>
+                    </property>
+                </property>
                 <property name="duplicatas" fetchPlan="_base"/>
                 <property name="pagamentos" fetchPlan="_base"/>
                 <property name="volumes" fetchPlan="_base"/>
@@ -24,6 +29,7 @@
         <dataLoadCoordinator auto="true"/>
     </facets>
     <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
         <action id="closeAction" type="detail_close" text="msg://nfeDetailView.closeAction.text"/>
     </actions>
     <layout>
@@ -54,6 +60,7 @@
                         <integerField id="finNfeField" property="finNfe" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.finNfe"/>
                         <integerField id="indFinalField" property="indFinal" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.indFinal"/>
                         <integerField id="indPresField" property="indPres" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.indPres"/>
+                        <integerField id="indIntermedField" property="indIntermed" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.indIntermed"/>
                         <integerField id="procEmiField" property="procEmi" dataContainer="nfeDc" width="12%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.procEmi"/>
                         <textField id="verProcField" property="verProc" dataContainer="nfeDc" width="12%" themeNames="small" maxLength="20" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.verProc"/>
                     </hbox>
@@ -110,19 +117,36 @@
                     </hbox>
                     <hbox width="100%">
                         <textField id="destEmailField" property="destEmail" dataContainer="nfeDc" width="50%" themeNames="small" maxLength="60" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.destEmail"/>
+                        <textField id="destIdEstrangeiroField" property="destIdEstrangeiro" dataContainer="nfeDc" width="20%" themeNames="small" maxLength="20" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.destIdEstrangeiro"/>
+                        <integerField id="destCPaisField" property="destCPais" dataContainer="nfeDc" width="10%" themeNames="small" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.destCPais"/>
+                        <textField id="destXPaisField" property="destXPais" dataContainer="nfeDc" width="20%" themeNames="small" maxLength="60" label="msg://br.com.axialsoftware.axctg3.entity.fiscal/Nfe.destXPais"/>
                     </hbox>
                 </vbox>
             </tab>
             <tab id="itensTab" label="Itens">
                 <vbox width="100%">
                     <hbox id="itensButtonsPanel" classNames="buttons-panel">
+                        <button id="itemCreateButton" action="nfeItensDataGrid.create" themeNames="small"/>
+                        <button id="itemEditButton" action="nfeItensDataGrid.edit" themeNames="small"/>
                         <button id="itemViewButton" action="nfeItensDataGrid.view" themeNames="small"/>
+                        <button id="itemRemoveButton" action="nfeItensDataGrid.remove" themeNames="small"/>
                     </hbox>
-                    <!-- list_read (não list_edit) — abre o NfeItemDetailView somente para leitura, sem
-                         ficar desabilitado quando a Nfe (view read-only) desativa list_edit/create/remove
-                         via @AdjustWhenViewReadOnly. Ver NfeDetailView. -->
+                    <!-- view (list_read) abre o NfeItemDetailView somente para leitura e continua ativo
+                         com a Nfe read-only; create/edit/remove são desativados por
+                         @AdjustWhenViewReadOnly e só valem no rascunho da NFe digitada. Ver NfeDetailView. -->
                     <dataGrid id="nfeItensDataGrid" dataContainer="itensDc" width="100%" minHeight="20em" themeNames="xsmall">
                         <actions>
+                            <action id="create" type="list_create">
+                                <properties>
+                                    <property name="openMode" value="DIALOG"/>
+                                </properties>
+                            </action>
+                            <action id="edit" type="list_edit">
+                                <properties>
+                                    <property name="openMode" value="DIALOG"/>
+                                </properties>
+                            </action>
+                            <action id="remove" type="list_remove"/>
                             <action id="view" type="list_read" text="Visualizar">
                                 <properties>
                                     <property name="openMode" value="DIALOG"/>
@@ -384,6 +408,8 @@
         </tabSheet>
 
         <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
+            <button id="recalcularTotaisButton" text="msg://nfeDetailView.recalcularTotaisButton.text" icon="vaadin:calc" themeNames="small"/>
             <button id="closeButton" action="closeAction" themeNames="small"/>
         </hbox>
     </layout>

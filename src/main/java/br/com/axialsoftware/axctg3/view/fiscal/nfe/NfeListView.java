@@ -8,6 +8,8 @@ import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeCancelamentoService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeCartaCorrecaoService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeDanfeService;
+import br.com.axialsoftware.axctg3.service.fiscal.NfeDigitadaEmissaoService;
+import br.com.axialsoftware.axctg3.service.fiscal.NfeDigitadaService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeExportacaoContadorService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeImportService;
 import br.com.axialsoftware.axctg3.service.fiscal.NfeInutilizacaoService;
@@ -22,11 +24,15 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
+import io.jmix.core.AccessManager;
 import io.jmix.core.DataManager;
 import io.jmix.core.Messages;
+import io.jmix.core.Metadata;
+import io.jmix.core.accesscontext.CrudEntityContext;
 import io.jmix.flowui.DialogWindows;
 import io.jmix.flowui.Dialogs;
 import io.jmix.flowui.UiComponents;
+import io.jmix.flowui.ViewNavigators;
 import io.jmix.flowui.action.DialogAction;
 import io.jmix.flowui.app.inputdialog.DialogActions;
 import io.jmix.flowui.app.inputdialog.DialogOutcome;
@@ -107,6 +113,16 @@ public class NfeListView extends StandardListView<Nfe> {
     private Messages messages;
     @Autowired
     private UiComponents uiComponents;
+    @Autowired
+    private NfeDigitadaService nfeDigitadaService;
+    @Autowired
+    private NfeDigitadaEmissaoService nfeDigitadaEmissaoService;
+    @Autowired
+    private ViewNavigators viewNavigators;
+    @Autowired
+    private AccessManager accessManager;
+    @Autowired
+    private Metadata metadata;
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
@@ -117,6 +133,11 @@ public class NfeListView extends StandardListView<Nfe> {
         buttonsPanel.setVisible(dialog == null);
 
         atualizarBadgeAmbiente();
+
+        boolean podeDigitar = podeDigitar();
+        nfesDataGrid.getAction("novaDigitadaAction").setVisible(podeDigitar);
+        nfesDataGrid.getAction("copiarRascunhoAction").setVisible(podeDigitar);
+        nfesDataGrid.getAction("emitirNfeAction").setVisible(podeDigitar);
     }
 
     @Override
@@ -243,17 +264,76 @@ public class NfeListView extends StandardListView<Nfe> {
         downloader.download(resultado.zip(), resultado.nomeArquivo(), DownloadFormat.ZIP);
     }
 
-    /*
-     * Emitir NFe, Consultar NFe e Inutilizar números de notas ainda não têm service
-     * implementado — só EmitirNfe (a partir de NotaSaidaListView), EmitirDanfe,
-     * VerificarStatusServico (copiado de EmpresaDetailView) e CancelarNfe (via
-     * NfeCancelamentoService, evento 110111) existem hoje. Placeholders no dropDownButton
-     * pra já fixar a estrutura do menu; cada um vira handler de verdade quando o service
-     * correspondente for implementado.
+    // ---- NFe digitada (rascunho editável em Nfe.detail, ver NfeDigitadaService) ----
+
+    @Subscribe("nfesDataGrid.novaDigitadaAction")
+    public void onNfesDataGridNovaDigitadaAction(final ActionPerformedEvent event) {
+        Nfe rascunho = nfeDigitadaService.criarRascunho();
+        viewNavigators.detailView(this, Nfe.class).editEntity(rascunho).navigate();
+    }
+
+    @Subscribe("nfesDataGrid.copiarRascunhoAction")
+    public void onNfesDataGridCopiarRascunhoAction(final ActionPerformedEvent event) {
+        Nfe selecionada = nfesDataGrid.getSingleSelectedItem();
+        if (selecionada == null) {
+            mostrarMensagem("nfeListView.copiarRascunhoAction.text", messageBundle.getMessage("nfeListView.nenhumaSelecionada"));
+            return;
+        }
+        Nfe rascunho = nfeDigitadaService.copiarComoRascunho(selecionada.getId());
+        viewNavigators.detailView(this, Nfe.class).editEntity(rascunho).navigate();
+    }
+
+    /**
+     * Emitir NFe a partir desta lista só vale pro rascunho de uma NFe digitada — a nota de
+     * saída comum é emitida em NotaSaidaListView. Transmitir é irreversível (o número fica
+     * usado), por isso a confirmação antes.
      */
     @Subscribe("nfesDataGrid.emitirNfeAction")
     public void onNfesDataGridEmitirNfeAction(final ActionPerformedEvent event) {
-        mostrarEmDesenvolvimento("nfeListView.emitirNfeAction.text");
+        Nfe selecionada = nfesDataGrid.getSingleSelectedItem();
+        if (selecionada == null) {
+            mostrarMensagem("nfeListView.emitirNfeAction.text", messageBundle.getMessage("nfeListView.nenhumaSelecionada"));
+            return;
+        }
+        if (!Boolean.TRUE.equals(selecionada.getDigitada()) || selecionada.getChave() != null) {
+            mostrarMensagem("nfeListView.emitirNfeAction.text", messageBundle.getMessage("nfeListView.emitirNfe.naoRascunho"));
+            return;
+        }
+        dialogs.createOptionDialog()
+                .withHeader(messageBundle.getMessage("nfeListView.emitirNfeAction.text"))
+                .withText(messageBundle.formatMessage("nfeListView.emitirNfe.confirmar",
+                        selecionada.getDestXNome() == null ? "-" : selecionada.getDestXNome(),
+                        selecionada.getValorNf() == null ? "0,00" : String.format("%,.2f", selecionada.getValorNf())))
+                .withActions(
+                        new DialogAction(DialogAction.Type.YES).withHandler(e -> transmitirDigitada(selecionada.getId())),
+                        new DialogAction(DialogAction.Type.NO))
+                .open();
+    }
+
+    private void transmitirDigitada(UUID nfeId) {
+        NfeDigitadaEmissaoService.Resultado resultado = nfeDigitadaEmissaoService.transmitir(nfeId);
+        nfesDl.load();
+        if (resultado.sucesso()) {
+            mostrarMensagem("nfeListView.emitirNfeAction.text", messageBundle.formatMessage(
+                    "nfeListView.emitirNfe.sucesso", resultado.chave(), resultado.protocolo()));
+        } else {
+            mostrarMensagem("nfeListView.emitirNfeAction.text", messageBundle.formatMessage(
+                    "nfeListView.emitirNfe.erro", resultado.motivo()));
+        }
+    }
+
+    private void mostrarMensagem(String chaveCabecalho, String texto) {
+        dialogs.createMessageDialog()
+                .withHeader(messageBundle.getMessage(chaveCabecalho))
+                .withText(texto)
+                .open();
+    }
+
+    // gerente fiscal e admin — os mesmos que podem excluir NFe (ver GerenteFiscalRole)
+    private boolean podeDigitar() {
+        CrudEntityContext contexto = new CrudEntityContext(metadata.getClass(Nfe.class));
+        accessManager.applyRegisteredConstraints(contexto);
+        return contexto.isDeletePermitted();
     }
 
     @Subscribe("nfesDataGrid.cancelarNfeAction")
@@ -638,13 +718,6 @@ public class NfeListView extends StandardListView<Nfe> {
                         UI.getCurrent().getPage().reload();
                     }
                 })
-                .open();
-    }
-
-    private void mostrarEmDesenvolvimento(String chaveTextoAcao) {
-        dialogs.createMessageDialog()
-                .withHeader(messageBundle.getMessage(chaveTextoAcao))
-                .withText(messageBundle.getMessage("nfeListView.emDesenvolvimento.text"))
                 .open();
     }
 

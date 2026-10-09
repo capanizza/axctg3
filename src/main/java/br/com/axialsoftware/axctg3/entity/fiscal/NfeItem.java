@@ -1,8 +1,10 @@
 package br.com.axialsoftware.axctg3.entity.fiscal;
 
+import io.jmix.core.DeletePolicy;
 import io.jmix.core.annotation.DeletedBy;
 import io.jmix.core.annotation.DeletedDate;
 import io.jmix.core.entity.annotation.JmixGeneratedValue;
+import io.jmix.core.entity.annotation.OnDelete;
 import io.jmix.core.metamodel.annotation.*;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -13,6 +15,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -113,6 +116,11 @@ public class NfeItem {
 
     @Column(name = "CEST", length = 7)
     private String cest;
+
+    // cBenef — código de benefício fiscal na UF (tabela CONFAZ; em SP, obrigatório com CST
+    // 40/41/50 — ver NfeXmlBuilder.cBenefDoItem)
+    @Column(name = "COD_BENEF", length = 10)
+    private String codBenef;
 
     @NumberFormat(pattern = "0000")
     @Column(name = "CFOP")
@@ -256,6 +264,67 @@ public class NfeItem {
     @Column(name = "VALOR_FCP", precision = 19, scale = 2)
     private BigDecimal valorFcp = BigDecimal.ZERO;
 
+    // ---- imposto / ICMS — campos das variantes menos comuns ----
+
+    // vBCFCP — base do FCP (variantes 10/20/51/70/90)
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "BASE_FCP", precision = 19, scale = 2)
+    private BigDecimal baseFcp = BigDecimal.ZERO;
+
+    // vICMSDeson — ICMS desonerado
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "VALOR_ICMS_DESON", precision = 19, scale = 2)
+    private BigDecimal valorIcmsDeson = BigDecimal.ZERO;
+
+    // motDesICMS — motivo da desoneração
+    @Column(name = "MOT_DES_ICMS")
+    private Integer motDesIcms;
+
+    // vICMSOp — ICMS da operação (CST 51, diferimento)
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "VALOR_ICMS_OP", precision = 19, scale = 2)
+    private BigDecimal valorIcmsOp = BigDecimal.ZERO;
+
+    // pDif — percentual do diferimento (CST 51)
+    @NumberFormat(pattern = "##0.0000")
+    @Column(name = "PERC_DIF_ICMS", precision = 9, scale = 4)
+    private BigDecimal percDifIcms = BigDecimal.ZERO;
+
+    // vICMSDif — ICMS diferido (CST 51)
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "VALOR_ICMS_DIF", precision = 19, scale = 2)
+    private BigDecimal valorIcmsDif = BigDecimal.ZERO;
+
+    // vBCSTRet — base do ST retido anteriormente (CST 60 / CSOSN 500)
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "BASE_ICMS_ST_RET", precision = 19, scale = 2)
+    private BigDecimal baseIcmsStRet = BigDecimal.ZERO;
+
+    // pST — alíquota suportada pelo consumidor final (CST 60 / CSOSN 500)
+    @NumberFormat(pattern = "##0.0000")
+    @Column(name = "ALIQ_ICMS_ST_RET", precision = 9, scale = 4)
+    private BigDecimal aliqIcmsStRet = BigDecimal.ZERO;
+
+    // vICMSSubstituto — ICMS próprio do substituto (CST 60 / CSOSN 500)
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "VALOR_ICMS_SUBSTITUTO", precision = 19, scale = 2)
+    private BigDecimal valorIcmsSubstituto = BigDecimal.ZERO;
+
+    // vICMSSTRet — ST retido anteriormente (CST 60 / CSOSN 500)
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "VALOR_ICMS_ST_RET", precision = 19, scale = 2)
+    private BigDecimal valorIcmsStRet = BigDecimal.ZERO;
+
+    // pCredSN — alíquota do crédito do Simples Nacional (CSOSN 101/201/900)
+    @NumberFormat(pattern = "##0.0000")
+    @Column(name = "ALIQ_CRED_SN", precision = 9, scale = 4)
+    private BigDecimal aliqCredSn = BigDecimal.ZERO;
+
+    // vCredICMSSN — crédito do Simples Nacional (CSOSN 101/201/900)
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "VALOR_CRED_ICMS_SN", precision = 19, scale = 2)
+    private BigDecimal valorCredIcmsSn = BigDecimal.ZERO;
+
     // ---- imposto / IPI ----
 
     // cEnq
@@ -280,6 +349,28 @@ public class NfeItem {
     @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
     @Column(name = "VALOR_IPI", precision = 19, scale = 2)
     private BigDecimal valorIpi = BigDecimal.ZERO;
+
+    // ---- imposto / II (Imposto de Importação) ----
+
+    // vBC — base do II (valor aduaneiro)
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "BASE_II", precision = 19, scale = 2)
+    private BigDecimal baseIi = BigDecimal.ZERO;
+
+    // vDespAdu — despesas aduaneiras
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "VALOR_DESP_ADU", precision = 19, scale = 2)
+    private BigDecimal valorDespAdu = BigDecimal.ZERO;
+
+    // vII
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "VALOR_II", precision = 19, scale = 2)
+    private BigDecimal valorIi = BigDecimal.ZERO;
+
+    // vIOF
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "VALOR_IOF", precision = 19, scale = 2)
+    private BigDecimal valorIof = BigDecimal.ZERO;
 
     // ---- imposto / PIS ----
 
@@ -524,6 +615,17 @@ public class NfeItem {
     @Column(name = "INFO_ADICIONAL_PRODUTO")
     @Lob
     private String infoAdicionalProduto;
+
+    // vItem — valor total do item (Reforma Tributária, irmão de imposto em det)
+    @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
+    @Column(name = "VALOR_ITEM", precision = 19, scale = 2)
+    private BigDecimal valorItem = BigDecimal.ZERO;
+
+    // Declarações de Importação do item (det/prod/DI) — só em entrada do exterior
+    @OnDelete(DeletePolicy.CASCADE)
+    @Composition
+    @OneToMany(mappedBy = "nfeItem")
+    private List<NfeDi> dis;
 
     public String getInfoAdicionalProduto() {
         return infoAdicionalProduto;
@@ -1299,5 +1401,157 @@ public class NfeItem {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public String getCodBenef() {
+        return codBenef;
+    }
+
+    public void setCodBenef(String codBenef) {
+        this.codBenef = codBenef;
+    }
+
+    public BigDecimal getBaseFcp() {
+        return baseFcp;
+    }
+
+    public void setBaseFcp(BigDecimal baseFcp) {
+        this.baseFcp = baseFcp;
+    }
+
+    public BigDecimal getValorIcmsDeson() {
+        return valorIcmsDeson;
+    }
+
+    public void setValorIcmsDeson(BigDecimal valorIcmsDeson) {
+        this.valorIcmsDeson = valorIcmsDeson;
+    }
+
+    public Integer getMotDesIcms() {
+        return motDesIcms;
+    }
+
+    public void setMotDesIcms(Integer motDesIcms) {
+        this.motDesIcms = motDesIcms;
+    }
+
+    public BigDecimal getValorIcmsOp() {
+        return valorIcmsOp;
+    }
+
+    public void setValorIcmsOp(BigDecimal valorIcmsOp) {
+        this.valorIcmsOp = valorIcmsOp;
+    }
+
+    public BigDecimal getPercDifIcms() {
+        return percDifIcms;
+    }
+
+    public void setPercDifIcms(BigDecimal percDifIcms) {
+        this.percDifIcms = percDifIcms;
+    }
+
+    public BigDecimal getValorIcmsDif() {
+        return valorIcmsDif;
+    }
+
+    public void setValorIcmsDif(BigDecimal valorIcmsDif) {
+        this.valorIcmsDif = valorIcmsDif;
+    }
+
+    public BigDecimal getBaseIcmsStRet() {
+        return baseIcmsStRet;
+    }
+
+    public void setBaseIcmsStRet(BigDecimal baseIcmsStRet) {
+        this.baseIcmsStRet = baseIcmsStRet;
+    }
+
+    public BigDecimal getAliqIcmsStRet() {
+        return aliqIcmsStRet;
+    }
+
+    public void setAliqIcmsStRet(BigDecimal aliqIcmsStRet) {
+        this.aliqIcmsStRet = aliqIcmsStRet;
+    }
+
+    public BigDecimal getValorIcmsSubstituto() {
+        return valorIcmsSubstituto;
+    }
+
+    public void setValorIcmsSubstituto(BigDecimal valorIcmsSubstituto) {
+        this.valorIcmsSubstituto = valorIcmsSubstituto;
+    }
+
+    public BigDecimal getValorIcmsStRet() {
+        return valorIcmsStRet;
+    }
+
+    public void setValorIcmsStRet(BigDecimal valorIcmsStRet) {
+        this.valorIcmsStRet = valorIcmsStRet;
+    }
+
+    public BigDecimal getAliqCredSn() {
+        return aliqCredSn;
+    }
+
+    public void setAliqCredSn(BigDecimal aliqCredSn) {
+        this.aliqCredSn = aliqCredSn;
+    }
+
+    public BigDecimal getValorCredIcmsSn() {
+        return valorCredIcmsSn;
+    }
+
+    public void setValorCredIcmsSn(BigDecimal valorCredIcmsSn) {
+        this.valorCredIcmsSn = valorCredIcmsSn;
+    }
+
+    public BigDecimal getBaseIi() {
+        return baseIi;
+    }
+
+    public void setBaseIi(BigDecimal baseIi) {
+        this.baseIi = baseIi;
+    }
+
+    public BigDecimal getValorDespAdu() {
+        return valorDespAdu;
+    }
+
+    public void setValorDespAdu(BigDecimal valorDespAdu) {
+        this.valorDespAdu = valorDespAdu;
+    }
+
+    public BigDecimal getValorIi() {
+        return valorIi;
+    }
+
+    public void setValorIi(BigDecimal valorIi) {
+        this.valorIi = valorIi;
+    }
+
+    public BigDecimal getValorIof() {
+        return valorIof;
+    }
+
+    public void setValorIof(BigDecimal valorIof) {
+        this.valorIof = valorIof;
+    }
+
+    public BigDecimal getValorItem() {
+        return valorItem;
+    }
+
+    public void setValorItem(BigDecimal valorItem) {
+        this.valorItem = valorItem;
+    }
+
+    public List<NfeDi> getDis() {
+        return dis;
+    }
+
+    public void setDis(List<NfeDi> dis) {
+        this.dis = dis;
     }
 }

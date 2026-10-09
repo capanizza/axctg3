@@ -20,10 +20,15 @@ are kept identical apart from this header — mirror any change to all three.
 ./gradlew bootRun                     # http://localhost:8085/axctg3 — admin/admin
 ```
 
-- Dev DB: PostgreSQL 16 in Docker — `jdbc:postgresql://localhost:5433/axctg3`
+- Dev DB: PostgreSQL 18 in Docker — `jdbc:postgresql://localhost:5433/axctg3`
   (postgres/root), container `axctg3-postgres` from `docker-compose.yml`, data in the
-  **external** volume `axctg3_axctg3_pgdata` (so `docker compose down -v` can't wipe it; on
-  a fresh machine `docker volume create axctg3_axctg3_pgdata` before the first `up`).
+  **external** volume `axctg3_axctg3_pgdata18` (so `docker compose down -v` can't wipe it; on
+  a fresh machine `docker volume create axctg3_axctg3_pgdata18` before the first `up`).
+  The image-18 volume mounts at `/var/lib/postgresql`, not `.../data`. Started empty on
+  2026-10-08 to receive the legacy import that will become the production DB; the old
+  Postgres 16 dev data stays untouched in volume `axctg3_axctg3_pgdata` (not running), with
+  its last dump kept outside the rotation in `C:\backups\axctg3-pg16-final`. The cloud and
+  test-server compose files still use `postgres:16`.
   Port 5433, not 5432, on purpose: the native Windows Postgres (service
   `postgresql-x64-16`, holding the pre-Docker copy of the dev DB) is stopped with
   startup type Manual — but if anyone starts it, it takes 5432, and sharing that port

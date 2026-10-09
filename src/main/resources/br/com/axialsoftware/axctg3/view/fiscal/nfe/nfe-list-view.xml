@@ -31,10 +31,12 @@
             <startSlot>
                 <button id="editButton" action="nfesDataGrid.editAction" themeNames="small"/>
                 <button id="removeButton" action="nfesDataGrid.removeAction" themeNames="small"/>
+                <button id="novaDigitadaButton" action="nfesDataGrid.novaDigitadaAction" themeNames="small"/>
                 <button id="importXmlButton" text="msg://nfeListView.importXmlButton.text" themeNames="small"/>
                 <dropdownButton id="nfeAcoesDropdownButton" text="msg://nfeListView.acoesDropdownButton.text" themeNames="small">
                     <items>
                         <actionItem id="emitirNfeItem" ref="nfesDataGrid.emitirNfeAction"/>
+                        <actionItem id="copiarRascunhoItem" ref="nfesDataGrid.copiarRascunhoAction"/>
                         <actionItem id="emitirDanfeItem" ref="nfesDataGrid.emitirDanfeAction"/>
                         <actionItem id="baixarXmlItem" ref="nfesDataGrid.baixarXmlAction"/>
                         <actionItem id="exportarXmlsContadorItem" ref="nfesDataGrid.exportarXmlsContadorAction"/>
@@ -61,9 +63,11 @@
                   dataContainer="nfesDc"
                   columnReorderingAllowed="true" themeNames="small">
             <actions>
-                <action id="editAction" type="list_read"/>
+                <action id="editAction" type="list_read" text="msg://nfeListView.abrirAction.text"/>
                 <action id="removeAction" type="list_remove"/>
                 <action id="emitirNfeAction" text="msg://nfeListView.emitirNfeAction.text" icon="vaadin:paperplane"/>
+                <action id="novaDigitadaAction" text="msg://nfeListView.novaDigitadaAction.text" icon="vaadin:plus"/>
+                <action id="copiarRascunhoAction" text="msg://nfeListView.copiarRascunhoAction.text" icon="vaadin:copy"/>
                 <action id="emitirDanfeAction" text="msg://nfeListView.emitirDanfeAction.text" icon="vaadin:print"/>
                 <action id="baixarXmlAction" text="msg://nfeListView.baixarXmlAction.text" icon="vaadin:download"/>
                 <action id="exportarXmlsContadorAction" text="msg://nfeListView.exportarXmlsContadorAction.text" icon="vaadin:download"/>

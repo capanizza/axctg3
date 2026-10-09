@@ -22,6 +22,8 @@ import br.com.axialsoftware.axctg3.entity.fiscal.NfeDuplicata;
 import br.com.axialsoftware.axctg3.entity.fiscal.NfeInutilizacao;
 import br.com.axialsoftware.axctg3.entity.fiscal.NfeItem;
 import br.com.axialsoftware.axctg3.entity.fiscal.NfePagamento;
+import br.com.axialsoftware.axctg3.entity.fiscal.NfeDi;
+import br.com.axialsoftware.axctg3.entity.fiscal.NfeDiAdicao;
 import br.com.axialsoftware.axctg3.entity.fiscal.NfeVolume;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.PedidoVenda;
@@ -100,6 +102,12 @@ public interface OperadorFiscalRole {
     @EntityPolicy(entityClass = NfePagamento.class, actions = {EntityPolicyAction.READ, EntityPolicyAction.CREATE, EntityPolicyAction.UPDATE})
     @EntityAttributePolicy(entityClass = NfeVolume.class, attributes = "*", action = EntityAttributePolicyAction.VIEW)
     @EntityPolicy(entityClass = NfeVolume.class, actions = {EntityPolicyAction.READ, EntityPolicyAction.CREATE, EntityPolicyAction.UPDATE})
+    // DI/adições do item (nota de importação) — mesmo tratamento dos outros filhos: um XML
+    // importado com DI é gravado sob a sessão do operador
+    @EntityAttributePolicy(entityClass = NfeDi.class, attributes = "*", action = EntityAttributePolicyAction.VIEW)
+    @EntityPolicy(entityClass = NfeDi.class, actions = {EntityPolicyAction.READ, EntityPolicyAction.CREATE, EntityPolicyAction.UPDATE})
+    @EntityAttributePolicy(entityClass = NfeDiAdicao.class, attributes = "*", action = EntityAttributePolicyAction.VIEW)
+    @EntityPolicy(entityClass = NfeDiAdicao.class, actions = {EntityPolicyAction.READ, EntityPolicyAction.CREATE, EntityPolicyAction.UPDATE})
     void nfeEntity();
 
     // Cartas de correção: histórico imutável (nfe-carta-correcao-list-view.xml só tem
@@ -194,6 +202,9 @@ public interface OperadorFiscalRole {
             "NfeDuplicata.detail",
             "NfePagamento.detail",
             "NfeVolume.detail",
+            // DI/adições: só leitura aqui (a Nfe abre travada); editar é do gerente, no rascunho
+            "NfeDi.detail",
+            "NfeDiAdicao.detail",
             "NfeCartaCorrecao.list",
             "NfeInutilizacao.list",
             "PeriodoFiscal.list",

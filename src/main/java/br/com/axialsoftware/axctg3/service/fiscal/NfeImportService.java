@@ -1,6 +1,8 @@
 package br.com.axialsoftware.axctg3.service.fiscal;
 
 import br.com.axialsoftware.axctg3.entity.fiscal.Nfe;
+import br.com.axialsoftware.axctg3.entity.fiscal.NfeDi;
+import br.com.axialsoftware.axctg3.entity.fiscal.NfeDiAdicao;
 import br.com.axialsoftware.axctg3.entity.fiscal.NfeDuplicata;
 import br.com.axialsoftware.axctg3.entity.fiscal.NfeItem;
 import br.com.axialsoftware.axctg3.entity.fiscal.NfePagamento;
@@ -95,6 +97,12 @@ public class NfeImportService {
         saveContext.saving(nfe);
         for (NfeItem item : nfe.getItens()) {
             saveContext.saving(item);
+            for (NfeDi di : item.getDis()) {
+                saveContext.saving(di);
+                for (NfeDiAdicao adicao : di.getAdicoes()) {
+                    saveContext.saving(adicao);
+                }
+            }
         }
         for (NfeDuplicata duplicata : nfe.getDuplicatas()) {
             saveContext.saving(duplicata);

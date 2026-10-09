@@ -1,6 +1,10 @@
 package br.com.axialsoftware.axctg3.service.fiscal;
 
+import br.com.axialsoftware.axctg3.entity.enums.FormaImportacao;
+import br.com.axialsoftware.axctg3.entity.enums.ViaTransporteInternacional;
 import br.com.axialsoftware.axctg3.entity.fiscal.Nfe;
+import br.com.axialsoftware.axctg3.entity.fiscal.NfeDi;
+import br.com.axialsoftware.axctg3.entity.fiscal.NfeDiAdicao;
 import br.com.axialsoftware.axctg3.entity.fiscal.NfeDuplicata;
 import br.com.axialsoftware.axctg3.entity.fiscal.NfeItem;
 import br.com.axialsoftware.axctg3.entity.fiscal.NfePagamento;
@@ -134,6 +138,7 @@ public class NfeXmlParser {
         nfe.setRefNfe(nfRef != null ? text(nfRef, "refNFe") : null);
         nfe.setIndFinal(integer(ide, "indFinal"));
         nfe.setIndPres(integer(ide, "indPres"));
+        nfe.setIndIntermed(integer(ide, "indIntermed"));
         nfe.setProcEmi(integer(ide, "procEmi"));
         nfe.setVerProc(text(ide, "verProc"));
     }
@@ -159,6 +164,7 @@ public class NfeXmlParser {
     private void parseDest(Nfe nfe, Element dest) {
         nfe.setDestCnpj(text(dest, "CNPJ"));
         nfe.setDestCpf(text(dest, "CPF"));
+        nfe.setDestIdEstrangeiro(text(dest, "idEstrangeiro"));
         nfe.setDestXNome(text(dest, "xNome"));
         nfe.setDestIndIe(integer(dest, "indIEDest"));
         nfe.setDestIe(text(dest, "IE"));
@@ -173,6 +179,8 @@ public class NfeXmlParser {
         nfe.setDestUf(text(ender, "UF"));
         nfe.setDestCep(text(ender, "CEP"));
         nfe.setDestFone(text(ender, "fone"));
+        nfe.setDestCPais(integer(ender, "cPais"));
+        nfe.setDestXPais(text(ender, "xPais"));
     }
 
     private void parseTotal(Nfe nfe, Element total) {
@@ -341,12 +349,16 @@ public class NfeXmlParser {
             item.setNfe(nfe);
             item.setItem(integerAttr(det, "nItem"));
             item.setInfoAdicionalProduto(text(det, "infAdProd"));
+            item.setValorItem(decimal(det, "vItem"));
 
-            parseProd(item, child(det, "prod"));
+            Element prod = child(det, "prod");
+            parseProd(item, prod);
+            item.setDis(parseDis(item, prod));
 
             Element imposto = child(det, "imposto");
             parseImpostoIcms(item, child(imposto, "ICMS"));
             parseImpostoIpi(item, child(imposto, "IPI"));
+            parseImpostoIi(item, child(imposto, "II"));
             parseImpostoPis(item, child(imposto, "PIS"));
             parseImpostoCofins(item, child(imposto, "COFINS"));
             item.setValorTotTributos(decimal(imposto, "vTotTrib"));
@@ -364,6 +376,7 @@ public class NfeXmlParser {
         item.setDescProd(text(prod, "xProd"));
         item.setNcm(text(prod, "NCM"));
         item.setCest(text(prod, "CEST"));
+        item.setCodBenef(text(prod, "cBenef"));
         item.setCfop(integer(prod, "CFOP"));
         item.setUnCom(text(prod, "uCom"));
         item.setQuantCom(decimal(prod, "qCom"));
@@ -404,6 +417,63 @@ public class NfeXmlParser {
         item.setValorIcmsSt(decimal(variante, "vICMSST"));
         item.setAliqFcp(decimal(variante, "pFCP"));
         item.setValorFcp(decimal(variante, "vFCP"));
+        item.setBaseFcp(decimal(variante, "vBCFCP"));
+        item.setValorIcmsDeson(decimal(variante, "vICMSDeson"));
+        item.setMotDesIcms(integer(variante, "motDesICMS"));
+        item.setValorIcmsOp(decimal(variante, "vICMSOp"));
+        item.setPercDifIcms(decimal(variante, "pDif"));
+        item.setValorIcmsDif(decimal(variante, "vICMSDif"));
+        item.setBaseIcmsStRet(decimal(variante, "vBCSTRet"));
+        item.setAliqIcmsStRet(decimal(variante, "pST"));
+        item.setValorIcmsSubstituto(decimal(variante, "vICMSSubstituto"));
+        item.setValorIcmsStRet(decimal(variante, "vICMSSTRet"));
+        item.setAliqCredSn(decimal(variante, "pCredSN"));
+        item.setValorCredIcmsSn(decimal(variante, "vCredICMSSN"));
+    }
+
+    private void parseImpostoIi(NfeItem item, Element ii) {
+        if (ii == null) {
+            return;
+        }
+        item.setBaseIi(decimal(ii, "vBC"));
+        item.setValorDespAdu(decimal(ii, "vDespAdu"));
+        item.setValorIi(decimal(ii, "vII"));
+        item.setValorIof(decimal(ii, "vIOF"));
+    }
+
+    // Declaração de Importação (prod/DI, 0..100) com suas adições (DI/adi, 1..999)
+    private List<NfeDi> parseDis(NfeItem item, Element prod) {
+        List<NfeDi> dis = new ArrayList<>();
+        for (Element diEl : children(prod, "DI")) {
+            NfeDi di = dataManager.create(NfeDi.class);
+            di.setNfeItem(item);
+            di.setNumeroDi(text(diEl, "nDI"));
+            di.setDataDi(date(diEl, "dDI"));
+            di.setLocalDesembaraco(text(diEl, "xLocDesemb"));
+            di.setUfDesembaraco(text(diEl, "UFDesemb"));
+            di.setDataDesembaraco(date(diEl, "dDesemb"));
+            di.setViaTransporte(ViaTransporteInternacional.fromId(integer(diEl, "tpViaTransp")));
+            di.setValorAfrmm(decimal(diEl, "vAFRMM"));
+            di.setFormaImportacao(FormaImportacao.fromId(integer(diEl, "tpIntermedio")));
+            String cnpj = text(diEl, "CNPJ");
+            di.setCnpjCpfAdquirente(cnpj != null ? cnpj : text(diEl, "CPF"));
+            di.setUfTerceiro(text(diEl, "UFTerceiro"));
+            di.setCodExportador(text(diEl, "cExportador"));
+            List<NfeDiAdicao> adicoes = new ArrayList<>();
+            for (Element adiEl : children(diEl, "adi")) {
+                NfeDiAdicao adicao = dataManager.create(NfeDiAdicao.class);
+                adicao.setNfeDi(di);
+                adicao.setNumeroAdicao(integer(adiEl, "nAdicao"));
+                adicao.setSequencial(integer(adiEl, "nSeqAdic"));
+                adicao.setCodFabricante(text(adiEl, "cFabricante"));
+                adicao.setValorDesconto(decimal(adiEl, "vDescDI"));
+                adicao.setNumDrawback(text(adiEl, "nDraw"));
+                adicoes.add(adicao);
+            }
+            di.setAdicoes(adicoes);
+            dis.add(di);
+        }
+        return dis;
     }
 
     private void parseImpostoIpi(NfeItem item, Element ipi) {
@@ -452,7 +522,9 @@ public class NfeXmlParser {
         item.setCodClassTribIs(text(is, "cClassTribIS"));
         item.setBaseIs(decimal(is, "vBCIS"));
         item.setAliqIs(decimal(is, "pIS"));
-        item.setAdRemIs(decimal(is, "adRemIS"));
+        // pISEspec no leiaute atual; adRemIS era o nome numa versão anterior da NT
+        BigDecimal pIsEspec = decimal(is, "pISEspec");
+        item.setAdRemIs(pIsEspec.signum() != 0 ? pIsEspec : decimal(is, "adRemIS"));
         item.setUnTribIs(text(is, "uTrib"));
         item.setQuantTribIs(decimal(is, "qTrib"));
         item.setValorIs(decimal(is, "vIS"));

@@ -21,9 +21,6 @@ import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.OffsetDateTime;
@@ -53,7 +50,7 @@ import java.util.Map;
 @Service
 public class NfeXmlBuilder {
 
-    private static final String NS_NFE = "http://www.portalfiscal.inf.br/nfe";
+    private static final String NS_NFE = NfeXml.NS_NFE;
     private static final DateTimeFormatter DATA_HORA = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
     private final DataManager dataManager;
@@ -1133,42 +1130,21 @@ public class NfeXmlBuilder {
 
     // ---- utilitários ----
 
+    // namespace/texto/decimal compartilhados com NfeXmlSerializer — ver NfeXml
     private Document novoDocumento() {
-        try {
-            // namespace-aware=true: exigido pra criar elementos com createElementNS (usado em
-            // todo o resto da classe) — ver comentário em construir() sobre o motivo real
-            // (cStat=297 de assinatura).
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            factory.setNamespaceAware(true);
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            return builder.newDocument();
-        } catch (ParserConfigurationException e) {
-            throw new IllegalStateException(e);
-        }
+        return NfeXml.novoDocumento();
     }
 
-    // Caracteres de controle (fora de \t\n\r) e surrogates soltos não são válidos em XML 1.0 —
-    // o parser DOM recusa com INVALID_CHARACTER_ERR ao tentar setTextContent. Dado vindo de
-    // import do sistema legado às vezes carrega esse tipo de lixo (padding com bytes de
-    // controle); sanitiza aqui, no único ponto que cria nó de texto, em vez de em cada campo.
-    private static final java.util.regex.Pattern CARACTER_XML_INVALIDO =
-            java.util.regex.Pattern.compile("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\uFFFE\\uFFFF]");
-
     private void text(Document doc, Element parent, String tag, Object valor) {
-        if (valor == null) {
-            return;
-        }
-        Element el = doc.createElementNS(NS_NFE, tag);
-        el.setTextContent(CARACTER_XML_INVALIDO.matcher(String.valueOf(valor)).replaceAll(""));
-        parent.appendChild(el);
+        NfeXml.text(doc, parent, tag, valor);
     }
 
     private String dec(BigDecimal valor, int scale) {
-        return (valor == null ? BigDecimal.ZERO : valor).setScale(scale, RoundingMode.HALF_UP).toPlainString();
+        return NfeXml.dec(valor, scale);
     }
 
     private String somenteDigitos(String texto) {
-        return texto == null ? "" : texto.replaceAll("\\D", "");
+        return NfeXml.somenteDigitos(texto);
     }
 
     // trim retornando null (não string vazia) pra text() continuar omitindo a tag quando

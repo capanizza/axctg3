@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/10/09-111128-c1f40fd1-nfe-digitada.xml">
+    <!-- NFe digitada: rascunho editável na própria NFE (chave nasce na transmissão) e os
+         grupos que faltavam pra nota de importação (DI/adição, II, destinatário estrangeiro). -->
+    <changeSet id="1" author="axctg3">
+        <dropNotNullConstraint tableName="NFE" columnName="CHAVE" columnDataType="VARCHAR(44)"/>
+    </changeSet>
+    <changeSet id="2" author="axctg3">
+        <addColumn tableName="NFE">
+            <column name="DIGITADA" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="CHAVE_TENTATIVA" type="VARCHAR(44)"/>
+            <column name="IND_INTERMED" type="INT"/>
+            <column name="DEST_ID_ESTRANGEIRO" type="VARCHAR(20)"/>
+            <column name="DEST_C_PAIS" type="INT"/>
+            <column name="DEST_X_PAIS" type="VARCHAR(60)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet id="3" author="axctg3">
+        <addColumn tableName="NFE_ITEM">
+            <column name="COD_BENEF" type="VARCHAR(10)"/>
+            <column name="BASE_FCP" type="DECIMAL(19, 2)"/>
+            <column name="VALOR_ICMS_DESON" type="DECIMAL(19, 2)"/>
+            <column name="MOT_DES_ICMS" type="INT"/>
+            <column name="VALOR_ICMS_OP" type="DECIMAL(19, 2)"/>
+            <column name="PERC_DIF_ICMS" type="DECIMAL(9, 4)"/>
+            <column name="VALOR_ICMS_DIF" type="DECIMAL(19, 2)"/>
+            <column name="BASE_ICMS_ST_RET" type="DECIMAL(19, 2)"/>
+            <column name="ALIQ_ICMS_ST_RET" type="DECIMAL(9, 4)"/>
+            <column name="VALOR_ICMS_SUBSTITUTO" type="DECIMAL(19, 2)"/>
+            <column name="VALOR_ICMS_ST_RET" type="DECIMAL(19, 2)"/>
+            <column name="ALIQ_CRED_SN" type="DECIMAL(9, 4)"/>
+            <column name="VALOR_CRED_ICMS_SN" type="DECIMAL(19, 2)"/>
+            <column name="BASE_II" type="DECIMAL(19, 2)"/>
+            <column name="VALOR_DESP_ADU" type="DECIMAL(19, 2)"/>
+            <column name="VALOR_II" type="DECIMAL(19, 2)"/>
+            <column name="VALOR_IOF" type="DECIMAL(19, 2)"/>
+            <column name="VALOR_ITEM" type="DECIMAL(19, 2)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet id="4" author="axctg3">
+        <createTable tableName="NFE_DI">
+            <column name="ID" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_NFE_DI"/>
+            </column>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="${offsetDateTime.type}"/>
+            <column name="LAST_MODIFIED_BY" type="VARCHAR(255)"/>
+            <column name="LAST_MODIFIED_DATE" type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY" type="VARCHAR(255)"/>
+            <column name="DELETED_DATE" type="${offsetDateTime.type}"/>
+            <column name="NFE_ITEM_ID" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="NUMERO_DI" type="VARCHAR(15)"/>
+            <column name="DATA_DI" type="DATE"/>
+            <column name="LOCAL_DESEMBARACO" type="VARCHAR(60)"/>
+            <column name="UF_DESEMBARACO" type="VARCHAR(2)"/>
+            <column name="DATA_DESEMBARACO" type="DATE"/>
+            <column name="VIA_TRANSPORTE" type="INT"/>
+            <column name="VALOR_AFRMM" type="DECIMAL(19, 2)"/>
+            <column name="FORMA_IMPORTACAO" type="INT"/>
+            <column name="CNPJ_CPF_ADQUIRENTE" type="VARCHAR(14)"/>
+            <column name="UF_TERCEIRO" type="VARCHAR(2)"/>
+            <column name="COD_EXPORTADOR" type="VARCHAR(60)"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="5" author="axctg3">
+        <createIndex indexName="IDX_NFE_DI_NFE_ITEM" tableName="NFE_DI">
+            <column name="NFE_ITEM_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="NFE_ITEM_ID" baseTableName="NFE_DI"
+                                 constraintName="FK_NFE_DI_ON_NFE_ITEM" referencedColumnNames="ID"
+                                 referencedTableName="NFE_ITEM"/>
+    </changeSet>
+    <changeSet id="6" author="axctg3">
+        <createTable tableName="NFE_DI_ADICAO">
+            <column name="ID" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_NFE_DI_ADICAO"/>
+            </column>
+            <column name="VERSION" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_BY" type="VARCHAR(255)"/>
+            <column name="CREATED_DATE" type="${offsetDateTime.type}"/>
+            <column name="LAST_MODIFIED_BY" type="VARCHAR(255)"/>
+            <column name="LAST_MODIFIED_DATE" type="${offsetDateTime.type}"/>
+            <column name="DELETED_BY" type="VARCHAR(255)"/>
+            <column name="DELETED_DATE" type="${offsetDateTime.type}"/>
+            <column name="NFE_DI_ID" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="NUMERO_ADICAO" type="INT"/>
+            <column name="SEQUENCIAL" type="INT"/>
+            <column name="COD_FABRICANTE" type="VARCHAR(60)"/>
+            <column name="VALOR_DESCONTO" type="DECIMAL(19, 2)"/>
+            <column name="NUM_DRAWBACK" type="VARCHAR(20)"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="7" author="axctg3">
+        <createIndex indexName="IDX_NFE_DI_ADICAO_NFE_DI" tableName="NFE_DI_ADICAO">
+            <column name="NFE_DI_ID"/>
+        </createIndex>
+
+        <addForeignKeyConstraint baseColumnNames="NFE_DI_ID" baseTableName="NFE_DI_ADICAO"
+                                 constraintName="FK_NFE_DI_ADICAO_ON_NFE_DI" referencedColumnNames="ID"
+                                 referencedTableName="NFE_DI"/>
+    </changeSet>
+</databaseChangeLog>

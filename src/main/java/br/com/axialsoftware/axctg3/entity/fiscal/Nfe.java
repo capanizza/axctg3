@@ -42,7 +42,9 @@ import java.util.UUID;
  * {@code cana} (agroindústria canavieira), {@code rastro}/{@code med}/{@code arma}/
  * {@code veicProd}/{@code comb} (rastreabilidade e produtos regulados específicos),
  * {@code ISSQNtot}/{@code infIntermed} (prestação de serviço/intermediador),
- * {@code infRespTec}, {@code reboque}/{@code vagao}/{@code balsa} (multimodal), NVE/DI.
+ * {@code infRespTec}, {@code reboque}/{@code vagao}/{@code balsa} (multimodal), NVE. A
+ * Declaração de Importação ({@code DI}/{@code adi}) e o grupo {@code II} entraram em
+ * 2026-10-09, junto com o destinatário estrangeiro, pra NFe digitada (ver {@link NfeDi}).
  * Até 2026-08-17 esta entidade era só de registro/consulta, sem integração com a SEFAZ
  * — decisão revertida nessa data (docs/EMISSAO-NFE.md): a emissão própria de NFe
  * ({@code NfeEmissaoService}) gera, assina e transmite a partir de {@code NotaSaida}, e
@@ -50,6 +52,11 @@ import java.util.UUID;
  * emitida pelo próprio axctg3 vira uma linha igual a uma importada, sem mapeador
  * duplicado. A ligação com {@code NotaSaida} continua só pela chave, sem FK, pelo mesmo
  * motivo de antes.
+ *
+ * <p><b>NFe digitada</b> (desde 2026-10-09, {@link #getDigitada()}): rascunho editável
+ * campo a campo, sem chave até a transmissão, cujo XML sai destes campos tal como estão
+ * ({@code NfeXmlSerializer}) — porta de exceção pras notas que a {@code NotaSaida} não
+ * cobre, como a de importação.
  *
  * <p>Campos percentuais ({@code p*}) usam 4 casas decimais (padrão do leiaute SEFAZ,
  * igual a {@link br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib}), diferente do
@@ -106,11 +113,26 @@ public class Nfe {
     private OffsetDateTime deletedDate;
 
     // chave de acesso completa (44 dígitos) — chave de negócio da NFe; é por este valor
-    // que NotaSaida.chave "encontra" o registro correspondente aqui
+    // que NotaSaida.chave "encontra" o registro correspondente aqui. Nula só no rascunho de
+    // uma NFe digitada (digitada = true) que ainda não foi autorizada: a chave nasce na
+    // transmissão, junto com número/cNF/dhEmi (ver chaveTentativa). O índice único continua
+    // valendo, porque nulos não colidem entre si.
     @InstanceName
-    @Column(name = "CHAVE", nullable = false, length = 44)
-    @NotNull
+    @Column(name = "CHAVE", length = 44)
     private String chave;
+
+    // NFe digitada campo a campo (porta de exceção pra casos que a NotaSaida não cobre —
+    // importação, por exemplo): o XML sai destes campos tal como digitados, sem cálculo
+    // (NfeXmlSerializer), em vez de ser montado a partir de uma NotaSaida (NfeXmlBuilder).
+    // false nas emitidas a partir de NotaSaida e nas importadas de XML.
+    @Column(name = "DIGITADA")
+    private Boolean digitada = false;
+
+    // Chave da última tentativa de transmissão ainda sem resposta confirmada da SEFAZ — só
+    // em NFe digitada; mesma proteção contra resposta perdida de NotaSaida.chaveTentativa
+    // (consultar antes de reenviar, reaproveitando o mesmo cNF).
+    @Column(name = "CHAVE_TENTATIVA", length = 44)
+    private String chaveTentativa;
 
     // sem valor padrão: o NfeEventListener preenche com a empresa corrente quando nulo
     @Column(name = "COD_EMPRESA", nullable = false)
@@ -189,6 +211,11 @@ public class Nfe {
     // indicador de presença do comprador: 0=não se aplica, 1=presencial, 2=internet...
     @Column(name = "IND_PRES")
     private Integer indPres;
+
+    // indIntermed — indicador de intermediador/marketplace: 0=sem intermediador (própria),
+    // 1=em site de terceiros
+    @Column(name = "IND_INTERMED")
+    private Integer indIntermed;
 
     @Column(name = "PROC_EMI")
     private Integer procEmi;
@@ -288,6 +315,18 @@ public class Nfe {
 
     @Column(name = "DEST_EMAIL", length = 60)
     private String destEmail;
+
+    // idEstrangeiro — identificação do destinatário estrangeiro (passaporte ou documento
+    // do país de origem), no lugar de CNPJ/CPF; pode ir vazio no XML
+    @Column(name = "DEST_ID_ESTRANGEIRO", length = 20)
+    private String destIdEstrangeiro;
+
+    // cPais/xPais de enderDest — tabela de países do Bacen (1058 = Brasil)
+    @Column(name = "DEST_C_PAIS")
+    private Integer destCPais;
+
+    @Column(name = "DEST_X_PAIS", length = 60)
+    private String destXPais;
 
     // ---- total (ICMSTot) ----
 
@@ -1622,11 +1661,11 @@ public class Nfe {
         this.codEmpresa = codEmpresa;
     }
 
-    public @NotNull String getChave() {
+    public String getChave() {
         return chave;
     }
 
-    public void setChave(@NotNull String chave) {
+    public void setChave(String chave) {
         this.chave = chave;
     }
 
@@ -1692,5 +1731,53 @@ public class Nfe {
 
     public void setId(UUID id) {
         this.id = id;
+    }
+
+    public Boolean getDigitada() {
+        return digitada;
+    }
+
+    public void setDigitada(Boolean digitada) {
+        this.digitada = digitada;
+    }
+
+    public String getChaveTentativa() {
+        return chaveTentativa;
+    }
+
+    public void setChaveTentativa(String chaveTentativa) {
+        this.chaveTentativa = chaveTentativa;
+    }
+
+    public Integer getIndIntermed() {
+        return indIntermed;
+    }
+
+    public void setIndIntermed(Integer indIntermed) {
+        this.indIntermed = indIntermed;
+    }
+
+    public String getDestIdEstrangeiro() {
+        return destIdEstrangeiro;
+    }
+
+    public void setDestIdEstrangeiro(String destIdEstrangeiro) {
+        this.destIdEstrangeiro = destIdEstrangeiro;
+    }
+
+    public Integer getDestCPais() {
+        return destCPais;
+    }
+
+    public void setDestCPais(Integer destCPais) {
+        this.destCPais = destCPais;
+    }
+
+    public String getDestXPais() {
+        return destXPais;
+    }
+
+    public void setDestXPais(String destXPais) {
+        this.destXPais = destXPais;
     }
 }

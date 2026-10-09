@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://nfeDiDetailView.title"
+      focusComponent="form">
+    <data>
+        <instance id="nfeDiDc"
+                  class="br.com.axialsoftware.axctg3.entity.fiscal.NfeDi">
+            <fetchPlan extends="_base">
+                <property name="adicoes" fetchPlan="_base"/>
+            </fetchPlan>
+            <loader id="nfeDiDl"/>
+            <collection id="adicoesDc" property="adicoes"/>
+        </instance>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <actions>
+        <action id="saveCloseAction" type="detail_saveClose"/>
+        <action id="closeAction" type="detail_close"/>
+    </actions>
+    <layout>
+        <vbox id="form" width="100%">
+            <hbox width="100%" expand="localDesembaracoField">
+                <textField id="numeroDiField" property="numeroDi" dataContainer="nfeDiDc"
+                           maxLength="15" width="16%" themeNames="small" required="true"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeDi.numeroDi"/>
+                <datePicker id="dataDiField" property="dataDi" dataContainer="nfeDiDc"
+                            width="14%" themeNames="small" required="true"
+                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeDi.dataDi"/>
+                <textField id="localDesembaracoField" property="localDesembaraco" dataContainer="nfeDiDc"
+                           maxLength="60" themeNames="small" required="true"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeDi.localDesembaraco"/>
+                <textField id="ufDesembaracoField" property="ufDesembaraco" dataContainer="nfeDiDc"
+                           maxLength="2" width="7%" themeNames="small" required="true"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeDi.ufDesembaraco"/>
+                <datePicker id="dataDesembaracoField" property="dataDesembaraco" dataContainer="nfeDiDc"
+                            width="14%" themeNames="small" required="true"
+                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeDi.dataDesembaraco"/>
+            </hbox>
+            <hbox width="100%">
+                <comboBox id="viaTransporteField" property="viaTransporte" dataContainer="nfeDiDc"
+                          width="22%" themeNames="small" required="true"
+                          label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeDi.viaTransporte"/>
+                <bigDecimalField id="valorAfrmmField" property="valorAfrmm" dataContainer="nfeDiDc"
+                                 width="14%" themeNames="small"
+                                 label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeDi.valorAfrmm"/>
+                <comboBox id="formaImportacaoField" property="formaImportacao" dataContainer="nfeDiDc"
+                          width="20%" themeNames="small" required="true"
+                          label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeDi.formaImportacao"/>
+                <textField id="cnpjCpfAdquirenteField" property="cnpjCpfAdquirente" dataContainer="nfeDiDc"
+                           maxLength="14" width="16%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeDi.cnpjCpfAdquirente"/>
+                <textField id="ufTerceiroField" property="ufTerceiro" dataContainer="nfeDiDc"
+                           maxLength="2" width="8%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeDi.ufTerceiro"/>
+                <textField id="codExportadorField" property="codExportador" dataContainer="nfeDiDc"
+                           maxLength="60" width="20%" themeNames="small" required="true"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NfeDi.codExportador"/>
+            </hbox>
+            <hbox id="adicoesButtonsPanel" classNames="buttons-panel">
+                <button id="adicaoCreateButton" action="adicoesDataGrid.create" themeNames="small"/>
+                <button id="adicaoEditButton" action="adicoesDataGrid.edit" themeNames="small"/>
+                <button id="adicaoViewButton" action="adicoesDataGrid.view" themeNames="small"/>
+                <button id="adicaoRemoveButton" action="adicoesDataGrid.remove" themeNames="small"/>
+            </hbox>
+            <dataGrid id="adicoesDataGrid" dataContainer="adicoesDc" width="100%" height="12em" themeNames="small">
+                <actions>
+                    <action id="create" type="list_create">
+                        <properties>
+                            <property name="openMode" value="DIALOG"/>
+                        </properties>
+                    </action>
+                    <action id="edit" type="list_edit">
+                        <properties>
+                            <property name="openMode" value="DIALOG"/>
+                        </properties>
+                    </action>
+                    <action id="view" type="list_read" text="msg://adicoesDataGrid.view.text">
+                        <properties>
+                            <property name="openMode" value="DIALOG"/>
+                        </properties>
+                    </action>
+                    <action id="remove" type="list_remove"/>
+                </actions>
+                <columns resizable="true">
+                    <column property="numeroAdicao" width="15%" textAlign="CENTER"/>
+                    <column property="sequencial" width="15%" textAlign="CENTER"/>
+                    <column property="codFabricante" width="35%"/>
+                    <column property="valorDesconto" width="15%" textAlign="END"/>
+                    <column property="numDrawback" width="20%"/>
+                </columns>
+            </dataGrid>
+        </vbox>
+        <hbox id="detailActions">
+            <button id="saveAndCloseButton" action="saveCloseAction" themeNames="small"/>
+            <button id="closeButton" action="closeAction" themeNames="small"/>
+        </hbox>
+    </layout>
+</view>

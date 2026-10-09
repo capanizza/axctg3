@@ -6,8 +6,11 @@ import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
 import br.com.axialsoftware.axctg3.entity.contabil.Depreciacao;
 import br.com.axialsoftware.axctg3.entity.contabil.HistoricoContabil;
 import br.com.axialsoftware.axctg3.entity.contabil.Lancamento;
+import br.com.axialsoftware.axctg3.entity.contabil.LancamentoTmp;
 import br.com.axialsoftware.axctg3.entity.contabil.SaldoConta;
+import io.jmix.security.model.EntityAttributePolicyAction;
 import io.jmix.security.model.EntityPolicyAction;
+import io.jmix.security.role.annotation.EntityAttributePolicy;
 import io.jmix.security.role.annotation.EntityPolicy;
 import io.jmix.security.role.annotation.ResourceRole;
 import io.jmix.securityflowui.role.annotation.MenuPolicy;
@@ -33,6 +36,13 @@ public interface GerenteContabilRole extends OperadorContabilRole {
     @EntityPolicy(entityClass = HistoricoContabil.class, actions = EntityPolicyAction.DELETE)
     @EntityPolicy(entityClass = ConfigRel.class, actions = EntityPolicyAction.DELETE)
     void excluirEntidadesModuloContabil();
+
+    // Importação de lançamentos do legado (botão "Importar" de Lancamento.list): o
+    // LancamentoService lê a tabela de staging pelo DataManager sob a sessão do usuário.
+    // Sem READ aqui a consulta volta vazia, sem erro — "nenhum lançamento a ser importado".
+    @EntityAttributePolicy(entityClass = LancamentoTmp.class, attributes = "*", action = EntityAttributePolicyAction.VIEW)
+    @EntityPolicy(entityClass = LancamentoTmp.class, actions = EntityPolicyAction.READ)
+    void importacaoLancamentosLegado();
 
     @ViewPolicy(viewIds = {
             "Associacao.list",
