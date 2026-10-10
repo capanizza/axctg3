@@ -34,8 +34,8 @@ import java.util.UUID;
  * <p>
  * Por isso a <b>conferência</b> existe: antes de gravar (e também sozinha, pelo botão
  * "Conferir"), o plano é montado em memória e checado — continuidade mês a mês de cada conta
- * e cada sintética igual à soma das filhas diretas. Divergência não bloqueia: vira relatório
- * no lote, e o usuário decide. Só os <b>erros</b> estruturais (conta superior inexistente,
+ * e cada sintética igual à soma das filhas diretas (saldo transferido inclusive).
+ * Divergência não bloqueia: vira relatório no lote, e o usuário decide. Só os <b>erros</b> estruturais (conta superior inexistente,
  * código repetido, plano já existente...) impedem a gravação.
  * <p>
  * As regras que o exportador antigo ({@code exportacao.ExportacaoPlanoContabil} no projeto
@@ -304,6 +304,14 @@ public class ImportacaoPlanoContasService {
                 compararSoma(relatorio, conta, m + 1, "débito", conta.debito[m], deb);
                 compararSoma(relatorio, conta, m + 1, "crédito", conta.credito[m], cre);
             }
+            BigDecimal transf = BigDecimal.ZERO;
+            for (ContaLida filha : lista) {
+                transf = transf.add(filha.saldoTransf);
+            }
+            if (conta.saldoTransf.compareTo(transf) != 0) {
+                relatorio.divergencias.add("Sintética " + conta.codigo + ": saldo transferido "
+                        + conta.saldoTransf + ", soma das filhas " + transf + ".");
+            }
         }
     }
 
@@ -352,8 +360,9 @@ public class ImportacaoPlanoContasService {
                     gravada.getCodContaSup() == null ? "" : gravada.getCodContaSup().trim());
             compararCampo(relatorio, lida.codigo, "natureza", lida.codNat,
                     gravada.getCodNat() == null ? null : gravada.getCodNat().getId());
-            if (lida.saldoTransf.compareTo(zeroSeNulo(gravada.getSaldoTransf())) != 0) {
-                relatorio.divergencias.add("Gravado: conta " + lida.codigo + ", saldo transferido " + lida.saldoTransf
+            BigDecimal transfEsperado = lida.analitica ? lida.saldoTransf : BigDecimal.ZERO;
+            if (transfEsperado.compareTo(zeroSeNulo(gravada.getSaldoTransf())) != 0) {
+                relatorio.divergencias.add("Gravado: conta " + lida.codigo + ", saldo transferido " + transfEsperado
                         + " no lote, " + zeroSeNulo(gravada.getSaldoTransf()) + " gravado.");
             }
             for (SaldoConta saldo : gravada.getSaldosConta()) {
@@ -396,7 +405,10 @@ public class ImportacaoPlanoContasService {
             conta.setAnalitica(lida.analitica);
             conta.setCodNat(CodNat.fromId(lida.codNat));
             conta.setCodContaSup(lida.codContaSup);
-            conta.setSaldoTransf(lida.saldoTransf);
+            // convenção do axctg3: só a analítica tem saldo transferido próprio (o EncerramentoService
+            // só grava nelas, e o SPED soma as filhas quando precisa do total da sintética); o
+            // legado guarda o total também nas sintéticas, que aqui só serve pra conferência
+            conta.setSaldoTransf(lida.analitica ? lida.saldoTransf : BigDecimal.ZERO);
             conta.setContaReferencial(buscarReferencial(lida.contaReferencial, referenciais));
 
             List<SaldoConta> saldos = new ArrayList<>();

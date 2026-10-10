@@ -144,6 +144,33 @@ class ImportacaoPlanoContasServiceTest {
     }
 
     @Test
+    void test_saldoTransferidoSoNaAnaliticaEConferidoNaSintetica() {
+        ImpLote lote = criarLotePadrao(COD_EMPRESA);
+        // como no legado: o total transferido em dezembro também nas sintéticas acima
+        transferir(lote, "110000001", "-30.00");
+        transferir(lote, "110000000", "-30.00");
+        transferir(lote, "100000000", "-31.00");
+
+        ImportacaoPlanoContasService.Relatorio relatorio = service.importar(lote.getId());
+
+        assertThat(relatorio.getDivergencias())
+                .containsExactly("Sintética 100000000: saldo transferido -31.00, soma das filhas -30.00.");
+        assertThat(conta("110000001").getSaldoTransf()).isEqualByComparingTo("-30.00");
+        assertThat(conta("110000000").getSaldoTransf()).isEqualByComparingTo("0.00");
+        assertThat(conta("100000000").getSaldoTransf()).isEqualByComparingTo("0.00");
+    }
+
+    private void transferir(ImpLote lote, String conta, String valor) {
+        ImpSaldoConta dezembro = dataManager.load(ImpSaldoConta.class)
+                .query("select e from ImpSaldoConta e where e.lote = :lote and e.conta = :conta and e.mes = 12")
+                .parameter("lote", lote)
+                .parameter("conta", conta)
+                .one();
+        dezembro.setSaldoTransf(new BigDecimal(valor));
+        dataManager.save(dezembro);
+    }
+
+    @Test
     void test_loteDeOutraEmpresaNaoGravaNada() {
         ImpLote lote = criarLotePadrao(COD_EMPRESA + 1);
 
