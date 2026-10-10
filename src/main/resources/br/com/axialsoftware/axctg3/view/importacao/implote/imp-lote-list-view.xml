@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<view xmlns="http://jmix.io/schema/flowui/view"
+      title="msg://impLoteListView.title"
+      focusComponent="impLotesDataGrid">
+    <data>
+        <collection id="impLotesDc"
+                    class="br.com.axialsoftware.axctg3.entity.importacao.ImpLote">
+            <fetchPlan extends="_base"/>
+            <loader id="impLotesDl" readOnly="true">
+                <query>
+                    <![CDATA[select e from ImpLote e
+                    order by e.createdDate desc]]>
+                </query>
+            </loader>
+        </collection>
+    </data>
+    <facets>
+        <dataLoadCoordinator auto="true"/>
+    </facets>
+    <layout>
+        <hbox id="buttonsPanel" wrap="true" width="100%">
+            <button id="conferirButton" action="impLotesDataGrid.conferirAction" themeNames="small"/>
+            <button id="importarButton" action="impLotesDataGrid.importarAction" themeNames="small"/>
+            <button id="atualizarButton" text="msg://impLoteListView.atualizarButton.text"
+                    icon="vaadin:refresh" themeNames="small"/>
+        </hbox>
+        <dataGrid id="impLotesDataGrid"
+                  width="100%"
+                  height="16em"
+                  dataContainer="impLotesDc"
+                  columnReorderingAllowed="true" themeNames="small">
+            <actions>
+                <action id="conferirAction" text="msg://impLoteListView.conferirAction.text"
+                        icon="vaadin:search"/>
+                <action id="importarAction" text="msg://impLoteListView.importarAction.text"
+                        icon="vaadin:upload"/>
+            </actions>
+            <columns resizable="true">
+                <column property="createdDate" width="14rem"/>
+                <column property="tipo"/>
+                <column property="codEmpresa"/>
+                <column property="codEmpresaLegado"/>
+                <column property="ano"/>
+                <column property="qtdLinhas"/>
+                <column property="situacao"/>
+                <column property="dataImportacao" width="14rem"/>
+            </columns>
+        </dataGrid>
+        <textArea id="mensagemField" label="msg://impLoteListView.mensagemField.label"
+                  width="100%" height="24em" readOnly="true"/>
+    </layout>
+</view>

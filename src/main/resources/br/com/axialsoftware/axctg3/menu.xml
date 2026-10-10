@@ -107,6 +107,8 @@
               title="msg://br.com.axialsoftware.axctg3.view.cadastros.empresa/empresaListView.title"/>
         <item view="Sequencia.list"
               title="msg://br.com.axialsoftware.axctg3.view.sequencia/sequenciaListView.title"/>
+        <item view="ImpLote.list"
+              title="msg://br.com.axialsoftware.axctg3.view.importacao.implote/impLoteListView.title"/>
     </menu>
     <menu id="tabelas" title="msg://br.com.axialsoftware.axctg3/menu.tabelas.title">
         <item view="ClassificacaoFiscal.list"
