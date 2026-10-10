@@ -25,8 +25,10 @@ public class ContaContabilEventListener {
 
     @EventListener
     public void onContaContabilSaving(final EntitySavingEvent<ContaContabil> event) {
-        if (event.isNewEntity()) {
-            ContaContabil contaContabil = event.getEntity();
+        // só preenche quando vem vazia (telas): a importação do legado grava na empresa do
+        // lote, que é de outro grupo e nunca pode ser a empresa selecionada do admin da Axial
+        ContaContabil contaContabil = event.getEntity();
+        if (event.isNewEntity() && contaContabil.getCodEmpresa() == null) {
             contaContabil.setCodEmpresa(utilGeralService.getCodEmpresa());
         }
     }

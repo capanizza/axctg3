@@ -10,7 +10,6 @@ import br.com.axialsoftware.axctg3.entity.importacao.ImpContaContabil;
 import br.com.axialsoftware.axctg3.entity.importacao.ImpLote;
 import br.com.axialsoftware.axctg3.entity.importacao.ImpSaldoConta;
 import br.com.axialsoftware.axctg3.entity.tabelas.ContaReferencial;
-import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import io.jmix.core.DataManager;
 import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
@@ -49,11 +48,9 @@ public class ImportacaoPlanoContasService {
     private static final int TAMANHO_NOME = 50;
 
     private final DataManager dataManager;
-    private final UtilGeralService utilGeralService;
 
-    public ImportacaoPlanoContasService(DataManager dataManager, UtilGeralService utilGeralService) {
+    public ImportacaoPlanoContasService(DataManager dataManager) {
         this.dataManager = dataManager;
-        this.utilGeralService = utilGeralService;
     }
 
     /**
@@ -98,7 +95,7 @@ public class ImportacaoPlanoContasService {
         return relatorio;
     }
 
-    /** {@code paraImportar}: só a importação exige empresa da sessão, plano vazio e lote não importado. */
+    /** {@code paraImportar}: só a importação exige empresa cadastrada, plano vazio e lote não importado. */
     private void validarLote(ImpLote lote, Relatorio relatorio, boolean paraImportar) {
         if (lote.getTipo() != TipoLote.PLANO_CONTAS) {
             relatorio.erros.add("O lote não é de plano de contas.");
@@ -119,10 +116,14 @@ public class ImportacaoPlanoContasService {
             relatorio.erros.add("Este lote já foi importado.");
             return;
         }
-        Integer codEmpresa = utilGeralService.getCodEmpresa();
-        if (!lote.getCodEmpresa().equals(codEmpresa)) {
-            relatorio.erros.add("O lote é da empresa " + lote.getCodEmpresa() + ", mas a empresa selecionada é a "
-                    + codEmpresa + ". Selecione a empresa " + lote.getCodEmpresa() + " antes de importar.");
+        // grava na empresa do lote, não na selecionada: quem importa é a Axial (grupo 0), para
+        // empresas de clientes que o isolamento por grupo nunca deixa ela selecionar
+        Long empresas = dataManager.loadValue(
+                        "select count(e) from Empresa e where e.codigo = :codEmpresa", Long.class)
+                .parameter("codEmpresa", lote.getCodEmpresa())
+                .one();
+        if (empresas == 0) {
+            relatorio.erros.add("A empresa " + lote.getCodEmpresa() + " não está cadastrada no axctg3.");
             return;
         }
         Long existentes = dataManager.loadValue(

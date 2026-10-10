@@ -1,6 +1,7 @@
 package br.com.axialsoftware.axctg3.importacao;
 
 import br.com.axialsoftware.axctg3.entity.User;
+import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
 import br.com.axialsoftware.axctg3.entity.contabil.SaldoConta;
 import br.com.axialsoftware.axctg3.entity.enums.CodNat;
@@ -51,6 +52,11 @@ class ImportacaoPlanoContasServiceTest {
     @BeforeEach
     void setUp() {
         limpar();
+        Empresa empresa = dataManager.create(Empresa.class);
+        empresa.setCodigo(COD_EMPRESA);
+        empresa.setNome("Empresa de teste da importação");
+        empresa.setApelido("Importação");
+        dataManager.save(empresa);
         User admin = (User) currentAuthentication.getUser();
         admin.setCodEmpresa(COD_EMPRESA);
         admin.setAnoContabil(ANO);
@@ -171,13 +177,27 @@ class ImportacaoPlanoContasServiceTest {
     }
 
     @Test
-    void test_loteDeOutraEmpresaNaoGravaNada() {
-        ImpLote lote = criarLotePadrao(COD_EMPRESA + 1);
+    void test_gravaNaEmpresaDoLoteENaoNaSelecionada() {
+        User admin = (User) currentAuthentication.getUser();
+        admin.setCodEmpresa(COD_EMPRESA + 1);
+        ImpLote lote = criarLotePadrao(COD_EMPRESA);
+
+        assertThat(service.importar(lote.getId()).getErros()).isEmpty();
+
+        assertThat(contasDaEmpresa()).hasSize(7);
+    }
+
+    @Test
+    void test_empresaNaoCadastradaNaoGravaNada() {
+        ImpLote lote = criarLotePadrao(COD_EMPRESA + 2);
 
         ImportacaoPlanoContasService.Relatorio relatorio = service.importar(lote.getId());
 
-        assertThat(relatorio.getErros()).anyMatch(e -> e.contains("Selecione a empresa"));
-        assertThat(contasDaEmpresa()).isEmpty();
+        assertThat(relatorio.getErros()).anyMatch(e -> e.contains("não está cadastrada"));
+        assertThat(dataManager.load(ContaContabil.class)
+                .query("select e from ContaContabil e where e.codEmpresa = :codEmpresa")
+                .parameter("codEmpresa", COD_EMPRESA + 2)
+                .list()).isEmpty();
         assertThat(dataManager.load(ImpLote.class).id(lote.getId()).one().getSituacao())
                 .isEqualTo(SituacaoLote.PRONTO);
     }
@@ -276,12 +296,12 @@ class ImportacaoPlanoContasServiceTest {
     private void limpar() {
         apagar(dataManager.load(ContaContabil.class)
                 .query("select e from ContaContabil e where e.codEmpresa in :codEmpresas")
-                .parameter("codEmpresas", List.of(COD_EMPRESA, COD_EMPRESA + 1))
+                .parameter("codEmpresas", List.of(COD_EMPRESA, COD_EMPRESA + 1, COD_EMPRESA + 2))
                 .hint(PersistenceHints.SOFT_DELETION, false)
                 .list());
         List<ImpLote> lotes = dataManager.load(ImpLote.class)
                 .query("select e from ImpLote e where e.codEmpresa in :codEmpresas")
-                .parameter("codEmpresas", List.of(COD_EMPRESA, COD_EMPRESA + 1))
+                .parameter("codEmpresas", List.of(COD_EMPRESA, COD_EMPRESA + 1, COD_EMPRESA + 2))
                 .hint(PersistenceHints.SOFT_DELETION, false)
                 .list();
         for (ImpLote lote : lotes) {
@@ -297,6 +317,11 @@ class ImportacaoPlanoContasServiceTest {
                     .list());
         }
         apagar(lotes);
+        apagar(dataManager.load(Empresa.class)
+                .query("select e from Empresa e where e.codigo = :codigo")
+                .parameter("codigo", COD_EMPRESA)
+                .hint(PersistenceHints.SOFT_DELETION, false)
+                .list());
     }
 
     private void apagar(List<?> entidades) {

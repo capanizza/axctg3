@@ -25,8 +25,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  * importa (grava, se não houver erro estrutural). O relatório fica no próprio lote e aparece
  * no quadro abaixo da grade.
  * <p>
- * A importação usa a empresa selecionada na sessão (o {@code ContaContabilEventListener}
- * carimba a empresa da sessão), então o serviço recusa um lote de outra empresa.
+ * A importação grava na empresa do lote, não na selecionada na sessão: quem importa é a Axial,
+ * para empresas de outros grupos.
  */
 @Route(value = "imp-lotes", layout = MainView.class)
 @ViewController(id = "ImpLote.list")
