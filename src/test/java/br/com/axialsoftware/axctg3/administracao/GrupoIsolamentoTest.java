@@ -28,7 +28,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * Grupo (cliente da Axial) acima da empresa: cria dois grupos pelo GrupoService e confere,
  * logado como o administrador de um deles, que ele só enxerga o próprio grupo, não
- * consegue se dar system-full-access e não aponta usuário para empresa do outro grupo.
+ * consegue se dar system-full-access e não aponta usuário para empresa do outro grupo —
+ * nem gravado pela Axial; já o usuário da própria Axial seleciona empresa de qualquer grupo.
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -155,6 +156,23 @@ class GrupoIsolamentoTest {
         usuarioA.setCodEmpresa(empresaDoGrupoB);
         assertThatThrownBy(() -> dataManager.save(usuarioA))
                 .hasStackTraceContaining("não pertence ao grupo");
+    }
+
+    @Test
+    void usuarioDaAxialApontaParaEmpresaDeQualquerGrupo() {
+        Integer empresaDoGrupoA = carregarUsuario(adminA).getCodEmpresa();
+        User admin = carregarUsuario("admin");
+        Integer empresaOriginal = admin.getCodEmpresa();
+        try {
+            admin.setCodEmpresa(empresaDoGrupoA);
+            User salvo = dataManager.save(admin);
+            assertThat(salvo.getCodGrupo()).isEqualTo(Grupo.CODIGO_AXIAL);
+            assertThat(salvo.getCodEmpresa()).isEqualTo(empresaDoGrupoA);
+        } finally {
+            User restaurar = carregarUsuario("admin");
+            restaurar.setCodEmpresa(empresaOriginal);
+            dataManager.save(restaurar);
+        }
     }
 
     private Grupo criarGrupo(int codigo, String usernameAdmin) {

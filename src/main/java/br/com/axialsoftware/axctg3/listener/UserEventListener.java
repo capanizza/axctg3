@@ -14,7 +14,8 @@ import java.util.Objects;
  * <ul>
  *     <li>codGrupo: quem não é da Axial só grava usuário no próprio grupo; a Axial
  *     escolhe (em branco = grupo de quem grava, ou 0 numa rotina interna).</li>
- *     <li>codEmpresa: tem que ser de uma empresa do mesmo grupo do usuário. Todas as
+ *     <li>codEmpresa: tem que ser de uma empresa do mesmo grupo do usuário (usuário da
+ *     Axial, grupo 0, escolhe qualquer uma). Todas as
  *     consultas filtram só pelo codEmpresa, então é esta verificação que impede alguém de
  *     apontar o próprio usuário para a empresa de outro cliente.</li>
  * </ul>
@@ -45,9 +46,13 @@ public class UserEventListener {
             // Empresa inexistente só passa para a Axial (testes e importações preparam o
             // usuário antes de criar a empresa); para os demais seria uma porta para um
             // código que ainda vai ser criado em outro grupo.
-            boolean permitido = grupoEmpresa == null
-                    ? enxergaTodos
-                    : Objects.equals(grupoEmpresa, user.getCodGrupo());
+            // Usuário da Axial (grupo 0) seleciona qualquer empresa: é o suporte, que já
+            // enxerga todos os grupos. Vale pelo grupo do usuário gravado, não de quem grava —
+            // a Axial não pode apontar um usuário de cliente para empresa de outro cliente.
+            boolean permitido = Objects.equals(user.getCodGrupo(), Grupo.CODIGO_AXIAL)
+                    || (grupoEmpresa == null
+                            ? enxergaTodos
+                            : Objects.equals(grupoEmpresa, user.getCodGrupo()));
             if (!permitido) {
                 throw new IllegalStateException(String.format(
                         "Empresa %d não pertence ao grupo %d do usuário %s",

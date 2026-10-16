@@ -154,7 +154,7 @@ itself** and sees every group. The isolation rests on two facts:
   `sec_RoleAssignmentEntity` to the user's own group; `DatabaseUserRepository.createAuthorities`
   adds it to **every** login in code, so it can't be forgotten or removed from the role
   screen. `UserEventListener` rejects a `User.codEmpresa` pointing to another group's
-  company, and both `UserEventListener`/`EmpresaEventListener` force `codGrupo` to the
+  company (a group-0 user may select any company — Axial support), and both `UserEventListener`/`EmpresaEventListener` force `codGrupo` to the
   saver's group unless the saver is group 0.
 
 `AdminGrupoRole` is the client-side administrator: users and companies of the own group,
