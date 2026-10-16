@@ -45,7 +45,7 @@ import java.util.UUID;
 @Service
 public class ImportacaoPlanoContasService {
 
-    private static final int TAMANHO_NOME = 50;
+    private static final int TAMANHO_NOME = 60;
 
     private final DataManager dataManager;
 

@@ -72,7 +72,7 @@ public class ContaContabil {
     @NotNull
     private Integer codEmpresa;
 
-    @Column(name = "NOME", nullable = false, length = 50)
+    @Column(name = "NOME", nullable = false, length = 60)
     @NotNull
     private String nome;
 
