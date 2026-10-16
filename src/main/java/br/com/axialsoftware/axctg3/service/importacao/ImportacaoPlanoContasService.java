@@ -67,6 +67,8 @@ public class ImportacaoPlanoContasService {
             Map<String, ContaLida> contas = montarPlano(lote, relatorio);
             if (relatorio.erros.isEmpty()) {
                 conferirSaldos(contas, relatorio);
+                conferirEquilibrio(contas, relatorio);
+                conferirPonteComAnoAnterior(lote, contas, relatorio);
                 compararComPlanoGravado(lote, contas, relatorio);
             }
         }
@@ -85,6 +87,8 @@ public class ImportacaoPlanoContasService {
             contas = montarPlano(lote, relatorio);
             if (relatorio.erros.isEmpty()) {
                 conferirSaldos(contas, relatorio);
+                conferirEquilibrio(contas, relatorio);
+                conferirPonteComAnoAnterior(lote, contas, relatorio);
             }
         }
         if (relatorio.erros.isEmpty()) {
@@ -314,6 +318,81 @@ public class ImportacaoPlanoContasService {
                         + conta.saldoTransf + ", soma das filhas " + transf + ".");
             }
         }
+    }
+
+    /**
+     * Ativo = passivo: as contas de grau 1 (a coringa inclusive, já normalizada para grau 1)
+     * somam zero no saldo anterior de cada mês, e o débito do mês é igual ao crédito.
+     */
+    void conferirEquilibrio(Map<String, ContaLida> contas, Relatorio relatorio) {
+        for (int m = 0; m < 12; m++) {
+            BigDecimal ant = BigDecimal.ZERO, deb = BigDecimal.ZERO, cre = BigDecimal.ZERO;
+            for (ContaLida conta : contas.values()) {
+                if (conta.grau == 1) {
+                    ant = ant.add(conta.saldoAnterior[m]);
+                    deb = deb.add(conta.debito[m]);
+                    cre = cre.add(conta.credito[m]);
+                }
+            }
+            if (ant.signum() != 0) {
+                relatorio.divergencias.add("Mês " + (m + 1) + ": as contas de grau 1 somam " + ant
+                        + " no saldo anterior (ativo diferente de passivo).");
+            }
+            if (deb.compareTo(cre) != 0) {
+                relatorio.divergencias.add("Mês " + (m + 1) + ": débitos " + deb + " e créditos " + cre
+                        + " nas contas de grau 1.");
+            }
+        }
+    }
+
+    /**
+     * Se o plano do ano anterior já está no axctg3, o saldo anterior de janeiro de cada conta do
+     * lote tem de ser o saldo final de dezembro dela no ano anterior. Conta que só existe de um
+     * lado tem de ter saldo zero ali (conta nova abre zerada; conta que deixou de existir fechou
+     * zerada). Pega o exercício seguinte criado no legado antes de lançamentos de dezembro.
+     */
+    void conferirPonteComAnoAnterior(ImpLote lote, Map<String, ContaLida> contas, Relatorio relatorio) {
+        int anoAnterior = lote.getAno() - 1;
+        List<ContaContabil> anteriores = dataManager.load(ContaContabil.class)
+                .query("select e from ContaContabil e where e.codEmpresa = :codEmpresa and e.ano = :ano")
+                .parameter("codEmpresa", lote.getCodEmpresa())
+                .parameter("ano", anoAnterior)
+                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE).add("saldosConta", FetchPlan.BASE))
+                .list();
+        if (anteriores.isEmpty()) {
+            relatorio.avisos.add("A empresa " + lote.getCodEmpresa() + " não tem plano de " + anoAnterior
+                    + " no axctg3: a abertura de " + lote.getAno() + " não foi comparada com o ano anterior.");
+            return;
+        }
+        Map<String, BigDecimal> finalDezembro = new HashMap<>();
+        for (ContaContabil conta : anteriores) {
+            BigDecimal saldo = BigDecimal.ZERO;
+            for (SaldoConta s : conta.getSaldosConta()) {
+                if (s.getMes() == 12) {
+                    saldo = s.getSaldoAtual();
+                }
+            }
+            finalDezembro.put(conta.getCodigo().trim(), saldo);
+        }
+        for (ContaLida conta : contas.values()) {
+            BigDecimal abertura = conta.saldoAnterior[0];
+            BigDecimal anterior = finalDezembro.get(conta.codigo);
+            if (anterior == null) {
+                if (abertura.signum() != 0) {
+                    relatorio.divergencias.add("Conta " + conta.codigo + ": não existe em " + anoAnterior
+                            + ", mas abre " + lote.getAno() + " com " + abertura + ".");
+                }
+            } else if (abertura.compareTo(anterior) != 0) {
+                relatorio.divergencias.add("Conta " + conta.codigo + ": abre " + lote.getAno() + " com " + abertura
+                        + ", mas fechou dezembro de " + anoAnterior + " com " + anterior + ".");
+            }
+        }
+        finalDezembro.forEach((codigo, saldo) -> {
+            if (!contas.containsKey(codigo) && saldo.signum() != 0) {
+                relatorio.divergencias.add("Conta " + codigo + ": fechou dezembro de " + anoAnterior + " com " + saldo
+                        + " e não está no plano de " + lote.getAno() + ".");
+            }
+        });
     }
 
     private void compararSoma(Relatorio relatorio, ContaLida conta, int mes, String campo,

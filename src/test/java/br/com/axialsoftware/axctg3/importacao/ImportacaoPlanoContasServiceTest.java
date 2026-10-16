@@ -166,6 +166,43 @@ class ImportacaoPlanoContasServiceTest {
         assertThat(conta("100000000").getSaldoTransf()).isEqualByComparingTo("0.00");
     }
 
+    @Test
+    void test_aberturaComparadaComDezembroDoAnoAnterior() {
+        // o ano anterior fecha o caixa em 130 (100 + 50 - 20); o lote do ano abre em 100 de novo
+        assertThat(service.importar(criarLotePadrao(COD_EMPRESA, ANO - 1).getId()).getErros()).isEmpty();
+        ImpLote lote = criarLotePadrao(COD_EMPRESA);
+
+        ImportacaoPlanoContasService.Relatorio relatorio = service.conferir(lote.getId());
+
+        assertThat(relatorio.getDivergencias())
+                .contains("Conta 110000001: abre " + ANO + " com 100.00, mas fechou dezembro de " + (ANO - 1) + " com 130.00.")
+                .contains("Conta 210000001: abre " + ANO + " com -100.00, mas fechou dezembro de " + (ANO - 1) + " com -130.00.")
+                .noneMatch(d -> d.startsWith("Conta 110000002"));
+        assertThat(relatorio.getAvisos()).noneMatch(a -> a.contains("não foi comparada com o ano anterior"));
+    }
+
+    @Test
+    void test_ativoDiferenteDePassivoVaiProRelatorio() {
+        ImpLote lote = criarLotePadrao(COD_EMPRESA);
+        // sem plano do ano anterior: só avisa que a ponte não foi conferida
+        assertThat(service.conferir(lote.getId()).getAvisos())
+                .anyMatch(a -> a.contains("não foi comparada com o ano anterior"));
+        ImpSaldoConta ativo = dataManager.load(ImpSaldoConta.class)
+                .query("select e from ImpSaldoConta e where e.lote = :lote and e.conta = '100000000' and e.mes = 1")
+                .parameter("lote", lote)
+                .one();
+        ativo.setSaldoAnterior(new BigDecimal("101.00"));
+        ativo.setDebitoMes(new BigDecimal("51.00"));
+        dataManager.save(ativo);
+
+        ImportacaoPlanoContasService.Relatorio relatorio = service.conferir(lote.getId());
+
+        assertThat(relatorio.getDivergencias())
+                .contains("Mês 1: as contas de grau 1 somam 1.00 no saldo anterior (ativo diferente de passivo).")
+                .contains("Mês 1: débitos 71.00 e créditos 70.00 nas contas de grau 1.")
+                .noneMatch(d -> d.startsWith("Mês 2:"));
+    }
+
     private void transferir(ImpLote lote, String conta, String valor) {
         ImpSaldoConta dezembro = dataManager.load(ImpSaldoConta.class)
                 .query("select e from ImpSaldoConta e where e.lote = :lote and e.conta = :conta and e.mes = 12")
@@ -220,12 +257,16 @@ class ImportacaoPlanoContasServiceTest {
      * sem nome). Caixa abre com 100, debita 50 e credita 20 em janeiro; fornecedores, o espelho.
      */
     private ImpLote criarLotePadrao(int codEmpresa) {
+        return criarLotePadrao(codEmpresa, ANO);
+    }
+
+    private ImpLote criarLotePadrao(int codEmpresa, int ano) {
         ImpLote lote = dataManager.create(ImpLote.class);
         lote.setTipo(TipoLote.PLANO_CONTAS);
         lote.setSituacao(SituacaoLote.PRONTO);
         lote.setCodEmpresa(codEmpresa);
         lote.setCodEmpresaLegado(2);
-        lote.setAno(ANO);
+        lote.setAno(ano);
         lote = dataManager.save(lote);
 
         SaveContext ctx = new SaveContext();
