@@ -2,6 +2,7 @@ package br.com.axialsoftware.axctg3.view.importacao.implote;
 
 import br.com.axialsoftware.axctg3.entity.enums.TipoLote;
 import br.com.axialsoftware.axctg3.entity.importacao.ImpLote;
+import br.com.axialsoftware.axctg3.service.importacao.ImportacaoLancamentosService;
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoPlanoContasService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
@@ -20,7 +21,8 @@ import io.jmix.flowui.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * Lotes exportados do sistema legado pelo projeto Axial ({@code exportacao2}). Não há criar
+ * Lotes exportados do sistema legado pelo projeto Axial ({@code exportacao2}): plano de contas
+ * com saldos e lançamentos. Não há criar
  * nem editar: o lote nasce no exportador. Daqui só se confere (relatório sem gravar nada) e
  * importa (grava, se não houver erro estrutural). O relatório fica no próprio lote e aparece
  * no quadro abaixo da grade.
@@ -48,6 +50,8 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
     private Dialogs dialogs;
     @Autowired
     private ImportacaoPlanoContasService importacaoPlanoContasService;
+    @Autowired
+    private ImportacaoLancamentosService importacaoLancamentosService;
 
     @Subscribe(id = "impLotesDc", target = Target.DATA_CONTAINER)
     public void onImpLotesDcItemChange(final InstanceContainer.ItemChangeEvent<ImpLote> event) {
@@ -61,7 +65,9 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
         if (lote == null) {
             return;
         }
-        ImportacaoPlanoContasService.Relatorio relatorio = importacaoPlanoContasService.conferir(lote.getId());
+        ImportacaoPlanoContasService.Relatorio relatorio = lote.getTipo() == TipoLote.LANCAMENTOS
+                ? importacaoLancamentosService.conferir(lote.getId())
+                : importacaoPlanoContasService.conferir(lote.getId());
         recarregar(lote);
         dialogs.createMessageDialog()
                 .withHeader(messageBundle.getMessage("impLoteListView.conferirAction.text"))
@@ -78,7 +84,9 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
         }
         dialogs.createOptionDialog()
                 .withHeader(messageBundle.getMessage("impLoteListView.importarAction.text"))
-                .withText(messageBundle.formatMessage("impLoteListView.importar.confirmar",
+                .withText(messageBundle.formatMessage(lote.getTipo() == TipoLote.LANCAMENTOS
+                                ? "impLoteListView.importarLancamentos.confirmar"
+                                : "impLoteListView.importar.confirmar",
                         lote.getAno(), lote.getCodEmpresa()))
                 .withActions(
                         new DialogAction(DialogAction.Type.YES).withHandler(e -> importar(lote)),
@@ -87,10 +95,14 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
     }
 
     private void importar(ImpLote lote) {
-        ImportacaoPlanoContasService.Relatorio relatorio = importacaoPlanoContasService.importar(lote.getId());
+        boolean lancamentos = lote.getTipo() == TipoLote.LANCAMENTOS;
+        ImportacaoPlanoContasService.Relatorio relatorio = lancamentos
+                ? importacaoLancamentosService.importar(lote.getId())
+                : importacaoPlanoContasService.importar(lote.getId());
         recarregar(lote);
         String texto = relatorio.getErros().isEmpty()
-                ? messageBundle.formatMessage("impLoteListView.importar.ok", relatorio.getImportadas(),
+                ? messageBundle.formatMessage(lancamentos ? "impLoteListView.importarLancamentos.ok"
+                : "impLoteListView.importar.ok", relatorio.getImportadas(),
                 relatorio.getDivergencias().size(), relatorio.getAvisos().size())
                 : messageBundle.formatMessage("impLoteListView.importar.erro", relatorio.getErros().size());
         dialogs.createMessageDialog()
@@ -113,7 +125,7 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
                     .open();
             return null;
         }
-        if (lote.getTipo() != TipoLote.PLANO_CONTAS) {
+        if (lote.getTipo() == null) {
             dialogs.createMessageDialog()
                     .withHeader(messageBundle.getMessage("impLoteListView.title"))
                     .withText(messageBundle.getMessage("impLoteListView.tipoNaoSuportado"))

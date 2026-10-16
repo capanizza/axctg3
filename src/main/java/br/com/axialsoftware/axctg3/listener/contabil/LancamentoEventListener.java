@@ -18,6 +18,9 @@ import java.time.LocalDate;
 @Component
 public class LancamentoEventListener {
 
+    // ligado só durante a gravação de um lote importado do legado (ver gravarComoImportacao)
+    private static final ThreadLocal<Boolean> IMPORTACAO = ThreadLocal.withInitial(() -> false);
+
     private final UtilGeralService utilGeralService;
     private final LancamentoService lancamentoService;
     private final Sequences sequences;
@@ -32,8 +35,30 @@ public class LancamentoEventListener {
         this.dialogs = dialogs;
     }
 
+    /**
+     * Executa {@code gravacao} sem as regras deste listener: os lançamentos importados do legado
+     * chegam com empresa/período/número/data próprios (não os da sessão) e os saldos já vieram
+     * prontos com o plano de contas — passar pelo {@code atualizarSaldos} contaria em dobro.
+     * <p>
+     * O {@link EntityChangedEvent} dispara no commit, então a gravação tem de abrir e fechar a
+     * própria transação aqui dentro (um {@code DataManager.save} chamado fora de transação faz
+     * isso); chamada de dentro de uma transação maior, o commit ocorreria depois de o desvio já
+     * ter sido desligado.
+     */
+    public static void gravarComoImportacao(Runnable gravacao) {
+        IMPORTACAO.set(true);
+        try {
+            gravacao.run();
+        } finally {
+            IMPORTACAO.remove();
+        }
+    }
+
     @EventListener
     public void onLancamentoSaving(final EntitySavingEvent<Lancamento> event) {
+        if (IMPORTACAO.get()) {
+            return;
+        }
         if (event.isNewEntity()) {
             Lancamento lancamento = event.getEntity();
             Integer codEmpresa = utilGeralService.getCodEmpresa();
@@ -55,6 +80,9 @@ public class LancamentoEventListener {
 
     @EventListener
     public void onLancamentoChangedBeforeCommit(final EntityChangedEvent<Lancamento> event) {
+        if (IMPORTACAO.get()) {
+            return;
+        }
         if (event.getType() != EntityChangedEvent.Type.DELETED) {
             Id<Lancamento> lancamentoId = event.getEntityId();
             Lancamento lancamento = dataManager.load(lancamentoId).one();
