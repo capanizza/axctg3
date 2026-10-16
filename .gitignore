@@ -36,3 +36,6 @@ webpack.generated.js
 
 # .env do servidor de teste (senha do banco) — só o .env.example vai pro git
 deploy/servidor-teste/.env
+
+# PDFs com dados de cliente (ex.: conferências enviadas ao cliente) — ficam só na máquina
+docs/*.pdf
