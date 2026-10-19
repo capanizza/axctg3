@@ -2,6 +2,7 @@ package br.com.axialsoftware.axctg3.view.importacao.implote;
 
 import br.com.axialsoftware.axctg3.entity.enums.TipoLote;
 import br.com.axialsoftware.axctg3.entity.importacao.ImpLote;
+import br.com.axialsoftware.axctg3.service.importacao.ImportacaoHistoricosService;
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoLancamentosService;
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoPlanoContasService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
@@ -22,7 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Lotes exportados do sistema legado pelo projeto Axial ({@code exportacao2}): plano de contas
- * com saldos e lançamentos. Não há criar
+ * com saldos, lançamentos e históricos contábeis. Não há criar
  * nem editar: o lote nasce no exportador. Daqui só se confere (relatório sem gravar nada) e
  * importa (grava, se não houver erro estrutural). O relatório fica no próprio lote e aparece
  * no quadro abaixo da grade.
@@ -52,6 +53,8 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
     private ImportacaoPlanoContasService importacaoPlanoContasService;
     @Autowired
     private ImportacaoLancamentosService importacaoLancamentosService;
+    @Autowired
+    private ImportacaoHistoricosService importacaoHistoricosService;
 
     @Subscribe(id = "impLotesDc", target = Target.DATA_CONTAINER)
     public void onImpLotesDcItemChange(final InstanceContainer.ItemChangeEvent<ImpLote> event) {
@@ -65,9 +68,11 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
         if (lote == null) {
             return;
         }
-        ImportacaoPlanoContasService.Relatorio relatorio = lote.getTipo() == TipoLote.LANCAMENTOS
-                ? importacaoLancamentosService.conferir(lote.getId())
-                : importacaoPlanoContasService.conferir(lote.getId());
+        ImportacaoPlanoContasService.Relatorio relatorio = switch (lote.getTipo()) {
+            case LANCAMENTOS -> importacaoLancamentosService.conferir(lote.getId());
+            case HISTORICOS -> importacaoHistoricosService.conferir(lote.getId());
+            case PLANO_CONTAS -> importacaoPlanoContasService.conferir(lote.getId());
+        };
         recarregar(lote);
         dialogs.createMessageDialog()
                 .withHeader(messageBundle.getMessage("impLoteListView.conferirAction.text"))
@@ -82,12 +87,17 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
         if (lote == null) {
             return;
         }
+        String confirmacao = switch (lote.getTipo()) {
+            case LANCAMENTOS -> messageBundle.formatMessage("impLoteListView.importarLancamentos.confirmar",
+                    lote.getAno(), lote.getCodEmpresa());
+            case HISTORICOS -> messageBundle.formatMessage("impLoteListView.importarHistoricos.confirmar",
+                    lote.getCodEmpresa());
+            case PLANO_CONTAS -> messageBundle.formatMessage("impLoteListView.importar.confirmar",
+                    lote.getAno(), lote.getCodEmpresa());
+        };
         dialogs.createOptionDialog()
                 .withHeader(messageBundle.getMessage("impLoteListView.importarAction.text"))
-                .withText(messageBundle.formatMessage(lote.getTipo() == TipoLote.LANCAMENTOS
-                                ? "impLoteListView.importarLancamentos.confirmar"
-                                : "impLoteListView.importar.confirmar",
-                        lote.getAno(), lote.getCodEmpresa()))
+                .withText(confirmacao)
                 .withActions(
                         new DialogAction(DialogAction.Type.YES).withHandler(e -> importar(lote)),
                         new DialogAction(DialogAction.Type.NO))
@@ -95,16 +105,23 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
     }
 
     private void importar(ImpLote lote) {
-        boolean lancamentos = lote.getTipo() == TipoLote.LANCAMENTOS;
-        ImportacaoPlanoContasService.Relatorio relatorio = lancamentos
-                ? importacaoLancamentosService.importar(lote.getId())
-                : importacaoPlanoContasService.importar(lote.getId());
+        ImportacaoPlanoContasService.Relatorio relatorio = switch (lote.getTipo()) {
+            case LANCAMENTOS -> importacaoLancamentosService.importar(lote.getId());
+            case HISTORICOS -> importacaoHistoricosService.importar(lote.getId());
+            case PLANO_CONTAS -> importacaoPlanoContasService.importar(lote.getId());
+        };
         recarregar(lote);
-        String texto = relatorio.getErros().isEmpty()
-                ? messageBundle.formatMessage(lancamentos ? "impLoteListView.importarLancamentos.ok"
-                : "impLoteListView.importar.ok", relatorio.getImportadas(),
-                relatorio.getDivergencias().size(), relatorio.getAvisos().size())
-                : messageBundle.formatMessage("impLoteListView.importar.erro", relatorio.getErros().size());
+        String texto;
+        if (!relatorio.getErros().isEmpty()) {
+            texto = messageBundle.formatMessage("impLoteListView.importar.erro", relatorio.getErros().size());
+        } else if (lote.getTipo() == TipoLote.HISTORICOS) {
+            texto = messageBundle.formatMessage("impLoteListView.importarHistoricos.ok",
+                    relatorio.getImportadas(), relatorio.getAvisos().size());
+        } else {
+            texto = messageBundle.formatMessage(lote.getTipo() == TipoLote.LANCAMENTOS
+                            ? "impLoteListView.importarLancamentos.ok" : "impLoteListView.importar.ok",
+                    relatorio.getImportadas(), relatorio.getDivergencias().size(), relatorio.getAvisos().size());
+        }
         dialogs.createMessageDialog()
                 .withHeader(messageBundle.getMessage("impLoteListView.importarAction.text"))
                 .withText(texto)
