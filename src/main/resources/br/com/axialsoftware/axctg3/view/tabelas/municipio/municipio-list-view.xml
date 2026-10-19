@@ -31,6 +31,10 @@
                 <button id="createButton" action="municipiosDataGrid.createAction" themeNames="small"/>
                 <button id="editButton" action="municipiosDataGrid.editAction" themeNames="small"/>
                 <button id="removeButton" action="municipiosDataGrid.removeAction" themeNames="small"/>
+                <fileUploadField id="importField" width="18em" themeNames="small"
+                                 acceptedFileTypes="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx"
+                                 uploadText="msg://municipioListView.import.uploadText"/>
+                <button id="importButton" text="msg://municipioListView.import.button" themeNames="small"/>
             </startSlot>
             <endSlot>
                 <simplePagination id="pagination" dataLoader="municipiosDl"/>

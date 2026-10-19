@@ -1,6 +1,7 @@
 package br.com.axialsoftware.axctg3.view.tabelas.municipio;
 
 import br.com.axialsoftware.axctg3.entity.tabelas.Municipio;
+import br.com.axialsoftware.axctg3.service.tabelas.MunicipioImportService;
 
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
@@ -8,14 +9,19 @@ import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
+import io.jmix.core.AccessManager;
 import io.jmix.core.DataManager;
+import io.jmix.core.Metadata;
+import io.jmix.core.accesscontext.CrudEntityContext;
 import io.jmix.flowui.Dialogs;
+import io.jmix.flowui.Notifications;
 import io.jmix.flowui.component.UiComponentUtils;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.component.sidepanellayout.SidePanelLayout;
 import io.jmix.flowui.component.textarea.JmixTextArea;
 import io.jmix.flowui.component.textfield.JmixIntegerField;
 import io.jmix.flowui.component.textfield.TypedTextField;
+import io.jmix.flowui.component.upload.FileUploadField;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.kit.component.button.JmixButton;
 import io.jmix.flowui.model.CollectionLoader;
@@ -52,11 +58,31 @@ public class MunicipioListView extends StandardListView<Municipio> {
     private Municipio editedMunicipio;
     @ViewComponent
     private HorizontalLayout buttonsPanel;
+    @ViewComponent
+    private FileUploadField importField;
+    @ViewComponent
+    private JmixButton importButton;
+    @Autowired
+    private Notifications notifications;
+    @Autowired
+    private MunicipioImportService municipioImportService;
+    @Autowired
+    private AccessManager accessManager;
+    @Autowired
+    private Metadata metadata;
 
     @Subscribe
     public void onBeforeShow(final BeforeShowEvent event) {
         Dialog dialog = UiComponentUtils.findDialog(this);
         buttonsPanel.setVisible(dialog == null);
+
+        // A tabela é global (todos os grupos): importar é só para quem pode criar e alterar
+        // município — na prática a Axial. Os papéis de operador/gerente só leem.
+        CrudEntityContext contexto = new CrudEntityContext(metadata.getClass(Municipio.class));
+        accessManager.applyRegisteredConstraints(contexto);
+        boolean podeImportar = contexto.isCreatePermitted() && contexto.isUpdatePermitted();
+        importField.setVisible(podeImportar);
+        importButton.setVisible(podeImportar);
     }
 
     @Subscribe("municipiosDataGrid.createAction")
@@ -111,5 +137,33 @@ public class MunicipioListView extends StandardListView<Municipio> {
         dataManager.saveWithoutReload(editedMunicipio);
         municipiosDl.load();
         sidePanelLayout.closeSidePanel();
+    }
+
+    @Subscribe(id = "importButton", subject = "clickListener")
+    public void onImportButtonClick(final ClickEvent<JmixButton> event) {
+        byte[] conteudo = importField.getValue();
+        if (conteudo == null || conteudo.length == 0) {
+            notifications.create(messageBundle.getMessage("municipioListView.selecioneArquivo"))
+                    .withType(Notifications.Type.WARNING)
+                    .show();
+            return;
+        }
+
+        MunicipioImportService.ImportResult resultado;
+        try {
+            resultado = municipioImportService.importar(conteudo);
+        } catch (IllegalArgumentException e) {
+            notifications.create(e.getMessage())
+                    .withType(Notifications.Type.ERROR)
+                    .show();
+            return;
+        }
+        municipiosDl.load();
+        importField.clear();
+
+        notifications.create(messageBundle.formatMessage("municipioListView.importResultado",
+                        resultado.criados(), resultado.atualizados(), resultado.inalterados(), resultado.ignorados()))
+                .withType(Notifications.Type.SUCCESS)
+                .show();
     }
 }

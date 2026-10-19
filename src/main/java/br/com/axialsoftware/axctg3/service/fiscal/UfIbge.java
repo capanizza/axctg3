@@ -31,4 +31,13 @@ public final class UfIbge {
         }
         return codigo;
     }
+
+    /** Sigla da UF pelo código IBGE (11 → "RO"), ou {@code null} se o código não for de uma UF. */
+    public static String sigla(Integer codigo) {
+        return codigo == null ? null : CODIGO_POR_UF.entrySet().stream()
+                .filter(e -> e.getValue().equals(codigo))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null);
+    }
 }
