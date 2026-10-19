@@ -6,7 +6,6 @@
         <instance id="empresaDc"
                   class="br.com.axialsoftware.axctg3.entity.cadastros.Empresa">
             <fetchPlan extends="_base">
-                <property name="tipoLogradouro" fetchPlan="_base"/>
                 <property name="municipio" fetchPlan="_base"/>
                 <property name="contaParceiroSaida" fetchPlan="_base"/>
                 <property name="contaParceiroEntrada" fetchPlan="_base"/>
@@ -38,12 +37,6 @@
              da sessão (mesmo critério que ContaContabilListView/ProdutoListView/etc já
              usam), setado via PreLoadEvent em EmpresaDetailView. Um container por
              entidade, compartilhado entre todos os campos que apontam pra ela. -->
-        <collection id="tiposLogradouroDc"
-                    class="br.com.axialsoftware.axctg3.entity.tabelas.TipoLogradouro">
-            <loader id="tiposLogradouroDl">
-                <query><![CDATA[select e from TipoLogradouro e order by e.descricao]]></query>
-            </loader>
-        </collection>
         <collection id="municipiosDc"
                     class="br.com.axialsoftware.axctg3.entity.tabelas.Municipio">
             <loader id="municipiosDl">
@@ -121,17 +114,6 @@
                     <tab id="enderecoTab" label="Endereço">
                         <vbox>
                             <hbox width="100%" expand="logradouroField">
-                                <entityComboBox id="tipoLogradouroField"
-                                                property="tipoLogradouro"
-                                                itemsContainer="tiposLogradouroDc"
-                                                dataContainer="empresaDc"
-                                                width="25%" themeNames="small"
-                                                label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Empresa.tipoLogradouro">
-                                    <actions>
-                                        <action id="entityLookupAction" type="entity_lookup"/>
-                                        <action id="entityClearAction" type="entity_clear"/>
-                                    </actions>
-                                </entityComboBox>
                                 <textField id="logradouroField"
                                            property="logradouro"
                                            dataContainer="empresaDc" themeNames="small"

@@ -6,7 +6,6 @@
         <instance id="parceiroDc"
                   class="br.com.axialsoftware.axctg3.entity.cadastros.Parceiro">
             <fetchPlan extends="_base">
-                <property name="tipoLogradouro" fetchPlan="_base"/>
                 <property name="municipio" fetchPlan="_base"/>
             </fetchPlan>
             <loader id="parceiroDl"/>
@@ -14,12 +13,6 @@
         <!-- Fontes de itens dos entityComboBox abaixo (troca de entityPicker, ver
              memória do projeto entitypicker-not-entitycombobox). Tabelas globais, sem
              filtro por codEmpresa. -->
-        <collection id="tiposLogradouroDc"
-                    class="br.com.axialsoftware.axctg3.entity.tabelas.TipoLogradouro">
-            <loader id="tiposLogradouroDl">
-                <query><![CDATA[select e from TipoLogradouro e order by e.descricao]]></query>
-            </loader>
-        </collection>
         <collection id="municipiosDc"
                     class="br.com.axialsoftware.axctg3.entity.tabelas.Municipio">
             <loader id="municipiosDl">
@@ -75,17 +68,6 @@
                            label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.contato"/>
             </hbox>
             <hbox width="100%" expand="logradouroField">
-                <entityComboBox id="tipoLogradouroField"
-                                property="tipoLogradouro"
-                                itemsContainer="tiposLogradouroDc"
-                                dataContainer="parceiroDc"
-                                width="25%" themeNames="small"
-                                label="msg://br.com.axialsoftware.axctg3.entity.cadastros/Parceiro.tipoLogradouro">
-                    <actions>
-                        <action id="entityLookupAction" type="entity_lookup"/>
-                        <action id="entityClearAction" type="entity_clear"/>
-                    </actions>
-                </entityComboBox>
                 <textField id="logradouroField"
                            property="logradouro"
                            dataContainer="parceiroDc" themeNames="small"

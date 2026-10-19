@@ -6,7 +6,6 @@ import br.com.axialsoftware.axctg3.entity.enums.*;
 import br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro;
 import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
 import br.com.axialsoftware.axctg3.entity.tabelas.Municipio;
-import br.com.axialsoftware.axctg3.entity.tabelas.TipoLogradouro;
 import io.jmix.core.FileRef;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.annotation.DeletedBy;
@@ -80,10 +79,6 @@ public class Empresa {
     @Column(name = "APELIDO", nullable = false, length = 20)
     @NotNull
     private String apelido;
-
-    @JoinColumn(name = "TIPO_LOGRADOURO_ID")
-    @ManyToOne(fetch = FetchType.LAZY)
-    private TipoLogradouro tipoLogradouro;
 
     @Column(name = "LOGRADOURO", length = 50)
     private String logradouro;
@@ -475,14 +470,6 @@ public class Empresa {
 
     public void setApelido(String apelido) {
         this.apelido = apelido;
-    }
-
-    public TipoLogradouro getTipoLogradouro() {
-        return tipoLogradouro;
-    }
-
-    public void setTipoLogradouro(TipoLogradouro tipoLogradouro) {
-        this.tipoLogradouro = tipoLogradouro;
     }
 
     public String getLogradouro() {

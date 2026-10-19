@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/10/19-101708-c1f40fd1-empresa_parceiro-tipo_logradouro-remover.xml">
+    <!--
+        Empresa e Parceiro deixam de ter tipo de logradouro: o tipo ("RUA", "AV") passa a ser
+        digitado no próprio LOGRADOURO, que vai como está pro xLgr da NFe. A tabela
+        TIPO_LOGRADOURO continua (sem uso por enquanto); só saem as referências a ela.
+    -->
+    <changeSet id="1" author="axctg3">
+        <dropForeignKeyConstraint baseTableName="EMPRESA" constraintName="FK_EMPRESA_ON_TIPO_LOGRADOURO"/>
+        <dropColumn tableName="EMPRESA" columnName="TIPO_LOGRADOURO_ID"/>
+    </changeSet>
+
+    <changeSet id="2" author="axctg3">
+        <dropForeignKeyConstraint baseTableName="PARCEIRO" constraintName="FK_PARCEIRO_ON_TIPO_LOGRADOURO"/>
+        <dropIndex tableName="PARCEIRO" indexName="IDX_PARCEIRO_TIPO_LOGRADOURO"/>
+        <dropColumn tableName="PARCEIRO" columnName="TIPO_LOGRADOURO_ID"/>
+    </changeSet>
+</databaseChangeLog>

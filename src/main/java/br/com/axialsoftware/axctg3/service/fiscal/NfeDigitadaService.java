@@ -170,9 +170,7 @@ public class NfeDigitadaService {
         nfe.setEmitCnpj(NfeXml.somenteDigitos(empresa.getCnpj()));
         nfe.setEmitXNome(empresa.getNome());
         nfe.setEmitXFant(empresa.getApelido());
-        String tipoLogradouro = empresa.getTipoLogradouro() == null ? null : empresa.getTipoLogradouro().getDescricao();
-        String logradouro = empresa.getLogradouro() == null ? "" : empresa.getLogradouro();
-        nfe.setEmitXLgr(tipoLogradouro == null || tipoLogradouro.isBlank() ? logradouro : tipoLogradouro + " " + logradouro);
+        nfe.setEmitXLgr(empresa.getLogradouro() == null ? "" : empresa.getLogradouro());
         nfe.setEmitNro(empresa.getNumero());
         nfe.setEmitXCpl(empresa.getComplemento());
         nfe.setEmitXBairro(empresa.getBairro());

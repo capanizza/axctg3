@@ -327,8 +327,7 @@ public class NfeXmlBuilder {
         text(doc, emit, "xNome", empresa.getNome());
         text(doc, emit, "xFant", empresa.getApelido());
         Element ender = doc.createElementNS(NS_NFE, "enderEmit");
-        text(doc, ender, "xLgr", enderecoCompleto(empresa.getTipoLogradouro() == null ? null
-                : empresa.getTipoLogradouro().getDescricao(), empresa.getLogradouro()));
+        text(doc, ender, "xLgr", vazioComo(empresa.getLogradouro(), ""));
         text(doc, ender, "nro", empresa.getNumero());
         if (empresa.getComplemento() != null && !empresa.getComplemento().isBlank()) {
             text(doc, ender, "xCpl", empresa.getComplemento());
@@ -363,8 +362,7 @@ public class NfeXmlBuilder {
                 ? "NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL"
                 : parceiro.getNome());
         Element ender = doc.createElementNS(NS_NFE, "enderDest");
-        text(doc, ender, "xLgr", enderecoCompleto(parceiro.getTipoLogradouro() == null ? null
-                : parceiro.getTipoLogradouro().getDescricao(), parceiro.getLogradouro()));
+        text(doc, ender, "xLgr", vazioComo(parceiro.getLogradouro(), ""));
         text(doc, ender, "nro", parceiro.getNumero());
         if (parceiro.getComplemento() != null && !parceiro.getComplemento().isBlank()) {
             text(doc, ender, "xCpl", parceiro.getComplemento());
@@ -1168,10 +1166,5 @@ public class NfeXmlBuilder {
 
     private String vazioComo(String valor, String padrao) {
         return valor == null || valor.isBlank() ? padrao : valor;
-    }
-
-    private String enderecoCompleto(String tipoLogradouro, String logradouro) {
-        String base = logradouro == null ? "" : logradouro;
-        return tipoLogradouro == null || tipoLogradouro.isBlank() ? base : tipoLogradouro + " " + base;
     }
 }

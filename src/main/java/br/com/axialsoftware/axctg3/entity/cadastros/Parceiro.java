@@ -1,7 +1,6 @@
 package br.com.axialsoftware.axctg3.entity.cadastros;
 
 import br.com.axialsoftware.axctg3.entity.tabelas.Municipio;
-import br.com.axialsoftware.axctg3.entity.tabelas.TipoLogradouro;
 import io.jmix.core.MetadataTools;
 import io.jmix.core.annotation.DeletedBy;
 import io.jmix.core.annotation.DeletedDate;
@@ -22,7 +21,6 @@ import java.util.UUID;
 
 @JmixEntity
 @Table(name = "PARCEIRO", indexes = {
-        @Index(name = "IDX_PARCEIRO_TIPO_LOGRADOURO", columnList = "TIPO_LOGRADOURO_ID"),
         @Index(name = "IDX_PARCEIRO_MUNICIPIO", columnList = "MUNICIPIO_ID"),
         @Index(name = "IDX_PARCEIRO_UNQ_CODIGO_COD_EMPRESA", columnList = "CODIGO, COD_EMPRESA", unique = true)
 })
@@ -84,10 +82,6 @@ public class Parceiro {
 
     @Column(name = "INSCRICAO", length = 25)
     private String inscricao;
-
-    @JoinColumn(name = "TIPO_LOGRADOURO_ID")
-    @ManyToOne(fetch = FetchType.LAZY)
-    private TipoLogradouro tipoLogradouro;
 
     @Column(name = "LOGRADOURO", length = 50)
     private String logradouro;
@@ -173,14 +167,6 @@ public class Parceiro {
 
     public void setInscricao(String inscricao) {
         this.inscricao = inscricao;
-    }
-
-    public TipoLogradouro getTipoLogradouro() {
-        return tipoLogradouro;
-    }
-
-    public void setTipoLogradouro(TipoLogradouro tipoLogradouro) {
-        this.tipoLogradouro = tipoLogradouro;
     }
 
     public String getLogradouro() {
