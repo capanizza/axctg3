@@ -30,8 +30,10 @@ import java.util.UUID;
  * legado, o que está igual não é gravado. Nada é apagado — histórico que só existe no axctg3
  * (criado aqui, ou apagado no legado) fica como está e aparece nos avisos.
  * <p>
- * O código 0 é copiado como qualquer outro: o legado guarda um histórico 0 (".") em toda empresa,
- * mas não o usa — lançamento sem histórico vem com o histórico vazio.
+ * O histórico 0 (".") que as empresas importadas pelo caminho antigo têm no axctg3 não vem do
+ * legado: foi criado à mão para o {@code LancamentoTmp}. Aparece nos avisos como "só no axctg3".
+ * A importação de lançamentos nova não precisa dele — lançamento sem histórico no legado fica sem
+ * histórico.
  */
 @Service
 public class ImportacaoHistoricosService {
