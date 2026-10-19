@@ -11,7 +11,8 @@ import org.jspecify.annotations.Nullable;
 public enum TipoLote implements EnumClass<Integer> {
 
     PLANO_CONTAS(1),
-    LANCAMENTOS(2);
+    LANCAMENTOS(2),
+    HISTORICOS(3);
 
     private final Integer id;
 
