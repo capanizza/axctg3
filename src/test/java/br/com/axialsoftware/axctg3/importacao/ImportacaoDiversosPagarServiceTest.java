@@ -109,6 +109,7 @@ class ImportacaoDiversosPagarServiceTest {
         mov(101, 34, "2025-03-20", "100.00", "0", 1);
         movVazio(101, "2025-04-14");
         mov(102, 1, "2025-03-03", "500.00", "0", 0);
+        movimentos.get(movimentos.size() - 1).setValor(null); // emissão sem valor no legado
         mov(102, 2, "2025-03-30", "450.00", "0", 1);
         gravarMovimentos(lote);
 
@@ -122,6 +123,7 @@ class ImportacaoDiversosPagarServiceTest {
         assertThat(relatorio.getImportadas()).isEqualTo(3);
         assertThat(relatorio.getDivergencias()).containsExactlyInAnyOrder(
                 "Diverso 10: emissão de 100.00 no movimento e 1000.00 no título; importada com o valor do título.",
+                "Diverso 170: emissão sem valor no movimento; importada com o valor do título (500.00).",
                 "Diverso 170: baixas somam 450.00 e o legado diz pago 500.00.");
         assertThat(relatorio.getAvisos()).anyMatch(a -> a.startsWith("1 movimento(s) sem histórico e sem valor"));
 
@@ -137,6 +139,7 @@ class ImportacaoDiversosPagarServiceTest {
                         + " " + (i.getBanco() == null ? "-" : i.getBanco().getCodigo()))
                 .containsExactly("1 1 2025-03-03 -", "2 34 2025-03-20 1", "3 2 2025-04-10 1");
         assertThat(itens).allMatch(ItemDiversoPagar::getContabilizado);
+        assertThat(itens(titulos.get(170)).get(0).getValor()).isEqualByComparingTo("500.00");
         assertThat(itens(titulos.get(10))).singleElement() // só a emissão: em aberto
                 .satisfies(i -> assertThat(i.getValor()).isEqualByComparingTo("1000.00"));
 

@@ -289,6 +289,7 @@ public class ImportacaoTitulosReceberService {
                     .thenComparing(ImpMovimento::registro, Comparator.nullsFirst(Comparator.naturalOrder())));
             List<Item> itens = new ArrayList<>();
             Item emissao = null;
+            boolean emissaoSemValor = false;
             int emissoes = 0;
             int outroBanco = 0;
             int vazios = 0;
@@ -303,14 +304,16 @@ public class ImportacaoTitulosReceberService {
                     historicosNaoAchados.merge(m.historico(), 1, Integer::sum);
                     continue;
                 }
-                if (m.data() == null || m.valor() == null) {
+                // emissão sem valor no legado: entra com o valor do título (ver abaixo)
+                if (m.data() == null || (m.valor() == null && !h.emissao())) {
                     relatorio.erros.add(titulo + ": movimento sem data ou sem valor (histórico " + h.codigo() + ").");
                     continue;
                 }
-                Item item = new Item(0, m.data(), h.id(), m.valor(), zero(m.juros()), zero(m.desconto()));
+                Item item = new Item(0, m.data(), h.id(), zero(m.valor()), zero(m.juros()), zero(m.desconto()));
                 if (h.emissao()) {
                     emissoes++;
                     emissao = item;
+                    emissaoSemValor = m.valor() == null;
                     continue;
                 }
                 itens.add(item);
@@ -336,6 +339,10 @@ public class ImportacaoTitulosReceberService {
                 }
                 relatorio.avisos.add(titulo + ": sem movimento de emissão no legado; criado com a data e o valor do título.");
                 emissao = new Item(0, l.dataEmissao(), h.id(), l.valor(), BigDecimal.ZERO, BigDecimal.ZERO);
+            } else if (emissaoSemValor) {
+                relatorio.divergencias.add(titulo + ": emissão sem valor no movimento; importada com o valor do título ("
+                        + l.valor() + ").");
+                emissao = emissao.comValor(l.valor());
             } else if (emissao.valor().compareTo(l.valor()) != 0) {
                 // o item 1 acompanha o valor do título, como no axctg3 ao editar um título
                 relatorio.divergencias.add(titulo + ": emissão de " + emissao.valor() + " no movimento e "

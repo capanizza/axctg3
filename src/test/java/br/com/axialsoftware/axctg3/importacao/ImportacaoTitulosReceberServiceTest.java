@@ -103,6 +103,7 @@ class ImportacaoTitulosReceberServiceTest {
         mov(101, 1, "2025-03-03", "400.00", "0", 1);
         mov(101, 5, "2025-03-20", "100.00", "5.00", 22);
         mov(102, 1, "2025-03-03", "500.00", "0", 1);
+        movimentos.get(movimentos.size() - 1).setValor(null); // emissão sem valor no legado
         mov(102, 2, "2025-03-30", "450.00", "0", 1);
         gravarMovimentos(lote);
 
@@ -116,6 +117,7 @@ class ImportacaoTitulosReceberServiceTest {
         assertThat(relatorio.getImportadas()).isEqualTo(3);
         assertThat(relatorio.getDivergencias()).containsExactlyInAnyOrder(
                 "Título 000317: emissão de 999.00 no movimento e 1000.00 no título; importada com o valor do título.",
+                "Título 000319: emissão sem valor no movimento; importada com o valor do título (500.00).",
                 "Título 000319: baixas somam 450.00 e o legado diz recebido 500.00.");
         assertThat(relatorio.getAvisos()).anyMatch(a -> a.startsWith("1 baixa(s) feitas no legado por banco diferente"));
 
