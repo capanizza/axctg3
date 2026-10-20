@@ -3,6 +3,8 @@ package br.com.axialsoftware.axctg3.financeiro;
 import br.com.axialsoftware.axctg3.entity.User;
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
+import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
+import br.com.axialsoftware.axctg3.entity.enums.CodNat;
 import br.com.axialsoftware.axctg3.entity.financeiro.Banco;
 import br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro;
 import br.com.axialsoftware.axctg3.entity.financeiro.ItemReceber;
@@ -11,6 +13,7 @@ import br.com.axialsoftware.axctg3.entity.tabelas.Municipio;
 import br.com.axialsoftware.axctg3.service.financeiro.NfcomImportService;
 import br.com.axialsoftware.axctg3.test_support.AuthenticatedAsAdmin;
 import io.jmix.core.DataManager;
+import io.jmix.core.FetchPlan;
 import io.jmix.core.SaveContext;
 import io.jmix.core.security.CurrentAuthentication;
 import io.jmix.data.PersistenceHints;
@@ -214,6 +217,66 @@ class NfcomImportServiceTest {
     }
 
     @Test
+    void test_comVariosBancosUsaOBancoComBoletoEAContaDaEmissao() {
+        // bancos de contrapartida importados do legado, sem boleto
+        banco(9502, "ANTECIPADO");
+        banco(9522, "PERDA RECEBIMENTOS");
+        bancoSicredi.setAgencia("0738");
+        bancoSicredi.setCodCedente("59622");
+        bancoSicredi = dataManager.save(bancoSicredi);
+        ContaContabil receita = dataManager.create(ContaContabil.class);
+        receita.setCodigo("311010001");
+        receita.setNome("RECEITA DE SERVIÇOS");
+        receita.setAno(ANO);
+        receita.setCodEmpresa(COD_EMPRESA);
+        receita.setGrau(1);
+        receita.setCodContaSup("311010001");
+        receita.setAnalitica(true);
+        receita.setCodNat(CodNat.CONTAS_DE_RESULTADO);
+        receita = dataManager.save(receita);
+        HistoricoFinanceiro histEmissao = dataManager.load(HistoricoFinanceiro.class)
+                .query("select e from HistoricoFinanceiro e where e.codigo = 1 and e.codEmpresa = :codEmpresa")
+                .parameter("codEmpresa", COD_EMPRESA)
+                .one();
+        histEmissao.setContaContabilReceber(receita);
+        dataManager.save(histEmissao);
+
+        byte[] xml = xmlNota("327", "24645912000189", "CLIENTE", "2026-09-02", "2026-09-10", "800.00");
+        NfcomImportService.ImportResult resultado = nfcomImportService.importar("nota.xml", xml);
+
+        assertThat(resultado.resultado()).isEqualTo(NfcomImportService.Resultado.CRIADA);
+        TituloReceber tituloReceber = dataManager.load(TituloReceber.class)
+                .query("select e from TituloReceber e where e.numero = :numero and e.codEmpresa = :codEmpresa")
+                .parameter("numero", "000327")
+                .parameter("codEmpresa", COD_EMPRESA)
+                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE)
+                        .add("banco", FetchPlan.BASE)
+                        .add("contaContabil", FetchPlan.BASE))
+                .one();
+        assertThat(tituloReceber.getBanco().getId()).isEqualTo(bancoSicredi.getId());
+        assertThat(tituloReceber.getContaContabil().getId()).isEqualTo(receita.getId());
+    }
+
+    @Test
+    void test_comVariosBancosSemBoletoRetornaErro() {
+        banco(9502, "ANTECIPADO");
+
+        byte[] xml = xmlNota("328", "24645912000189", "CLIENTE", "2026-09-02", "2026-09-10", "800.00");
+        NfcomImportService.ImportResult resultado = nfcomImportService.importar("nota.xml", xml);
+
+        assertThat(resultado.resultado()).isEqualTo(NfcomImportService.Resultado.ERRO);
+        assertThat(resultado.mensagem()).contains("2 banco(s), 0 com boleto");
+    }
+
+    private void banco(int codigo, String nome) {
+        Banco banco = dataManager.create(Banco.class);
+        banco.setCodigo(codigo);
+        banco.setCodEmpresa(COD_EMPRESA);
+        banco.setNome(nome);
+        dataManager.save(banco);
+    }
+
+    @Test
     void test_importarXmlInvalidoRetornaErro() {
         NfcomImportService.ImportResult resultado = nfcomImportService.importar(
                 "invalido.xml", "not xml".getBytes(StandardCharsets.UTF_8));
@@ -293,6 +356,7 @@ class NfcomImportServiceTest {
         apagar(carregar(TituloReceber.class, "select e from TituloReceber e where e.codEmpresa = :codEmpresa"));
         apagar(carregar(Banco.class, "select e from Banco e where e.codEmpresa = :codEmpresa"));
         apagar(carregar(HistoricoFinanceiro.class, "select e from HistoricoFinanceiro e where e.codEmpresa = :codEmpresa"));
+        apagar(carregar(ContaContabil.class, "select e from ContaContabil e where e.codEmpresa = :codEmpresa"));
         apagar(carregar(Parceiro.class, "select e from Parceiro e where e.codEmpresa = :codEmpresa"));
         apagar(carregar(Empresa.class, "select e from Empresa e where e.codigo = :codEmpresa"));
         apagar(carregar(Municipio.class, "select e from Municipio e where e.codigo = :codigo", "codigo", MUNICIPIO_TESTE));
