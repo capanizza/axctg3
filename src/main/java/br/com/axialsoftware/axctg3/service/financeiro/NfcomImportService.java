@@ -1,11 +1,14 @@
 package br.com.axialsoftware.axctg3.service.financeiro;
 
 import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
+import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
 import br.com.axialsoftware.axctg3.entity.financeiro.Banco;
+import br.com.axialsoftware.axctg3.entity.financeiro.HistoricoFinanceiro;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber;
 import br.com.axialsoftware.axctg3.entity.tabelas.Municipio;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import io.jmix.core.DataManager;
+import io.jmix.core.FetchPlan;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,8 +30,13 @@ import java.util.List;
  *   <li>Cancelamento (evento 110111) exclui o título pelo número derivado da chave — decisão do
  *   usuário (diferente do Axial, que só marca {@code OBS='Cancelada'} sem excluir);
  *   <li>Banco: NFCom não tem grupo de cobrança/duplicata (sempre 1 nota = 1 título) nem indica
- *   banco — usa o único {@link Banco} cadastrado pra empresa (mesmo valor fixo que o Axial grava,
- *   só que resolvido dinamicamente em vez de hardcoded).
+ *   banco — o Axial grava fixo o banco 1. Aqui: o único {@link Banco} da empresa ou, havendo
+ *   mais de um (bancos "de contrapartida" como antecipado e perda importados do legado), o único
+ *   com configuração de boleto (agência e cedente), que é por onde a duplicata é cobrada
+ *   (decisão do usuário 2026-10-20). Sem como decidir, erro;
+ *   <li>Conta contábil do título (crédito da contabilização da emissão): a conta de receber do
+ *   histórico financeiro de emissão (código 1) da empresa — o Axial grava fixo a 311010001, que é
+ *   a conta desse histórico na Rádio (decisão do usuário 2026-10-20).
  * </ul>
  *
  * <p>Desvio proposital do Axial: se o cancelamento chegar pra um título que já tem baixa
@@ -96,7 +104,7 @@ public class NfcomImportService {
         }
 
         Parceiro parceiro = resolverParceiro(nota.destinatario(), codEmpresa);
-        Banco banco = resolverBancoUnico(codEmpresa);
+        Banco banco = resolverBanco(codEmpresa);
 
         TituloReceber tituloReceber = dataManager.create(TituloReceber.class);
         tituloReceber.setNumero(nota.numero());
@@ -105,6 +113,7 @@ public class NfcomImportService {
         tituloReceber.setParceiro(parceiro);
         tituloReceber.setBanco(banco);
         tituloReceber.setValor(nota.valor());
+        tituloReceber.setContaContabil(contaDaEmissao(codEmpresa));
         dataManager.save(tituloReceber);
 
         return new ImportResult(Resultado.CRIADA, null);
@@ -163,16 +172,37 @@ public class NfcomImportService {
                 .orElse(null);
     }
 
-    private Banco resolverBancoUnico(Integer codEmpresa) {
+    private Banco resolverBanco(Integer codEmpresa) {
         List<Banco> bancos = dataManager.load(Banco.class)
                 .query("select e from Banco e where e.codEmpresa = :codEmpresa")
                 .parameter("codEmpresa", codEmpresa)
                 .list();
-        if (bancos.size() != 1) {
-            throw new IllegalStateException(
-                    "Import de NFCom exige exatamente 1 banco cadastrado pra empresa — encontrado(s) " + bancos.size());
+        if (bancos.size() == 1) {
+            return bancos.get(0);
         }
-        return bancos.get(0);
+        List<Banco> comBoleto = bancos.stream()
+                .filter(b -> preenchido(b.getAgencia()) && preenchido(b.getCodCedente()))
+                .toList();
+        if (comBoleto.size() != 1) {
+            throw new IllegalStateException("Import de NFCom precisa de 1 banco cadastrado pra empresa, ou de 1 só "
+                    + "banco com boleto configurado (agência e cedente) — encontrado(s) " + bancos.size()
+                    + " banco(s), " + comBoleto.size() + " com boleto");
+        }
+        return comBoleto.get(0);
+    }
+
+    private ContaContabil contaDaEmissao(Integer codEmpresa) {
+        return dataManager.load(HistoricoFinanceiro.class)
+                .query("select e from HistoricoFinanceiro e where e.codigo = 1 and e.codEmpresa = :codEmpresa")
+                .parameter("codEmpresa", codEmpresa)
+                .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE).add("contaContabilReceber", FetchPlan.BASE))
+                .optional()
+                .map(HistoricoFinanceiro::getContaContabilReceber)
+                .orElse(null);
+    }
+
+    private static boolean preenchido(String valor) {
+        return valor != null && !valor.isBlank();
     }
 
     private static String limitado(String valor, int tamanho) {
