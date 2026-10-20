@@ -12,7 +12,11 @@ public enum TipoLote implements EnumClass<Integer> {
 
     PLANO_CONTAS(1),
     LANCAMENTOS(2),
-    HISTORICOS(3);
+    HISTORICOS(3),
+    BANCOS(4),
+    HISTORICOS_FINANCEIROS(5),
+    PARCEIROS(6),
+    CENTROS_CUSTO(7);
 
     private final Integer id;
 

@@ -19,7 +19,10 @@ public class HistoricoFinanceiroEventListener {
     public void onHistoricoFinanceiroSaving(final EntitySavingEvent<HistoricoFinanceiro> event) {
         if (event.isNewEntity()) {
             HistoricoFinanceiro entity = event.getEntity();
-            entity.setCodEmpresa(utilGeralService.getCodEmpresa());
+            // a importação do legado já vem com a empresa do lote
+            if (entity.getCodEmpresa() == null) {
+                entity.setCodEmpresa(utilGeralService.getCodEmpresa());
+            }
         }
     }
 }

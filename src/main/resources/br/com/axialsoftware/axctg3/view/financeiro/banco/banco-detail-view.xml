@@ -199,6 +199,16 @@
                            dataContainer="bancoDc"
                            width="12%" themeNames="small"
                            label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.nossoNumAtual"/>
+                <textField id="postoField"
+                           property="posto"
+                           dataContainer="bancoDc"
+                           width="10%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.posto"/>
+                <integerField id="byteGeracaoNossoNumeroField"
+                              property="byteGeracaoNossoNumero"
+                              dataContainer="bancoDc"
+                              width="12%" themeNames="small"
+                              label="msg://br.com.axialsoftware.axctg3.entity.financeiro/Banco.byteGeracaoNossoNumero"/>
             </hbox>
         </vbox>
         <hbox width="100%">

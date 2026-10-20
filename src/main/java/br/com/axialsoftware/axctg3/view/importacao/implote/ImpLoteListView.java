@@ -2,8 +2,12 @@ package br.com.axialsoftware.axctg3.view.importacao.implote;
 
 import br.com.axialsoftware.axctg3.entity.enums.TipoLote;
 import br.com.axialsoftware.axctg3.entity.importacao.ImpLote;
+import br.com.axialsoftware.axctg3.service.importacao.ImportacaoBancosService;
+import br.com.axialsoftware.axctg3.service.importacao.ImportacaoCentrosCustoService;
+import br.com.axialsoftware.axctg3.service.importacao.ImportacaoHistoricosFinanceirosService;
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoHistoricosService;
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoLancamentosService;
+import br.com.axialsoftware.axctg3.service.importacao.ImportacaoParceirosService;
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoPlanoContasService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
@@ -23,7 +27,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Lotes exportados do sistema legado pelo projeto Axial ({@code exportacao2}): plano de contas
- * com saldos, lançamentos e históricos contábeis. Não há criar
+ * com saldos, lançamentos, históricos contábeis, bancos, históricos financeiros, parceiros e
+ * centros de custo. Não há criar
  * nem editar: o lote nasce no exportador. Daqui só se confere (relatório sem gravar nada) e
  * importa (grava, se não houver erro estrutural). O relatório fica no próprio lote e aparece
  * no quadro abaixo da grade.
@@ -55,6 +60,14 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
     private ImportacaoLancamentosService importacaoLancamentosService;
     @Autowired
     private ImportacaoHistoricosService importacaoHistoricosService;
+    @Autowired
+    private ImportacaoBancosService importacaoBancosService;
+    @Autowired
+    private ImportacaoHistoricosFinanceirosService importacaoHistoricosFinanceirosService;
+    @Autowired
+    private ImportacaoParceirosService importacaoParceirosService;
+    @Autowired
+    private ImportacaoCentrosCustoService importacaoCentrosCustoService;
 
     @Subscribe(id = "impLotesDc", target = Target.DATA_CONTAINER)
     public void onImpLotesDcItemChange(final InstanceContainer.ItemChangeEvent<ImpLote> event) {
@@ -71,6 +84,10 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
         ImportacaoPlanoContasService.Relatorio relatorio = switch (lote.getTipo()) {
             case LANCAMENTOS -> importacaoLancamentosService.conferir(lote.getId());
             case HISTORICOS -> importacaoHistoricosService.conferir(lote.getId());
+            case BANCOS -> importacaoBancosService.conferir(lote.getId());
+            case HISTORICOS_FINANCEIROS -> importacaoHistoricosFinanceirosService.conferir(lote.getId());
+            case PARCEIROS -> importacaoParceirosService.conferir(lote.getId());
+            case CENTROS_CUSTO -> importacaoCentrosCustoService.conferir(lote.getId());
             case PLANO_CONTAS -> importacaoPlanoContasService.conferir(lote.getId());
         };
         recarregar(lote);
@@ -92,6 +109,14 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
                     lote.getAno(), lote.getCodEmpresa());
             case HISTORICOS -> messageBundle.formatMessage("impLoteListView.importarHistoricos.confirmar",
                     lote.getCodEmpresa());
+            case BANCOS -> messageBundle.formatMessage("impLoteListView.importarBancos.confirmar",
+                    lote.getCodEmpresa());
+            case HISTORICOS_FINANCEIROS -> messageBundle.formatMessage(
+                    "impLoteListView.importarHistoricosFinanceiros.confirmar", lote.getCodEmpresa());
+            case PARCEIROS -> messageBundle.formatMessage("impLoteListView.importarParceiros.confirmar",
+                    lote.getCodEmpresa());
+            case CENTROS_CUSTO -> messageBundle.formatMessage("impLoteListView.importarCentrosCusto.confirmar",
+                    lote.getCodEmpresa());
             case PLANO_CONTAS -> messageBundle.formatMessage("impLoteListView.importar.confirmar",
                     lote.getAno(), lote.getCodEmpresa());
         };
@@ -108,6 +133,10 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
         ImportacaoPlanoContasService.Relatorio relatorio = switch (lote.getTipo()) {
             case LANCAMENTOS -> importacaoLancamentosService.importar(lote.getId());
             case HISTORICOS -> importacaoHistoricosService.importar(lote.getId());
+            case BANCOS -> importacaoBancosService.importar(lote.getId());
+            case HISTORICOS_FINANCEIROS -> importacaoHistoricosFinanceirosService.importar(lote.getId());
+            case PARCEIROS -> importacaoParceirosService.importar(lote.getId());
+            case CENTROS_CUSTO -> importacaoCentrosCustoService.importar(lote.getId());
             case PLANO_CONTAS -> importacaoPlanoContasService.importar(lote.getId());
         };
         recarregar(lote);
@@ -116,6 +145,18 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
             texto = messageBundle.formatMessage("impLoteListView.importar.erro", relatorio.getErros().size());
         } else if (lote.getTipo() == TipoLote.HISTORICOS) {
             texto = messageBundle.formatMessage("impLoteListView.importarHistoricos.ok",
+                    relatorio.getImportadas(), relatorio.getAvisos().size());
+        } else if (lote.getTipo() == TipoLote.BANCOS) {
+            texto = messageBundle.formatMessage("impLoteListView.importarBancos.ok",
+                    relatorio.getImportadas(), relatorio.getAvisos().size());
+        } else if (lote.getTipo() == TipoLote.HISTORICOS_FINANCEIROS) {
+            texto = messageBundle.formatMessage("impLoteListView.importarHistoricosFinanceiros.ok",
+                    relatorio.getImportadas(), relatorio.getAvisos().size());
+        } else if (lote.getTipo() == TipoLote.PARCEIROS) {
+            texto = messageBundle.formatMessage("impLoteListView.importarParceiros.ok",
+                    relatorio.getImportadas(), relatorio.getAvisos().size());
+        } else if (lote.getTipo() == TipoLote.CENTROS_CUSTO) {
+            texto = messageBundle.formatMessage("impLoteListView.importarCentrosCusto.ok",
                     relatorio.getImportadas(), relatorio.getAvisos().size());
         } else {
             texto = messageBundle.formatMessage(lote.getTipo() == TipoLote.LANCAMENTOS
