@@ -48,7 +48,8 @@ import java.util.UUID;
  * aqui, impede a importação — para não apagar o que foi feito no axctg3.
  * <p>
  * Conferência: o valor de emissão tem de bater com o do título, e a soma das baixas com o
- * RECEBIDO do legado; diferença vira divergência, não impede.
+ * RECEBIDO do legado; diferença vira divergência, não impede. Movimento sem histórico e sem valor
+ * (linha em branco digitada no legado) é ignorado, com aviso.
  */
 @Service
 public class ImportacaoTitulosReceberService {
@@ -184,6 +185,7 @@ public class ImportacaoTitulosReceberService {
             Map<String, Integer> contasNaoAchadas = new TreeMap<>();
             Map<Integer, Integer> historicosNaoAchados = new TreeMap<>();
             int baixasOutroBanco = 0;
+            int vazios = 0;
             for (ImpTitulo linha : linhas) {
                 Titulo t = converter(linha, movimentos.getOrDefault(linha.registro(), List.of()),
                         contasNaoAchadas, historicosNaoAchados);
@@ -196,11 +198,16 @@ public class ImportacaoTitulosReceberService {
                 }
                 doLote.put(t.numero, t);
                 baixasOutroBanco += t.baixasOutroBanco;
+                vazios += t.movimentosVazios;
             }
             historicosNaoAchados.forEach((codigo, qtd) -> relatorio.erros.add("Histórico financeiro " + codigo
                     + " não existe na empresa (" + qtd + " movimentos). Importe antes os históricos financeiros."));
             contasNaoAchadas.forEach((codigo, qtd) -> relatorio.avisos.add("Conta contábil " + codigo
                     + " não existe no plano de " + anoPlano + " (" + qtd + " títulos): ficam sem conta."));
+            if (vazios > 0) {
+                relatorio.avisos.add(vazios + " movimento(s) sem histórico e sem valor (linha em branco no legado) "
+                        + "ignorado(s).");
+            }
             if (baixasOutroBanco > 0) {
                 relatorio.avisos.add(baixasOutroBanco + " baixa(s) feitas no legado por banco diferente do banco do "
                         + "título; o axctg3 guarda o banco só no título.");
@@ -283,8 +290,13 @@ public class ImportacaoTitulosReceberService {
             Item emissao = null;
             int emissoes = 0;
             int outroBanco = 0;
+            int vazios = 0;
             BigDecimal baixado = BigDecimal.ZERO;
             for (ImpMovimento m : ordenados) {
+                if (m.historico() == null && (m.valor() == null || m.valor().signum() == 0)) {
+                    vazios++;
+                    continue;
+                }
                 Historico h = m.historico() == null ? null : historicos.get(m.historico());
                 if (h == null) {
                     historicosNaoAchados.merge(m.historico(), 1, Integer::sum);
@@ -350,6 +362,7 @@ public class ImportacaoTitulosReceberService {
             Titulo t = new Titulo(numero, l.dataEmissao(), l.dataVencimento(), parceiro, banco,
                     texto(l.numBanco()), l.valor(), conta, observacao, numerados);
             t.baixasOutroBanco = outroBanco;
+            t.movimentosVazios = vazios;
             titulos++;
             totalValor = totalValor.add(l.valor());
             totalBaixado = totalBaixado.add(baixado);
@@ -605,6 +618,7 @@ public class ImportacaoTitulosReceberService {
         UUID id;
         boolean trocarItens;
         int baixasOutroBanco;
+        int movimentosVazios;
 
         Titulo(String numero, LocalDate dataEmissao, LocalDate dataVencimento, UUID parceiro, UUID banco,
                String numBanco, BigDecimal valor, UUID conta, String observacao, List<Item> itens) {
