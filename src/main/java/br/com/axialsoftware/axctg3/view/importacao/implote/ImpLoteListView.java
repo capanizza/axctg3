@@ -9,6 +9,7 @@ import br.com.axialsoftware.axctg3.service.importacao.ImportacaoHistoricosServic
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoLancamentosService;
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoParceirosService;
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoPlanoContasService;
+import br.com.axialsoftware.axctg3.service.importacao.ImportacaoTitulosPagarService;
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoTitulosReceberService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
@@ -29,7 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 /**
  * Lotes exportados do sistema legado pelo projeto Axial ({@code exportacao2}): plano de contas
  * com saldos, lançamentos, históricos contábeis, bancos, históricos financeiros, parceiros,
- * centros de custo e títulos a receber. Não há criar
+ * centros de custo e títulos a receber e a pagar. Não há criar
  * nem editar: o lote nasce no exportador. Daqui só se confere (relatório sem gravar nada) e
  * importa (grava, se não houver erro estrutural). O relatório fica no próprio lote e aparece
  * no quadro abaixo da grade.
@@ -71,6 +72,8 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
     private ImportacaoCentrosCustoService importacaoCentrosCustoService;
     @Autowired
     private ImportacaoTitulosReceberService importacaoTitulosReceberService;
+    @Autowired
+    private ImportacaoTitulosPagarService importacaoTitulosPagarService;
 
     @Subscribe(id = "impLotesDc", target = Target.DATA_CONTAINER)
     public void onImpLotesDcItemChange(final InstanceContainer.ItemChangeEvent<ImpLote> event) {
@@ -92,6 +95,7 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
             case PARCEIROS -> importacaoParceirosService.conferir(lote.getId());
             case CENTROS_CUSTO -> importacaoCentrosCustoService.conferir(lote.getId());
             case TITULOS_RECEBER -> importacaoTitulosReceberService.conferir(lote.getId());
+            case TITULOS_PAGAR -> importacaoTitulosPagarService.conferir(lote.getId());
             case PLANO_CONTAS -> importacaoPlanoContasService.conferir(lote.getId());
         };
         recarregar(lote);
@@ -123,6 +127,8 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
                     lote.getCodEmpresa());
             case TITULOS_RECEBER -> messageBundle.formatMessage("impLoteListView.importarTitulosReceber.confirmar",
                     lote.getPeriodo(), lote.getCodEmpresa());
+            case TITULOS_PAGAR -> messageBundle.formatMessage("impLoteListView.importarTitulosPagar.confirmar",
+                    lote.getPeriodo(), lote.getCodEmpresa());
             case PLANO_CONTAS -> messageBundle.formatMessage("impLoteListView.importar.confirmar",
                     lote.getAno(), lote.getCodEmpresa());
         };
@@ -144,6 +150,7 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
             case PARCEIROS -> importacaoParceirosService.importar(lote.getId());
             case CENTROS_CUSTO -> importacaoCentrosCustoService.importar(lote.getId());
             case TITULOS_RECEBER -> importacaoTitulosReceberService.importar(lote.getId());
+            case TITULOS_PAGAR -> importacaoTitulosPagarService.importar(lote.getId());
             case PLANO_CONTAS -> importacaoPlanoContasService.importar(lote.getId());
         };
         recarregar(lote);
@@ -167,6 +174,9 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
                     relatorio.getImportadas(), relatorio.getAvisos().size());
         } else if (lote.getTipo() == TipoLote.TITULOS_RECEBER) {
             texto = messageBundle.formatMessage("impLoteListView.importarTitulosReceber.ok",
+                    relatorio.getImportadas(), relatorio.getDivergencias().size(), relatorio.getAvisos().size());
+        } else if (lote.getTipo() == TipoLote.TITULOS_PAGAR) {
+            texto = messageBundle.formatMessage("impLoteListView.importarTitulosPagar.ok",
                     relatorio.getImportadas(), relatorio.getDivergencias().size(), relatorio.getAvisos().size());
         } else {
             texto = messageBundle.formatMessage(lote.getTipo() == TipoLote.LANCAMENTOS
