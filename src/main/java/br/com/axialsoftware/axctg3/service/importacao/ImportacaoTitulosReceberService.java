@@ -48,7 +48,8 @@ import java.util.UUID;
  * aqui, impede a importação — para não apagar o que foi feito no axctg3.
  * <p>
  * Conferência: o valor de emissão tem de bater com o do título, e a soma das baixas com o
- * RECEBIDO do legado; diferença vira divergência, não impede. Movimento sem histórico e sem valor
+ * RECEBIDO do legado; diferença vira divergência, não impede. Emissão diferente do título entra
+ * com o valor do título (o item 1 acompanha o título, como no axctg3). Movimento sem histórico e sem valor
  * (linha em branco digitada no legado) é ignorado, com aviso.
  */
 @Service
@@ -336,8 +337,10 @@ public class ImportacaoTitulosReceberService {
                 relatorio.avisos.add(titulo + ": sem movimento de emissão no legado; criado com a data e o valor do título.");
                 emissao = new Item(0, l.dataEmissao(), h.id(), l.valor(), BigDecimal.ZERO, BigDecimal.ZERO);
             } else if (emissao.valor().compareTo(l.valor()) != 0) {
+                // o item 1 acompanha o valor do título, como no axctg3 ao editar um título
                 relatorio.divergencias.add(titulo + ": emissão de " + emissao.valor() + " no movimento e "
-                        + l.valor() + " no título.");
+                        + l.valor() + " no título; importada com o valor do título.");
+                emissao = emissao.comValor(l.valor());
             }
             BigDecimal recebido = zero(l.recebido());
             if (baixado.compareTo(recebido) != 0) {
@@ -592,6 +595,10 @@ public class ImportacaoTitulosReceberService {
                         BigDecimal desconto) {
         Item comItem(int numero) {
             return new Item(numero, data, historico, valor, juros, desconto);
+        }
+
+        Item comValor(BigDecimal novo) {
+            return new Item(item, data, historico, novo, juros, desconto);
         }
 
         boolean mesmo(Item o) {
