@@ -33,8 +33,12 @@ import java.util.TreeMap;
 import java.util.UUID;
 
 /**
- * Importa um {@link ImpLote} de lançamentos do legado (MOVCONTA) de um ano inteiro, para uma
- * empresa cujo plano de contas desse ano já foi importado com os saldos do legado.
+ * Importa um {@link ImpLote} de lançamentos do legado (MOVCONTA) de um ano inteiro — ou de um mês
+ * só, quando o lote tem mês (empresa com milhares de lançamentos por mês) — para uma empresa cujo
+ * plano de contas desse ano já foi importado com os saldos do legado. No lote de um mês, tudo
+ * (a exigência de período vazio, a conferência dos saldos, a comparação com o gravado) vale só
+ * para aquele mês; o saldo transferido do encerramento só é conferido no lote de dezembro ou do
+ * ano inteiro.
  * <p>
  * Os lançamentos são gravados <b>sem</b> passar pelo {@code LancamentoService.atualizarSaldos}
  * (ver {@link LancamentoEventListener#gravarComoImportacao}): os saldos mensais vieram prontos
@@ -120,7 +124,7 @@ public class ImportacaoLancamentosService {
         return relatorio;
     }
 
-    /** {@code paraImportar}: só a importação exige lote não importado e ano sem lançamentos. */
+    /** {@code paraImportar}: só a importação exige lote não importado e período sem lançamentos. */
     private void validarLote(ImpLote lote, ImportacaoPlanoContasService.Relatorio relatorio, boolean paraImportar) {
         if (lote.getTipo() != TipoLote.LANCAMENTOS) {
             relatorio.erros.add("O lote não é de lançamentos.");
@@ -132,6 +136,10 @@ public class ImportacaoLancamentosService {
         }
         if (lote.getAno() == null) {
             relatorio.erros.add("O lote não informa o ano dos lançamentos.");
+            return;
+        }
+        if (lote.getMes() != null && (lote.getMes() < 1 || lote.getMes() > 12)) {
+            relatorio.erros.add("O lote informa o mês " + lote.getMes() + ", inválido.");
             return;
         }
         // grava na empresa do lote, não na selecionada (mesma regra do plano de contas)
@@ -150,16 +158,20 @@ public class ImportacaoLancamentosService {
             relatorio.erros.add("Este lote já foi importado.");
             return;
         }
-        Long existentes = dataManager.loadValue(
-                        "select count(e) from Lancamento e where e.codEmpresa = :codEmpresa and e.ano = :ano",
+        var consulta = dataManager.loadValue(
+                        "select count(e) from Lancamento e where e.codEmpresa = :codEmpresa and e.ano = :ano"
+                                + (lote.getMes() == null ? "" : " and e.mes = :mes"),
                         Long.class)
                 .parameter("codEmpresa", lote.getCodEmpresa())
-                .parameter("ano", lote.getAno())
-                .one();
+                .parameter("ano", lote.getAno());
+        if (lote.getMes() != null) {
+            consulta.parameter("mes", lote.getMes());
+        }
+        Long existentes = consulta.one();
         if (existentes > 0) {
             relatorio.erros.add("A empresa " + lote.getCodEmpresa() + " já tem " + existentes
-                    + " lançamentos em " + lote.getAno() + ". A importação só grava num ano sem lançamentos"
-                    + " (use Conferir para comparar o lote com eles).");
+                    + " lançamentos em " + lote.getPeriodo() + ". A importação só grava num período sem"
+                    + " lançamentos (use Conferir para comparar o lote com eles).");
         }
     }
 
@@ -169,6 +181,7 @@ public class ImportacaoLancamentosService {
      */
     Leitura ler(ImpLote lote, ImportacaoPlanoContasService.Relatorio relatorio) {
         Leitura leitura = new Leitura();
+        leitura.mes = lote.getMes();
         int ano = lote.getAno();
         Integer codEmpresa = lote.getCodEmpresa();
 
@@ -226,6 +239,10 @@ public class ImportacaoLancamentosService {
             String id = "Lançamento " + linha.getNumero() + " de " + linha.getMes() + "/" + ano;
             if (!Objects.equals(linha.getAno(), ano)) {
                 relatorio.erros.add(id + ": ano " + linha.getAno() + " diferente do ano do lote.");
+                continue;
+            }
+            if (lote.getMes() != null && !lote.getMes().equals(linha.getMes())) {
+                relatorio.erros.add(id + ": fora do mês do lote (" + lote.getPeriodo() + ").");
                 continue;
             }
             if (!chaves.add(linha.getMes() + "/" + linha.getNumero())) {
@@ -370,7 +387,7 @@ public class ImportacaoLancamentosService {
             BigDecimal[] cre = creditos.get(codigo);
             for (SaldoConta saldo : conta.getSaldosConta()) {
                 int m = saldo.getMes() - 1;
-                if (m < 0 || m > 11) {
+                if (m < 0 || m > 11 || (leitura.mes != null && !leitura.mes.equals(saldo.getMes()))) {
                     continue;
                 }
                 compararMes(relatorio, codigo, saldo.getMes(), "débito", zeroSeNulo(saldo.getDebitoMes()),
@@ -378,7 +395,8 @@ public class ImportacaoLancamentosService {
                 compararMes(relatorio, codigo, saldo.getMes(), "crédito", zeroSeNulo(saldo.getCreditoMes()),
                         cre == null ? BigDecimal.ZERO : cre[m]);
             }
-            if (conta.getCodNat() == CodNat.CONTAS_DE_RESULTADO) {
+            if (conta.getCodNat() == CodNat.CONTAS_DE_RESULTADO
+                    && (leitura.mes == null || leitura.mes == MES_ENCERRAMENTO)) {
                 BigDecimal transf = zeroSeNulo(conta.getSaldoTransf());
                 BigDecimal nosLancamentos = encerrado.getOrDefault(codigo, BigDecimal.ZERO);
                 if (transf.compareTo(nosLancamentos) != 0) {
@@ -412,21 +430,25 @@ public class ImportacaoLancamentosService {
      * para as divergências, com o prefixo "Gravado:".
      */
     private void compararComGravados(ImpLote lote, Leitura leitura, ImportacaoPlanoContasService.Relatorio relatorio) {
-        List<Lancamento> gravados = dataManager.load(Lancamento.class)
-                .query("select e from Lancamento e where e.codEmpresa = :codEmpresa and e.ano = :ano")
+        var consulta = dataManager.load(Lancamento.class)
+                .query("select e from Lancamento e where e.codEmpresa = :codEmpresa and e.ano = :ano"
+                        + (lote.getMes() == null ? "" : " and e.mes = :mes"))
                 .parameter("codEmpresa", lote.getCodEmpresa())
                 .parameter("ano", lote.getAno())
                 .fetchPlan(fp -> fp.addFetchPlan(FetchPlan.BASE)
                         .add("contaDevedora", FetchPlan.BASE)
                         .add("contaCredora", FetchPlan.BASE)
                         .add("historicoContabil", FetchPlan.BASE)
-                        .add("centroCusto", FetchPlan.BASE))
-                .list();
+                        .add("centroCusto", FetchPlan.BASE));
+        if (lote.getMes() != null) {
+            consulta.parameter("mes", lote.getMes());
+        }
+        List<Lancamento> gravados = consulta.list();
         if (gravados.isEmpty()) {
             return;
         }
         relatorio.avisos.add("A empresa " + lote.getCodEmpresa() + " já tem " + gravados.size()
-                + " lançamentos gravados em " + lote.getAno() + "; o lote foi comparado com eles.");
+                + " lançamentos gravados em " + lote.getPeriodo() + "; o lote foi comparado com eles.");
         Map<String, Lancamento> porChave = new HashMap<>();
         for (Lancamento gravado : gravados) {
             porChave.put(gravado.getMes() + "/" + gravado.getNumero(), gravado);
@@ -529,7 +551,8 @@ public class ImportacaoLancamentosService {
         secao(sb, "DIVERGÊNCIAS", relatorio.divergencias);
         secao(sb, "AVISOS", relatorio.avisos);
         if (relatorio.erros.isEmpty() && relatorio.divergencias.isEmpty()) {
-            sb.append("\nLançamentos batendo com os saldos do plano em todas as contas analíticas.\n");
+            sb.append("\nLançamentos batendo com os saldos do plano em todas as contas analíticas")
+                    .append(lote.getMes() == null ? "" : " no mês " + lote.getPeriodo()).append(".\n");
         }
         lote.setMensagem(sb.toString());
         if (importado) {
@@ -561,6 +584,8 @@ public class ImportacaoLancamentosService {
     }
 
     static class Leitura {
+        // mês do lote; null = ano inteiro
+        Integer mes;
         final Map<String, ContaContabil> contas = new HashMap<>();
         final List<LancamentoLido> lancamentos = new ArrayList<>();
     }

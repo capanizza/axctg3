@@ -110,7 +110,7 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
         }
         String confirmacao = switch (lote.getTipo()) {
             case LANCAMENTOS -> messageBundle.formatMessage("impLoteListView.importarLancamentos.confirmar",
-                    lote.getAno(), lote.getCodEmpresa());
+                    lote.getPeriodo(), lote.getCodEmpresa());
             case HISTORICOS -> messageBundle.formatMessage("impLoteListView.importarHistoricos.confirmar",
                     lote.getCodEmpresa());
             case BANCOS -> messageBundle.formatMessage("impLoteListView.importarBancos.confirmar",
@@ -122,7 +122,7 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
             case CENTROS_CUSTO -> messageBundle.formatMessage("impLoteListView.importarCentrosCusto.confirmar",
                     lote.getCodEmpresa());
             case TITULOS_RECEBER -> messageBundle.formatMessage("impLoteListView.importarTitulosReceber.confirmar",
-                    lote.getAno(), lote.getCodEmpresa());
+                    lote.getPeriodo(), lote.getCodEmpresa());
             case PLANO_CONTAS -> messageBundle.formatMessage("impLoteListView.importar.confirmar",
                     lote.getAno(), lote.getCodEmpresa());
         };

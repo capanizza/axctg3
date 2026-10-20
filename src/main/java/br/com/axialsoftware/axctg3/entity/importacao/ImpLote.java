@@ -81,6 +81,10 @@ public class ImpLote {
     @Column(name = "ANO")
     private Integer ano;
 
+    // lote de um mês só (lançamentos e títulos de empresa com muito movimento); vazio = ano inteiro
+    @Column(name = "MES")
+    private Integer mes;
+
     @Column(name = "QTD_LINHAS")
     private Integer qtdLinhas;
 
@@ -193,6 +197,22 @@ public class ImpLote {
 
     public void setAno(Integer ano) {
         this.ano = ano;
+    }
+
+    public Integer getMes() {
+        return mes;
+    }
+
+    public void setMes(Integer mes) {
+        this.mes = mes;
+    }
+
+    /** "2025" ou, no lote de um mês, "3/2025" — para as mensagens. */
+    public String getPeriodo() {
+        if (ano == null) {
+            return "";
+        }
+        return mes == null ? String.valueOf(ano) : mes + "/" + ano;
     }
 
     public Integer getQtdLinhas() {

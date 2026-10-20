@@ -41,6 +41,7 @@
                 <column property="codEmpresa"/>
                 <column property="codEmpresaLegado"/>
                 <column property="ano"/>
+                <column property="mes"/>
                 <column property="qtdLinhas"/>
                 <column property="situacao"/>
                 <column property="dataImportacao" width="14rem"/>
