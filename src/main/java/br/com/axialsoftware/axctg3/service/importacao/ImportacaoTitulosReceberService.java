@@ -29,8 +29,9 @@ import java.util.UUID;
 
 /**
  * Importa um {@link ImpLote} de títulos a receber do legado (RECEBER, com todos os movimentos de
- * MOVRECEBER: emissão e baixas) para a empresa do lote. Um lote por ano de emissão: o exportador
- * do projeto Axial gera um por ano, porque há empresa com mais de 100 mil títulos por ano.
+ * MOVRECEBER: emissão e baixas) para a empresa do lote. Um lote por ano de emissão — ou por mês,
+ * quando o lote tem mês: há empresa com mais de 100 mil títulos por ano. O período só delimita
+ * os títulos que contam como "existem no axctg3 e não vieram no lote".
  * <p>
  * Pelo volume, lê e grava por JDBC em lote, sem passar pelo DataManager nem pelos listeners de
  * {@code TituloReceber} (que trocariam a empresa pela da sessão e criariam o item de emissão
@@ -108,6 +109,10 @@ public class ImportacaoTitulosReceberService {
         }
         if (lote.getAno() == null) {
             relatorio.erros.add("O lote não tem ano. Exporte de novo.");
+            return;
+        }
+        if (lote.getMes() != null && (lote.getMes() < 1 || lote.getMes() > 12)) {
+            relatorio.erros.add("O lote informa o mês " + lote.getMes() + ", inválido. Exporte de novo.");
             return;
         }
         Integer empresas = jdbc.queryForObject(
@@ -428,15 +433,16 @@ public class ImportacaoTitulosReceberService {
             }
             relatorio.avisos.addAll(alteracoes);
 
-            LocalDate inicio = LocalDate.of(lote.getAno(), 1, 1);
+            LocalDate inicio = LocalDate.of(lote.getAno(), lote.getMes() == null ? 1 : lote.getMes(), 1);
+            LocalDate fim = lote.getMes() == null ? inicio.plusYears(1) : inicio.plusMonths(1);
             List<String> soNoAxctg3 = jdbc.queryForList("select t.NUMERO from TITULO_RECEBER t "
                             + "where t.COD_EMPRESA = ? and t.DELETED_DATE is null "
                             + "and t.DATA_EMISSAO >= ? and t.DATA_EMISSAO < ? "
                             + "and t.NUMERO not in (select i.NUMERO from IMP_TITULO_RECEBER i where i.LOTE_ID = ?) "
                             + "order by t.NUMERO", String.class,
-                    codEmpresa, inicio, inicio.plusYears(1), lote.getId());
+                    codEmpresa, inicio, fim, lote.getId());
             if (!soNoAxctg3.isEmpty()) {
-                relatorio.avisos.add(soNoAxctg3.size() + " título(s) de " + lote.getAno()
+                relatorio.avisos.add(soNoAxctg3.size() + " título(s) de " + lote.getPeriodo()
                         + " existem no axctg3 e não vieram no lote (ficam como estão): "
                         + String.join(", ", soNoAxctg3.subList(0, Math.min(50, soNoAxctg3.size())))
                         + (soNoAxctg3.size() > 50 ? "..." : "") + ".");
@@ -496,7 +502,7 @@ public class ImportacaoTitulosReceberService {
             sb.append(e.novos.size()).append(importado ? " criados, " : " a criar, ")
                     .append(e.alterados.size()).append(importado ? " alterados, " : " a alterar, ")
                     .append(e.iguais).append(" iguais.\n");
-            sb.append(e.titulos).append(" títulos de ").append(lote.getAno()).append(": valor ").append(e.totalValor)
+            sb.append(e.titulos).append(" títulos de ").append(lote.getPeriodo()).append(": valor ").append(e.totalValor)
                     .append(", baixado ").append(e.totalBaixado).append(", em aberto ").append(e.totalAberto)
                     .append(" (").append(e.abertos).append(" títulos).\n");
         }

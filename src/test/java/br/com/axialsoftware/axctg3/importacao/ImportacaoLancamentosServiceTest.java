@@ -185,6 +185,51 @@ class ImportacaoLancamentosServiceTest {
                 .isEqualTo(SituacaoLote.PRONTO);
     }
 
+    @Test
+    void test_loteDeUmMesConfereEGravaSoAqueleMes() {
+        ImpLote janeiro = loteDoMes(1, lancamento(null, 7, 1, LocalDate.of(ANO, 1, 15), "110000001", "311000001", 1, "NF 123", "100.00"));
+        ImpLote fevereiro = loteDoMes(2, lancamento(null, 1, 2, LocalDate.of(ANO, 2, 3), "110000001", "", null, null, "10.00"));
+        ImpLote dezembro = loteDoMes(12, lancamento(null, 1, 12, LocalDate.of(ANO, 12, 31), "311000001", "245010001", 1, null, "100.00"));
+
+        // o mês de janeiro sozinho bate com o plano: os outros meses não são cobrados
+        ImportacaoPlanoContasService.Relatorio relatorio = service.importar(janeiro.getId());
+        assertThat(relatorio.getErros()).isEmpty();
+        assertThat(relatorio.getDivergencias()).isEmpty();
+        assertThat(lancamentos()).hasSize(1);
+
+        // janeiro já tem lançamentos, fevereiro ainda não
+        ImpLote janeiroDeNovo = loteDoMes(1, lancamento(null, 8, 1, LocalDate.of(ANO, 1, 20), "110000001", "311000001", 1, null, "1.00"));
+        assertThat(service.importar(janeiroDeNovo.getId()).getErros())
+                .anyMatch(e -> e.contains("já tem 1 lançamentos em 1/" + ANO));
+        assertThat(service.importar(fevereiro.getId()).getErros()).isEmpty();
+
+        // só o lote de dezembro confere o saldo transferido do encerramento
+        ImportacaoPlanoContasService.Relatorio encerramento = service.importar(dezembro.getId());
+        assertThat(encerramento.getErros()).isEmpty();
+        assertThat(encerramento.getDivergencias()).isEmpty();
+        assertThat(encerramento.getAvisos()).anyMatch(a -> a.contains("reconhecidos como encerramento"));
+        assertThat(lancamentos()).hasSize(3);
+
+        // lançamento de outro mês dentro do lote é erro
+        ImpLote misturado = loteDoMes(3, lancamento(null, 2, 4, LocalDate.of(ANO, 4, 1), "110000001", "311000001", 1, null, "1.00"));
+        assertThat(service.conferir(misturado.getId()).getErros())
+                .anyMatch(e -> e.contains("fora do mês do lote (3/" + ANO + ")"));
+    }
+
+    private ImpLote loteDoMes(int mes, ImpLancamento linha) {
+        ImpLote lote = dataManager.create(ImpLote.class);
+        lote.setTipo(TipoLote.LANCAMENTOS);
+        lote.setSituacao(SituacaoLote.PRONTO);
+        lote.setCodEmpresa(COD_EMPRESA);
+        lote.setCodEmpresaLegado(4);
+        lote.setAno(ANO);
+        lote.setMes(mes);
+        lote = dataManager.save(lote);
+        linha.setLote(lote);
+        dataManager.save(linha);
+        return lote;
+    }
+
     // ---------------------------------------------------------------- lotes
 
     /** (código, nome, grau, analítica) do plano do teste, em ordem de código. */
