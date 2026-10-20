@@ -310,6 +310,7 @@ public abstract class ImportacaoContasPagarBase {
                     .thenComparing(ImpMovimento::registro, Comparator.nullsFirst(Comparator.naturalOrder())));
             List<Item> itens = new ArrayList<>();
             Item emissao = null;
+            boolean emissaoSemValor = false;
             int emissoes = 0;
             int vazios = 0;
             BigDecimal baixado = BigDecimal.ZERO;
@@ -323,7 +324,8 @@ public abstract class ImportacaoContasPagarBase {
                     historicosNaoAchados.merge(m.historico(), 1, Integer::sum);
                     continue;
                 }
-                if (m.data() == null || m.valor() == null) {
+                // emissão sem valor no legado: entra com o valor do título (ver abaixo)
+                if (m.data() == null || (m.valor() == null && !h.emissao())) {
                     relatorio.erros.add(titulo + ": movimento sem data ou sem valor (histórico " + h.codigo() + ").");
                     continue;
                 }
@@ -335,10 +337,11 @@ public abstract class ImportacaoContasPagarBase {
                         continue;
                     }
                 }
-                Item item = new Item(0, m.data(), h.id(), banco, m.valor(), zero(m.juros()), zero(m.desconto()));
+                Item item = new Item(0, m.data(), h.id(), banco, zero(m.valor()), zero(m.juros()), zero(m.desconto()));
                 if (h.emissao()) {
                     emissoes++;
                     emissao = item;
+                    emissaoSemValor = m.valor() == null;
                     continue;
                 }
                 itens.add(item);
@@ -361,6 +364,10 @@ public abstract class ImportacaoContasPagarBase {
                 }
                 relatorio.avisos.add(titulo + ": sem movimento de emissão no legado; criado com a data e o valor do título.");
                 emissao = new Item(0, l.dataEmissao(), h.id(), null, l.valor(), BigDecimal.ZERO, BigDecimal.ZERO);
+            } else if (emissaoSemValor) {
+                relatorio.divergencias.add(titulo + ": emissão sem valor no movimento; importada com o valor do título ("
+                        + l.valor() + ").");
+                emissao = emissao.comValor(l.valor());
             } else if (emissao.valor().compareTo(l.valor()) != 0) {
                 // o item 1 acompanha o valor do título, como no axctg3 ao editar um título
                 relatorio.divergencias.add(titulo + ": emissão de " + emissao.valor() + " no movimento e "
