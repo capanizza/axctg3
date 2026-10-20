@@ -49,7 +49,13 @@ import java.util.UUID;
  * <p>
  * Conferência: o valor de emissão tem de bater com o do título, e a soma das baixas com o
  * RECEBIDO do legado; diferença vira divergência, não impede. Emissão diferente do título entra
- * com o valor do título (o item 1 acompanha o título, como no axctg3). Movimento sem histórico e sem valor
+ * com o valor do título (o item 1 acompanha o título, como no axctg3).
+ * <p>
+ * Título marcado "Cancelada" no legado e sem nenhuma baixa é nota cancelada (NFCom: o XML de
+ * cancelamento segue o da emissão, o título nunca chega a ter baixa — o Axial só marca a
+ * observação e mantém o título em aberto): não é importado e, se já tinha sido, é excluído (soft
+ * delete), como faz a importação de NFCom do axctg3 (decisão do usuário 2026-10-20). Cancelado com
+ * baixa não é esse caso e entra normalmente, com a observação. Movimento sem histórico e sem valor
  * (linha em branco digitada no legado) é ignorado, com aviso.
  */
 @Service
@@ -94,7 +100,7 @@ public class ImportacaoTitulosReceberService {
         boolean importado = paraImportar && relatorio.erros.isEmpty();
         if (importado) {
             execucao.gravar();
-            relatorio.importadas = execucao.novos.size() + execucao.alterados.size();
+            relatorio.importadas = execucao.novos.size() + execucao.alterados.size() + execucao.excluidos.size();
         }
         gravarRelatorio(lote, relatorio, execucao, importado);
         return relatorio;
@@ -143,6 +149,11 @@ public class ImportacaoTitulosReceberService {
 
         final List<Titulo> novos = new ArrayList<>();
         final List<Titulo> alterados = new ArrayList<>();
+        /** Cancelados sem baixa no legado: não entram. */
+        final List<String> cancelados = new ArrayList<>();
+        /** Dos cancelados, os que já estavam no axctg3 (importados antes): são excluídos. */
+        final List<UUID> excluir = new ArrayList<>();
+        final List<String> excluidos = new ArrayList<>();
         int iguais;
         int titulos;
         BigDecimal totalValor = BigDecimal.ZERO;
@@ -193,13 +204,24 @@ public class ImportacaoTitulosReceberService {
                 if (t == null) {
                     continue;
                 }
-                if (doLote.containsKey(t.numero)) {
+                if (doLote.containsKey(t.numero) || cancelados.contains(t.numero)) {
                     relatorio.erros.add("Título " + t.numero + " repetido no lote.");
+                    continue;
+                }
+                vazios += t.movimentosVazios;
+                if (t.cancelado && t.itens.size() == 1) {
+                    cancelados.add(t.numero);
                     continue;
                 }
                 doLote.put(t.numero, t);
                 baixasOutroBanco += t.baixasOutroBanco;
-                vazios += t.movimentosVazios;
+                titulos++;
+                totalValor = totalValor.add(t.valor);
+                totalBaixado = totalBaixado.add(t.baixado);
+                if (t.baixado.compareTo(t.valor) < 0) {
+                    abertos++;
+                    totalAberto = totalAberto.add(t.valor.subtract(t.baixado));
+                }
             }
             historicosNaoAchados.forEach((codigo, qtd) -> relatorio.erros.add("Histórico financeiro " + codigo
                     + " não existe na empresa (" + qtd + " movimentos). Importe antes os históricos financeiros."));
@@ -373,13 +395,8 @@ public class ImportacaoTitulosReceberService {
                     texto(l.numBanco()), l.valor(), conta, observacao, numerados);
             t.baixasOutroBanco = outroBanco;
             t.movimentosVazios = vazios;
-            titulos++;
-            totalValor = totalValor.add(l.valor());
-            totalBaixado = totalBaixado.add(baixado);
-            if (baixado.compareTo(l.valor()) < 0) {
-                abertos++;
-                totalAberto = totalAberto.add(l.valor().subtract(baixado));
-            }
+            t.baixado = baixado;
+            t.cancelado = cancelado(l.obs()) || cancelado(l.observacao());
             return t;
         }
 
@@ -456,6 +473,29 @@ public class ImportacaoTitulosReceberService {
             }
             relatorio.avisos.addAll(alteracoes);
 
+            List<String> ficam = new ArrayList<>();
+            for (String numero : cancelados) {
+                Gravado g = gravados.get(numero);
+                if (g == null) {
+                    continue;
+                }
+                if (IMPORTACAO.equals(g.criadoPor()) && !comItemDoAxctg3.contains(g.id())) {
+                    excluir.add(g.id());
+                    excluidos.add(numero);
+                } else {
+                    ficam.add(numero);
+                }
+            }
+            if (!cancelados.isEmpty()) {
+                relatorio.avisos.add(cancelados.size() + " título(s) cancelado(s) no legado, sem baixa, não entram"
+                        + (excluidos.isEmpty() ? "" : " (" + excluidos.size() + " já importado(s) antes, excluído(s) "
+                        + "do axctg3)") + ": " + String.join(", ", cancelados) + ".");
+            }
+            if (!ficam.isEmpty()) {
+                relatorio.avisos.add("Cancelado(s) no legado que existem no axctg3 com movimento feito aqui ou criados "
+                        + "aqui, e ficam como estão: " + String.join(", ", ficam) + ".");
+            }
+
             LocalDate inicio = LocalDate.of(lote.getAno(), lote.getMes() == null ? 1 : lote.getMes(), 1);
             LocalDate fim = lote.getMes() == null ? inicio.plusYears(1) : inicio.plusMonths(1);
             List<String> soNoAxctg3 = jdbc.queryForList("select t.NUMERO from TITULO_RECEBER t "
@@ -474,6 +514,14 @@ public class ImportacaoTitulosReceberService {
 
         void gravar() {
             OffsetDateTime agora = OffsetDateTime.now();
+            List<Object[]> apagar = new ArrayList<>();
+            for (UUID id : excluir) {
+                apagar.add(new Object[]{IMPORTACAO, agora, id});
+            }
+            emLotes("update ITEM_RECEBER set DELETED_BY = ?, DELETED_DATE = ? "
+                    + "where TITULO_RECEBER_ID = ? and DELETED_DATE is null", apagar);
+            emLotes("update TITULO_RECEBER set DELETED_BY = ?, DELETED_DATE = ? "
+                    + "where ID = ? and DELETED_DATE is null", apagar);
             List<Object[]> titulosNovos = new ArrayList<>();
             List<Object[]> itensNovos = new ArrayList<>();
             for (Titulo t : novos) {
@@ -524,7 +572,10 @@ public class ImportacaoTitulosReceberService {
         if (e != null && relatorio.erros.isEmpty()) {
             sb.append(e.novos.size()).append(importado ? " criados, " : " a criar, ")
                     .append(e.alterados.size()).append(importado ? " alterados, " : " a alterar, ")
-                    .append(e.iguais).append(" iguais.\n");
+                    .append(e.iguais).append(" iguais")
+                    .append(e.excluidos.isEmpty() ? "" : ", " + e.excluidos.size()
+                            + (importado ? " excluídos (cancelados)" : " a excluir (cancelados)"))
+                    .append(".\n");
             sb.append(e.titulos).append(" títulos de ").append(lote.getPeriodo()).append(": valor ").append(e.totalValor)
                     .append(", baixado ").append(e.totalBaixado).append(", em aberto ").append(e.totalAberto)
                     .append(" (").append(e.abertos).append(" títulos).\n");
@@ -557,6 +608,11 @@ public class ImportacaoTitulosReceberService {
         }
         String t = valor.trim();
         return t.isEmpty() ? null : t;
+    }
+
+    /** O Axial marca a nota cancelada gravando "Cancelada" na observação do título. */
+    private static boolean cancelado(String observacao) {
+        return observacao != null && observacao.toUpperCase().contains("CANCELAD");
     }
 
     private static BigDecimal zero(BigDecimal valor) {
@@ -633,6 +689,8 @@ public class ImportacaoTitulosReceberService {
         boolean trocarItens;
         int baixasOutroBanco;
         int movimentosVazios;
+        BigDecimal baixado = BigDecimal.ZERO;
+        boolean cancelado;
 
         Titulo(String numero, LocalDate dataEmissao, LocalDate dataVencimento, UUID parceiro, UUID banco,
                String numBanco, BigDecimal valor, UUID conta, String observacao, List<Item> itens) {
