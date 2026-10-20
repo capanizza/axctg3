@@ -177,6 +177,51 @@ class ImportacaoTitulosReceberServiceTest {
     }
 
     @Test
+    void test_canceladoSemBaixaNaoEntraEEExcluidoSeJaEstava() {
+        movimentos.clear();
+        ImpLote primeiro = criarLote(
+                titulo(100, "000188", 1, "3500.00", "0.00"),
+                titulo(101, "000190", 1, "1300.00", "0.00"));
+        mov(100, 1, "2025-03-03", "3500.00", "0", 1);
+        mov(101, 1, "2025-03-03", "1300.00", "0", 1);
+        gravarMovimentos(primeiro);
+        assertThat(service.importar(primeiro.getId()).getErros()).isEmpty();
+
+        // no legado as duas notas foram marcadas "Cancelada": a 188 sem baixa (nota cancelada de
+        // verdade), a 190 recebida pelo banco; e chegou uma terceira cancelada, nunca importada
+        movimentos.clear();
+        ImpTituloReceber t188 = titulo(100, "000188", 1, "3500.00", "0.00");
+        t188.setObs("Cancelada");
+        ImpTituloReceber t190 = titulo(101, "000190", 1, "1300.00", "1300.00");
+        t190.setObs("Cancelada");
+        ImpTituloReceber t317 = titulo(102, "000317", 1, "1000.00", "0.00");
+        t317.setObs("Cancelada");
+        ImpLote segundo = criarLote(t188, t190, t317);
+        mov(100, 1, "2025-03-03", "3500.00", "0", 1);
+        mov(101, 1, "2025-03-03", "1300.00", "0", 1);
+        mov(101, 2, "2025-03-31", "1300.00", "0", 1);
+        mov(102, 1, "2025-03-03", "1000.00", "0", 1);
+        gravarMovimentos(segundo);
+
+        ImportacaoPlanoContasService.Relatorio relatorio = service.importar(segundo.getId());
+
+        assertThat(relatorio.getErros()).isEmpty();
+        assertThat(relatorio.getAvisos()).anyMatch(a -> a.equals("2 título(s) cancelado(s) no legado, sem baixa, "
+                + "não entram (1 já importado(s) antes, excluído(s) do axctg3): 000188, 000317."));
+        Map<String, TituloReceber> titulos = titulos();
+        assertThat(titulos).containsOnlyKeys("000190");
+        assertThat(titulos.get("000190").getObservacao()).isEqualTo("Cancelada");
+        assertThat(itens(titulos.get("000190"))).hasSize(2);
+        assertThat(dataManager.load(ItemReceber.class)
+                .query("select e from ItemReceber e where e.tituloReceber.numero = '000188' "
+                        + "and e.tituloReceber.codEmpresa = :cod")
+                .parameter("cod", COD_EMPRESA)
+                .list()).isEmpty(); // a emissão do excluído também saiu
+        assertThat(dataManager.load(ImpLote.class).id(segundo.getId()).one().getMensagem())
+                .contains("1 excluídos (cancelados)");
+    }
+
+    @Test
     void test_tituloCriadoNoAxctg3ImpedeAImportacao() {
         // título digitado no axctg3 com o mesmo número: o listener cria a emissão pela empresa da sessão
         ((User) currentAuthentication.getUser()).setCodEmpresa(COD_EMPRESA);
