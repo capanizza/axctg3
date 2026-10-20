@@ -96,7 +96,8 @@ class ImportacaoTitulosReceberServiceTest {
                 titulo(100, "000317", 1, "1000.00", "0.00"),
                 titulo(101, "000318", 1, "400.00", "400.00"),
                 titulo(102, "000319", 1, "500.00", "500.00"));
-        mov(100, 1, "2025-03-03", "1000.00", "0", 1);
+        // emissão digitada diferente do título no legado: entra com o valor do título
+        mov(100, 1, "2025-03-03", "999.00", "0", 1);
         // baixas fora de ordem no legado: a importação numera pela data
         mov(101, 2, "2025-04-10", "300.00", "0", 1);
         mov(101, 1, "2025-03-03", "400.00", "0", 1);
@@ -113,8 +114,9 @@ class ImportacaoTitulosReceberServiceTest {
 
         assertThat(relatorio.getErros()).isEmpty();
         assertThat(relatorio.getImportadas()).isEqualTo(3);
-        assertThat(relatorio.getDivergencias())
-                .containsExactly("Título 000319: baixas somam 450.00 e o legado diz recebido 500.00.");
+        assertThat(relatorio.getDivergencias()).containsExactlyInAnyOrder(
+                "Título 000317: emissão de 999.00 no movimento e 1000.00 no título; importada com o valor do título.",
+                "Título 000319: baixas somam 450.00 e o legado diz recebido 500.00.");
         assertThat(relatorio.getAvisos()).anyMatch(a -> a.startsWith("1 baixa(s) feitas no legado por banco diferente"));
 
         Map<String, TituloReceber> titulos = titulos();
@@ -129,7 +131,8 @@ class ImportacaoTitulosReceberServiceTest {
                 .containsExactly("1 1 2025-03-03", "2 5 2025-03-20", "3 2 2025-04-10");
         assertThat(itens).allMatch(ItemReceber::getContabilizado);
         assertThat(itens.get(1).getDesconto()).isEqualByComparingTo("5.00");
-        assertThat(itens(titulos.get("000317"))).hasSize(1); // só a emissão: em aberto
+        assertThat(itens(titulos.get("000317"))).singleElement() // só a emissão: em aberto
+                .satisfies(i -> assertThat(i.getValor()).isEqualByComparingTo("1000.00"));
 
         ImpLote recarregado = dataManager.load(ImpLote.class).id(lote.getId()).one();
         assertThat(recarregado.getSituacao()).isEqualTo(SituacaoLote.IMPORTADO);

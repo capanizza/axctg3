@@ -64,8 +64,8 @@ public class ImpTituloPagar {
     @NotNull
     private ImpLote lote;
 
-    // RECEBER como no legado; REGISTRO liga às baixas (ImpItemPagar.pai). OBS e OBSERVACAO são
-    // os dois campos de observação do legado (texto curto e BLOB)
+    // PAGAR como no legado (o título a pagar não tem banco: o banco é de cada baixa); REGISTRO liga
+    // às baixas (ImpItemPagar.pai)
     @Column(name = "REGISTRO")
     private Integer registro;
 

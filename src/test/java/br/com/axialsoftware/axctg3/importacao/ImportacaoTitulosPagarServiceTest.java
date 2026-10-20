@@ -145,7 +145,7 @@ class ImportacaoTitulosPagarServiceTest {
         assertThat(recarregado.getSituacao()).isEqualTo(SituacaoLote.IMPORTADO);
         assertThat(recarregado.getMensagem())
                 .contains("3 criados, 0 alterados, 0 iguais")
-                .contains("em aberto 1050.00 (2 títulos)");
+                .contains("em aberto 1050.00 (2 em aberto)");
     }
 
     @Test
