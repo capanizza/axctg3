@@ -164,7 +164,9 @@ public class BoletoService {
         dto.setLocalPagamento(banco.getLocalPagamento());
         dto.setNossoNumeroFormatado(handler.formatarNossoNumero(banco, tituloReceber));
         dto.setAgenciaCodigoBeneficiario(handler.formatarAgenciaCodigoBeneficiario(banco));
-        dto.setNomeBeneficiario(empresa.getNome());
+        // razão social da configuração do boleto, como o legado (Empresa.nome costuma ser o fantasia)
+        dto.setNomeBeneficiario(banco.getNomeCedente() == null || banco.getNomeCedente().isBlank()
+                ? empresa.getNome() : banco.getNomeCedente());
         dto.setCnpjBeneficiario(formatarCnpj(empresa.getCnpj()));
         dto.setEnderecoBeneficiario(enderecoEmpresa(empresa));
         dto.setNomePagador(pagador.getNome());
