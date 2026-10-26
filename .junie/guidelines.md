@@ -4,8 +4,8 @@ This file provides guidance to Junie when working with code in this repository.
 
 Axctg3 is a Brazilian multi-company accounting application (contabilidade) built on
 Jmix 3 / Spring Boot 4 / Vaadin 25, Java 21, Gradle, PostgreSQL + Liquibase.
-Pinned in `build.gradle`: `io.jmix` plugin and `bomVersion` `3.0.3`; Vaadin `25.1.10`
-(see `package.json`). Hilla/Copilot are excluded from `configurations.implementation`.
+Pinned in `build.gradle`: `io.jmix` plugin and `bomVersion` `3.1.0`, which brings Spring Boot
+4.1.1 and Vaadin 25.3 (`flow-server` 25.3.0). Hilla/Copilot are excluded from `configurations.implementation`.
 
 `CLAUDE.md` and `AGENTS.md` hold the same guidance for other tools. These three files
 are kept identical apart from this header — mirror any change to all three.
