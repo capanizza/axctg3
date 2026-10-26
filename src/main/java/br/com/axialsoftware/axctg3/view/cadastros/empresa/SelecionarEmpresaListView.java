@@ -5,6 +5,7 @@ import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 
 import br.com.axialsoftware.axctg3.view.main.MainView;
+import br.com.axialsoftware.axctg3.view.main.OutrasAbasSupport;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -47,6 +48,8 @@ public class SelecionarEmpresaListView extends StandardListView<Empresa> {
     private UiComponents uiComponents;
     @Autowired
     private UtilGeralService utilGeralService;
+    @Autowired
+    private OutrasAbasSupport outrasAbasSupport;
 
     @Supply(to = "empresasDataGrid.selecionada", subject = "renderer")
     private Renderer<Empresa> empresasDataGridSelecionadaRenderer() {
@@ -57,6 +60,12 @@ public class SelecionarEmpresaListView extends StandardListView<Empresa> {
             checkbox.addClassName("grid-value-checkbox");
             return checkbox;
         });
+    }
+
+    // Empresa/período ficam no usuário da sessão, compartilhado pelas abas do navegador.
+    @Subscribe
+    public void onReady(final ReadyEvent event) {
+        outrasAbasSupport.avisarSeHouverOutrasAbas();
     }
 
     @Subscribe("empresasDataGrid.selecionarAction")
@@ -78,21 +87,21 @@ public class SelecionarEmpresaListView extends StandardListView<Empresa> {
                 .withText(mensagem)
                 .withActions(
                         new DialogAction(DialogAction.Type.YES)
-                                .withHandler(e -> {
-                                    // Grava antes de mexer no principal: o UserEventListener
-                                    // recusa empresa de outro grupo, e aí a sessão não muda.
-                                    User user = (User) currentAuthentication.getUser();
-                                    User userSalvo = dataManager.load(User.class).id(user.getId()).one();
-                                    userSalvo.setCodEmpresa(codEmpresa);
-                                    dataManager.saveWithoutReload(userSalvo);
-                                    user.setCodEmpresa(codEmpresa);  // para atualizar a tela
-                                    dialogs.createMessageDialog()
-                                            .withHeader(messageBundle.getMessage("selecionarEmpresaListView.selecionarEmpresa.header"))
-                                            .withText(messageBundle.formatMessage("selecionarEmpresaListView.selecionada.text",
-                                                    empresa.getApelido()))
-                                            .open();
-                                    UI.getCurrent().getPage().reload();
-                                }),
+                                .withHandler(e -> outrasAbasSupport.executarSemOutrasAbas(() -> {
+                                        // Grava antes de mexer no principal: o UserEventListener
+                                        // recusa empresa de outro grupo, e aí a sessão não muda.
+                                        User user = (User) currentAuthentication.getUser();
+                                        User userSalvo = dataManager.load(User.class).id(user.getId()).one();
+                                        userSalvo.setCodEmpresa(codEmpresa);
+                                        dataManager.saveWithoutReload(userSalvo);
+                                        user.setCodEmpresa(codEmpresa);  // para atualizar a tela
+                                        dialogs.createMessageDialog()
+                                                .withHeader(messageBundle.getMessage("selecionarEmpresaListView.selecionarEmpresa.header"))
+                                                .withText(messageBundle.formatMessage("selecionarEmpresaListView.selecionada.text",
+                                                        empresa.getApelido()))
+                                                .open();
+                                        UI.getCurrent().getPage().reload();
+                                })),
                         new DialogAction(DialogAction.Type.NO)
                                 .withHandler(e -> {
                                 })

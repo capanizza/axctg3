@@ -137,6 +137,12 @@ by hand**. Entities store a plain `Integer codEmpresa` — not a FK to `Empresa`
 `SelecionarEmpresaListView` switches company/period. It writes the **persisted** `User`
 row *and* mutates the in-memory principal (so the header updates), then calls
 `UI.getCurrent().getPage().reload()`. Follow that pattern if you add another switcher.
+That principal is shared by every browser tab of the session, so a switch in one tab would
+leave the others showing one company in the header while saving into another. The three
+switchers (`SelecionarEmpresa`, `PeriodoContabil`, `PeriodoFiscal`) therefore go through
+`view/main/OutrasAbasSupport`: on open it warns, and on confirm it allows the switch only
+with a single tab, offering "Fechar as outras abas" (pushes the other UIs to
+`/public/aba-encerrada.html`). A new switcher must do the same.
 
 ### Grupo (client of Axial) sits above the company
 
