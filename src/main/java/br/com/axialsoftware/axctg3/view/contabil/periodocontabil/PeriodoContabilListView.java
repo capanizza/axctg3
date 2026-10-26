@@ -6,6 +6,7 @@ import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
+import br.com.axialsoftware.axctg3.view.main.OutrasAbasSupport;
 
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.UI;
@@ -57,6 +58,8 @@ public class PeriodoContabilListView extends StandardListView<Empresa> {
     private UiComponents uiComponents;
     @Autowired
     private UtilGeralService utilGeralService;
+    @Autowired
+    private OutrasAbasSupport outrasAbasSupport;
 
     @Supply(to = "empresasDataGrid.selecionada", subject = "renderer")
     private Renderer<Empresa> empresasDataGridSelecionadaRenderer() {
@@ -67,6 +70,12 @@ public class PeriodoContabilListView extends StandardListView<Empresa> {
             checkbox.addClassName("grid-value-checkbox");
             return checkbox;
         });
+    }
+
+    // Empresa/período ficam no usuário da sessão, compartilhado pelas abas do navegador.
+    @Subscribe
+    public void onReady(final ReadyEvent event) {
+        outrasAbasSupport.avisarSeHouverOutrasAbas();
     }
 
     @Subscribe("empresasDataGrid.periodoAction")
@@ -113,20 +122,22 @@ public class PeriodoContabilListView extends StandardListView<Empresa> {
                     .open();
             return;
         }
-        User user = (User) currentAuthentication.getUser();
-        User usuario = dataManager.load(User.class).id(user.getId()).one();
-        user.setAnoContabil(anoContabil); // para atualizar a tela
-        user.setMesContabil(mesContabil);
-        usuario.setAnoContabil(anoContabil);
-        usuario.setMesContabil(mesContabil);
-        dataManager.saveWithoutReload(usuario);
-        ConfigRel configRel = utilGeralService.prepararConfigRel();
-        Map<String, LocalDate> mapa = utilGeralService.prepararDatas(usuario.getAnoContabil(), usuario.getMesContabil());
-        configRel.setDataLancamentoInicial(mapa.get("dataInicial"));
-        configRel.setDataLancamentoFinal(mapa.get("dataFinal"));
-        dataManager.saveWithoutReload(configRel);
-        sidePanelLayout.closeSidePanel();
-        UI.getCurrent().getPage().reload();
+        outrasAbasSupport.executarSemOutrasAbas(() -> {
+            User user = (User) currentAuthentication.getUser();
+            User usuario = dataManager.load(User.class).id(user.getId()).one();
+            user.setAnoContabil(anoContabil); // para atualizar a tela
+            user.setMesContabil(mesContabil);
+            usuario.setAnoContabil(anoContabil);
+            usuario.setMesContabil(mesContabil);
+            dataManager.saveWithoutReload(usuario);
+            ConfigRel configRel = utilGeralService.prepararConfigRel();
+            Map<String, LocalDate> mapa = utilGeralService.prepararDatas(usuario.getAnoContabil(), usuario.getMesContabil());
+            configRel.setDataLancamentoInicial(mapa.get("dataInicial"));
+            configRel.setDataLancamentoFinal(mapa.get("dataFinal"));
+            dataManager.saveWithoutReload(configRel);
+            sidePanelLayout.closeSidePanel();
+            UI.getCurrent().getPage().reload();
+        });
     }
 
     // Empresa corrente do usuário logado (User.codEmpresa) — cada usuário tem a sua.

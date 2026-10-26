@@ -5,6 +5,7 @@ import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
 import br.com.axialsoftware.axctg3.service.UtilGeralService;
 
 import br.com.axialsoftware.axctg3.view.main.MainView;
+import br.com.axialsoftware.axctg3.view.main.OutrasAbasSupport;
 
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.UI;
@@ -55,6 +56,8 @@ public class PeriodoFiscalListView extends StandardListView<Empresa> {
     private UiComponents uiComponents;
     @Autowired
     private UtilGeralService utilGeralService;
+    @Autowired
+    private OutrasAbasSupport outrasAbasSupport;
 
     @Supply(to = "empresasDataGrid.selecionada", subject = "renderer")
     private Renderer<Empresa> empresasDataGridSelecionadaRenderer() {
@@ -65,6 +68,12 @@ public class PeriodoFiscalListView extends StandardListView<Empresa> {
             checkbox.addClassName("grid-value-checkbox");
             return checkbox;
         });
+    }
+
+    // Empresa/período ficam no usuário da sessão, compartilhado pelas abas do navegador.
+    @Subscribe
+    public void onReady(final ReadyEvent event) {
+        outrasAbasSupport.avisarSeHouverOutrasAbas();
     }
 
     @Subscribe("empresasDataGrid.periodoAction")
@@ -111,15 +120,17 @@ public class PeriodoFiscalListView extends StandardListView<Empresa> {
                     .open();
             return;
         }
-        User user = (User) currentAuthentication.getUser();
-        User usuario = dataManager.load(User.class).id(user.getId()).one();
-        user.setAnoFiscal(anoFiscal); // para atualizar a tela
-        user.setMesFiscal(mesFiscal);
-        usuario.setAnoFiscal(anoFiscal);
-        usuario.setMesFiscal(mesFiscal);
-        dataManager.saveWithoutReload(usuario);
-        sidePanelLayout.closeSidePanel();
-        UI.getCurrent().getPage().reload();
+        outrasAbasSupport.executarSemOutrasAbas(() -> {
+            User user = (User) currentAuthentication.getUser();
+            User usuario = dataManager.load(User.class).id(user.getId()).one();
+            user.setAnoFiscal(anoFiscal); // para atualizar a tela
+            user.setMesFiscal(mesFiscal);
+            usuario.setAnoFiscal(anoFiscal);
+            usuario.setMesFiscal(mesFiscal);
+            dataManager.saveWithoutReload(usuario);
+            sidePanelLayout.closeSidePanel();
+            UI.getCurrent().getPage().reload();
+        });
     }
 
     // Empresa corrente do usuário logado (User.codEmpresa) — cada usuário tem a sua.
