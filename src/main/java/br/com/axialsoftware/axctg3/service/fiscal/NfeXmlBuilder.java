@@ -217,11 +217,16 @@ public class NfeXmlBuilder {
         infNFe.appendChild(construirPag(doc, titulos));
         // Na ordem do f_nfe.pas: observação da nota, texto do Simples, texto da mensagem padrão;
         // depois os tributos aproximados.
+        // Mensagem padrão que já traz os incisos I/II do Simples: o III (crédito) vem logo
+        // depois dela, para a ordem I, II, III não se inverter (NF 12784 da GB, 2026-10-27).
         String textoMensagem = notaSaida.getMensagem() == null ? null : notaSaida.getMensagem().getTexto();
+        boolean mensagemComSimples = falaDoSimples(textoMensagem);
+        String textoSimples = simplesNacional(empresa) ? textoSimplesNacional(notaSaida, !mensagemComSimples) : null;
         Element infAdic = construirInfAdic(doc, juntarTextos(
                 notaSaida.getComplementoMensagem(),
-                simplesNacional(empresa) ? textoSimplesNacional(notaSaida, !falaDoSimples(textoMensagem)) : null,
+                mensagemComSimples ? null : textoSimples,
                 textoMensagem,
+                mensagemComSimples ? textoSimples : null,
                 tributosAproximadosService.textoInfCpl(totalTributos, baseTributos, chaveIbpt)));
         if (infAdic != null) {
             infNFe.appendChild(infAdic);

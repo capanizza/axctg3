@@ -366,10 +366,11 @@ class NfeXmlBuilderTotaisTest {
         validarContraXsd(doc);
         String infCpl = texto(doc.getDocumentElement(), "infCpl");
 
+        // I e II da mensagem, depois o III gerado (na NF 12784 da GB o III saiu antes)
         assertThat(infCpl)
-                .startsWith("PEDIDO DE COMPRA: 38502. INSUMOS DEVOLVIDOS DE SUA NF 20943. III - Permite o aproveitamento")
-                .contains("III - Permite o aproveitamento do crédito de ICMS no valor de R$ 8,00")
-                .contains("I - Documento emitido por ME ou EPP optante pelo Simples Nacional. II - Nao gera direito")
+                .startsWith("PEDIDO DE COMPRA: 38502. INSUMOS DEVOLVIDOS DE SUA NF 20943. I - Documento emitido por ME "
+                        + "ou EPP optante pelo Simples Nacional. II - Nao gera direito a credito fiscal de IPI. III - "
+                        + "Permite o aproveitamento do crédito de ICMS no valor de R$ 8,00")
                 .doesNotContain("\n")
                 .doesNotContain("II - Não gera direito");   // o texto gerado (com til) não repete
     }
