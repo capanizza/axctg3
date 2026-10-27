@@ -215,8 +215,13 @@ public class NfeXmlBuilder {
             infNFe.appendChild(cobr);
         }
         infNFe.appendChild(construirPag(doc, titulos));
+        // Na ordem do f_nfe.pas: observação da nota, texto do Simples, texto da mensagem padrão;
+        // depois os tributos aproximados.
+        String textoMensagem = notaSaida.getMensagem() == null ? null : notaSaida.getMensagem().getTexto();
         Element infAdic = construirInfAdic(doc, juntarTextos(
-                simplesNacional(empresa) ? textoSimplesNacional(notaSaida) : null,
+                notaSaida.getComplementoMensagem(),
+                simplesNacional(empresa) ? textoSimplesNacional(notaSaida, !falaDoSimples(textoMensagem)) : null,
+                textoMensagem,
                 tributosAproximadosService.textoInfCpl(totalTributos, baseTributos, chaveIbpt)));
         if (infAdic != null) {
             infNFe.appendChild(infAdic);
@@ -1160,10 +1165,11 @@ public class NfeXmlBuilder {
 
     /** Texto obrigatório do optante do Simples (mesmos incisos que o legado da GB emite);
      * o inciso III só quando há crédito de ICMS (CSOSN 101), com o valor somado dos itens. */
-    private String textoSimplesNacional(NotaSaida notaSaida) {
-        StringBuilder texto = new StringBuilder(
-                "I - Documento emitido por ME ou EPP optante pelo Simples Nacional. "
-                        + "II - Não gera direito a crédito fiscal de IPI.");
+    private String textoSimplesNacional(NotaSaida notaSaida, boolean incisosIeII) {
+        StringBuilder texto = new StringBuilder(incisosIeII
+                ? "I - Documento emitido por ME ou EPP optante pelo Simples Nacional. "
+                        + "II - Não gera direito a crédito fiscal de IPI."
+                : "");
         BigDecimal credito = BigDecimal.ZERO;
         BigDecimal aliquota = null;
         for (ItemNotaSaida item : notaSaida.getItens()) {
@@ -1176,7 +1182,7 @@ public class NfeXmlBuilder {
             java.text.NumberFormat formato = java.text.NumberFormat.getNumberInstance(java.util.Locale.of("pt", "BR"));
             formato.setMinimumFractionDigits(2);
             formato.setMaximumFractionDigits(2);
-            texto.append(" III - Permite o aproveitamento do crédito de ICMS no valor de R$ ")
+            texto.append(texto.isEmpty() ? "" : " ").append("III - Permite o aproveitamento do crédito de ICMS no valor de R$ ")
                     .append(formato.format(credito))
                     .append(", correspondente à alíquota de ")
                     .append(formato.format(aliquota))
@@ -1185,15 +1191,23 @@ public class NfeXmlBuilder {
         return texto.toString();
     }
 
+    /** A mensagem padrão já traz o texto do Simples (a GB tem uma assim): os incisos I/II não se repetem. */
+    private boolean falaDoSimples(String textoMensagem) {
+        return textoMensagem != null && textoMensagem.toUpperCase().contains("SIMPLES NACIONAL");
+    }
+
+    // infCpl é TString: quebra de linha (comum nas mensagens digitadas) rejeita o lote com
+    // cStat=225 — vira espaço, como no NfeXmlSerializer. Até 5000 caracteres.
     private String juntarTextos(String... textos) {
         String junto = java.util.Arrays.stream(textos)
                 .filter(t -> t != null && !t.isBlank())
+                .map(t -> t.replaceAll("\\s+", " ").trim())
                 .collect(java.util.stream.Collectors.joining(" "));
-        return junto.isEmpty() ? null : junto;
+        return junto.isEmpty() ? null : junto.length() > 5000 ? junto.substring(0, 5000).trim() : junto;
     }
 
-    // Leva o texto do Simples Nacional (se for o caso) e o dos tributos aproximados —
-    // NotaSaida não tem campo de observação. Sem texto, o grupo inteiro fica de fora (é opcional no schema).
+    // Leva a observação da nota (complemento da mensagem), o texto do Simples Nacional, o da
+    // mensagem padrão e o dos tributos aproximados. Sem texto, o grupo inteiro fica de fora (é opcional no schema).
     private Element construirInfAdic(Document doc, String infCpl) {
         if (infCpl == null) {
             return null;

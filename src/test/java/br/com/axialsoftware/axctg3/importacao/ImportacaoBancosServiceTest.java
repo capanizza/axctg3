@@ -202,6 +202,25 @@ class ImportacaoBancosServiceTest {
         dataManager.save(c);
     }
 
+    // empresa com a contabilidade fora (GB): sem plano de contas, o banco entra sem conta, com um
+    // aviso só
+    @Test
+    void test_semPlanoDeContasImportaSemContaComAviso() {
+        apagar(carregar(ContaContabil.class, "select e from ContaContabil e where e.codEmpresa = :cod"));
+        ImpLote lote = criarLote(linha(1, 341, "ITAU", "111020001", l -> { }));
+
+        ImportacaoPlanoContasService.Relatorio relatorio = service.importar(lote.getId());
+
+        assertThat(relatorio.getErros()).isEmpty();
+        assertThat(relatorio.getImportadas()).isEqualTo(1);
+        assertThat(relatorio.getAvisos())
+                .anyMatch(a -> a.startsWith("A empresa " + COD_EMPRESA + " não tem plano de contas"))
+                .noneMatch(a -> a.contains("não existe no plano mais recente"));
+        assertThat(dataManager.load(Banco.class)
+                .query("select e from Banco e where e.codEmpresa = :cod").parameter("cod", COD_EMPRESA)
+                .one().getContaContabil()).isNull();
+    }
+
     private ImpBanco linha(Integer codigo, Integer codGeral, String nome, String codContabil, Consumer<ImpBanco> resto) {
         ImpBanco l = dataManager.create(ImpBanco.class);
         l.setCodigo(codigo);

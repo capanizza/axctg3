@@ -8,7 +8,10 @@ import br.com.axialsoftware.axctg3.service.importacao.ImportacaoDiversosPagarSer
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoHistoricosFinanceirosService;
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoHistoricosService;
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoLancamentosService;
+import br.com.axialsoftware.axctg3.service.importacao.ImportacaoMensagensService;
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoMovimentoBancoService;
+import br.com.axialsoftware.axctg3.service.importacao.ImportacaoNotasSaidaService;
+import br.com.axialsoftware.axctg3.service.importacao.ImportacaoPedidosVendaService;
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoParceirosService;
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoPlanoContasService;
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoTitulosPagarService;
@@ -39,7 +42,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  * Lotes exportados do sistema legado pelo projeto Axial ({@code exportacao2}): plano de contas
  * com saldos, lançamentos, históricos contábeis, bancos, históricos financeiros, parceiros,
  * centros de custo, títulos a receber e a pagar, diversos a pagar, movimento bancário, grupos de
- * produtos, produtos, naturezas de operação, condições de pagamento, vendedores e transportadoras. Não há criar
+ * produtos, produtos, naturezas de operação, condições de pagamento, vendedores, transportadoras,
+ * mensagens, notas de saída e pedidos de venda. Não há criar
  * nem editar: o lote nasce no exportador. Daqui só se confere (relatório sem gravar nada) e
  * importa (grava, se não houver erro estrutural). O relatório fica no próprio lote e aparece
  * no quadro abaixo da grade.
@@ -60,7 +64,8 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
             TipoLote.NATUREZAS_OPERACAO, "NaturezasOperacao",
             TipoLote.CONDICOES_PAGAMENTO, "CondicoesPagamento",
             TipoLote.VENDEDORES, "Vendedores",
-            TipoLote.TRANSPORTADORAS, "Transportadoras");
+            TipoLote.TRANSPORTADORAS, "Transportadoras",
+            TipoLote.MENSAGENS, "Mensagens");
 
     @ViewComponent
     private CollectionLoader<ImpLote> impLotesDl;
@@ -97,6 +102,12 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
     @Autowired
     private ImportacaoMovimentoBancoService importacaoMovimentoBancoService;
     @Autowired
+    private ImportacaoNotasSaidaService importacaoNotasSaidaService;
+    @Autowired
+    private ImportacaoMensagensService importacaoMensagensService;
+    @Autowired
+    private ImportacaoPedidosVendaService importacaoPedidosVendaService;
+    @Autowired
     private ImportacaoGruposProdutoService importacaoGruposProdutoService;
     @Autowired
     private ImportacaoProdutosService importacaoProdutosService;
@@ -132,6 +143,9 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
             case TITULOS_PAGAR -> importacaoTitulosPagarService.conferir(lote.getId());
             case DIVERSOS_PAGAR -> importacaoDiversosPagarService.conferir(lote.getId());
             case MOVIMENTO_BANCO -> importacaoMovimentoBancoService.conferir(lote.getId());
+            case NOTAS_SAIDA -> importacaoNotasSaidaService.conferir(lote.getId());
+            case MENSAGENS -> importacaoMensagensService.conferir(lote.getId());
+            case PEDIDOS_VENDA -> importacaoPedidosVendaService.conferir(lote.getId());
             case GRUPOS_PRODUTO -> importacaoGruposProdutoService.conferir(lote.getId());
             case PRODUTOS -> importacaoProdutosService.conferir(lote.getId());
             case NATUREZAS_OPERACAO -> importacaoNaturezasOperacaoService.conferir(lote.getId());
@@ -175,6 +189,12 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
                     lote.getPeriodo(), lote.getCodEmpresa());
             case MOVIMENTO_BANCO -> messageBundle.formatMessage("impLoteListView.importarMovimentoBanco.confirmar",
                     lote.getPeriodo(), lote.getCodEmpresa());
+            case MENSAGENS -> messageBundle.formatMessage("impLoteListView.importarMensagens.confirmar",
+                    lote.getCodEmpresa());
+            case NOTAS_SAIDA -> messageBundle.formatMessage("impLoteListView.importarNotasSaida.confirmar",
+                    lote.getPeriodo(), lote.getCodEmpresa());
+            case PEDIDOS_VENDA -> messageBundle.formatMessage("impLoteListView.importarPedidosVenda.confirmar",
+                    lote.getPeriodo(), lote.getCodEmpresa());
             case GRUPOS_PRODUTO -> messageBundle.formatMessage("impLoteListView.importarGruposProduto.confirmar",
                     lote.getCodEmpresa());
             case PRODUTOS -> messageBundle.formatMessage("impLoteListView.importarProdutos.confirmar",
@@ -211,6 +231,9 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
             case TITULOS_PAGAR -> importacaoTitulosPagarService.importar(lote.getId());
             case DIVERSOS_PAGAR -> importacaoDiversosPagarService.importar(lote.getId());
             case MOVIMENTO_BANCO -> importacaoMovimentoBancoService.importar(lote.getId());
+            case NOTAS_SAIDA -> importacaoNotasSaidaService.importar(lote.getId());
+            case MENSAGENS -> importacaoMensagensService.importar(lote.getId());
+            case PEDIDOS_VENDA -> importacaoPedidosVendaService.importar(lote.getId());
             case GRUPOS_PRODUTO -> importacaoGruposProdutoService.importar(lote.getId());
             case PRODUTOS -> importacaoProdutosService.importar(lote.getId());
             case NATUREZAS_OPERACAO -> importacaoNaturezasOperacaoService.importar(lote.getId());
@@ -249,6 +272,12 @@ public class ImpLoteListView extends StandardListView<ImpLote> {
                     relatorio.getImportadas(), relatorio.getDivergencias().size(), relatorio.getAvisos().size());
         } else if (CADASTROS.containsKey(lote.getTipo())) {
             texto = messageBundle.formatMessage("impLoteListView.importar" + CADASTROS.get(lote.getTipo()) + ".ok",
+                    relatorio.getImportadas(), relatorio.getAvisos().size());
+        } else if (lote.getTipo() == TipoLote.NOTAS_SAIDA) {
+            texto = messageBundle.formatMessage("impLoteListView.importarNotasSaida.ok",
+                    relatorio.getImportadas(), relatorio.getDivergencias().size(), relatorio.getAvisos().size());
+        } else if (lote.getTipo() == TipoLote.PEDIDOS_VENDA) {
+            texto = messageBundle.formatMessage("impLoteListView.importarPedidosVenda.ok",
                     relatorio.getImportadas(), relatorio.getAvisos().size());
         } else if (lote.getTipo() == TipoLote.MOVIMENTO_BANCO) {
             texto = messageBundle.formatMessage("impLoteListView.importarMovimentoBanco.ok",

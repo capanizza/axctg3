@@ -3,6 +3,7 @@ package br.com.axialsoftware.axctg3.importacao;
 import br.com.axialsoftware.axctg3.entity.User;
 import br.com.axialsoftware.axctg3.entity.cadastros.CondicaoPagamento;
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
+import br.com.axialsoftware.axctg3.entity.cadastros.Mensagem;
 import br.com.axialsoftware.axctg3.entity.cadastros.Transportadora;
 import br.com.axialsoftware.axctg3.entity.cadastros.Vendedor;
 import br.com.axialsoftware.axctg3.entity.enums.CodRegimeTributario;
@@ -15,6 +16,7 @@ import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
 import br.com.axialsoftware.axctg3.entity.importacao.ImpCondicaoPagamento;
 import br.com.axialsoftware.axctg3.entity.importacao.ImpGrupoProduto;
 import br.com.axialsoftware.axctg3.entity.importacao.ImpLote;
+import br.com.axialsoftware.axctg3.entity.importacao.ImpMensagem;
 import br.com.axialsoftware.axctg3.entity.importacao.ImpNaturezaOperacao;
 import br.com.axialsoftware.axctg3.entity.importacao.ImpProduto;
 import br.com.axialsoftware.axctg3.entity.importacao.ImpTransportadora;
@@ -22,6 +24,7 @@ import br.com.axialsoftware.axctg3.entity.importacao.ImpVendedor;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassificacaoFiscal;
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoCondicoesPagamentoService;
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoGruposProdutoService;
+import br.com.axialsoftware.axctg3.service.importacao.ImportacaoMensagensService;
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoNaturezasOperacaoService;
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoPlanoContasService;
 import br.com.axialsoftware.axctg3.service.importacao.ImportacaoProdutosService;
@@ -80,6 +83,8 @@ class ImportacaoCadastrosFaturamentoTest {
     ImportacaoVendedoresService vendedoresService;
     @Autowired
     ImportacaoTransportadorasService transportadorasService;
+    @Autowired
+    ImportacaoMensagensService mensagensService;
 
     @BeforeEach
     void setUp() {
@@ -250,6 +255,23 @@ class ImportacaoCadastrosFaturamentoTest {
                 .list()).isEmpty();
     }
 
+    @Test
+    void test_mensagens() {
+        ImpLote lote = lote(TipoLote.MENSAGENS, ImpMensagem.class,
+                m -> {
+                    m.setCodigo(6);
+                    m.setTexto("ICMS suspenso - Decreto n. 45.490/2000, art. 402.");
+                },
+                m -> m.setCodigo(7));
+        ImportacaoPlanoContasService.Relatorio r = mensagensService.importar(lote.getId());
+        assertThat(r.getErros()).isEmpty();
+        assertThat(r.getImportadas()).isEqualTo(2);
+        assertThat(r.getAvisos()).contains("Mensagem 7 sem texto no legado.");
+        assertThat(dataManager.load(Mensagem.class)
+                .query("select e from Mensagem e where e.codEmpresa = :cod and e.codigo = 6").parameter("cod", COD_EMPRESA)
+                .one().getTexto()).isEqualTo("ICMS suspenso - Decreto n. 45.490/2000, art. 402.");
+    }
+
     private void natureza(ImpNaturezaOperacao n, int codigo, int cfop, String nome, String aliq, String condicao,
                           String venda) {
         n.setCodigo(codigo);
@@ -321,8 +343,9 @@ class ImportacaoCadastrosFaturamentoTest {
         apagar(carregar(CondicaoPagamento.class, "select e from CondicaoPagamento e where e.codEmpresa = :cod"));
         apagar(carregar(Vendedor.class, "select e from Vendedor e where e.codEmpresa = :cod"));
         apagar(carregar(Transportadora.class, "select e from Transportadora e where e.codEmpresa = :cod"));
+        apagar(carregar(Mensagem.class, "select e from Mensagem e where e.codEmpresa = :cod"));
         for (Class<?> imp : List.of(ImpProduto.class, ImpGrupoProduto.class, ImpNaturezaOperacao.class,
-                ImpCondicaoPagamento.class, ImpVendedor.class, ImpTransportadora.class)) {
+                ImpCondicaoPagamento.class, ImpVendedor.class, ImpTransportadora.class, ImpMensagem.class)) {
             apagar(carregar(imp, "select e from " + imp.getSimpleName() + " e where e.lote.codEmpresa = :cod"));
         }
         apagar(carregar(ImpLote.class, "select e from ImpLote e where e.codEmpresa = :cod"));

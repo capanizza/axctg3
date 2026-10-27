@@ -148,17 +148,29 @@ class ImportacaoParceirosServiceTest {
     }
 
     @Test
-    void test_semRazaoOuCnpjImpedeAImportacao() {
-        ImpLote lote = criarLote(
-                linha(5L, " ", "11222333000181", l -> { }),
-                linha(6L, "SEM CNPJ", "", l -> { }));
+    void test_semRazaoImpedeAImportacao() {
+        ImpLote lote = criarLote(linha(5L, " ", "11222333000181", l -> { }));
 
         ImportacaoPlanoContasService.Relatorio relatorio = service.importar(lote.getId());
 
-        assertThat(relatorio.getErros())
-                .anyMatch(e -> e.equals("Parceiro 5 sem razão social."))
-                .anyMatch(e -> e.equals("Parceiro 6 sem CNPJ/CPF."));
+        assertThat(relatorio.getErros()).anyMatch(e -> e.equals("Parceiro 5 sem razão social."));
         assertThat(parceiros()).isEmpty();
+    }
+
+    // na GB são favorecidos de contas a pagar (salário, FGTS, DAS...): ficam de fora, com aviso
+    @Test
+    void test_semCnpjFicaDeForaComAviso() {
+        ImpLote lote = criarLote(
+                linha(6L, "SALARIO FUNCIONARIO", "", l -> { }),
+                linha(7L, "MERCADO", "44555666000172", l -> { }));
+
+        ImportacaoPlanoContasService.Relatorio relatorio = service.importar(lote.getId());
+
+        assertThat(relatorio.getErros()).isEmpty();
+        assertThat(relatorio.getImportadas()).isEqualTo(1);
+        assertThat(relatorio.getAvisos()).anyMatch(a -> a.startsWith("1 parceiro(s) sem CNPJ/CPF no legado não entram")
+                && a.endsWith(": 6 SALARIO FUNCIONARIO."));
+        assertThat(parceiros()).containsOnlyKeys(7L);
     }
 
     private ImpParceiro linha(Long codigo, String razao, String cnpj, Consumer<ImpParceiro> resto) {

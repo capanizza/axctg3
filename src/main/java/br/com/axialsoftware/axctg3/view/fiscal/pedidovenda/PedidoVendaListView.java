@@ -7,13 +7,17 @@ import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.fiscal.PedidoVendaService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.router.Route;
 import io.jmix.core.DataManager;
 import io.jmix.core.SaveContext;
 import io.jmix.flowui.Dialogs;
+import io.jmix.flowui.UiComponents;
 import io.jmix.flowui.app.inputdialog.DialogActions;
 import io.jmix.flowui.app.inputdialog.DialogOutcome;
 import io.jmix.flowui.component.UiComponentUtils;
+import io.jmix.flowui.component.checkbox.JmixCheckbox;
 import io.jmix.flowui.component.grid.DataGrid;
 import io.jmix.flowui.kit.action.ActionPerformedEvent;
 import io.jmix.flowui.model.CollectionLoader;
@@ -49,6 +53,19 @@ public class PedidoVendaListView extends StandardListView<PedidoVenda> {
     private Dialogs dialogs;
     @Autowired
     private DataManager dataManager;
+    @Autowired
+    private UiComponents uiComponents;
+
+    @Supply(to = "pedidoVendasDataGrid.faturado", subject = "renderer")
+    private Renderer<PedidoVenda> pedidoVendasDataGridFaturadoRenderer() {
+        return new ComponentRenderer<>(pedido -> {
+            JmixCheckbox checkbox = uiComponents.create(JmixCheckbox.class);
+            checkbox.setValue(Boolean.TRUE.equals(pedido.getFaturado()));
+            checkbox.setReadOnly(true);
+            checkbox.addClassName("grid-value-checkbox");
+            return checkbox;
+        });
+    }
 
     // Período delimitado (ConfigRel, por usuário) — mesmo padrão de NotaSaidaListView e
     // das listas do financeiro; sem período gravado, vale o dia de hoje.

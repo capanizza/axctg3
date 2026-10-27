@@ -222,9 +222,13 @@ public abstract class ImportacaoCadastroBase<I, E, K extends Comparable<K>> {
         }
     }
 
+    /** Empresa sem plano de contas (ver {@link #contasDoPlanoMaisRecente}): sem aviso por registro. */
+    protected boolean semPlano;
+
     /**
      * Contas do plano do ano mais recente da empresa do lote, por código: o cadastro aponta para
-     * uma conta de um ano só. Sem plano nenhum, registra erro ({@code motivo} completa a frase).
+     * uma conta de um ano só. Sem plano nenhum (empresa com a contabilidade fora, como a GB), um
+     * aviso só e as contas ficam vazias ({@code motivo} completa a frase).
      */
     protected Map<String, ContaContabil> contasDoPlanoMaisRecente(ImpLote lote, String motivo,
                                                                   ImportacaoPlanoContasService.Relatorio relatorio) {
@@ -235,8 +239,9 @@ public abstract class ImportacaoCadastroBase<I, E, K extends Comparable<K>> {
                 .optional()
                 .orElse(null);
         if (ano == null) {
-            relatorio.erros.add("A empresa " + lote.getCodEmpresa()
-                    + " não tem plano de contas. Importe antes o plano de contas: " + motivo + ".");
+            semPlano = true;
+            relatorio.avisos.add("A empresa " + lote.getCodEmpresa() + " não tem plano de contas: as contas ficam "
+                    + "vazias (" + motivo + "). Importe o plano de contas e reimporte para ligá-las.");
             return contas;
         }
         dataManager.load(ContaContabil.class)

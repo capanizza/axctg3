@@ -26,6 +26,8 @@ import java.util.stream.Collectors;
  * O município vem pelo código IBGE (0 = sem município); não achado, fica vazio com aviso. O
  * CNPJ/CPF fica como no legado, só dígitos. Sem apelido, usa o começo da razão social. CNPJ
  * repetido entre parceiros (fora o "000...0" dos órgãos públicos) vira aviso, não impede.
+ * Parceiro sem CNPJ/CPF (na GB são favorecidos de contas a pagar: salário, FGTS, DAS...) fica de
+ * fora, com aviso — o axctg3 exige o CNPJ/CPF.
  */
 @Service
 public class ImportacaoParceirosService {
@@ -67,8 +69,13 @@ public class ImportacaoParceirosService {
             return "Parceiro";
         }
 
+        /** Parceiro sem CNPJ/CPF fica de fora (decisão do usuário 2026-10-27): ver {@link #preparar}. */
         @Override
         protected List<ImpParceiro> linhas(ImpLote lote) {
+            return todasLinhas(lote).stream().filter(l -> texto(l.getCnpj()) != null).toList();
+        }
+
+        private List<ImpParceiro> todasLinhas(ImpLote lote) {
             return dataManager.load(ImpParceiro.class)
                     .query("select e from ImpParceiro e where e.lote = :lote order by e.codigo")
                     .parameter("lote", lote)
@@ -104,6 +111,15 @@ public class ImportacaoParceirosService {
 
         @Override
         protected void preparar(ImpLote lote, ImportacaoPlanoContasService.Relatorio relatorio) {
+            List<String> semCnpj = todasLinhas(lote).stream()
+                    .filter(l -> texto(l.getCnpj()) == null)
+                    .map(l -> l.getCodigo() + " " + texto(l.getRazao()))
+                    .toList();
+            if (!semCnpj.isEmpty()) {
+                relatorio.avisos.add(semCnpj.size() + " parceiro(s) sem CNPJ/CPF no legado não entram (o axctg3 exige o "
+                        + "CNPJ/CPF); nota, pedido ou título que use um deles não poderá ser importado: "
+                        + String.join("; ", semCnpj) + ".");
+            }
             List<ImpParceiro> linhas = linhas(lote);
             List<Integer> codigos = linhas.stream()
                     .map(ImpParceiro::getMunicipio)
@@ -137,9 +153,6 @@ public class ImportacaoParceirosService {
                 relatorio.erros.add(titulo + " sem razão social.");
             }
             String cnpj = texto(l.getCnpj());
-            if (cnpj == null) {
-                relatorio.erros.add(titulo + " sem CNPJ/CPF.");
-            }
             String apelido = texto(l.getApelido());
             if (apelido == null && razao != null) {
                 apelido = razao.length() > 20 ? razao.substring(0, 20).trim() : razao;
