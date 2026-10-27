@@ -213,6 +213,16 @@ class ImportacaoNotasPedidosTest {
                 .parameter("p", pedidos.get(1)).list();
         assertThat(industrializacao).extracting(ItemPedidoVenda::getCfop).containsExactly(5124, 5902);
         assertThat(industrializacao).extracting(ItemPedidoVenda::getForaDoTotal).containsExactly(false, true);
+
+        // faturado no axctg3 (nota emitida aqui) e reimportado aberto do legado: continua faturado
+        PedidoVenda emitido = dataManager.load(PedidoVenda.class).id(primeiro.getId()).one();
+        emitido.setFaturado(true);
+        dataManager.save(emitido);
+        ImpLote denovo = lote(TipoLote.PEDIDOS_VENDA);
+        dataManager.save(new SaveContext().saving(pedido(denovo, 1, 156519, "N", "N"),
+                itemPedido(denovo, 1, 1, "62945.00")));
+        assertThat(pedidosService.importar(denovo.getId()).getErros()).isEmpty();
+        assertThat(dataManager.load(PedidoVenda.class).id(primeiro.getId()).one().getFaturado()).isTrue();
     }
 
     // ---- lote de notas ----

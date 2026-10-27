@@ -136,6 +136,14 @@ public class ImportacaoPedidosVendaService extends ImportacaoDocumentoBase {
         return d;
     }
 
+    /** Pedido faturado no axctg3 (nota emitida aqui) continua faturado: reimportar não o reabre. */
+    @Override
+    protected void ajustarComGravado(Documento doLote, Documento gravado) {
+        if (Boolean.TRUE.equals(gravado.cabecalho.get("FATURADO"))) {
+            doLote.cabecalho.put("FATURADO", Boolean.TRUE);
+        }
+    }
+
     @Override
     protected void concluirConversao(Contexto ctx) {
         List<Integer> cancelados = contar(ctx, "cancelados");

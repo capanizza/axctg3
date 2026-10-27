@@ -98,6 +98,13 @@ abstract class ImportacaoDocumentoBase {
      */
     protected abstract Documento converter(Map<String, Object> linha, List<Map<String, Object>> itens, Contexto ctx);
 
+    /**
+     * Reimportação: ajusta o documento do lote ao que já está gravado antes da comparação — para o
+     * que o axctg3 decide e o legado não pode desfazer (ex.: pedido faturado aqui).
+     */
+    protected void ajustarComGravado(Documento doLote, Documento gravado) {
+    }
+
     /** Avisos que só fazem sentido depois de converter o lote inteiro. */
     protected void concluirConversao(Contexto ctx) {
     }
@@ -294,6 +301,7 @@ abstract class ImportacaoDocumentoBase {
                             + " tem item incluído no axctg3; a importação apagaria esse item.");
                     continue;
                 }
+                ajustarComGravado(d, g);
                 List<String> mudancas = ImportacaoDocumentos.diferencas(d.cabecalho, g.cabecalho);
                 d.trocarItens = !ImportacaoDocumentos.mesmasLinhas(d.itens, g.itens);
                 if (d.trocarItens) {
