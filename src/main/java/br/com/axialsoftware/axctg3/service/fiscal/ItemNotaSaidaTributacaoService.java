@@ -143,13 +143,12 @@ public class ItemNotaSaidaTributacaoService {
     }
 
     private boolean foraDoTotalPorPadrao(NaturezaOperacao natureza, Integer codEmpresa, Integer cfop) {
-        if (cfop == null || !CFOP_FORA_DO_TOTAL.contains(cfop)) {
-            return false;
-        }
-        if (natureza != null && cfop.equals(natureza.getCfop())) {
-            return false;
-        }
-        return simplesNacional(codEmpresa);
+        return cfopForaDoTotal(cfop, natureza == null ? null : natureza.getCfop()) && simplesNacional(codEmpresa);
+    }
+
+    /** A parte da regra que só depende dos CFOPs (a importação de pedidos confere o Simples à parte). */
+    public static boolean cfopForaDoTotal(Integer cfop, Integer cfopNatureza) {
+        return cfop != null && CFOP_FORA_DO_TOTAL.contains(cfop) && !cfop.equals(cfopNatureza);
     }
 
     /** 1º item da nota, pra regra do 5124/5125 — conta os itens já gravados, fora o próprio. */

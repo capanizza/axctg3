@@ -1,6 +1,7 @@
 package br.com.axialsoftware.axctg3.service.importacao;
 
 import br.com.axialsoftware.axctg3.entity.enums.TipoLote;
+import br.com.axialsoftware.axctg3.service.fiscal.ItemNotaSaidaTributacaoService;
 import io.jmix.core.DataManager;
 import io.jmix.data.Sequences;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,9 @@ import java.util.Map;
  * padrão vem pelo código (importe antes as mensagens). FATURATOTAL marca o pedido como faturado,
  * e o axctg3 não emite nota a partir dele. Pedido cancelado, ou sem natureza ou parceiro
  * (começado e abandonado), não entra (aviso). Os itens
- * levam CFOP e complemento; o CST fica vazio (o legado calculava na emissão da nota).
+ * levam CFOP e complemento; o CST fica vazio (o legado calculava na emissão da nota). O retorno do
+ * material do cliente (5902...) sai do total como na tela do item: {@link
+ * ItemNotaSaidaTributacaoService#cfopForaDoTotal}, só no Simples.
  */
 @Service
 public class ImportacaoPedidosVendaService extends ImportacaoDocumentoBase {
@@ -95,6 +98,13 @@ public class ImportacaoPedidosVendaService extends ImportacaoDocumentoBase {
             comErro = true;
         }
 
+        // devolução simbólica fora do total, pela mesma regra da tela do item (o legado mandava
+        // tudo no total; um pedido importado e emitido no axctg3 saiu com o retorno no vNF — NF
+        // 12787 da GB)
+        boolean simples = (Boolean) ctx.estado().computeIfAbsent("simples", k -> jdbc.queryForObject(
+                "select count(*) from EMPRESA where CODIGO = ? and DELETED_DATE is null and CRT in (1, 2)",
+                Integer.class, ctx.lote().getCodEmpresa()) > 0);
+        Integer cfopNatureza = cfopDaNatureza(ctx, l.get("NATUREZA"));
         List<Map<String, Object>> itens = new ArrayList<>();
         BigDecimal valor = BigDecimal.ZERO;
         for (Map<String, Object> li : itensLegado) {
@@ -109,7 +119,8 @@ public class ImportacaoPedidosVendaService extends ImportacaoDocumentoBase {
             i.put("CST", null);
             i.put("DESCRICAO_COMPLEMENTAR",
                     ImportacaoDocumentos.cortar(ImportacaoDocumentos.texto((String) li.get("COMPL_PRODUTO")), 255));
-            i.put("FORA_DO_TOTAL", Boolean.FALSE);
+            i.put("FORA_DO_TOTAL", simples
+                    && ItemNotaSaidaTributacaoService.cfopForaDoTotal((Integer) li.get("CFO"), cfopNatureza));
             itens.add(i);
             valor = valor.add(quantidade.multiply(unitario));
         }
@@ -137,6 +148,17 @@ public class ImportacaoPedidosVendaService extends ImportacaoDocumentoBase {
             ctx.relatorio().avisos.add(incompletos.size() + " pedido(s) sem natureza ou sem parceiro no legado "
                     + "(incompletos) não entram: " + ImportacaoDocumentos.resumir(incompletos) + ".");
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Integer cfopDaNatureza(Contexto ctx, Object codigo) {
+        Map<Long, Integer> cfops = (Map<Long, Integer>) ctx.estado().computeIfAbsent("cfops", k -> {
+            Map<Long, Integer> m = new java.util.HashMap<>();
+            jdbc.query("select CODIGO, CFOP from NATUREZA_OPERACAO where COD_EMPRESA = ? and DELETED_DATE is null",
+                    rs -> { m.put(rs.getLong(1), rs.getInt(2)); }, ctx.lote().getCodEmpresa());
+            return m;
+        });
+        return codigo == null ? null : cfops.get(((Number) codigo).longValue());
     }
 
     private static boolean semCodigo(Object codigo) {

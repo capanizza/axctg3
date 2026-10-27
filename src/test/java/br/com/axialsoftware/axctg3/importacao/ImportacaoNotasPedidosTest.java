@@ -70,6 +70,7 @@ class ImportacaoNotasPedidosTest {
         empresa.setNome("Teste da importação de notas e pedidos");
         empresa.setApelido("Imp notas");
         empresa.setEspecieNfe("NFe");
+        empresa.setCrt(br.com.axialsoftware.axctg3.entity.enums.CodRegimeTributario.SIMPLES_NACIONAL);
         dataManager.save(empresa);
         Parceiro parceiro = dataManager.create(Parceiro.class);
         parceiro.setCodigo(221L);
@@ -168,7 +169,10 @@ class ImportacaoNotasPedidosTest {
         SaveContext ctx = new SaveContext();
         ctx.saving(pedido(lote, 1, 156519, "N", "N"), itemPedido(lote, 1, 1, "62945.00"));
         ctx.saving(pedido(lote, 2, 156520, "S", "N"), itemPedido(lote, 2, 1, "10.00"));
-        ctx.saving(pedido(lote, 3, 156521, "N", "S"), itemPedido(lote, 3, 3, "50.00"));
+        ImpItemPedidoVenda retorno = itemPedido(lote, 3, 1, "350.00");   // devolução simbólica
+        retorno.setRegistro(31);
+        retorno.setCfo(5902);
+        ctx.saving(pedido(lote, 3, 156521, "N", "S"), itemPedido(lote, 3, 3, "50.00"), retorno);
         ImpPedidoVenda semNatureza = pedido(lote, 4, 24, "N", "N");   // natureza 0 no legado
         semNatureza.setNatureza(0);
         ctx.saving(semNatureza);
@@ -202,6 +206,13 @@ class ImportacaoNotasPedidosTest {
             assertThat(i.getValorUnitario()).isEqualByComparingTo("62945");
         });
         assertThat(dataManager.load(ImpLote.class).id(lote.getId()).one().getSituacao()).isEqualTo(SituacaoLote.IMPORTADO);
+
+        // natureza 5124 + item 5902 no Simples: o retorno sai do total, como na tela do item
+        List<ItemPedidoVenda> industrializacao = dataManager.load(ItemPedidoVenda.class)
+                .query("select e from ItemPedidoVenda e where e.pedidoVenda = :p order by e.item")
+                .parameter("p", pedidos.get(1)).list();
+        assertThat(industrializacao).extracting(ItemPedidoVenda::getCfop).containsExactly(5124, 5902);
+        assertThat(industrializacao).extracting(ItemPedidoVenda::getForaDoTotal).containsExactly(false, true);
     }
 
     // ---- lote de notas ----
