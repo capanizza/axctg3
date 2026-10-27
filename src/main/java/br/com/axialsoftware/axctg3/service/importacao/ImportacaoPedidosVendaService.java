@@ -22,7 +22,8 @@ import java.util.Map;
  * a soma de DESCONTO1 e DESCONTO2. As duas observações do legado: OBSERVACAO (interna) vai para o
  * complemento da mensagem e OBS1 (o texto que ia para a nota) para a mensagem da nota. A mensagem
  * padrão vem pelo código (importe antes as mensagens). FATURATOTAL marca o pedido como faturado,
- * e o axctg3 não emite nota a partir dele. Pedido cancelado no legado não entra (aviso). Os itens
+ * e o axctg3 não emite nota a partir dele. Pedido cancelado, ou sem natureza ou parceiro
+ * (começado e abandonado), não entra (aviso). Os itens
  * levam CFOP e complemento; o CST fica vazio (o legado calculava na emissão da nota).
  */
 @Service
@@ -58,6 +59,12 @@ public class ImportacaoPedidosVendaService extends ImportacaoDocumentoBase {
         String titulo = "Pedido " + numero;
         if ("S".equalsIgnoreCase(ImportacaoDocumentos.texto((String) l.get("CANCELADO")))) {
             contar(ctx, "cancelados").add(numero);
+            return null;
+        }
+        // natureza 0 / sem parceiro: pedido começado e abandonado no legado (na GB, quase todos
+        // sem itens) — fica de fora, como o cancelado
+        if (semCodigo(l.get("NATUREZA")) || semCodigo(l.get("PARCEIRO"))) {
+            contar(ctx, "incompletos").add(numero);
             return null;
         }
         boolean faturado = "S".equalsIgnoreCase(ImportacaoDocumentos.texto((String) l.get("FATURA_TOTAL")));
@@ -125,6 +132,15 @@ public class ImportacaoPedidosVendaService extends ImportacaoDocumentoBase {
             ctx.relatorio().avisos.add(cancelados.size() + " pedido(s) cancelado(s) no legado não entram: "
                     + ImportacaoDocumentos.resumir(cancelados) + ".");
         }
+        List<Integer> incompletos = contar(ctx, "incompletos");
+        if (!incompletos.isEmpty()) {
+            ctx.relatorio().avisos.add(incompletos.size() + " pedido(s) sem natureza ou sem parceiro no legado "
+                    + "(incompletos) não entram: " + ImportacaoDocumentos.resumir(incompletos) + ".");
+        }
+    }
+
+    private static boolean semCodigo(Object codigo) {
+        return codigo == null || ((Number) codigo).longValue() == 0;
     }
 
     @SuppressWarnings("unchecked")

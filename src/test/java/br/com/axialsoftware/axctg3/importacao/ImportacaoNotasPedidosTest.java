@@ -169,6 +169,9 @@ class ImportacaoNotasPedidosTest {
         ctx.saving(pedido(lote, 1, 156519, "N", "N"), itemPedido(lote, 1, 1, "62945.00"));
         ctx.saving(pedido(lote, 2, 156520, "S", "N"), itemPedido(lote, 2, 1, "10.00"));
         ctx.saving(pedido(lote, 3, 156521, "N", "S"), itemPedido(lote, 3, 3, "50.00"));
+        ImpPedidoVenda semNatureza = pedido(lote, 4, 24, "N", "N");   // natureza 0 no legado
+        semNatureza.setNatureza(0);
+        ctx.saving(semNatureza);
         dataManager.save(ctx);
 
         ImportacaoPlanoContasService.Relatorio r = pedidosService.importar(lote.getId());
@@ -177,6 +180,7 @@ class ImportacaoNotasPedidosTest {
         assertThat(r.getImportadas()).isEqualTo(2);
         assertThat(r.getAvisos())
                 .contains("1 pedido(s) cancelado(s) no legado não entram: 156520.")
+                .contains("1 pedido(s) sem natureza ou sem parceiro no legado (incompletos) não entram: 24.")
                 .noneMatch(a -> a.startsWith("Mensagem que não existe"));
         List<PedidoVenda> pedidos = dataManager.load(PedidoVenda.class)
                 .query("select e from PedidoVenda e where e.codEmpresa = :cod order by e.numero")
