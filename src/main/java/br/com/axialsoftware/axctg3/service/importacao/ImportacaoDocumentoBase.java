@@ -230,15 +230,22 @@ abstract class ImportacaoDocumentoBase {
 
         /** Separa novos, alterados e iguais; documento do axctg3 que não veio do legado impede. */
         private void comparar(Map<Integer, Documento> doLote) {
-            String doLoteSql = "(select i.NUMERO from " + c.tabelaImp() + " i where i.LOTE_ID = ?)";
+            // pela faixa de números do lote, filtrando em Java: o número no lote pode ser texto
+            // (pedido do legado), e comparar com a coluna inteira do axctg3 falharia no Postgres
+            int menor = doLote.keySet().stream().min(Integer::compare).orElse(0);
+            int maior = doLote.keySet().stream().max(Integer::compare).orElse(0);
+            String doLoteSql = "between ? and ?";
             Map<Integer, Documento> gravados = new HashMap<>();
             Map<UUID, Documento> porId = new HashMap<>();
             Map<Integer, String> criadoPor = new HashMap<>();
             jdbc.query("select ID, NUMERO, CREATED_BY, " + String.join(", ", c.colunas()) + " from " + c.tabela()
-                            + " where COD_EMPRESA = ? and DELETED_DATE is null and NUMERO in " + doLoteSql,
+                            + " where COD_EMPRESA = ? and DELETED_DATE is null and NUMERO " + doLoteSql,
                     rs -> {
                         Map<String, Object> l = ImportacaoDocumentos.linha(rs);
                         Integer numero = (Integer) l.get("NUMERO");
+                        if (!doLote.containsKey(numero)) {
+                            return;
+                        }
                         if (gravados.containsKey(numero)) {
                             relatorio.erros.add(c.documento() + " " + numero + " existe mais de uma vez no axctg3.");
                             return;
@@ -250,12 +257,12 @@ abstract class ImportacaoDocumentoBase {
                         gravados.put(numero, d);
                         porId.put(d.id, d);
                         criadoPor.put(numero, (String) l.get("CREATED_BY"));
-                    }, codEmpresa, lote.getId());
+                    }, codEmpresa, menor, maior);
             Set<UUID> comItemDoAxctg3 = new HashSet<>();
             jdbc.query("select it." + c.colunaPai() + ", it.CREATED_BY, it." + String.join(", it.", c.colunasItem())
                             + " from " + c.tabelaItem() + " it join " + c.tabela() + " d on d.ID = it." + c.colunaPai()
                             + " where d.COD_EMPRESA = ? and d.DELETED_DATE is null and it.DELETED_DATE is null "
-                            + "and d.NUMERO in " + doLoteSql + " order by it." + c.colunaPai() + ", it.ITEM",
+                            + "and d.NUMERO " + doLoteSql + " order by it." + c.colunaPai() + ", it.ITEM",
                     rs -> {
                         Map<String, Object> l = ImportacaoDocumentos.linha(rs);
                         Documento d = porId.get((UUID) l.get(c.colunaPai()));
@@ -268,7 +275,7 @@ abstract class ImportacaoDocumentoBase {
                         if (!IMPORTACAO.equals(l.get("CREATED_BY"))) {
                             comItemDoAxctg3.add(d.id);
                         }
-                    }, codEmpresa, lote.getId());
+                    }, codEmpresa, menor, maior);
 
             List<String> alteracoes = new ArrayList<>();
             for (Documento d : doLote.values()) {
@@ -307,8 +314,10 @@ abstract class ImportacaoDocumentoBase {
             List<Integer> soNoAxctg3 = jdbc.queryForList("select d.NUMERO from " + c.tabela() + " d "
                             + "where d.COD_EMPRESA = ? and d.DELETED_DATE is null and d.CREATED_BY = ? "
                             + "and d." + c.colunaData() + " >= ? and d." + c.colunaData() + " < ? "
-                            + "and d.NUMERO not in " + doLoteSql + " order by d.NUMERO", Integer.class,
-                    codEmpresa, IMPORTACAO, inicio, fim, lote.getId());
+                            + "order by d.NUMERO", Integer.class,
+                    codEmpresa, IMPORTACAO, inicio, fim).stream()
+                    .filter(numero -> !doLote.containsKey(numero))
+                    .toList();
             if (!soNoAxctg3.isEmpty()) {
                 relatorio.avisos.add(soNoAxctg3.size() + " " + c.nome() + " de " + lote.getPeriodo()
                         + " importados antes não vieram neste lote (ficam como estão): "

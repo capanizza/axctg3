@@ -259,7 +259,7 @@ class ImportacaoNotasPedidosTest {
         ImpPedidoVenda p = dataManager.create(ImpPedidoVenda.class);
         p.setLote(lote);
         p.setRegistro(registro);
-        p.setNumero(numero);
+        p.setNumero(String.format("%06d", numero));   // texto com zeros, como no legado
         p.setData(LocalDate.of(2026, 6, 17));
         p.setParceiro(221);
         p.setNatureza(3);

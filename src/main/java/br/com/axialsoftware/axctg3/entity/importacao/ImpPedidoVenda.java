@@ -69,8 +69,9 @@ public class ImpPedidoVenda {
     @Column(name = "REGISTRO")
     private Integer registro;
 
+    // texto no legado (com zeros à esquerda: "002677"); a importação converte
     @Column(name = "NUMERO")
-    private Integer numero;
+    private String numero;
 
     @Column(name = "DATA")
     private LocalDate data;
@@ -215,11 +216,11 @@ public class ImpPedidoVenda {
         this.registro = registro;
     }
 
-    public Integer getNumero() {
+    public String getNumero() {
         return numero;
     }
 
-    public void setNumero(Integer numero) {
+    public void setNumero(String numero) {
         this.numero = numero;
     }
 

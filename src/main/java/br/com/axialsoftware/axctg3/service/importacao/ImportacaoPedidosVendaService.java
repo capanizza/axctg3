@@ -44,11 +44,17 @@ public class ImportacaoPedidosVendaService extends ImportacaoDocumentoBase {
 
     @Override
     protected Documento converter(Map<String, Object> l, List<Map<String, Object>> itensLegado, Contexto ctx) {
-        Integer numero = (Integer) l.get("NUMERO");
-        if (numero == null) {
+        // número é texto no legado ("002677")
+        String numeroLegado = ImportacaoDocumentos.texto((String) l.get("NUMERO"));
+        if (numeroLegado == null) {
             ctx.relatorio().erros.add("Pedido sem número no lote (registro " + l.get("REGISTRO") + ").");
             return null;
         }
+        if (!numeroLegado.matches("\\d{1,9}")) {
+            ctx.relatorio().erros.add("Pedido com número \"" + numeroLegado + "\" no legado: o axctg3 só aceita número.");
+            return null;
+        }
+        Integer numero = Integer.valueOf(numeroLegado);
         String titulo = "Pedido " + numero;
         if ("S".equalsIgnoreCase(ImportacaoDocumentos.texto((String) l.get("CANCELADO")))) {
             contar(ctx, "cancelados").add(numero);
