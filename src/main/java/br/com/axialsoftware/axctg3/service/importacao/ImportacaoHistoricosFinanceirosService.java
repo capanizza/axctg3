@@ -120,8 +120,8 @@ public class ImportacaoHistoricosFinanceirosService {
                     .list()
                     .forEach(h -> historicos.put(h.getCodigo(), h));
             if (historicos.isEmpty()) {
-                relatorio.erros.add("A empresa " + lote.getCodEmpresa() + " não tem históricos contábeis. "
-                        + "Importe antes os históricos contábeis: o histórico financeiro aponta para eles.");
+                relatorio.avisos.add("A empresa " + lote.getCodEmpresa() + " não tem históricos contábeis: os "
+                        + "históricos contábeis ficam vazios. Importe-os e reimporte para ligá-los.");
             }
         }
 
@@ -153,7 +153,7 @@ public class ImportacaoHistoricosFinanceirosService {
                            String codigoLegado, String titulo, ImportacaoPlanoContasService.Relatorio relatorio) {
             String codigo = texto(codigoLegado);
             ContaContabil conta = codigo == null ? null : contas.get(codigo);
-            if (codigo != null && conta == null) {
+            if (codigo != null && conta == null && !semPlano) {
                 relatorio.avisos.add(titulo + ": " + nome + " " + codigo
                         + " não existe no plano mais recente da empresa; fica vazia.");
             }
@@ -165,7 +165,7 @@ public class ImportacaoHistoricosFinanceirosService {
                                ImportacaoPlanoContasService.Relatorio relatorio) {
             Integer cod = codigo == null || codigo == 0 ? null : codigo;
             HistoricoContabil historico = cod == null ? null : historicos.get(cod);
-            if (cod != null && historico == null) {
+            if (cod != null && historico == null && !historicos.isEmpty()) {
                 relatorio.avisos.add(titulo + ": " + nome + " " + cod
                         + " não existe nos históricos contábeis da empresa; fica vazio.");
             }

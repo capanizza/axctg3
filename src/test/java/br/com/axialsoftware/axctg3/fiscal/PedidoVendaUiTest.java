@@ -181,6 +181,9 @@ class PedidoVendaUiTest {
     @Test
     void emitirNotaSaidaGeraNotaComItensAPartirDoPedido() {
         PedidoVenda pedido = criarPedido();
+        pedido.setComplementoMensagem("observação interna");
+        pedido.setMensagemNota("PEDIDO DE COMPRA: 123.");
+        pedido = dataManager.save(pedido);
         criarItem(pedido, new BigDecimal("3"), new BigDecimal("10.50"));
 
         PedidoVendaService.ResultadoEmitirNotaSaida resultado = pedidoVendaService.emitirNotaSaida(pedido.getId());
@@ -194,6 +197,12 @@ class PedidoVendaUiTest {
         assertThat(notaSaida.getNatureza()).isEqualTo(natureza);
         assertThat(notaSaida.getValorMercadoria()).isEqualByComparingTo("31.50");
         assertThat(notaSaida.getValor()).isEqualByComparingTo("31.50");
+        assertThat(notaSaida.getComplementoMensagem()).isEqualTo("PEDIDO DE COMPRA: 123.");
+        assertThat(dataManager.load(PedidoVenda.class).id(pedido.getId()).one().getFaturado()).isTrue();
+
+        PedidoVendaService.ResultadoEmitirNotaSaida denovo = pedidoVendaService.emitirNotaSaida(pedido.getId());
+        assertThat(denovo.sucesso()).isFalse();
+        assertThat(denovo.motivo()).contains("já faturado");
     }
 
     // Item marcado "fora do total" no pedido chega assim na nota (indTot=0) e não soma.

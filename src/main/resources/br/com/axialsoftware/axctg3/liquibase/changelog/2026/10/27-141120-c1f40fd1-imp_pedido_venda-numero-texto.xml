@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+        logicalFilePath="br/com/axialsoftware/axctg3/liquibase/changelog/2026/10/27-141120-c1f40fd1-imp_pedido_venda-numero-texto.xml">
+    <!-- PEDVENDA.NUMERO é texto no legado ("002677"): a importação converte -->
+    <changeSet id="1" author="axctg3">
+        <modifyDataType tableName="IMP_PEDIDO_VENDA" columnName="NUMERO" newDataType="VARCHAR(255)"/>
+    </changeSet>
+</databaseChangeLog>

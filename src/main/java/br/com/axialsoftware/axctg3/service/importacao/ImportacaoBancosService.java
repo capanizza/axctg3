@@ -121,7 +121,7 @@ public class ImportacaoBancosService {
 
             String codContabil = texto(l.getCodContabil());
             ContaContabil conta = codContabil == null ? null : contas.get(codContabil);
-            if (codContabil != null && conta == null) {
+            if (codContabil != null && conta == null && !semPlano) {
                 relatorio.avisos.add(titulo + ": conta contábil " + codContabil
                         + " não existe no plano mais recente da empresa; o banco fica sem conta.");
             }
@@ -158,13 +158,26 @@ public class ImportacaoBancosService {
             campos.campo("nosso número atual", b::getNossoNumAtual, b::setNossoNumAtual,
                     cortar(texto(l.getNossoNumAtual()), 10, titulo, "nosso número atual", relatorio));
             campos.campo("número da remessa", b::getNumRemessa, b::setNumRemessa, l.getNumRemessa());
-            campos.campo("dias para protesto", b::getDiasProtesto, b::setDiasProtesto, l.getDiasProtesto());
+            // dias para protesto não vem mais do legado (a coluna falta em vários bancos e estava
+            // vazia nos outros): fica o que estiver no axctg3
             campos.campo("multa por atraso", b::getMultaAtraso, b::setMultaAtraso, l.getMulta());
             campos.campo("multa por dia", b::getMultaDia, b::setMultaDia, l.getMultaDia());
-            campos.campo("mensagem", b::getMensagem, b::setMensagem, texto(l.getMensagem()));
-            campos.campo("histórico de baixa normal", b::getBaixaNormal, b::setBaixaNormal, l.getBaixaNormal());
-            campos.campo("histórico de baixa com juros", b::getBaixaJuros, b::setBaixaJuros, l.getBaixaJuros());
-            campos.campo("histórico de baixa com desconto", b::getBaixaDesconto, b::setBaixaDesconto, l.getBaixaDesconto());
+            // mensagem e históricos de baixa faltam em alguns bancos do legado (vêm vazios): vazio
+            // não apaga o que foi configurado no axctg3
+            String mensagem = texto(l.getMensagem());
+            if (mensagem != null) {
+                campos.campo("mensagem", b::getMensagem, b::setMensagem, mensagem);
+            }
+            if (l.getBaixaNormal() != null) {
+                campos.campo("histórico de baixa normal", b::getBaixaNormal, b::setBaixaNormal, l.getBaixaNormal());
+            }
+            if (l.getBaixaJuros() != null) {
+                campos.campo("histórico de baixa com juros", b::getBaixaJuros, b::setBaixaJuros, l.getBaixaJuros());
+            }
+            if (l.getBaixaDesconto() != null) {
+                campos.campo("histórico de baixa com desconto", b::getBaixaDesconto, b::setBaixaDesconto,
+                        l.getBaixaDesconto());
+            }
 
             if (sicredi && b.getAgencia() != null && b.getByteGeracaoNossoNumero() == null) {
                 relatorio.avisos.add(titulo + ": o byte de geração do Nosso Número não existe no legado. "

@@ -449,6 +449,7 @@ public class NfeEmissaoService {
                                 .add("classTrib", FetchPlan.BASE))
                         .add("condicaoPagamento", FetchPlan.BASE)
                         .add("banco", FetchPlan.BASE)
+                        .add("mensagem", FetchPlan.BASE)
                         .add("itens", fpItens -> fpItens.addFetchPlan(FetchPlan.BASE)
                                 .add("produto", fpProduto -> fpProduto.addFetchPlan(FetchPlan.BASE)
                                         .add("classificacaoFiscal", FetchPlan.BASE)

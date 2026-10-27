@@ -1,6 +1,7 @@
 package br.com.axialsoftware.axctg3.fiscal;
 
 import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
+import br.com.axialsoftware.axctg3.entity.cadastros.Mensagem;
 import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
 import br.com.axialsoftware.axctg3.entity.enums.AmbienteNfe;
 import br.com.axialsoftware.axctg3.entity.enums.CodRegimeTributario;
@@ -341,6 +342,38 @@ class NfeXmlBuilderTotaisTest {
                 .contains("Valor aproximado dos tributos");
     }
 
+    // infCpl como no f_nfe.pas: observação da nota, Simples, mensagem padrão, tributos — numa
+    // linha só (quebra de linha no TString dá cStat=225), sem repetir os incisos I/II quando a
+    // mensagem padrão já fala do Simples (a mensagem 2 da GB)
+    @Test
+    void infCplLevaComplementoEMensagemSemRepetirOSimples() {
+        prepararFixtures();
+        tornarSimples();
+        NotaSaida nota = criarNotaIndustrializacao();
+        Mensagem mensagem = dataManager.create(Mensagem.class);
+        mensagem.setCodigo(2);
+        mensagem.setCodEmpresa(COD_EMPRESA);
+        mensagem.setTexto("I - Documento emitido por ME ou EPP optante pelo Simples Nacional.\r\n"
+                + "II - Nao gera direito a credito fiscal de IPI.");
+        mensagem = dataManager.save(mensagem);
+        NotaSaida editada = dataManager.load(NotaSaida.class).id(nota.getId()).one();
+        editada.setMensagem(mensagem);
+        editada.setComplementoMensagem("PEDIDO DE COMPRA: 38502.\nINSUMOS DEVOLVIDOS DE SUA NF 20943.");
+        dataManager.save(editada);
+
+        nota = dataManager.load(NotaSaida.class).id(nota.getId()).one();
+        Document doc = nfeXmlBuilder.construir(nota).documento();
+        validarContraXsd(doc);
+        String infCpl = texto(doc.getDocumentElement(), "infCpl");
+
+        assertThat(infCpl)
+                .startsWith("PEDIDO DE COMPRA: 38502. INSUMOS DEVOLVIDOS DE SUA NF 20943. III - Permite o aproveitamento")
+                .contains("III - Permite o aproveitamento do crédito de ICMS no valor de R$ 8,00")
+                .contains("I - Documento emitido por ME ou EPP optante pelo Simples Nacional. II - Nao gera direito")
+                .doesNotContain("\n")
+                .doesNotContain("II - Não gera direito");   // o texto gerado (com til) não repete
+    }
+
     @Test
     void simplesRecusaCsosnComStECstDoRegimeNormal() {
         prepararFixtures();
@@ -563,6 +596,8 @@ class NfeXmlBuilderTotaisTest {
                 .query("select e from Produto e where e.codEmpresa = :c").parameter("c", COD_EMPRESA).list());
         apagar(dataManager.load(NaturezaOperacao.class)
                 .query("select e from NaturezaOperacao e where e.codEmpresa = :c").parameter("c", COD_EMPRESA).list());
+        apagar(dataManager.load(Mensagem.class)
+                .query("select e from Mensagem e where e.codEmpresa = :c").parameter("c", COD_EMPRESA).list());
         apagar(dataManager.load(Parceiro.class)
                 .query("select e from Parceiro e where e.codEmpresa = :c").parameter("c", COD_EMPRESA).list());
         apagar(dataManager.load(Empresa.class)

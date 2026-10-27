@@ -66,8 +66,9 @@
             <columns resizable="true">
                 <column property="numero" filterable="true" width="12%"/>
                 <column property="dataEntrada" filterable="true" width="15%"/>
-                <column property="parceiro" filterable="true" width="40%"/>
-                <column property="natureza" filterable="true" width="33%"/>
+                <column property="parceiro" filterable="true" width="37%"/>
+                <column property="natureza" filterable="true" width="28%"/>
+                <column property="faturado" textAlign="CENTER" width="8%"/>
             </columns>
         </dataGrid>
         <hbox id="lookupActions" visible="false">

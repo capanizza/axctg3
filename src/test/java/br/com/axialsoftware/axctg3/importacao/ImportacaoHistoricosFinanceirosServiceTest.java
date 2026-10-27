@@ -134,15 +134,22 @@ class ImportacaoHistoricosFinanceirosServiceTest {
         assertThat(historicos().get(2).getContaContabilPagar().getCodigo()).isEqualTo("333020002");
     }
 
+    // empresa com a contabilidade fora (GB): sem históricos contábeis nem plano, o histórico
+    // financeiro entra sem eles, com um aviso de cada
     @Test
-    void test_semHistoricosContabeisImpedeAImportacao() {
+    void test_semContabilidadeImportaComAviso() {
         apagar(carregar(HistoricoContabil.class, "select e from HistoricoContabil e where e.codEmpresa = :cod"));
+        apagar(carregar(ContaContabil.class, "select e from ContaContabil e where e.codEmpresa = :cod"));
         ImpLote lote = criarLote(linha(1, "EMISSAO", "S", "N", null, 0, "311010001", 61));
 
         ImportacaoPlanoContasService.Relatorio relatorio = service.importar(lote.getId());
 
-        assertThat(relatorio.getErros()).anyMatch(e -> e.contains("não tem históricos contábeis"));
-        assertThat(historicos()).isEmpty();
+        assertThat(relatorio.getErros()).isEmpty();
+        assertThat(relatorio.getAvisos())
+                .anyMatch(a -> a.contains("não tem históricos contábeis"))
+                .anyMatch(a -> a.contains("não tem plano de contas"))
+                .noneMatch(a -> a.contains("não existe no plano mais recente") || a.contains("não existe nos históricos"));
+        assertThat(historicos()).hasSize(1);
     }
 
     private void conta(String codigo, int ano) {

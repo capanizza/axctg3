@@ -45,6 +45,11 @@ relacionar com NFe. Reverte a decisão de 2026-08-09 documentada em `Nfe.java`
   - 102/103/300/400 saem em `ICMSSN102`; 201/202/203 (ST) recusados na emissão.
   - PIS/COFINS `NT` CST 06; sem IBSCBS/IBSCBSTot/vItem/vNFTot (o legado não manda e a
     SEFAZ autoriza em 2026); `infCpl` com os incisos I/II/III da LC 123.
+- **`infCpl`** (todas as empresas, 2026-10-27), na ordem do `f_nfe.pas`: complemento da
+  mensagem da nota, texto do Simples (se for o caso), texto da mensagem padrão
+  (`NotaSaida.mensagem`) e tributos aproximados — numa linha só (quebra de linha no TString
+  dá cStat=225), até 5000 caracteres. Mensagem padrão que já fala do Simples Nacional não
+  repete os incisos I/II gerados.
   - `ItemNotaSaida.foraDoTotal` → `indTot=0` (devolução simbólica do material do
     cliente): marcado por padrão no Simples quando o item é 5902/6902/5925/6925 e a
     natureza da nota tem outro CFOP — a regra do `f_nfe.pas` do AxFat, que lá ficou

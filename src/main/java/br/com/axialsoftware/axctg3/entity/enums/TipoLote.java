@@ -26,7 +26,10 @@ public enum TipoLote implements EnumClass<Integer> {
     NATUREZAS_OPERACAO(14),
     CONDICOES_PAGAMENTO(15),
     VENDEDORES(16),
-    TRANSPORTADORAS(17);
+    TRANSPORTADORAS(17),
+    NOTAS_SAIDA(18),
+    PEDIDOS_VENDA(19),
+    MENSAGENS(20);
 
     private final Integer id;
 

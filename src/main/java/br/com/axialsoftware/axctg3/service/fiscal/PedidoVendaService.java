@@ -183,6 +183,9 @@ public class PedidoVendaService {
      * recalculado do zero por {@code ItemNotaSaidaEventListener} (mesmo caminho de um
      * item incluído na tela), então cfop/cst/codClassTrib do pedido só valem como
      * ponto de partida quando já vieram preenchidos lá.
+     * <p>
+     * O pedido fica marcado como faturado e não gera outra nota. O complemento da mensagem da
+     * nota vem da mensagem da nota do pedido, não do complemento do pedido (observação interna).
      */
     @Transactional
     public ResultadoEmitirNotaSaida emitirNotaSaida(UUID pedidoVendaId) {
@@ -201,6 +204,9 @@ public class PedidoVendaService {
                                 .add("produto", FetchPlan.BASE)))
                 .one();
 
+        if (Boolean.TRUE.equals(pedido.getFaturado())) {
+            return new ResultadoEmitirNotaSaida(false, "Pedido já faturado — a nota dele já foi emitida.", null);
+        }
         if (pedido.getItens() == null || pedido.getItens().isEmpty()) {
             return new ResultadoEmitirNotaSaida(false, "Pedido sem itens — inclua ao menos um item antes de emitir a nota.", null);
         }
@@ -227,7 +233,9 @@ public class PedidoVendaService {
         notaSaida.setVendedor(pedido.getVendedor());
         notaSaida.setClassTrib(pedido.getClassTrib());
         notaSaida.setMensagem(pedido.getMensagem());
-        notaSaida.setComplementoMensagem(pedido.getComplementoMensagem());
+        // o que vai para a nota é a mensagem da nota do pedido (o OBS1 do legado); o
+        // complemento do pedido é observação interna
+        notaSaida.setComplementoMensagem(pedido.getMensagemNota());
         notaSaida.setFrete(pedido.getFrete());
         notaSaida.setSeguro(pedido.getSeguro());
         notaSaida.setDespesas(pedido.getDespesas());
@@ -263,6 +271,8 @@ public class PedidoVendaService {
         for (ItemNotaSaida item : itens) {
             saveContext.saving(item);
         }
+        pedido.setFaturado(true);
+        saveContext.saving(pedido);
         dataManager.save(saveContext);
 
         // Reload: numero (NotaSaidaEventListener) e valor/valorMercadoria/baseIcms/valorIcms

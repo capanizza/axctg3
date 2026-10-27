@@ -201,6 +201,18 @@
                                           height="6.5em" themeNames="small"
                                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.complementoMensagem"/>
                             </hbox>
+                            <hbox width="100%" expand="mensagemNotaField">
+                                <textArea id="mensagemNotaField"
+                                          property="mensagemNota"
+                                          dataContainer="pedidoVendaDc"
+                                          height="6.5em" themeNames="small"
+                                          label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.mensagemNota"/>
+                                <checkbox id="faturadoField"
+                                          property="faturado"
+                                          dataContainer="pedidoVendaDc"
+                                          alignSelf="END"
+                                          label="msg://br.com.axialsoftware.axctg3.entity.fiscal/PedidoVenda.faturado"/>
+                            </hbox>
                             <hbox width="100%">
                                 <comboBox id="modFreteField"
                                           property="modFrete"

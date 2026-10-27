@@ -143,6 +143,16 @@ public class PedidoVenda {
     @Lob
     private String complementoMensagem;
 
+    // Texto que vai para a nota (complemento da mensagem da NotaSaida, que sai no infCpl) —
+    // o OBS1 do legado; complementoMensagem é a observação interna do pedido.
+    @Column(name = "MENSAGEM_NOTA")
+    @Lob
+    private String mensagemNota;
+
+    // Nota já emitida a partir do pedido (aqui ou no legado — FATURATOTAL): não emite de novo.
+    @Column(name = "FATURADO")
+    private Boolean faturado = false;
+
     @NumberFormat(pattern = "###,###,##0.00", decimalSeparator = ",", groupingSeparator = ".")
     @Column(name = "FRETE", precision = 19, scale = 2)
     private BigDecimal frete = BigDecimal.ZERO;
@@ -227,6 +237,22 @@ public class PedidoVenda {
 
     public void setFrete(BigDecimal frete) {
         this.frete = frete;
+    }
+
+    public String getMensagemNota() {
+        return mensagemNota;
+    }
+
+    public void setMensagemNota(String mensagemNota) {
+        this.mensagemNota = mensagemNota;
+    }
+
+    public Boolean getFaturado() {
+        return faturado;
+    }
+
+    public void setFaturado(Boolean faturado) {
+        this.faturado = faturado;
     }
 
     public String getComplementoMensagem() {
