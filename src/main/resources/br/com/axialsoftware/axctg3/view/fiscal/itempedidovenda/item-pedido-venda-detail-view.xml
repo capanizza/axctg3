@@ -52,7 +52,7 @@
                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemPedidoVenda.cfop"/>
                 <textField id="cstField"
                            property="cst"
-                           maxLength="4"
+                           maxLength="3"
                            dataContainer="itemPedidoVendaDc"
                            width="8%" themeNames="small"
                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemPedidoVenda.cst"/>
@@ -62,13 +62,18 @@
                               width="16%" themeNames="small"
                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemPedidoVenda.codClassTrib"/>
             </hbox>
-            <hbox width="100%">
+            <hbox width="100%" expand="descricaoComplementarField">
                 <textField id="descricaoComplementarField"
                            property="descricaoComplementar"
                            maxLength="255"
                            dataContainer="itemPedidoVendaDc"
-                           width="100%" themeNames="small"
+                           themeNames="small"
                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemPedidoVenda.descricaoComplementar"/>
+                <checkbox id="foraDoTotalField"
+                          property="foraDoTotal"
+                          dataContainer="itemPedidoVendaDc"
+                          alignSelf="END"
+                          label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemPedidoVenda.foraDoTotal"/>
             </hbox>
             <hbox width="100%">
                 <bigDecimalField id="quantidadeField"

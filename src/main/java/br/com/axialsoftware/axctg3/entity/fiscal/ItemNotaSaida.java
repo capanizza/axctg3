@@ -149,6 +149,20 @@ public class ItemNotaSaida {
     @Column(name = "DESCRICAO_COMPLEMENTAR")
     private String descricaoComplementar = "";
 
+    // indTot=0 na NFe: o item sai na nota mas não soma no vProd/vNF — retorno do material do
+    // cliente numa industrialização por encomenda (CFOP 5902/6902), pedido do usuário
+    // 2026-10-27. Editável no item; NotaSaidaService também o deixa fora de valorMercadoria.
+    @Column(name = "FORA_DO_TOTAL")
+    private Boolean foraDoTotal = false;
+
+    public Boolean getForaDoTotal() {
+        return foraDoTotal;
+    }
+
+    public void setForaDoTotal(Boolean foraDoTotal) {
+        this.foraDoTotal = foraDoTotal;
+    }
+
     public String getDescricaoComplementar() {
         return descricaoComplementar;
     }

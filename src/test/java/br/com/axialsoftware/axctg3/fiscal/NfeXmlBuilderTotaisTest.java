@@ -62,6 +62,9 @@ class NfeXmlBuilderTotaisTest {
     @Autowired
     private NfeXmlBuilder nfeXmlBuilder;
 
+    @Autowired
+    private br.com.axialsoftware.axctg3.service.fiscal.ItemNotaSaidaTributacaoService tributacaoService;
+
     private Parceiro parceiro;
     private Produto produtoComNcm;
     private Produto produtoSemNcm;
@@ -278,6 +281,222 @@ class NfeXmlBuilderTotaisTest {
         Element icmsTot = elementos(doc.getDocumentElement(), "ICMSTot").get(0);
         assertThat(new BigDecimal(texto(icmsTot, "vBC"))).isEqualByComparingTo("14.00");
         assertThat(new BigDecimal(texto(icmsTot, "vICMS"))).isEqualByComparingTo("0.98");
+    }
+
+    // Simples (CRT=1), no formato que o legado emite pra GB: CSOSN 101 com pCredSN da
+    // alíquota da natureza, CSOSN 400 em ICMSSN102, PIS/COFINS NT 06, sem IBS/CBS.
+    @Test
+    void simplesNacionalSaiComoNoLegadoDaGb() {
+        prepararFixtures();
+        tornarSimples();
+        NotaSaida nota = criarNota(true);
+        NaturezaOperacao natureza = dataManager.load(NaturezaOperacao.class).id(nota.getNatureza().getId()).one();
+        // Como a natureza de venda da GB: CSOSN 101 e a alíquota de crédito nela.
+        natureza.setCst(dataManager.load(br.com.axialsoftware.axctg3.entity.tabelas.Cst.class)
+                .query("select e from Cst e where e.codigo = '101'").one());
+        natureza.setAliqIcms(new BigDecimal("4"));
+        dataManager.save(natureza);
+
+        trocarCst(nota, 1, "101");  // 3 x 10,50 = 31,50 → crédito 1,26
+        trocarCst(nota, 2, "400");  // retorno de industrialização, sem crédito
+        trocarCst(nota, 3, "101");  // 2 x 7,00 = 14,00 → crédito 0,56
+        assertThat(carregarItem(nota, 2).getValorIcms()).isZero();
+
+        nota = dataManager.load(NotaSaida.class).id(nota.getId()).one();
+        Document doc = nfeXmlBuilder.construir(nota).documento();
+        Element raiz = doc.getDocumentElement();
+        List<Element> dets = elementos(raiz, "det");
+        validarContraXsd(doc);
+
+        assertThat(texto(raiz, "CRT")).isEqualTo("1");
+        Element sn101 = elementos(porNItem(dets, "1"), "ICMSSN101").get(0);
+        assertThat(texto(sn101, "CSOSN")).isEqualTo("101");
+        assertThat(texto(sn101, "pCredSN")).isEqualTo("4.0000");
+        assertThat(texto(sn101, "vCredICMSSN")).isEqualTo("1.26");
+        Element sn102 = elementos(porNItem(dets, "2"), "ICMSSN102").get(0);
+        assertThat(texto(sn102, "CSOSN")).isEqualTo("400");
+        assertThat(elementos(sn102, "pCredSN")).isEmpty();
+
+        assertThat(elementos(raiz, "PISNT")).hasSize(3);
+        assertThat(elementos(raiz, "COFINSNT")).hasSize(3);
+        assertThat(elementos(raiz, "PISAliq")).isEmpty();
+        assertThat(texto(elementos(raiz, "PISNT").get(0), "CST")).isEqualTo("06");
+        assertThat(elementos(raiz, "IBSCBS")).isEmpty();
+        assertThat(elementos(raiz, "vItem")).isEmpty();
+        assertThat(elementos(raiz, "IBSCBSTot")).isEmpty();
+        assertThat(elementos(raiz, "vNFTot")).isEmpty();
+        assertThat(elementos(raiz, "cBenef")).isEmpty();
+
+        Element icmsTot = elementos(raiz, "ICMSTot").get(0);
+        assertThat(new BigDecimal(texto(icmsTot, "vBC"))).isZero();
+        assertThat(new BigDecimal(texto(icmsTot, "vICMS"))).isZero();
+        // vTotTrib sobre o vProd do item (sem IBS/CBS somado)
+        BigDecimal vProd1 = new BigDecimal("31.50");
+        assertThat(new BigDecimal(texto(icmsTot, "vTotTrib")))
+                .isEqualByComparingTo(pct(vProd1, "13.45").add(pct(vProd1, "18.00")));
+
+        assertThat(texto(raiz, "infCpl"))
+                .startsWith("I - Documento emitido por ME ou EPP optante pelo Simples Nacional.")
+                .contains("crédito de ICMS no valor de R$ 1,82, correspondente à alíquota de 4,00%")
+                .contains("Valor aproximado dos tributos");
+    }
+
+    @Test
+    void simplesRecusaCsosnComStECstDoRegimeNormal() {
+        prepararFixtures();
+        tornarSimples();
+        NotaSaida nota = criarNota(false);
+        trocarCst(nota, 1, "201");
+        NotaSaida comSt = dataManager.load(NotaSaida.class).id(nota.getId()).one();
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> nfeXmlBuilder.construir(comSt))
+                .isInstanceOf(IllegalStateException.class).hasMessageContaining("CSOSN 201");
+
+        trocarCst(nota, 1, "00");
+        NotaSaida comCst = dataManager.load(NotaSaida.class).id(nota.getId()).one();
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> nfeXmlBuilder.construir(comCst))
+                .isInstanceOf(IllegalStateException.class).hasMessageContaining("exige CSOSN");
+    }
+
+    // XSD oficial de src/test/resources/nfe-schemas (Signature opcional, ver README de lá).
+    private static void validarContraXsd(Document doc) {
+        try {
+            java.io.StringWriter xml = new java.io.StringWriter();
+            javax.xml.transform.TransformerFactory.newInstance().newTransformer().transform(
+                    new javax.xml.transform.dom.DOMSource(doc), new javax.xml.transform.stream.StreamResult(xml));
+            javax.xml.validation.SchemaFactory.newInstance(javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI)
+                    .newSchema(new org.springframework.core.io.ClassPathResource("nfe-schemas/nfe_v4.00.xsd").getURL())
+                    .newValidator()
+                    .validate(new javax.xml.transform.stream.StreamSource(new java.io.StringReader(xml.toString())));
+        } catch (Exception e) {
+            throw new AssertionError("XML fora do XSD: " + e.getMessage(), e);
+        }
+    }
+
+    private void tornarSimples() {
+        Empresa empresa = dataManager.load(Empresa.class)
+                .query("select e from Empresa e where e.codigo = :c").parameter("c", COD_EMPRESA).one();
+        empresa.setCrt(CodRegimeTributario.SIMPLES_NACIONAL);
+        // endereço completo só pra o XML passar no XSD
+        empresa.setLogradouro("Rua de Teste");
+        empresa.setNumero("100");
+        empresa.setBairro("Centro");
+        empresa.setCep("01001000");
+        dataManager.save(empresa);
+
+        Parceiro cliente = dataManager.load(Parceiro.class).id(parceiro.getId()).one();
+        cliente.setLogradouro("Avenida de Teste");
+        cliente.setNumero("200");
+        cliente.setBairro("Centro");
+        cliente.setCep("01001000");
+        cliente.setEstado("SP");
+        cliente.setMunicipio(empresa.getMunicipio());
+        cliente.setInscricao("123456789012");  // contribuinte
+        parceiro = dataManager.save(cliente);
+    }
+
+    // Industrialização por encomenda da GB: natureza 5124 tributada (CSOSN 101, 4%), com o
+    // material do cliente voltando em 5902. CSOSN de cada item resolvido no save, pela regra
+    // da CALCULACSOSN do legado.
+    private NotaSaida criarNotaIndustrializacao() {
+        NaturezaOperacao natureza = dataManager.create(NaturezaOperacao.class);
+        natureza.setCodigo(3);
+        natureza.setCodEmpresa(COD_EMPRESA);
+        natureza.setNome("Industrialização de teste");
+        natureza.setCfop(5124);
+        natureza.setVenda(true);
+        natureza.setAliqIcms(new BigDecimal("4"));
+        natureza.setCst(dataManager.load(br.com.axialsoftware.axctg3.entity.tabelas.Cst.class)
+                .query("select e from Cst e where e.codigo = '101'").one());
+        dataManager.save(natureza);
+
+        NotaSaida notaSaida = dataManager.create(NotaSaida.class);
+        notaSaida.setCodEmpresa(COD_EMPRESA);
+        notaSaida.setDataEmissao(LocalDate.now());
+        notaSaida.setDataSaida(LocalDate.now());
+        notaSaida.setEspecie("NF");
+        notaSaida.setSerie("1");
+        notaSaida.setParceiro(parceiro);
+        notaSaida.setNatureza(natureza);
+        notaSaida = dataManager.save(notaSaida);
+
+        criarItem(notaSaida, 1, produtoComNcm, 5124, "1", "200.00");  // mão de obra
+        criarItem(notaSaida, 2, produtoComNcm, 5124, "1", "150.00");
+        criarItem(notaSaida, 3, produtoComNcm, 5902, "1", "350.00");  // material do cliente
+        return dataManager.load(NotaSaida.class).id(notaSaida.getId()).one();
+    }
+
+    @Test
+    void simplesResolveCsosnComoACalculaCsosnDoLegado() {
+        prepararFixtures();
+        tornarSimples();
+        NotaSaida nota = criarNotaIndustrializacao();
+
+        assertThat(carregarItem(nota, 1).getCst()).isEqualTo("101");
+        assertThat(carregarItem(nota, 1).getValorIcms()).isEqualByComparingTo("8.00");
+        assertThat(carregarItem(nota, 2).getCst()).isEqualTo("400");   // 5124 fora do 1º item
+        assertThat(carregarItem(nota, 2).getValorIcms()).isZero();
+        assertThat(carregarItem(nota, 3).getCst()).isEqualTo("400");   // 5902
+
+        // não contribuinte (sem IE): 102, sem crédito
+        Parceiro cliente = dataManager.load(Parceiro.class).id(parceiro.getId()).one();
+        cliente.setInscricao(null);
+        dataManager.save(cliente);
+        NotaSaida outra = dataManager.load(NotaSaida.class).id(nota.getId()).one();
+        criarItem(outra, 4, produtoComNcm, 5101, "1", "10.00");
+        assertThat(carregarItem(outra, 4).getCst()).isEqualTo("102");
+    }
+
+    // Devolução simbólica (f_nfe.pas): retorno num item de nota de outra natureza sai do
+    // total; nota cuja natureza já é o retorno continua somando.
+    @Test
+    void devolucaoSimbolicaForaDoTotalSoComNaturezaDeOutroCfop() {
+        prepararFixtures();
+        NotaSaida industrializacao = criarNotaIndustrializacao();
+        assertThat(tributacaoService.foraDoTotalPorPadrao(industrializacao, 5902)).isFalse();  // regime normal
+
+        tornarSimples();
+        assertThat(tributacaoService.foraDoTotalPorPadrao(industrializacao, 5902)).isTrue();
+        assertThat(tributacaoService.foraDoTotalPorPadrao(industrializacao, 6925)).isTrue();
+        assertThat(tributacaoService.foraDoTotalPorPadrao(industrializacao, 5124)).isFalse();
+
+        NaturezaOperacao soRetorno = dataManager.load(NaturezaOperacao.class)
+                .id(industrializacao.getNatureza().getId()).one();
+        soRetorno.setCfop(5902);
+        dataManager.save(soRetorno);
+        NotaSaida notaDeRetorno = dataManager.load(NotaSaida.class).id(industrializacao.getId()).one();
+        assertThat(tributacaoService.foraDoTotalPorPadrao(notaDeRetorno, 5902)).isFalse();
+    }
+
+    @Test
+    void itemForaDoTotalSaiComIndTotZeroEForaDoVnf() {
+        prepararFixtures();
+        tornarSimples();
+        NotaSaida nota = criarNotaIndustrializacao();
+        ItemNotaSaida retorno = carregarItem(nota, 3);
+        retorno.setForaDoTotal(true);
+        dataManager.save(retorno);
+
+        nota = dataManager.load(NotaSaida.class).id(nota.getId()).one();
+        assertThat(nota.getValorMercadoria()).isEqualByComparingTo("350.00");
+        assertThat(nota.getValor()).isEqualByComparingTo("350.00");
+
+        Document doc = nfeXmlBuilder.construir(nota).documento();
+        validarContraXsd(doc);
+        List<Element> dets = elementos(doc.getDocumentElement(), "det");
+        assertThat(texto(porNItem(dets, "1"), "indTot")).isEqualTo("1");
+        assertThat(texto(porNItem(dets, "3"), "indTot")).isEqualTo("0");
+        assertThat(texto(porNItem(dets, "3"), "vProd")).isEqualTo("350.00");
+        Element icmsTot = elementos(doc.getDocumentElement(), "ICMSTot").get(0);
+        assertThat(texto(icmsTot, "vProd")).isEqualTo("350.00");
+        assertThat(texto(icmsTot, "vNF")).isEqualTo("350.00");
+        assertThat(texto(doc.getDocumentElement(), "infCpl"))
+                .contains("crédito de ICMS no valor de R$ 8,00, correspondente à alíquota de 4,00%");
+    }
+
+    private void trocarCst(NotaSaida nota, int numero, String cst) {
+        ItemNotaSaida item = carregarItem(nota, numero);
+        item.setCst(cst);
+        dataManager.save(item);
     }
 
     private ItemNotaSaida carregarItem(NotaSaida nota, int numero) {

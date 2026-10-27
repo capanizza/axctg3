@@ -44,7 +44,7 @@ import java.util.Map;
  * (ver {@code construirIde}), sem os demais sub-grupos. Simplificações adicionais
  * específicas da emissão própria (primeira versão, docs/EMISSAO-NFE.md tem a lista
  * completa): sem diferimento/devolução de tributo no bloco IBS/CBS (fica zerado), sem
- * crédito de ICMS do Simples (pCredSN/vCredICMSSN zerado), frete/transportador não
+ * ICMS-ST no Simples (CSOSN 201/202/203 recusados), frete/transportador não
  * modelados em {@code NotaSaida} (modFrete fixo em 9 = sem transporte).
  */
 @Service
@@ -180,10 +180,13 @@ public class NfeXmlBuilder {
         for (ItemNotaSaida item : notaSaida.getItens()) {
             RateioItem rateio = calcularRateioItem(item, notaSaida, simplesNacional(empresa));
             TributosAproximadosService.Valor tributosItem = TributosAproximadosService.Valor.ZERO;
-            if (tributosAproximadosService.aplicavel(notaSaida.getNatureza(), item.getCfop())) {
+            if (!Boolean.TRUE.equals(item.getForaDoTotal())
+                    && tributosAproximadosService.aplicavel(notaSaida.getNatureza(), item.getCfop())) {
                 ClassificacaoFiscal cf = item.getProduto().getClassificacaoFiscal();
                 TabelaIbpt linhaIbpt = cf == null ? null : ibptPorNcm.get(cf.getCodNcm());
-                BigDecimal vItem = valorVItem(item, notaSaida.getNatureza(), aliquotaTeste);
+                BigDecimal vItem = simplesNacional(empresa)
+                        ? (item.getSubTotal() == null ? BigDecimal.ZERO : item.getSubTotal())
+                        : valorVItem(item, notaSaida.getNatureza(), aliquotaTeste);
                 tributosItem = tributosAproximadosService.calcular(linhaIbpt, vItem);
                 if (linhaIbpt != null) {
                     baseTributos = baseTributos.add(vItem);
@@ -203,7 +206,7 @@ public class NfeXmlBuilder {
             nItem++;
         }
 
-        infNFe.appendChild(construirTotal(doc, notaSaida, totalVIbs, totalVIbsUf, totalVIbsMun, totalVCbs, totalRateio,
+        infNFe.appendChild(construirTotal(doc, notaSaida, reformaTributaria(empresa), totalVIbs, totalVIbsUf, totalVIbsMun, totalVCbs, totalRateio,
                 totalTributos.total(), totalBaseIbsCbs));
         infNFe.appendChild(construirTransp(doc, notaSaida));
         List<TituloReceber> titulos = buscarTitulos(notaSaida);
@@ -212,8 +215,9 @@ public class NfeXmlBuilder {
             infNFe.appendChild(cobr);
         }
         infNFe.appendChild(construirPag(doc, titulos));
-        Element infAdic = construirInfAdic(doc,
-                tributosAproximadosService.textoInfCpl(totalTributos, baseTributos, chaveIbpt));
+        Element infAdic = construirInfAdic(doc, juntarTextos(
+                simplesNacional(empresa) ? textoSimplesNacional(notaSaida) : null,
+                tributosAproximadosService.textoInfCpl(totalTributos, baseTributos, chaveIbpt)));
         if (infAdic != null) {
             infNFe.appendChild(infAdic);
         }
@@ -436,7 +440,9 @@ public class NfeXmlBuilder {
         if (rateio.despesas().compareTo(BigDecimal.ZERO) != 0) {
             text(doc, prod, "vOutro", dec(rateio.despesas(), 2));
         }
-        text(doc, prod, "indTot", 1);
+        // indTot=0: retorno do material do cliente (ItemNotaSaida.foraDoTotal) — fora do
+        // vProd/vNF, que NotaSaidaService já soma sem ele.
+        text(doc, prod, "indTot", Boolean.TRUE.equals(item.getForaDoTotal()) ? 0 : 1);
         det.appendChild(prod);
 
         Element imposto = doc.createElementNS(NS_NFE, "imposto");
@@ -446,9 +452,10 @@ public class NfeXmlBuilder {
         if (ipi != null) {
             imposto.appendChild(ipi);
         }
-        imposto.appendChild(construirPis(doc, item, natureza));
-        imposto.appendChild(construirCofins(doc, item, natureza));
-        if (incluirReformaTributaria) {
+        boolean simples = simplesNacional(empresa);
+        imposto.appendChild(construirPis(doc, item, natureza, simples));
+        imposto.appendChild(construirCofins(doc, item, natureza, simples));
+        if (reformaTributaria(empresa)) {
             imposto.appendChild(construirIbsCbs(doc, item, natureza, aliquotaTeste));
         }
         det.appendChild(imposto);
@@ -464,7 +471,7 @@ public class NfeXmlBuilder {
             text(doc, det, "infAdProd", item.getDescricaoComplementar().trim());
         }
 
-        if (incluirReformaTributaria) {
+        if (reformaTributaria(empresa)) {
             // vItem (valor total do item já com IBS/CBS somado) — grupo novo da Reforma
             // Tributária, sibling de imposto, confirmado obrigatório em 30/30 notas reais de
             // teste com IBSCBS (ver conversa 2026-08-17); mesma fórmula do vNFTot do total.
@@ -515,7 +522,10 @@ public class NfeXmlBuilder {
 
     private RateioItem calcularRateioItem(ItemNotaSaida item, NotaSaida notaSaida, boolean simples) {
         BigDecimal totalVProd = notaSaida.getValorMercadoria();
-        BigDecimal vProdItem = item.getSubTotal() == null ? BigDecimal.ZERO : item.getSubTotal();
+        // item fora do total não recebe rateio — o total do rateio tem que bater com o
+        // vProd da nota, que não o inclui
+        BigDecimal vProdItem = item.getSubTotal() == null || Boolean.TRUE.equals(item.getForaDoTotal())
+                ? BigDecimal.ZERO : item.getSubTotal();
         // nota com vProd total zerado (ex.: todos os itens a custo zero) — sem base pra
         // ratear, cada item fica sem parcela nenhuma em vez de dividir por zero.
         BigDecimal fator = (totalVProd == null || totalVProd.compareTo(BigDecimal.ZERO) == 0)
@@ -570,6 +580,13 @@ public class NfeXmlBuilder {
                 ? (simples ? "102" : "40") : item.getCst().trim();
     }
 
+    /** IBSCBS/IBSCBSTot/vItem/vNFTot só saem pro regime normal: em 2026 o optante do
+     * Simples não informa o grupo — os XMLs da GB autorizados pelo legado até jul/2026 vêm
+     * todos sem ele. */
+    private boolean reformaTributaria(Empresa empresa) {
+        return incluirReformaTributaria && !simplesNacional(empresa);
+    }
+
     private boolean simplesNacional(Empresa empresa) {
         return empresa.getCrt() == CodRegimeTributario.SIMPLES_NACIONAL
                 || empresa.getCrt() == CodRegimeTributario.SIMPLES_NACIONAL_EXCESSO_SUBLIMITE;
@@ -602,12 +619,34 @@ public class NfeXmlBuilder {
 
         Element variante;
         if (simples) {
-            variante = doc.createElementNS(NS_NFE, "ICMSSN" + codigo);
+            // O schema agrupa CSOSN no mesmo elemento: 102/103/300/400 saem em ICMSSN102
+            // (confirmado nos XMLs da GB autorizados pelo legado: CSOSN 400 em ICMSSN102).
+            String elementoIcms = switch (codigo) {
+                case "101", "500", "900" -> codigo;
+                case "102", "103", "300", "400" -> "102";
+                case "201", "202", "203" -> throw new IllegalStateException("CSOSN " + codigo
+                        + " (com ICMS-ST) ainda não é suportado na emissão — item " + item.getItem());
+                default -> throw new IllegalStateException("Empresa do Simples Nacional exige CSOSN no item "
+                        + item.getItem() + ", não CST \"" + codigo + "\" — confira o CST da natureza/produto");
+            };
+            variante = doc.createElementNS(NS_NFE, "ICMSSN" + elementoIcms);
             text(doc, variante, "orig", 0);
             text(doc, variante, "CSOSN", codigo);
-            // Crédito de ICMS do Simples (pCredSN/vCredICMSSN) fica zerado nesta versão —
-            // ver Javadoc da classe e docs/EMISSAO-NFE.md.
+            if ("101".equals(codigo)) {
+                // Crédito do art. 23 da LC 123/2006: alíquota da natureza (aliqIcms do
+                // item), valor calculado por ItemNotaSaidaTributacaoService.
+                if (item.getAliqIcms() == null || item.getAliqIcms().signum() == 0) {
+                    throw new IllegalStateException("CSOSN 101 no item " + item.getItem()
+                            + " sem alíquota de crédito — preencha a alíquota de ICMS da natureza de operação");
+                }
+                text(doc, variante, "pCredSN", dec(item.getAliqIcms(), 4));
+                text(doc, variante, "vCredICMSSN", dec(item.getValorIcms(), 2));
+            }
         } else {
+            if (codigo.length() != 2) {
+                throw new IllegalStateException("Empresa do regime normal exige CST no item " + item.getItem()
+                        + ", não CSOSN \"" + codigo + "\" — confira o CST da natureza/produto");
+            }
             // CST 40 (isenta), 41 (não tributada) e 50 (suspensão) são agrupados no mesmo
             // elemento ICMS40 no schema oficial — não é 1:1 elemento/CST como os demais
             // (confirmado validando contra o XSD oficial, 2026-08-17: "ICMS41" não existe,
@@ -737,9 +776,11 @@ public class NfeXmlBuilder {
         return ipi;
     }
 
-    private Element construirPis(Document doc, ItemNotaSaida item, NaturezaOperacao natureza) {
+    private Element construirPis(Document doc, ItemNotaSaida item, NaturezaOperacao natureza, boolean simples) {
         Element pis = doc.createElementNS(NS_NFE, "PIS");
-        boolean venda = natureza != null && Boolean.TRUE.equals(natureza.getVenda());
+        // Simples: PIS/COFINS recolhidos no DAS — PISNT com CST 06 em toda operação, como
+        // o legado emite pra GB (CRT=1).
+        boolean venda = !simples && natureza != null && Boolean.TRUE.equals(natureza.getVenda());
         if (venda) {
             Element aliq = doc.createElementNS(NS_NFE, "PISAliq");
             text(doc, aliq, "CST", "01");
@@ -755,9 +796,11 @@ public class NfeXmlBuilder {
         return pis;
     }
 
-    private Element construirCofins(Document doc, ItemNotaSaida item, NaturezaOperacao natureza) {
+    private Element construirCofins(Document doc, ItemNotaSaida item, NaturezaOperacao natureza, boolean simples) {
         Element cofins = doc.createElementNS(NS_NFE, "COFINS");
-        boolean venda = natureza != null && Boolean.TRUE.equals(natureza.getVenda());
+        // Simples: PIS/COFINS recolhidos no DAS — COFINSNT com CST 06 em toda operação, como
+        // o legado emite pra GB (CRT=1).
+        boolean venda = !simples && natureza != null && Boolean.TRUE.equals(natureza.getVenda());
         if (venda) {
             Element aliq = doc.createElementNS(NS_NFE, "COFINSAliq");
             text(doc, aliq, "CST", "01");
@@ -933,7 +976,7 @@ public class NfeXmlBuilder {
 
     // ---- total ----
 
-    private Element construirTotal(Document doc, NotaSaida notaSaida, BigDecimal totalVIbs, BigDecimal totalVIbsUf,
+    private Element construirTotal(Document doc, NotaSaida notaSaida, boolean reformaTributaria, BigDecimal totalVIbs, BigDecimal totalVIbsUf,
                                     BigDecimal totalVIbsMun, BigDecimal totalVCbs, RateioItem totalRateio,
                                     BigDecimal totalVTotTrib, BigDecimal totalBaseIbsCbs) {
         Element total = doc.createElementNS(NS_NFE, "total");
@@ -964,7 +1007,7 @@ public class NfeXmlBuilder {
         text(doc, icmsTot, "vTotTrib", dec(totalVTotTrib, 2));
         total.appendChild(icmsTot);
 
-        if (incluirReformaTributaria) {
+        if (reformaTributaria) {
             // IBSCBSTot: grupos vDif/vDevTrib (diferimento/devolução) e
             // vCredPres/vCredPresCondSus (crédito presumido) confirmados obrigatórios contra
             // 30 notas reais de teste com IBSCBS (ver conversa 2026-08-17) — zerados aqui,
@@ -1115,8 +1158,42 @@ public class NfeXmlBuilder {
 
     // ---- infAdic ----
 
-    // Hoje só leva o texto dos tributos aproximados — NotaSaida não tem campo de
-    // observação. Sem texto, o grupo inteiro fica de fora (é opcional no schema).
+    /** Texto obrigatório do optante do Simples (mesmos incisos que o legado da GB emite);
+     * o inciso III só quando há crédito de ICMS (CSOSN 101), com o valor somado dos itens. */
+    private String textoSimplesNacional(NotaSaida notaSaida) {
+        StringBuilder texto = new StringBuilder(
+                "I - Documento emitido por ME ou EPP optante pelo Simples Nacional. "
+                        + "II - Não gera direito a crédito fiscal de IPI.");
+        BigDecimal credito = BigDecimal.ZERO;
+        BigDecimal aliquota = null;
+        for (ItemNotaSaida item : notaSaida.getItens()) {
+            if ("101".equals(item.getCst() == null ? null : item.getCst().trim())) {
+                credito = credito.add(item.getValorIcms() == null ? BigDecimal.ZERO : item.getValorIcms());
+                aliquota = item.getAliqIcms();
+            }
+        }
+        if (credito.signum() != 0) {
+            java.text.NumberFormat formato = java.text.NumberFormat.getNumberInstance(java.util.Locale.of("pt", "BR"));
+            formato.setMinimumFractionDigits(2);
+            formato.setMaximumFractionDigits(2);
+            texto.append(" III - Permite o aproveitamento do crédito de ICMS no valor de R$ ")
+                    .append(formato.format(credito))
+                    .append(", correspondente à alíquota de ")
+                    .append(formato.format(aliquota))
+                    .append("%, nos termos do art. 23 da LC 123/2006.");
+        }
+        return texto.toString();
+    }
+
+    private String juntarTextos(String... textos) {
+        String junto = java.util.Arrays.stream(textos)
+                .filter(t -> t != null && !t.isBlank())
+                .collect(java.util.stream.Collectors.joining(" "));
+        return junto.isEmpty() ? null : junto;
+    }
+
+    // Leva o texto do Simples Nacional (se for o caso) e o dos tributos aproximados —
+    // NotaSaida não tem campo de observação. Sem texto, o grupo inteiro fica de fora (é opcional no schema).
     private Element construirInfAdic(Document doc, String infCpl) {
         if (infCpl == null) {
             return null;

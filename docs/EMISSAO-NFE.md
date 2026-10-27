@@ -34,9 +34,21 @@ relacionar com NFe. Reverte a decisão de 2026-08-09 documentada em `Nfe.java`
   do Axial.
 - **UF de trabalho: SP** (Imbramil e Lavell). Endpoints de outras UFs entram depois, no
   mesmo mapa estático em `NfeWebserviceClient`.
-- **Crédito de ICMS do Simples** (`pCredSN`/`vCredICMSSN`) — no Axial vinha de uma
-  procedure do Firebird (`calculacsosn`) que não existe no axctg3. Fica **zerado** por
-  enquanto: destrava a emissão; portar a regra é trabalho futuro.
+- **Simples Nacional (CRT 1/2)** — feito em 2026-10-27 para a GB (empresa 8), conferido
+  contra os XMLs que o legado emite para ela e a procedure `CALCULACSOSN` do banco
+  `AXIALGB.FDB`:
+  - CSOSN sugerido por item em `ItemNotaSaidaTributacaoService.resolverCstItem` (regra
+    da procedure: CFOPs fixos 900/400, 5124/5125 só o 1º item tributa, não contribuinte
+    → 102, natureza 101 com alíquota → 101). Editável na tela do item.
+  - `pCredSN` = alíquota de ICMS da natureza (como no legado, atualizada à mão
+    conforme a faixa do Simples); `vCredICMSSN` = valor do item × alíquota.
+  - 102/103/300/400 saem em `ICMSSN102`; 201/202/203 (ST) recusados na emissão.
+  - PIS/COFINS `NT` CST 06; sem IBSCBS/IBSCBSTot/vItem/vNFTot (o legado não manda e a
+    SEFAZ autoriza em 2026); `infCpl` com os incisos I/II/III da LC 123.
+  - `ItemNotaSaida.foraDoTotal` → `indTot=0` (devolução simbólica do material do
+    cliente): marcado por padrão no Simples quando o item é 5902/6902/5925/6925 e a
+    natureza da nota tem outro CFOP — a regra do `f_nfe.pas` do AxFat, que lá ficou
+    desligada (`TipoRetorno := false` fixo). Fora do vProd/vNF e do rateio.
 
 ## O que foi implementado
 
@@ -126,7 +138,7 @@ relacionar com NFe. Reverte a decisão de 2026-08-09 documentada em `Nfe.java`
 
 - Validar/bloquear CFOP de entrada antes de montar o XML (ver "tpNF sempre 1" acima).
 - Outros UFs além de SP.
-- Crédito de ICMS do Simples de verdade (portar `calculacsosn` do Axial).
+- ICMS-ST no Simples (CSOSN 201/202/203).
 - Frete/transportador em `NotaSaida`.
 - Diferimento/devolução de tributo no bloco IBS/CBS.
 - Criptografia da senha do certificado.

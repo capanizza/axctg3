@@ -1,10 +1,16 @@
 package br.com.axialsoftware.axctg3.service.fiscal;
 
+import br.com.axialsoftware.axctg3.entity.cadastros.Empresa;
+import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
+import br.com.axialsoftware.axctg3.entity.enums.CodRegimeTributario;
 import br.com.axialsoftware.axctg3.entity.fiscal.ItemNotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao;
+import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
+import br.com.axialsoftware.axctg3.entity.fiscal.PedidoVenda;
 import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
 import br.com.axialsoftware.axctg3.entity.tabelas.Cst;
+import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import io.jmix.core.DataManager;
 import io.jmix.core.EntityStates;
 import io.jmix.core.FetchPlan;
@@ -12,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Set;
 
 /**
  * Resolução de CST/cClassTrib e cálculo de ICMS de um {@link ItemNotaSaida} — extraído de
@@ -35,12 +42,171 @@ public class ItemNotaSaidaTributacaoService {
     // nenhum) não fixa tratamento próprio, quem decide é o Cst do produto.
     private static final String CST_ICMS_TRIBUTACAO_INTEGRAL = "00";
 
+    // CFOPs com CSOSN fixo, como na procedure CALCULACSOSN do legado (banco da GB).
+    private static final Set<Integer> CFOP_CSOSN_900 = Set.of(5206, 6206, 5922, 1949);
+    private static final Set<Integer> CFOP_CSOSN_400 = Set.of(5902, 5925, 1901, 6902, 6925, 2901);
+    // Industrialização por encomenda: só o 1º item da nota leva o imposto, os demais saem 400.
+    private static final Set<Integer> CFOP_INDUSTRIALIZACAO = Set.of(5124, 5125);
+    // Devolução simbólica do material do cliente — fora do total da nota. Mesma lista do
+    // f_nfe.pas do AxFat (5902/5925/1901, regra escrita para GB/Premiere/Goldenplast mas
+    // desligada lá por um "TipoRetorno := false" fixo), mais as interestaduais; 1901 é
+    // entrada e não aparece numa nota de saída.
+    private static final Set<Integer> CFOP_FORA_DO_TOTAL = Set.of(5902, 6902, 5925, 6925);
+
     private final DataManager dataManager;
     private final EntityStates entityStates;
+    private final UtilGeralService utilGeralService;
 
-    public ItemNotaSaidaTributacaoService(DataManager dataManager, EntityStates entityStates) {
+    public ItemNotaSaidaTributacaoService(DataManager dataManager, EntityStates entityStates,
+                                          UtilGeralService utilGeralService) {
         this.dataManager = dataManager;
         this.entityStates = entityStates;
+        this.utilGeralService = utilGeralService;
+    }
+
+    /**
+     * CST/CSOSN sugerido pra um item novo. Regime normal: a precedência natureza/produto de
+     * {@link #resolverCstIcms}. Simples Nacional: a mesma regra da procedure
+     * {@code CALCULACSOSN} do legado (lida no banco da GB em 2026-10-27), com o CSOSN da
+     * natureza/produto no papel do {@code CONDICAOICM}:
+     * <ul>
+     * <li>CFOP 5206/6206/5922/1949 → 900; 5902/6902/5925/6925/1901/2901 → 400;</li>
+     * <li>5124/5125 fora do 1º item da nota → 400;</li>
+     * <li>destinatário não contribuinte (sem IE) → 102;</li>
+     * <li>natureza 101 (ou tributada sem CSOSN) com alíquota → 101; sem alíquota → 102;</li>
+     * <li>qualquer outro CSOSN da natureza/produto vale como está.</li>
+     * </ul>
+     * Sem ICMS-ST (201/202), que a emissão ainda não monta. É só sugestão: o operador
+     * troca o CST na tela do item.
+     */
+    public String resolverCstItem(NaturezaOperacao naturezaIn, Produto produtoIn, NotaSaida notaSaida,
+                                  Integer cfop, boolean primeiroItem) {
+        return resolverCstItem(naturezaIn, produtoIn, codEmpresa(notaSaida == null ? null : notaSaida.getCodEmpresa()),
+                notaSaida == null ? null : parceiroDaNota(notaSaida), cfop, primeiroItem);
+    }
+
+    /** Mesma regra pro item do pedido de venda (que vira item da nota na conversão). */
+    public String resolverCstItem(NaturezaOperacao naturezaIn, Produto produtoIn, PedidoVenda pedido,
+                                  Integer cfop, boolean primeiroItem) {
+        return resolverCstItem(naturezaIn, produtoIn, codEmpresa(pedido == null ? null : pedido.getCodEmpresa()),
+                pedido == null ? null : pedido.getParceiro(), cfop, primeiroItem);
+    }
+
+    private String resolverCstItem(NaturezaOperacao naturezaIn, Produto produtoIn, Integer codEmpresa,
+                                   Parceiro parceiro, Integer cfop, boolean primeiroItem) {
+        NaturezaOperacao natureza = comTributacaoFetched(naturezaIn);
+        String base = resolverCstIcmsImpl(natureza, comTributacaoFetched(produtoIn));
+        if (!simplesNacional(codEmpresa)) {
+            return base;
+        }
+        if (cfop != null && CFOP_CSOSN_900.contains(cfop)) {
+            return "900";
+        }
+        if (cfop != null && CFOP_CSOSN_400.contains(cfop)) {
+            return "400";
+        }
+        if (cfop != null && CFOP_INDUSTRIALIZACAO.contains(cfop) && !primeiroItem) {
+            return "400";
+        }
+        if (!contribuinte(parceiro)) {
+            return "102";
+        }
+        boolean comAliquota = natureza != null && natureza.getAliqIcms() != null
+                && natureza.getAliqIcms().signum() != 0;
+        if (base == null || "101".equals(base) || CST_ICMS_TRIBUTACAO_INTEGRAL.equals(base)) {
+            return comAliquota ? "101" : "102";
+        }
+        if (base.length() == 2) {
+            // CST de regime normal cadastrado numa empresa do Simples: isenta/não
+            // tributada/suspensão viram 400, o resto 102 (o CONDICAOICM 3 do legado)
+            return switch (base) {
+                case "40", "41", "50" -> "400";
+                default -> "102";
+            };
+        }
+        return base;
+    }
+
+    /** Item que sai com indTot=0 por padrão: devolução simbólica do material do cliente
+     * junto da industrialização por encomenda — CFOP de retorno num item de nota cuja
+     * natureza tem outro CFOP (como no f_nfe.pas; uma nota só de retorno continua somando,
+     * senão o vNF zeraria). Só na empresa do Simples (pedido do usuário pra GB,
+     * 2026-10-27). Editável no item. */
+    public boolean foraDoTotalPorPadrao(NotaSaida notaSaida, Integer cfop) {
+        return notaSaida != null
+                && foraDoTotalPorPadrao(notaSaida.getNatureza(), codEmpresa(notaSaida.getCodEmpresa()), cfop);
+    }
+
+    public boolean foraDoTotalPorPadrao(PedidoVenda pedido, Integer cfop) {
+        return pedido != null
+                && foraDoTotalPorPadrao(pedido.getNatureza(), codEmpresa(pedido.getCodEmpresa()), cfop);
+    }
+
+    private boolean foraDoTotalPorPadrao(NaturezaOperacao natureza, Integer codEmpresa, Integer cfop) {
+        if (cfop == null || !CFOP_FORA_DO_TOTAL.contains(cfop)) {
+            return false;
+        }
+        if (natureza != null && cfop.equals(natureza.getCfop())) {
+            return false;
+        }
+        return simplesNacional(codEmpresa);
+    }
+
+    /** 1º item da nota, pra regra do 5124/5125 — conta os itens já gravados, fora o próprio. */
+    public boolean primeiroItem(NotaSaida notaSaida, ItemNotaSaida item) {
+        if (notaSaida == null || entityStates.isNew(notaSaida)) {
+            return true;
+        }
+        Long outros = dataManager.loadValue(
+                        "select count(i) from ItemNotaSaida i where i.notaSaida.id = :nota and i.id <> :item",
+                        Long.class)
+                .parameter("nota", notaSaida.getId())
+                .parameter("item", item.getId())
+                .one();
+        return outros == 0;
+    }
+
+    // nota/pedido novo ainda sem codEmpresa: o listener grava o da sessão no save
+    private Integer codEmpresa(Integer codEmpresaDoDocumento) {
+        return codEmpresaDoDocumento != null ? codEmpresaDoDocumento : utilGeralService.getCodEmpresa();
+    }
+
+    private boolean simplesNacional(Integer codEmpresa) {
+        if (codEmpresa == null) {
+            return false;
+        }
+        CodRegimeTributario crt = dataManager.load(Empresa.class)
+                .query("select e from Empresa e where e.codigo = :codigo")
+                .parameter("codigo", codEmpresa)
+                .optional()
+                .map(Empresa::getCrt)
+                .orElse(null);
+        return crt == CodRegimeTributario.SIMPLES_NACIONAL
+                || crt == CodRegimeTributario.SIMPLES_NACIONAL_EXCESSO_SUBLIMITE;
+    }
+
+    private Parceiro parceiroDaNota(NotaSaida notaSaida) {
+        if (entityStates.isLoaded(notaSaida, "parceiro")) {
+            return notaSaida.getParceiro();
+        }
+        return dataManager.load(Parceiro.class)
+                .query("select n.parceiro from NotaSaida n where n.id = :id")
+                .parameter("id", notaSaida.getId())
+                .optional()
+                .orElse(null);
+    }
+
+    // Mesmo critério do indIEDest em NfeXmlBuilder: sem IE = não contribuinte. Documento
+    // sem destinatário ainda conta como contribuinte (não força o 102 antes da hora).
+    private boolean contribuinte(Parceiro parceiro) {
+        if (parceiro == null) {
+            return true;
+        }
+        if (!entityStates.isLoaded(parceiro, "inscricao")) {
+            parceiro = dataManager.load(Parceiro.class).id(parceiro.getId()).one();
+        }
+        String inscricao = parceiro.getInscricao();
+        return inscricao != null && !inscricao.isBlank() && !"ISENTO".equalsIgnoreCase(inscricao.trim());
     }
 
     /** CST resolvido (Natureza/Produto, ver {@link #resolverCstIcms}) + alíquota — a
@@ -132,8 +298,11 @@ public class ItemNotaSaidaTributacaoService {
      * nem ICMS-ST nesta versão (fora do escopo "nota simples" de 2026-09-14).
      */
     public void aplicarCalculoIcms(ItemNotaSaida item, NaturezaOperacao natureza, Produto produto) {
-        TributacaoIcms tributacao = resolverTributacaoIcms(natureza, produto);
-        BigDecimal aliqIcms = tributacao == null ? BigDecimal.ZERO : tributacao.aliqIcms();
+        // Alíquota sempre da natureza, mesmo com o CST digitado no item (antes vinha zero
+        // quando nem natureza nem produto tinham CST — o CST agora é editável na tela).
+        NaturezaOperacao naturezaFetched = comTributacaoFetched(natureza);
+        BigDecimal aliqIcms = naturezaFetched == null || naturezaFetched.getAliqIcms() == null
+                ? BigDecimal.ZERO : naturezaFetched.getAliqIcms();
         // Isenta/não tributada/suspensão/ST retido: sem ICMS próprio, mesmo que a
         // natureza tenha alíquota (bug real 2026-09-24: doação com CST 41 gravava ICMS de
         // 7% da natureza). O CST vale o do item, que o usuário pode ter trocado à mão.
@@ -168,9 +337,15 @@ public class ItemNotaSaidaTributacaoService {
         return dataManager.load(ClassTrib.class).id(classTrib.getId()).optional().orElse(classTrib);
     }
 
+    // CSOSN (Simples, 3 dígitos): só o 101 leva valor — aí aliqIcms/valorIcms do item são o
+    // pCredSN/vCredICMSSN (crédito do art. 23 da LC 123), com a alíquota vinda da natureza,
+    // como no legado da GB (2026-10-27). Os demais CSOSN não têm ICMS próprio no XML.
     private boolean semIcmsProprio(String cst) {
         if (cst == null || cst.isBlank()) {
             return true;
+        }
+        if (cst.trim().length() == 3) {
+            return !"101".equals(cst.trim());
         }
         return switch (cst.trim()) {
             case "40", "41", "50", "60" -> true;

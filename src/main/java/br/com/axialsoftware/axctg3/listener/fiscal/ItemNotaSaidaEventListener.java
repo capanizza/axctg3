@@ -80,7 +80,9 @@ public class ItemNotaSaidaEventListener {
                         notaSaida == null ? null : notaSaida.getClassTrib(), natureza, produto));
             }
             if (itemNotaSaida.getCst() == null) {
-                String cst = tributacaoService.resolverCstIcms(natureza, produto);
+                // Simples: CSOSN pela regra do legado (CFOP, contribuinte, 1º item...)
+                String cst = tributacaoService.resolverCstItem(natureza, produto, notaSaida,
+                        itemNotaSaida.getCfop(), tributacaoService.primeiroItem(notaSaida, itemNotaSaida));
                 if (cst != null) {
                     itemNotaSaida.setCst(cst);
                 }
