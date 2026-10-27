@@ -53,9 +53,8 @@
                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.cfop"/>
                 <textField id="cstField"
                            property="cst"
-                           maxLength="4"
+                           maxLength="3"
                            dataContainer="itemNotaSaidaDc"
-                           readOnly="true"
                            width="5%" themeNames="small"
                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.cst"/>
                 <integerField id="codClassTribField"
@@ -64,13 +63,18 @@
                               width="20%" themeNames="small"
                               label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.codClassTrib"/>
             </hbox>
-            <hbox width="100%">
+            <hbox width="100%" expand="descricaoComplementarField">
                 <textField id="descricaoComplementarField"
                            property="descricaoComplementar"
                            maxLength="255"
                            dataContainer="itemNotaSaidaDc"
-                           width="100%" themeNames="small"
+                           themeNames="small"
                            label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.descricaoComplementar"/>
+                <checkbox id="foraDoTotalField"
+                          property="foraDoTotal"
+                          dataContainer="itemNotaSaidaDc"
+                          alignSelf="END"
+                          label="msg://br.com.axialsoftware.axctg3.entity.fiscal/ItemNotaSaida.foraDoTotal"/>
             </hbox>
             <hbox width="100%" expand="valorUnitarioField">
                 <bigDecimalField id="quantidadeField"

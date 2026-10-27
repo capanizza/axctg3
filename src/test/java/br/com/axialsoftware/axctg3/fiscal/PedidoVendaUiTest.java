@@ -196,6 +196,28 @@ class PedidoVendaUiTest {
         assertThat(notaSaida.getValor()).isEqualByComparingTo("31.50");
     }
 
+    // Item marcado "fora do total" no pedido chega assim na nota (indTot=0) e não soma.
+    @Test
+    void emitirNotaSaidaLevaOForaDoTotalDoItem() {
+        PedidoVenda pedido = criarPedido();
+        criarItem(pedido, new BigDecimal("3"), new BigDecimal("10.50"));
+        ItemPedidoVenda retorno = criarItem(pedido, new BigDecimal("1"), new BigDecimal("100.00"));
+        retorno.setForaDoTotal(true);
+        dataManager.save(retorno);
+
+        PedidoVendaService.ResultadoEmitirNotaSaida resultado = pedidoVendaService.emitirNotaSaida(pedido.getId());
+
+        assertThat(resultado.sucesso()).isTrue();
+        NotaSaida notaSaida = resultado.notaSaida();
+        List<ItemNotaSaida> itens = dataManager.load(ItemNotaSaida.class)
+                .query("select e from ItemNotaSaida e where e.notaSaida = :nota")
+                .parameter("nota", notaSaida)
+                .list();
+        assertThat(itens).extracting(ItemNotaSaida::getForaDoTotal).containsExactlyInAnyOrder(false, true);
+        assertThat(notaSaida.getValorMercadoria()).isEqualByComparingTo("31.50");
+        assertThat(notaSaida.getValor()).isEqualByComparingTo("31.50");
+    }
+
     // Pedido do usuário 2026-09-24: na doação, CST 41 (natureza) e 410999 (cabeçalho)
     // já vêm no item, em vez do CST/cClassTrib de venda do produto.
     @Test

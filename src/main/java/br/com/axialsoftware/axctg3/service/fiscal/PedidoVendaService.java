@@ -34,15 +34,17 @@ public class PedidoVendaService {
     private final RelatorioService relatorioService;
     private final MetadataTools metadataTools;
     private final Messages messages;
+    private final ItemNotaSaidaTributacaoService tributacaoService;
 
     public PedidoVendaService(DataManager dataManager, UtilGeralService utilGeralService,
                                RelatorioService relatorioService, MetadataTools metadataTools,
-                               Messages messages) {
+                               Messages messages, ItemNotaSaidaTributacaoService tributacaoService) {
         this.dataManager = dataManager;
         this.utilGeralService = utilGeralService;
         this.relatorioService = relatorioService;
         this.metadataTools = metadataTools;
         this.messages = messages;
+        this.tributacaoService = tributacaoService;
     }
 
     /**
@@ -239,7 +241,13 @@ public class PedidoVendaService {
             item.setNotaSaida(notaSaida);
             item.setProduto(itemPedido.getProduto());
             item.setCfop(itemPedido.getCfop());
-            item.setCst(itemPedido.getCst());
+            // Sem CST no pedido: resolve aqui, com a posição do item (o listener, que
+            // resolveria no save, não enxerga os irmãos ainda não gravados — regra do 1º
+            // item do 5124/5125 no Simples).
+            item.setCst(itemPedido.getCst() != null ? itemPedido.getCst()
+                    : tributacaoService.resolverCstItem(notaSaida.getNatureza(), itemPedido.getProduto(), notaSaida,
+                            itemPedido.getCfop(), itens.isEmpty()));
+            item.setForaDoTotal(Boolean.TRUE.equals(itemPedido.getForaDoTotal()));
             item.setCodClassTrib(itemPedido.getCodClassTrib());
             item.setDescricaoComplementar(itemPedido.getDescricaoComplementar());
             item.setQuantidade(itemPedido.getQuantidade());

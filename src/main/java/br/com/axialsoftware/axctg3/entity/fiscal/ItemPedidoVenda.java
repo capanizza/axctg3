@@ -87,6 +87,18 @@ public class ItemPedidoVenda {
     @Column(name = "DESCRICAO_COMPLEMENTAR")
     private String descricaoComplementar = "";
 
+    // Vai pro ItemNotaSaida.foraDoTotal (indTot=0) na conversão em nota — ver lá.
+    @Column(name = "FORA_DO_TOTAL")
+    private Boolean foraDoTotal = false;
+
+    public Boolean getForaDoTotal() {
+        return foraDoTotal;
+    }
+
+    public void setForaDoTotal(Boolean foraDoTotal) {
+        this.foraDoTotal = foraDoTotal;
+    }
+
     public String getDescricaoComplementar() {
         return descricaoComplementar;
     }

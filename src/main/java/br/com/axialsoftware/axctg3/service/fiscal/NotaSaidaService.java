@@ -52,6 +52,10 @@ public class NotaSaidaService {
         BigDecimal baseIcms = BigDecimal.ZERO;
         BigDecimal valorIcms = BigDecimal.ZERO;
         for (ItemNotaSaida item : notaSaida.getItens()) {
+            // indTot=0 (retorno do material do cliente): sai na nota, não soma no total
+            if (Boolean.TRUE.equals(item.getForaDoTotal())) {
+                continue;
+            }
             valorMercadoria = valorMercadoria.add(nvl(item.getSubTotal()));
             baseIcms = baseIcms.add(nvl(item.getBaseIcms()));
             valorIcms = valorIcms.add(nvl(item.getValorIcms()));

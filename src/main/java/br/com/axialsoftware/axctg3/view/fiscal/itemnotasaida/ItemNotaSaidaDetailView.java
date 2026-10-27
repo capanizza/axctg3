@@ -8,6 +8,7 @@ import br.com.axialsoftware.axctg3.service.UtilGeralService;
 import br.com.axialsoftware.axctg3.service.fiscal.ItemNotaSaidaTributacaoService;
 import br.com.axialsoftware.axctg3.view.main.MainView;
 import com.vaadin.flow.router.Route;
+import io.jmix.core.EntityStates;
 import io.jmix.flowui.model.CollectionLoader;
 import io.jmix.flowui.model.InstanceContainer;
 import io.jmix.flowui.view.*;
@@ -24,12 +25,20 @@ public class ItemNotaSaidaDetailView extends StandardDetailView<ItemNotaSaida> {
 
     // Propriedades que, ao mudar, exigem recalcular a prévia de CST/ICMS na tela — antes
     // de salvar o item de verdade (quando ItemNotaSaidaEventListener grava pra valer).
-    private static final Set<String> PROPRIEDADES_QUE_AFETAM_ICMS = Set.of("quantidade", "valorUnitario", "produto");
+    private static final Set<String> PROPRIEDADES_QUE_AFETAM_ICMS =
+            Set.of("quantidade", "valorUnitario", "produto", "cfop", "cst");
 
     @Autowired
     private ItemNotaSaidaTributacaoService tributacaoService;
     @Autowired
     private UtilGeralService utilGeralService;
+    @Autowired
+    private EntityStates entityStates;
+
+    // CST sugerido pela tela (true enquanto ela mesma o escreve) x digitado pelo operador:
+    // depois de digitado, troca de CFOP/produto não sobrescreve mais.
+    private boolean atualizandoCst;
+    private boolean cstDigitado;
     @ViewComponent
     private CollectionLoader<Produto> produtosDl;
 
@@ -63,7 +72,8 @@ public class ItemNotaSaidaDetailView extends StandardDetailView<ItemNotaSaida> {
         // CST/cClassTrib já na abertura quando o cabeçalho/natureza decidem sozinhos
         // (ex.: doação — CST 41 na natureza, 410999 no cabeçalho), sem esperar o
         // produto; o que ficar em branco aqui é resolvido quando o produto for escolhido.
-        resolverTributacao(item);
+        resolverTributacao(item, false);
+        item.setForaDoTotal(tributacaoService.foraDoTotalPorPadrao(notaSaida, item.getCfop()));
     }
 
     /**
@@ -81,23 +91,44 @@ public class ItemNotaSaidaDetailView extends StandardDetailView<ItemNotaSaida> {
             return;
         }
         ItemNotaSaida item = event.getItem();
-        resolverTributacao(item);
+        String propriedade = event.getProperty();
+        if ("cst".equals(propriedade)) {
+            if (!atualizandoCst) {
+                cstDigitado = true;
+            }
+        } else {
+            // Item novo: CFOP/produto mudam o CSOSN sugerido (Simples) até o operador
+            // digitar o CST; em item já gravado só preenche o que estiver em branco.
+            boolean novo = entityStates.isNew(item);
+            resolverTributacao(item, novo && !cstDigitado
+                    && ("cfop".equals(propriedade) || "produto".equals(propriedade)));
+            if (novo && "cfop".equals(propriedade)) {
+                item.setForaDoTotal(tributacaoService.foraDoTotalPorPadrao(item.getNotaSaida(), item.getCfop()));
+            }
+        }
         NotaSaida notaSaida = item.getNotaSaida();
         NaturezaOperacao natureza = notaSaida == null ? null : notaSaida.getNatureza();
         tributacaoService.aplicarCalculoIcms(item, natureza, item.getProduto());
     }
 
     // Mesma precedência do save (ItemNotaSaidaEventListener.onItemNotaSaidaSaving) —
-    // cabeçalho/natureza/produto, ver ItemNotaSaidaTributacaoService — só preenche o
-    // que ainda está em branco, nunca sobrescreve o que o operador digitou.
-    private void resolverTributacao(ItemNotaSaida item) {
+    // cabeçalho/natureza/produto e, no Simples, a regra do CSOSN do legado (ver
+    // ItemNotaSaidaTributacaoService.resolverCstItem). Só preenche o que está em branco,
+    // a não ser com recalcularCst (item novo cujo CST o operador ainda não digitou).
+    private void resolverTributacao(ItemNotaSaida item, boolean recalcularCst) {
         NotaSaida notaSaida = item.getNotaSaida();
         NaturezaOperacao natureza = notaSaida == null ? null : notaSaida.getNatureza();
         Produto produto = item.getProduto();
-        if (item.getCst() == null) {
-            String cst = tributacaoService.resolverCstIcms(natureza, produto);
+        if (item.getCst() == null || recalcularCst) {
+            String cst = tributacaoService.resolverCstItem(natureza, produto, notaSaida, item.getCfop(),
+                    primeiroItem(notaSaida, item));
             if (cst != null) {
-                item.setCst(cst);
+                atualizandoCst = true;
+                try {
+                    item.setCst(cst);
+                } finally {
+                    atualizandoCst = false;
+                }
             }
         }
         if (item.getCodClassTrib() == null) {
@@ -107,5 +138,14 @@ public class ItemNotaSaidaDetailView extends StandardDetailView<ItemNotaSaida> {
                 item.setCodClassTrib(codClassTrib);
             }
         }
+    }
+
+    // Itens da nota em memória (os da tela da nota, ainda não gravados, contam); sem eles,
+    // pergunta ao banco.
+    private boolean primeiroItem(NotaSaida notaSaida, ItemNotaSaida item) {
+        if (notaSaida != null && entityStates.isLoaded(notaSaida, "itens") && notaSaida.getItens() != null) {
+            return notaSaida.getItens().stream().noneMatch(outro -> !outro.equals(item));
+        }
+        return tributacaoService.primeiroItem(notaSaida, item);
     }
 }
