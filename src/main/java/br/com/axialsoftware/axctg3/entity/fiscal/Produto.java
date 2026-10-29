@@ -169,6 +169,21 @@ public class Produto {
     @ManyToOne(fetch = FetchType.LAZY)
     private Cst cst;
 
+    // Código de benefício fiscal (prod/cBenef da NFe) do produto — quando preenchido, vai
+    // sempre no item, qualquer que seja o CST e o que estiver na natureza (ver
+    // NfeXmlBuilder.cBenefDoItem). Permite numa mesma nota itens tributados e itens
+    // isentos/com redução de base.
+    @Column(name = "COD_BENEFICIO_FISCAL", length = 10)
+    private String codBeneficioFiscal;
+
+    public String getCodBeneficioFiscal() {
+        return codBeneficioFiscal;
+    }
+
+    public void setCodBeneficioFiscal(String codBeneficioFiscal) {
+        this.codBeneficioFiscal = codBeneficioFiscal;
+    }
+
     public Cst getCst() {
         return cst;
     }
