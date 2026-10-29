@@ -1,6 +1,7 @@
 package br.com.axialsoftware.axctg3.entity.fiscal;
 
 import br.com.axialsoftware.axctg3.entity.contabil.ContaContabil;
+import br.com.axialsoftware.axctg3.entity.enums.CstPisCofins;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
 import br.com.axialsoftware.axctg3.entity.tabelas.Cst;
 import io.jmix.core.MetadataTools;
@@ -160,6 +161,34 @@ public class NaturezaOperacao {
     @JoinColumn(name = "CONTA_CONTABIL_ID")
     @ManyToOne(fetch = FetchType.LAZY)
     private ContaContabil contaContabil;
+
+    // Código de benefício fiscal (prod/cBenef da NFe, tabela da SEFAZ da UF) — sai nos
+    // itens cujo CST de ICMS carrega benefício (ver NfeXmlBuilder.cBenefDoItem). Em
+    // branco, CST 40/41/50 continuam com o genérico SP099999. Produtor rural (Agropec,
+    // José Lavelli): SP052600 com CST 51, igual ao legado.
+    @Column(name = "COD_BENEFICIO_FISCAL", length = 10)
+    private String codBeneficioFiscal;
+
+    // CST de PIS/COFINS da natureza. Em branco mantém o automático do NfeXmlBuilder
+    // (venda no regime normal = 01 com alíquota zero, demais = 06).
+    @Column(name = "CST_PIS_COFINS")
+    private Integer cstPisCofins;
+
+    public String getCodBeneficioFiscal() {
+        return codBeneficioFiscal;
+    }
+
+    public void setCodBeneficioFiscal(String codBeneficioFiscal) {
+        this.codBeneficioFiscal = codBeneficioFiscal;
+    }
+
+    public CstPisCofins getCstPisCofins() {
+        return cstPisCofins == null ? null : CstPisCofins.fromId(cstPisCofins);
+    }
+
+    public void setCstPisCofins(CstPisCofins cstPisCofins) {
+        this.cstPisCofins = cstPisCofins == null ? null : cstPisCofins.getId();
+    }
 
     public ContaContabil getContaContabil() {
         return contaContabil;

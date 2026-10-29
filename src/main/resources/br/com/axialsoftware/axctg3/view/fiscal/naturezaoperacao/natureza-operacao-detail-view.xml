@@ -148,6 +148,17 @@
                         <action id="entityClearAction" type="entity_clear"/>
                     </actions>
                 </entityComboBox>
+                <textField id="codBeneficioFiscalField"
+                           property="codBeneficioFiscal"
+                           maxLength="10"
+                           dataContainer="naturezaOperacaoDc"
+                           width="20%" themeNames="small"
+                           label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NaturezaOperacao.codBeneficioFiscal"/>
+                <comboBox id="cstPisCofinsField"
+                          property="cstPisCofins"
+                          dataContainer="naturezaOperacaoDc"
+                          width="50%" themeNames="small"
+                          label="msg://br.com.axialsoftware.axctg3.entity.fiscal/NaturezaOperacao.cstPisCofins"/>
             </hbox>
         </vbox>
         <hbox id="detailActions">

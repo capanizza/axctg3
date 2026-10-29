@@ -5,6 +5,7 @@ import br.com.axialsoftware.axctg3.entity.cadastros.Mensagem;
 import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
 import br.com.axialsoftware.axctg3.entity.enums.AmbienteNfe;
 import br.com.axialsoftware.axctg3.entity.enums.CodRegimeTributario;
+import br.com.axialsoftware.axctg3.entity.enums.CstPisCofins;
 import br.com.axialsoftware.axctg3.entity.fiscal.ItemNotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
@@ -543,6 +544,77 @@ class NfeXmlBuilderTotaisTest {
                         .add("notaSaida", fn -> fn.addFetchPlan(io.jmix.core.FetchPlan.BASE)
                                 .add("natureza", io.jmix.core.FetchPlan.BASE)))
                 .one();
+    }
+
+    // Produtor rural (Agropec, regime normal) como o legado emite: CST 51 com cBenef
+    // SP052600 e PIS/COFINS NT 06, ambos vindos da natureza; item com CST sem benefício
+    // não leva cBenef.
+    @Test
+    void produtorRuralLevaCbenefECstPisCofinsDaNatureza() {
+        prepararFixtures();
+        NotaSaida nota = criarNota(true);
+        NaturezaOperacao natureza = dataManager.load(NaturezaOperacao.class).id(nota.getNatureza().getId()).one();
+        natureza.setCst(dataManager.load(br.com.axialsoftware.axctg3.entity.tabelas.Cst.class)
+                .query("select e from Cst e where e.codigo = '51'").one());
+        natureza.setCodBeneficioFiscal("SP052600");
+        natureza.setCstPisCofins(CstPisCofins.ALIQUOTA_ZERO);
+        dataManager.save(natureza);
+        trocarCst(nota, 1, "51");
+        trocarCst(nota, 2, "51");
+        trocarCst(nota, 3, "00");
+
+        nota = dataManager.load(NotaSaida.class).id(nota.getId()).one();
+        Document doc = nfeXmlBuilder.construir(nota).documento();
+
+        List<Element> dets = elementos(doc.getDocumentElement(), "det");
+        Element det1 = porNItem(dets, "1");
+        assertThat(texto(elementos(det1, "prod").get(0), "cBenef")).isEqualTo("SP052600");
+        assertThat(elementos(det1, "ICMS51")).hasSize(1);
+        assertThat(texto(elementos(det1, "PISNT").get(0), "CST")).isEqualTo("06");
+        assertThat(texto(elementos(det1, "COFINSNT").get(0), "CST")).isEqualTo("06");
+        assertThat(elementos(det1, "PISAliq")).isEmpty();
+        assertThat(elementos(elementos(porNItem(dets, "3"), "prod").get(0), "cBenef")).isEmpty();
+    }
+
+    // cBenef do produto vai sempre no item, mesmo em CST 00 e por cima do da natureza.
+    @Test
+    void cbenefDoProdutoVenceANaturezaEmQualquerCst() {
+        prepararFixtures();
+        Produto produto = dataManager.load(Produto.class).id(produtoSemNcm.getId()).one();
+        produto.setCodBeneficioFiscal("SP020001");
+        dataManager.save(produto);
+        NotaSaida nota = criarNota(true);
+        NaturezaOperacao natureza = dataManager.load(NaturezaOperacao.class).id(nota.getNatureza().getId()).one();
+        natureza.setCodBeneficioFiscal("SP052600");
+        dataManager.save(natureza);
+        trocarCst(nota, 1, "51");
+        trocarCst(nota, 3, "00");
+
+        nota = dataManager.load(NotaSaida.class).id(nota.getId()).one();
+        Document doc = nfeXmlBuilder.construir(nota).documento();
+
+        List<Element> dets = elementos(doc.getDocumentElement(), "det");
+        assertThat(texto(elementos(porNItem(dets, "1"), "prod").get(0), "cBenef")).isEqualTo("SP052600");
+        assertThat(texto(elementos(porNItem(dets, "3"), "prod").get(0), "cBenef")).isEqualTo("SP020001");
+    }
+
+    // Natureza sem cBenef/CST de PIS-COFINS: continua o automático de antes.
+    @Test
+    void naturezaSemCbenefNemCstPisCofinsMantemOAutomatico() {
+        prepararFixtures();
+        NotaSaida nota = criarNota(true);
+        trocarCst(nota, 1, "40");
+        trocarCst(nota, 2, "51");
+
+        nota = dataManager.load(NotaSaida.class).id(nota.getId()).one();
+        Document doc = nfeXmlBuilder.construir(nota).documento();
+
+        List<Element> dets = elementos(doc.getDocumentElement(), "det");
+        Element det1 = porNItem(dets, "1");
+        assertThat(texto(elementos(det1, "prod").get(0), "cBenef")).isEqualTo("SP099999");
+        assertThat(texto(elementos(det1, "PISAliq").get(0), "CST")).isEqualTo("01");
+        assertThat(texto(elementos(det1, "COFINSAliq").get(0), "CST")).isEqualTo("01");
+        assertThat(elementos(elementos(porNItem(dets, "2"), "prod").get(0), "cBenef")).isEmpty();
     }
 
     @Test

@@ -5,11 +5,13 @@ import br.com.axialsoftware.axctg3.entity.cadastros.Parceiro;
 import br.com.axialsoftware.axctg3.entity.cadastros.Transportadora;
 import br.com.axialsoftware.axctg3.entity.enums.AmbienteNfe;
 import br.com.axialsoftware.axctg3.entity.enums.CodRegimeTributario;
+import br.com.axialsoftware.axctg3.entity.enums.CstPisCofins;
 import br.com.axialsoftware.axctg3.entity.enums.FinNfe;
 import br.com.axialsoftware.axctg3.entity.enums.ModFrete;
 import br.com.axialsoftware.axctg3.entity.fiscal.ItemNotaSaida;
 import br.com.axialsoftware.axctg3.entity.fiscal.NaturezaOperacao;
 import br.com.axialsoftware.axctg3.entity.fiscal.NotaSaida;
+import br.com.axialsoftware.axctg3.entity.fiscal.Produto;
 import br.com.axialsoftware.axctg3.entity.financeiro.TituloReceber;
 import br.com.axialsoftware.axctg3.entity.tabelas.AliquotaIbsCbs;
 import br.com.axialsoftware.axctg3.entity.tabelas.ClassTrib;
@@ -420,7 +422,7 @@ public class NfeXmlBuilder {
                 ? item.getProduto().getClassificacaoFiscal().getCodNcm() : "00000000");
         // cBenef fica em prod, não em imposto/ICMS, apesar de depender do CST do ICMS —
         // ver Javadoc de cBenefDoItem().
-        text(doc, prod, "cBenef", cBenefDoItem(item, simplesNacional(empresa)));
+        text(doc, prod, "cBenef", cBenefDoItem(item, natureza, simplesNacional(empresa)));
         text(doc, prod, "CFOP", item.getCfop());
         text(doc, prod, "uCom", vazioComo(item.getProduto().getUnidade(), "UN"));
         text(doc, prod, "qCom", dec(item.getQuantidade(), 4));
@@ -603,23 +605,36 @@ public class NfeXmlBuilder {
     }
 
     /** Código de benefício fiscal (tabela CONFAZ, campo {@code prod/cBenef} — não é dentro
-     * de {@code imposto/ICMS} apesar do nome sugerir) — obrigatório pra SEFAZ-SP sempre que
-     * o CST de ICMS é 40/41/50 (isenta/não-tributada/suspensão), senão rejeita com
-     * cStat=930 "CST com benefício fiscal e não informado o código de benefício fiscal"
-     * (confirmado 2026-08-17). "SP099999" cravado é o mesmo valor usado em 573/573 itens
-     * com CST 40/41 nas notas reais de produção já conferidas ([[nfe-xmls-reais-teste]]) —
-     * não modelado em lugar nenhum da entidade (nem {@code Produto} nem
-     * {@code NaturezaOperacao}), então por ora é fixo igual ao legado; se aparecer uma UF/
-     * situação com código diferente, precisa virar campo de verdade. */
-    private String cBenefDoItem(ItemNotaSaida item, boolean simples) {
+     * de {@code imposto/ICMS} apesar do nome sugerir), nesta ordem:
+     * <ol>
+     * <li>{@link Produto#getCodBeneficioFiscal()} preenchido: vai sempre, qualquer CST —
+     * numa mesma nota pode haver itens tributados e itens isentos/com redução de base;</li>
+     * <li>senão {@link NaturezaOperacao#getCodBeneficioFiscal()}, mas só em CST que carrega
+     * benefício (20, 30, 40, 41, 50, 51, 53, 70, 90) — produtor rural: SP052600 com CST 51,
+     * igual ao legado (2026-10-29, XMLs autorizados da Agropec);</li>
+     * <li>senão "SP099999" em CST 40/41/50: a SEFAZ-SP rejeita sem cBenef nesses CST
+     * (cStat=930, confirmado 2026-08-17), e é o mesmo valor usado em 573/573 itens com
+     * CST 40/41 nas notas reais de produção já conferidas ([[nfe-xmls-reais-teste]]).</li>
+     * </ol>
+     * Fora disso, nada. Simples Nacional nunca usa os passos 2 e 3. */
+    private String cBenefDoItem(ItemNotaSaida item, NaturezaOperacao natureza, boolean simples) {
+        String doProduto = item.getProduto() == null ? null : preenchido(item.getProduto().getCodBeneficioFiscal());
+        if (doProduto != null) {
+            return doProduto;
+        }
         if (simples) {
             return null;
         }
-        String codigo = resolverCstIcms(item, false);
-        return switch (codigo) {
-            case "40", "41", "50" -> "SP099999";
+        String daNatureza = natureza == null ? null : preenchido(natureza.getCodBeneficioFiscal());
+        return switch (resolverCstIcms(item, false)) {
+            case "40", "41", "50" -> daNatureza != null ? daNatureza : "SP099999";
+            case "20", "30", "51", "53", "70", "90" -> daNatureza;
             default -> null;
         };
+    }
+
+    private static String preenchido(String texto) {
+        return texto == null || texto.isBlank() ? null : texto.trim();
     }
 
     private Element construirIcms(Document doc, ItemNotaSaida item, Empresa empresa, RateioItem rateio) {
@@ -787,43 +802,51 @@ public class NfeXmlBuilder {
     }
 
     private Element construirPis(Document doc, ItemNotaSaida item, NaturezaOperacao natureza, boolean simples) {
-        Element pis = doc.createElementNS(NS_NFE, "PIS");
-        // Simples: PIS/COFINS recolhidos no DAS — PISNT com CST 06 em toda operação, como
-        // o legado emite pra GB (CRT=1).
-        boolean venda = !simples && natureza != null && Boolean.TRUE.equals(natureza.getVenda());
-        if (venda) {
-            Element aliq = doc.createElementNS(NS_NFE, "PISAliq");
-            text(doc, aliq, "CST", "01");
-            text(doc, aliq, "vBC", dec(item.getSubTotal(), 2));
-            text(doc, aliq, "pPIS", "0.00");
-            text(doc, aliq, "vPIS", "0.00");
-            pis.appendChild(aliq);
-        } else {
-            Element outr = doc.createElementNS(NS_NFE, "PISNT");
-            text(doc, outr, "CST", "06");
-            pis.appendChild(outr);
-        }
-        return pis;
+        return construirPisCofins(doc, "PIS", item, natureza, simples);
     }
 
     private Element construirCofins(Document doc, ItemNotaSaida item, NaturezaOperacao natureza, boolean simples) {
-        Element cofins = doc.createElementNS(NS_NFE, "COFINS");
-        // Simples: PIS/COFINS recolhidos no DAS — COFINSNT com CST 06 em toda operação, como
-        // o legado emite pra GB (CRT=1).
-        boolean venda = !simples && natureza != null && Boolean.TRUE.equals(natureza.getVenda());
-        if (venda) {
-            Element aliq = doc.createElementNS(NS_NFE, "COFINSAliq");
-            text(doc, aliq, "CST", "01");
-            text(doc, aliq, "vBC", dec(item.getSubTotal(), 2));
-            text(doc, aliq, "pCOFINS", "0.00");
-            text(doc, aliq, "vCOFINS", "0.00");
-            cofins.appendChild(aliq);
-        } else {
-            Element outr = doc.createElementNS(NS_NFE, "COFINSNT");
-            text(doc, outr, "CST", "06");
-            cofins.appendChild(outr);
+        return construirPisCofins(doc, "COFINS", item, natureza, simples);
+    }
+
+    /** PIS e COFINS saem sempre com o mesmo CST, então um método só monta os dois
+     * ({@code tributo} = "PIS" ou "COFINS"). Com {@link NaturezaOperacao#getCstPisCofins()}
+     * em branco, o automático de antes: Simples recolhe no DAS — {@code xxxNT} CST 06 em
+     * toda operação, como o legado emite pra GB (CRT=1); regime normal, venda = CST 01 com
+     * alíquota zero, demais = 06. Preenchido, o CST da natureza decide o grupo — produtor
+     * rural (Agropec) sai 06 como no legado, apesar de ser regime normal e venda. */
+    private Element construirPisCofins(Document doc, String tributo, ItemNotaSaida item,
+                                       NaturezaOperacao natureza, boolean simples) {
+        Element grupo = doc.createElementNS(NS_NFE, tributo);
+        CstPisCofins cst = natureza == null ? null : natureza.getCstPisCofins();
+        if (cst == null) {
+            boolean venda = !simples && natureza != null && Boolean.TRUE.equals(natureza.getVenda());
+            cst = venda ? CstPisCofins.TRIBUTAVEL_ALIQUOTA_BASICA : CstPisCofins.ALIQUOTA_ZERO;
         }
-        return cofins;
+        String codigo = String.format("%02d", cst.getId());
+        Element variante;
+        switch (cst) {
+            case TRIBUTAVEL_ALIQUOTA_BASICA -> {
+                variante = doc.createElementNS(NS_NFE, tributo + "Aliq");
+                text(doc, variante, "CST", codigo);
+                text(doc, variante, "vBC", dec(item.getSubTotal(), 2));
+                text(doc, variante, "p" + tributo, "0.00");
+                text(doc, variante, "v" + tributo, "0.00");
+            }
+            case OUTRAS_OPERACOES_SAIDA -> {
+                variante = doc.createElementNS(NS_NFE, tributo + "Outr");
+                text(doc, variante, "CST", codigo);
+                text(doc, variante, "vBC", "0.00");
+                text(doc, variante, "p" + tributo, "0.00");
+                text(doc, variante, "v" + tributo, "0.00");
+            }
+            default -> {
+                variante = doc.createElementNS(NS_NFE, tributo + "NT");
+                text(doc, variante, "CST", codigo);
+            }
+        }
+        grupo.appendChild(variante);
+        return grupo;
     }
 
     // ---- IBS/CBS (Reforma Tributária) ----
