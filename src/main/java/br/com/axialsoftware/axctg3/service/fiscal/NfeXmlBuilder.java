@@ -344,7 +344,7 @@ public class NfeXmlBuilder {
         text(doc, emit, "xFant", empresa.getApelido());
         Element ender = doc.createElementNS(NS_NFE, "enderEmit");
         text(doc, ender, "xLgr", vazioComo(empresa.getLogradouro(), ""));
-        text(doc, ender, "nro", empresa.getNumero());
+        text(doc, ender, "nro", vazioComo(empresa.getNumero(), "S/N"));
         if (empresa.getComplemento() != null && !empresa.getComplemento().isBlank()) {
             text(doc, ender, "xCpl", empresa.getComplemento());
         }
@@ -379,7 +379,9 @@ public class NfeXmlBuilder {
                 : parceiro.getNome());
         Element ender = doc.createElementNS(NS_NFE, "enderDest");
         text(doc, ender, "xLgr", vazioComo(parceiro.getLogradouro(), ""));
-        text(doc, ender, "nro", parceiro.getNumero());
+        // nro é obrigatório no schema (sem ele: cStat=225); parceiro importado do legado com
+        // número 0 fica sem número — 2026-10-30, Seara na 1ª nota do José
+        text(doc, ender, "nro", vazioComo(parceiro.getNumero(), "S/N"));
         if (parceiro.getComplemento() != null && !parceiro.getComplemento().isBlank()) {
             text(doc, ender, "xCpl", parceiro.getComplemento());
         }
