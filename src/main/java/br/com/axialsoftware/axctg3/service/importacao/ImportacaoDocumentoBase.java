@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -149,7 +150,7 @@ abstract class ImportacaoDocumentoBase {
                     + execucao.iguais + " iguais.\n"
                     + execucao.documentos + " " + c.nome() + " de " + lote.getPeriodo()
                     + (execucao.cancelados > 0 ? " (" + execucao.cancelados + " cancelados)" : "")
-                    + ", " + execucao.itens + " itens, valor " + execucao.totalValor + ".\n";
+                    + ", " + execucao.itens + " itens, valor " + execucao.totalValor.setScale(2, RoundingMode.HALF_UP) + ".\n";
         }
         ImportacaoDocumentos.gravarRelatorio(dataManager, lote, relatorio, resumo, importado);
         return relatorio;

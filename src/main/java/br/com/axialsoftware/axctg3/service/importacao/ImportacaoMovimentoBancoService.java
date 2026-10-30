@@ -253,8 +253,16 @@ public class ImportacaoMovimentoBancoService {
                     + " não existe na empresa (" + qtd + " movimentos). Importe antes os bancos."));
             historicosNaoAchados.forEach((codigo, qtd) -> relatorio.erros.add("Histórico financeiro " + codigo
                     + " não existe na empresa (" + qtd + " movimentos). Importe antes os históricos financeiros."));
-            contasNaoAchadas.forEach((codigo, qtd) -> relatorio.avisos.add("Conta contábil " + codigo
-                    + " não existe no plano de " + anoPlano + " (" + qtd + " movimentos): ficam sem conta."));
+            if (anoPlano == null) {
+                // empresa sem contabilidade no axctg3 (ex.: José): um aviso só, não um por conta
+                if (!contasNaoAchadas.isEmpty()) {
+                    relatorio.avisos.add("A empresa " + codEmpresa + " não tem plano de contas: as contas ficam "
+                            + "vazias. Importe o plano de contas e reimporte para ligá-las.");
+                }
+            } else {
+                contasNaoAchadas.forEach((codigo, qtd) -> relatorio.avisos.add("Conta contábil " + codigo
+                        + " não existe no plano de " + anoPlano + " (" + qtd + " movimentos): ficam sem conta."));
+            }
             if (semValor > 0) {
                 relatorio.avisos.add(semValor + " movimento(s) sem valor no legado ignorado(s).");
             }
