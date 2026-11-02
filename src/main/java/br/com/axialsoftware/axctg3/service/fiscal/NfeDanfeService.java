@@ -327,6 +327,7 @@ public class NfeDanfeService {
         parametros.put("EMIT_CEP", formatarCep(nfe.getEmitCep()));
         parametros.put("EMIT_FONE", nvl(nfe.getEmitFone()));
         parametros.put("EMIT_IE", nvl(nfe.getEmitIe()));
+        parametros.put("EMIT_CRT_DESC", crtDescricao(nfe.getEmitCrt()));
 
         parametros.put("DEST_DOC", nfe.getDestCnpj() != null ? formatarCnpj(nfe.getDestCnpj()) : formatarCpf(nfe.getDestCpf()));
         parametros.put("DEST_X_NOME", nvl(nfe.getDestXNome()));
@@ -353,10 +354,26 @@ public class NfeDanfeService {
         parametros.put("VALOR_ST", formatarValor(nfe.getValorSt()));
         parametros.put("VALOR_PROD", formatarValor(nfe.getValorProd()));
         parametros.put("VALOR_FRETE", formatarValor(nfe.getValorFrete()));
-        BigDecimal segDescOutro = nvl(nfe.getValorSeg()).add(nvl(nfe.getValorDesc())).add(nvl(nfe.getValorOutro()));
-        parametros.put("VALOR_SEG_DESC_OUTRO", formatarValor(segDescOutro));
+        parametros.put("VALOR_SEG", formatarValor(nfe.getValorSeg()));
+        parametros.put("VALOR_DESC", formatarValor(nfe.getValorDesc()));
+        parametros.put("VALOR_OUTRO", formatarValor(nfe.getValorOutro()));
         parametros.put("VALOR_IPI", formatarValor(nfe.getValorIpi()));
         parametros.put("VALOR_NF", formatarValor(nfe.getValorNf()));
+
+        // Campos de exibição condicionada (NT 2026.010, item 4.4): em branco quando o valor não
+        // existe/não se aplica — o quadro e o rótulo continuam lá (leiaute fixo, mesmo critério
+        // do quadro de duplicatas vazio), só o valor não é impresso.
+        parametros.put("VALOR_FCP", formatarValorOpcional(nfe.getValorFcp()));
+        parametros.put("VALOR_FCP_ST", formatarValorOpcional(nfe.getValorFcpSt()));
+        parametros.put("VALOR_ICMS_UF_DEST", formatarValorOpcional(nfe.getValorIcmsUfDest()));
+        parametros.put("VALOR_FCP_UF_DEST", formatarValorOpcional(nfe.getValorFcpUfDest()));
+
+        // Bloco "TOTAL DO IBS / CBS / IS" — obrigatório na NT (fora da lista de facultativos),
+        // então sai 0,00 mesmo sem grupo IBSCBSTot no XML (ex.: Simples Nacional em 2026).
+        parametros.put("VALOR_CBS", formatarValor(nfe.getValorCbs()));
+        parametros.put("VALOR_IBS_UF", formatarValor(nfe.getValorIbsUf()));
+        parametros.put("VALOR_IBS_MUN", formatarValor(nfe.getValorIbsMun()));
+        parametros.put("VALOR_IS", formatarValor(nfe.getValorIs()));
 
         parametros.put("INF_CPL", nvl(nfe.getInfCpl()));
 
@@ -389,9 +406,70 @@ public class NfeDanfeService {
             dto.setValorIpi(item.getValorIpi());
             dto.setAliqIcms(item.getAliqIcms());
             dto.setAliqIpi(item.getAliqIpi());
+            preencherTributosReforma(dto, item);
             itensDto.add(dto);
         }
         return itensDto;
+    }
+
+    /**
+     * Colunas "BASES DE CÁLCULO"/"ALÍQUOTAS"/"VALOR DOS TRIBUTOS" do leiaute da NT 2026.010
+     * (Reforma Tributária), uma linha por tributo. Tributo cujo grupo não existe no XML do
+     * item sai com a linha em branco — a NT proíbe imprimir informação inexistente no XML, e o
+     * rótulo fixo no {@code Danfe.jrxml} mantém a grade igual em toda nota:
+     * <ul>
+     *   <li>ICMS: em branco sem base e sem valor (CSOSN do Simples, CST 40/41/50...);</li>
+     *   <li>IBS/CBS: em branco sem {@code CST} do grupo {@code IBSCBS} (Simples em 2026);</li>
+     *   <li>IS: em branco sem grupo {@code IS};</li>
+     *   <li>IPI: em branco sem grupo {@code IPI}, ou {@code IPINT} (sem base/alíquota/valor).</li>
+     * </ul>
+     * Alíquota de IBS UF/IBS Município/CBS: a efetiva ({@code pAliqEfet}) quando o grupo
+     * {@code gRed} veio no XML, a nominal ({@code pIBSUF}/{@code pIBSMun}/{@code pCBS}) quando
+     * não veio (regra de impressão do item 4.3 da NT). O parser grava zero nos campos de
+     * {@code gRed} ausente, então "veio" = redução ou alíquota efetiva diferente de zero.
+     */
+    private void preencherTributosReforma(DanfeItemDto dto, NfeItem item) {
+        dto.setCodClassTrib(item.getCodClassTrib());
+        dto.setQuantUnTexto(formatarQuantidade(item.getQuantCom()) + "\n" + nvl(item.getUnCom()));
+
+        boolean temIcms = naoZero(item.getBaseIcms()) || naoZero(item.getValorIcms());
+        boolean temIbsCbs = item.getCstIbsCbs() != null;
+        boolean temIs = item.getCstIs() != null;
+        boolean temIpi = item.getCstIpi() != null
+                && (naoZero(item.getBaseIpi()) || naoZero(item.getAliqIpi()) || naoZero(item.getValorIpi()));
+
+        dto.setBasesTexto(String.join("\n",
+                temIcms ? formatarValor(item.getBaseIcms()) : "",
+                temIbsCbs ? formatarValor(item.getBaseIbsCbs()) : "",
+                temIs ? formatarValor(item.getBaseIs()) : "",
+                temIpi ? formatarValor(item.getBaseIpi()) : ""));
+
+        dto.setAliqEsqTexto(String.join("\n",
+                temIcms ? formatarAliquota(item.getAliqIcms()) : "",
+                temIbsCbs ? formatarAliquota(aliquotaImpressa(item.getAliqIbsUf(), item.getPercRedAliqIbsUf(), item.getAliqEfetIbsUf())) : "",
+                temIbsCbs ? formatarAliquota(aliquotaImpressa(item.getAliqIbsMun(), item.getPercRedAliqIbsMun(), item.getAliqEfetIbsMun())) : ""));
+        dto.setAliqDirTexto(String.join("\n",
+                temIbsCbs ? formatarAliquota(aliquotaImpressa(item.getAliqCbs(), item.getPercRedAliqCbs(), item.getAliqEfetCbs())) : "",
+                temIpi ? formatarAliquota(item.getAliqIpi()) : "",
+                temIs ? formatarAliquota(item.getAliqIs()) : ""));
+
+        dto.setValoresEsqTexto(String.join("\n",
+                temIcms ? formatarValor(item.getValorIcms()) : "",
+                temIbsCbs ? formatarValor(item.getValorIbsUf()) : "",
+                temIbsCbs ? formatarValor(item.getValorIbsMun()) : ""));
+        dto.setValoresDirTexto(String.join("\n",
+                temIbsCbs ? formatarValor(item.getValorCbs()) : "",
+                temIpi ? formatarValor(item.getValorIpi()) : "",
+                temIs ? formatarValor(item.getValorIs()) : ""));
+    }
+
+    private static BigDecimal aliquotaImpressa(BigDecimal nominal, BigDecimal percRedAliq, BigDecimal aliqEfet) {
+        boolean temGRed = naoZero(percRedAliq) || naoZero(aliqEfet);
+        return temGRed ? aliqEfet : nominal;
+    }
+
+    private static boolean naoZero(BigDecimal valor) {
+        return valor != null && valor.signum() != 0;
     }
 
     /**
@@ -445,6 +523,21 @@ public class NfeDanfeService {
     /** Dinheiro: "###,###,##0.00" com vírgula decimal / ponto de milhar (ver {@link #SIMBOLOS_BR}). */
     private static String formatarValor(BigDecimal valor) {
         return new DecimalFormat("###,###,##0.00", SIMBOLOS_BR).format(nvl(valor));
+    }
+
+    /** Valor de exibição condicionada (NT 2026.010, item 4.4): em branco quando zero/ausente. */
+    private static String formatarValorOpcional(BigDecimal valor) {
+        return naoZero(valor) ? formatarValor(valor) : "";
+    }
+
+    /** Alíquota em percentual: 2 casas no mínimo, até 4 (pIBSUF/pCBS/pAliqEfet têm 4 no XML). */
+    private static String formatarAliquota(BigDecimal valor) {
+        return new DecimalFormat("##0.00##", SIMBOLOS_BR).format(nvl(valor)) + "%";
+    }
+
+    /** Quantidade comercial: 4 casas, igual ao {@code pattern} da coluna no Danfe.jrxml antigo. */
+    private static String formatarQuantidade(BigDecimal valor) {
+        return new DecimalFormat("###,###,##0.0000", SIMBOLOS_BR).format(nvl(valor));
     }
 
     /** Peso: mesma máscara de dinheiro, 3 casas decimais — igual ao @NumberFormat de NfeVolume. */
@@ -513,6 +606,20 @@ public class NfeDanfeService {
             return "";
         }
         return tpNf == 0 ? "0 - ENTRADA" : "1 - SAÍDA";
+    }
+
+    /** CRT (C21) — "CÓDIGO DO REGIME TRIBUTÁRIO" no quadro do emitente (NT 2026.010, item 4.2). */
+    private static String crtDescricao(Integer crt) {
+        if (crt == null) {
+            return "";
+        }
+        return switch (crt) {
+            case 1 -> "1 - SIMPLES NACIONAL";
+            case 2 -> "2 - SIMPLES NACIONAL - EXCESSO DE SUBLIMITE";
+            case 3 -> "3 - REGIME NORMAL";
+            case 4 -> "4 - SIMPLES NACIONAL - MEI";
+            default -> String.valueOf(crt);
+        };
     }
 
     private static String tpAmbDescricao(Integer tpAmb) {

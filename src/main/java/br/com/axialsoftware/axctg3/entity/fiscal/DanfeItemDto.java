@@ -15,6 +15,14 @@ import java.util.UUID;
  * (ver {@link br.com.axialsoftware.axctg3.service.fiscal.NfeDanfeService}). Uma instância por
  * {@link NfeItem}; {@code cst} já vem combinado (CST do Regime Normal ou CSOSN do Simples
  * Nacional, o que estiver preenchido) pra não precisar de lógica condicional no template.
+ *
+ * <p>As colunas "BASES DE CÁLCULO"/"ALÍQUOTAS"/"VALOR DOS TRIBUTOS" do leiaute da Reforma
+ * Tributária (NT 2026.010) chegam já formatadas, uma linha por tributo separada por
+ * {@code \n} ({@code basesTexto}, {@code aliqEsqTexto}/{@code aliqDirTexto},
+ * {@code valoresEsqTexto}/{@code valoresDirTexto}) — o {@code pattern} do JasperReports não
+ * serve pra texto de várias linhas, e a linha de um tributo ausente no XML precisa sair em
+ * branco (não 0,00), decisão que fica em {@code NfeDanfeService}. Os rótulos de cada linha
+ * são fixos no {@code Danfe.jrxml}.
  */
 @JmixEntity
 public class DanfeItemDto {
@@ -52,6 +60,82 @@ public class DanfeItemDto {
     private BigDecimal aliqIcms;
 
     private BigDecimal aliqIpi;
+
+    private String codClassTrib;
+
+    // Quantidade formatada + "\n" + unidade — coluna "QTD / UN" do Danfe.jrxml.
+    private String quantUnTexto;
+
+    // ICMS / IBS-CBS / IS / IPI, uma linha cada.
+    private String basesTexto;
+
+    // ICMS / IBS UF / IBS Município.
+    private String aliqEsqTexto;
+
+    // CBS / IPI / IS.
+    private String aliqDirTexto;
+
+    // ICMS / IBS UF / IBS Município.
+    private String valoresEsqTexto;
+
+    // CBS / IPI / IS.
+    private String valoresDirTexto;
+
+    public String getCodClassTrib() {
+        return codClassTrib;
+    }
+
+    public void setCodClassTrib(String codClassTrib) {
+        this.codClassTrib = codClassTrib;
+    }
+
+    public String getQuantUnTexto() {
+        return quantUnTexto;
+    }
+
+    public void setQuantUnTexto(String quantUnTexto) {
+        this.quantUnTexto = quantUnTexto;
+    }
+
+    public String getBasesTexto() {
+        return basesTexto;
+    }
+
+    public void setBasesTexto(String basesTexto) {
+        this.basesTexto = basesTexto;
+    }
+
+    public String getAliqEsqTexto() {
+        return aliqEsqTexto;
+    }
+
+    public void setAliqEsqTexto(String aliqEsqTexto) {
+        this.aliqEsqTexto = aliqEsqTexto;
+    }
+
+    public String getAliqDirTexto() {
+        return aliqDirTexto;
+    }
+
+    public void setAliqDirTexto(String aliqDirTexto) {
+        this.aliqDirTexto = aliqDirTexto;
+    }
+
+    public String getValoresEsqTexto() {
+        return valoresEsqTexto;
+    }
+
+    public void setValoresEsqTexto(String valoresEsqTexto) {
+        this.valoresEsqTexto = valoresEsqTexto;
+    }
+
+    public String getValoresDirTexto() {
+        return valoresDirTexto;
+    }
+
+    public void setValoresDirTexto(String valoresDirTexto) {
+        this.valoresDirTexto = valoresDirTexto;
+    }
 
     public Integer getItem() {
         return item;
