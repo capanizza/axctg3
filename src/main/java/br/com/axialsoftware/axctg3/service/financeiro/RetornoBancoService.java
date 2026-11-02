@@ -30,10 +30,13 @@ import java.util.Set;
 public class RetornoBancoService {
 
     // Tabela de Ocorrências (seção 7.2 do manual Sicredi — convenção comum à maioria dos
-    // retornos CNAB): 02 = entrada confirmada; liquidação normal/automática/em
-    // cartório/após baixa; rejeições de entrada/baixa/alteração/instrução.
+    // retornos CNAB): 02 = entrada confirmada; liquidação normal/em cartório/após baixa;
+    // rejeições de entrada/baixa/alteração/instrução. 09/10 (baixado automaticamente/conforme
+    // instrução) NÃO são pagamento: o título sai da cobrança sem valor pago — retorno real da
+    // Rádio (set/2026) trouxe quatro 09, todos com valor pago 0,00. Antes estavam aqui e
+    // criavam uma baixa de R$ 0,00.
     private static final String OCORRENCIA_ENTRADA_CONFIRMADA = "02";
-    private static final Set<String> OCORRENCIAS_LIQUIDACAO = Set.of("06", "09", "10", "15", "17");
+    private static final Set<String> OCORRENCIAS_LIQUIDACAO = Set.of("06", "15", "17");
     private static final Set<String> OCORRENCIAS_REJEICAO = Set.of("03", "27", "30", "32");
 
     private final DataManager dataManager;
@@ -85,7 +88,8 @@ public class RetornoBancoService {
                     dataManager.save(tituloReceber);
                 }
             } else if (OCORRENCIAS_LIQUIDACAO.contains(detalhe.ocorrencia())) {
-                if (Boolean.TRUE.equals(tituloReceber.getAberto())) {
+                if (Boolean.TRUE.equals(tituloReceber.getAberto())
+                        && detalhe.valorPago() != null && detalhe.valorPago().signum() > 0) {
                     criarBaixa(tituloReceber, detalhe, historicoBaixa);
                     baixados++;
                 }
@@ -109,13 +113,38 @@ public class RetornoBancoService {
         return dataManager.save(retornoBanco);
     }
 
+    /**
+     * Compara ignorando zeros à esquerda: o "seu número" volta do banco como foi registrado
+     * ("351" pelo app do Sicredi, "000247" pela remessa do legado), e {@code TituloReceber.numero}
+     * importado do legado tem 6 dígitos com zeros ("000351") — igualdade exata não achava
+     * nenhum dos 31 títulos do retorno real da Rádio de set/2026. Mais de um título com o mesmo
+     * número sem os zeros (ex.: "351" e "000351") é ambíguo: vale só a igualdade exata, senão
+     * conta como não encontrado em vez de baixar o título errado.
+     */
     private TituloReceber buscarTituloReceber(String numero, Integer codEmpresa) {
-        return dataManager.load(TituloReceber.class)
-                .query("select e from TituloReceber e where e.numero = :numero and e.codEmpresa = :codEmpresa")
-                .parameter("numero", numero)
+        String semZeros = semZerosAEsquerda(numero);
+        if (semZeros.isEmpty()) {
+            return null;
+        }
+        List<TituloReceber> candidatos = dataManager.load(TituloReceber.class)
+                .query("select e from TituloReceber e where e.numero like :sufixo and e.codEmpresa = :codEmpresa")
+                .parameter("sufixo", "%" + semZeros)
                 .parameter("codEmpresa", codEmpresa)
-                .optional()
+                .list()
+                .stream()
+                .filter(t -> semZeros.equals(semZerosAEsquerda(t.getNumero())))
+                .toList();
+        if (candidatos.size() == 1) {
+            return candidatos.get(0);
+        }
+        return candidatos.stream()
+                .filter(t -> numero.trim().equals(t.getNumero()))
+                .findFirst()
                 .orElse(null);
+    }
+
+    private static String semZerosAEsquerda(String numero) {
+        return numero == null ? "" : numero.trim().replaceFirst("^0+", "");
     }
 
     private void criarBaixa(TituloReceber tituloReceber, RetornoDetalheLido detalhe, HistoricoFinanceiro historicoBaixa) {
