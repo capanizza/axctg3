@@ -178,6 +178,64 @@ class RetornoBancoServiceTest {
         assertThat(carregarItens(titulo)).hasSize(1); // só o item de emissão, sem baixa
     }
 
+    /**
+     * Retorno real da Rádio (set/2026): o app do Sicredi devolve o "seu número" sem zeros
+     * ("351"), e o título importado do legado tem 6 dígitos ("000351").
+     */
+    @Test
+    void test_seuNumeroSemZerosAEsquerdaEncontraTituloComZeros() {
+        TituloReceber titulo = criarTitulo("000351", new BigDecimal("550.00"));
+        RetornoDetalheLido liquidacao = new RetornoDetalheLido("351", "261001426", "06",
+                LocalDate.of(ANO, MES, 15), titulo.getDataVencimento(), new BigDecimal("550.00"),
+                new BigDecimal("550.00"), BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, "");
+        when(bancoCobrancaHandler.lerRetorno(any())).thenReturn(List.of(liquidacao));
+
+        RetornoBanco retornoBanco = retornoBancoService.processarRetorno(bancoSicredi, new byte[0], "retorno.txt");
+
+        assertThat(retornoBanco.getQuantidadeNaoEncontrados()).isEqualTo(0);
+        assertThat(retornoBanco.getQuantidadeBaixados()).isEqualTo(1);
+        assertThat(carregarItens(titulo)).hasSize(2);
+    }
+
+    /** Dois títulos que só diferem nos zeros: vale a igualdade exata, nunca um palpite. */
+    @Test
+    void test_numeroAmbiguoSemZerosUsaSoIgualdadeExata() {
+        TituloReceber comZeros = criarTitulo("000352", new BigDecimal("100.00"));
+        TituloReceber semZeros = criarTitulo("352", new BigDecimal("100.00"));
+        RetornoDetalheLido liquidacao = new RetornoDetalheLido("352", "261001434", "06",
+                LocalDate.of(ANO, MES, 15), semZeros.getDataVencimento(), new BigDecimal("100.00"),
+                new BigDecimal("100.00"), BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, "");
+        RetornoDetalheLido ambiguo = new RetornoDetalheLido("0352", "261001435", "06",
+                LocalDate.of(ANO, MES, 15), semZeros.getDataVencimento(), new BigDecimal("100.00"),
+                new BigDecimal("100.00"), BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, "");
+        when(bancoCobrancaHandler.lerRetorno(any())).thenReturn(List.of(liquidacao, ambiguo));
+
+        RetornoBanco retornoBanco = retornoBancoService.processarRetorno(bancoSicredi, new byte[0], "retorno.txt");
+
+        assertThat(retornoBanco.getQuantidadeBaixados()).isEqualTo(1);
+        assertThat(retornoBanco.getQuantidadeNaoEncontrados()).isEqualTo(1);
+        assertThat(carregarItens(semZeros)).hasSize(2);
+        assertThat(carregarItens(comZeros)).hasSize(1);
+    }
+
+    /**
+     * Ocorrência 09 (baixado automaticamente) tira o título da cobrança sem pagamento — no
+     * retorno real da Rádio veio com valor pago 0,00. Não pode virar baixa de R$ 0,00.
+     */
+    @Test
+    void test_ocorrencia09BaixadoSemPagamentoNaoCriaBaixa() {
+        TituloReceber titulo = criarTitulo("000258", new BigDecimal("1814.00"));
+        RetornoDetalheLido baixadoNoBanco = new RetornoDetalheLido("258", "261000845", "09",
+                LocalDate.of(ANO, MES, 1), titulo.getDataVencimento(), new BigDecimal("1814.00"),
+                BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, "");
+        when(bancoCobrancaHandler.lerRetorno(any())).thenReturn(List.of(baixadoNoBanco));
+
+        RetornoBanco retornoBanco = retornoBancoService.processarRetorno(bancoSicredi, new byte[0], "retorno.txt");
+
+        assertThat(retornoBanco.getQuantidadeBaixados()).isEqualTo(0);
+        assertThat(carregarItens(titulo)).hasSize(1); // só a emissão
+    }
+
     @AfterEach
     void tearDown() {
         limparDadosDaEmpresa();
