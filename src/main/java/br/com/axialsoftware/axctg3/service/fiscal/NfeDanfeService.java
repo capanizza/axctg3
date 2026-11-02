@@ -419,7 +419,8 @@ public class NfeDanfeService {
      * rótulo fixo no {@code Danfe.jrxml} mantém a grade igual em toda nota:
      * <ul>
      *   <li>ICMS: em branco sem base e sem valor (CSOSN do Simples, CST 40/41/50...);</li>
-     *   <li>IBS/CBS: em branco sem {@code CST} do grupo {@code IBSCBS} (Simples em 2026);</li>
+     *   <li>IBS/CBS: em branco sem grupo {@code IBSCBS} (Simples em 2026) ou sem {@code gIBSCBS}
+     *       dentro dele (CST 410 e afins — só CST/cClassTrib, que já saem na descrição);</li>
      *   <li>IS: em branco sem grupo {@code IS};</li>
      *   <li>IPI: em branco sem grupo {@code IPI}, ou {@code IPINT} (sem base/alíquota/valor).</li>
      * </ul>
@@ -433,7 +434,12 @@ public class NfeDanfeService {
         dto.setQuantUnTexto(formatarQuantidade(item.getQuantCom()) + "\n" + nvl(item.getUnCom()));
 
         boolean temIcms = naoZero(item.getBaseIcms()) || naoZero(item.getValorIcms());
-        boolean temIbsCbs = item.getCstIbsCbs() != null;
+        // CST com só CST/cClassTrib no XML (ex.: 410 — imunidade/não incidência) não traz o
+        // grupo gIBSCBS, e o parser grava zero no que falta; sem base/alíquota/valor, nada a imprimir.
+        boolean temIbsCbs = item.getCstIbsCbs() != null
+                && (naoZero(item.getBaseIbsCbs()) || naoZero(item.getAliqIbsUf()) || naoZero(item.getAliqIbsMun())
+                || naoZero(item.getAliqCbs()) || naoZero(item.getValorIbsUf()) || naoZero(item.getValorIbsMun())
+                || naoZero(item.getValorCbs()));
         boolean temIs = item.getCstIs() != null;
         boolean temIpi = item.getCstIpi() != null
                 && (naoZero(item.getBaseIpi()) || naoZero(item.getAliqIpi()) || naoZero(item.getValorIpi()));
