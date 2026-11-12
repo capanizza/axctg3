@@ -50,7 +50,7 @@ try {
         "docker exec axctg3-postgres pg_dump -U postgres -Fc axctg3 > $remoto/axctg3.dump",
         "docker exec -i axctg3-postgres pg_restore -l < $remoto/axctg3.dump > /dev/null",
         # Volume lido por um container descartavel (imagem do postgres, ja presente na VM).
-        "docker run --rm -v axctg3_arquivos:/dados:ro -v ${remoto}:/saida postgres:16 tar czf /saida/arquivos.tgz -C /dados .",
+        "docker run --rm -v axctg3_arquivos:/dados:ro -v ${remoto}:/saida postgres:18 tar czf /saida/arquivos.tgz -C /dados .",
         "cd $remoto",
         "sha256sum axctg3.dump arquivos.tgz > sha256.txt"
     ) -join "; ")

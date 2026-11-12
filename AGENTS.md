@@ -27,8 +27,8 @@ three files are kept identical apart from this header — mirror any change to a
   The image-18 volume mounts at `/var/lib/postgresql`, not `.../data`. Started empty on
   2026-10-08 to receive the legacy import that will become the production DB; the old
   Postgres 16 dev data stays untouched in volume `axctg3_axctg3_pgdata` (not running), with
-  its last dump kept outside the rotation in `C:\backups\axctg3-pg16-final`. The cloud and
-  test-server compose files still use `postgres:16`.
+  its last dump kept outside the rotation in `C:\backups\axctg3-pg16-final`. The cloud
+  compose moved to `postgres:18` on 2026-11-12; the test-server one still uses `postgres:16`.
   Port 5433, not 5432, on purpose: the native Windows Postgres (service
   `postgresql-x64-16`, holding the pre-Docker copy of the dev DB) is stopped with
   startup type Manual — but if anyone starts it, it takes 5432, and sharing that port
@@ -54,7 +54,11 @@ three files are kept identical apart from this header — mirror any change to a
 - Cloud test VM (Magalu, `br-se1`, x86): https://axctg3.axialsoftware.com.br — runs
   `deploy/nuvem/docker-compose.yml` (same Postgres+app pair plus a Caddy container doing
   HTTPS/Let's Encrypt from `deploy/nuvem/Caddyfile`; app port bound to `127.0.0.1` only,
-  `SERVER_FORWARDHEADERSSTRATEGY=native`). DNS is the registro.br zone (A record `axctg3`).
+  `SERVER_FORWARDHEADERSSTRATEGY=native`). Since 2026-11-12 (image 1.1.0) it runs Postgres 18
+  on a fresh, empty volume `axctg3_pgdata18` — no longer a copy of dev — published only on the
+  VM's `127.0.0.1:5432`, so the Axial exporter reaches it through `ssh -N -L 5434:localhost:5432`
+  to write the `IMP_*` legacy-import batches. If SSH or the backup times out, the home IP
+  (dynamic) changed: fix the port-22 source rule in the Magalu security group. DNS is the registro.br zone (A record `axctg3`).
   Setup history: `docs/NUVEM-CONVERSA-2026-10-01.md` and `-2026-10-06.md`.
   Daily backup from Windows over SSH: `scripts/backup-nuvem.ps1` (task "axctg3 backup
   nuvem", 12:45, needs the key in the Windows ssh-agent) → `C:\backups\axctg3-nuvem`.

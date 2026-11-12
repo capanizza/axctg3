@@ -10,16 +10,22 @@ name: axctg3
 
 services:
   postgres:
-    image: postgres:16
+    image: postgres:18
     container_name: axctg3-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: axctg3
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_SENHA}
-    # Sem "ports": o banco só é visível para o app, pela rede interna do compose.
+    # Só no localhost da VM: fora dela o banco só é alcançável pelo túnel SSH
+    # (ssh -N -L 5434:localhost:5432 ubuntu@<vm>), usado pelo exportador do Axial para
+    # gravar os lotes IMP_* da importação do legado. Nunca abrir a 5432 no grupo de segurança.
+    ports:
+      - "127.0.0.1:5432:5432"
+    # A partir do Postgres 18 a imagem monta em /var/lib/postgresql (não mais .../data):
+    # os dados ficam num subdiretório por versão (18/docker), o que permite pg_upgrade.
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d axctg3"]
       interval: 5s
@@ -69,7 +75,7 @@ volumes:
   # external: o compose não cria nem apaga — protege os dados contra `docker compose down -v`.
   pgdata:
     external: true
-    name: axctg3_pgdata
+    name: axctg3_pgdata18
   arquivos:
     external: true
     name: axctg3_arquivos
