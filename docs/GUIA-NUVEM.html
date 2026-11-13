@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Guia da nuvem do axctg3</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 18mm 16mm; }
+  :root { --tinta:#1d2430; --suave:#5b6573; --linha:#d9dee5; --fundo-cod:#f3f5f8; --azul:#1f5fa8; --aviso:#fff6e0; --aviso-borda:#e0a800; --perigo:#fdecec; --perigo-borda:#c0392b; --ok:#eaf6ee; --ok-borda:#2e8b57; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: "Segoe UI", Arial, sans-serif; font-size: 10.5pt; line-height: 1.45; color: var(--tinta); background:#fff; margin:0; }
+  h1 { font-size: 22pt; margin: 0 0 4px; color: var(--azul); }
+  h2 { font-size: 15pt; margin: 0 0 8px; padding-bottom: 4px; border-bottom: 2px solid var(--azul); color: var(--azul); }
+  h3 { font-size: 11.5pt; margin: 16px 0 6px; }
+  p { margin: 6px 0; }
+  .sub { color: var(--suave); margin-bottom: 16px; }
+  section { page-break-before: always; }
+  section.primeira { page-break-before: auto; }
+  code { font-family: Consolas, "Courier New", monospace; font-size: 9.5pt; background: var(--fundo-cod); padding: 1px 4px; border-radius: 3px; }
+  pre { font-family: Consolas, "Courier New", monospace; font-size: 9.3pt; background: var(--fundo-cod); border: 1px solid var(--linha); border-left: 4px solid var(--azul); border-radius: 4px; padding: 8px 10px; margin: 6px 0 10px; white-space: pre-wrap; word-break: break-all; page-break-inside: avoid; }
+  pre .com { color: #6a7480; }
+  .onde { display:inline-block; font-size: 8pt; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 1px 7px; border-radius: 10px; margin: 8px 0 0; }
+  .win { background:#e3edf9; color:#1f5fa8; }
+  .vm  { background:#e9f5ec; color:#23704a; }
+  .web { background:#f1e9f9; color:#6b3fa0; }
+  table { border-collapse: collapse; width: 100%; margin: 6px 0 12px; page-break-inside: avoid; }
+  th, td { border: 1px solid var(--linha); padding: 5px 7px; text-align: left; vertical-align: top; font-size: 9.8pt; }
+  th { background: #eef2f7; }
+  .caixa { border-left: 4px solid; border-radius: 4px; padding: 7px 10px; margin: 8px 0 10px; page-break-inside: avoid; }
+  .aviso { background: var(--aviso); border-color: var(--aviso-borda); }
+  .perigo { background: var(--perigo); border-color: var(--perigo-borda); }
+  .ok { background: var(--ok); border-color: var(--ok-borda); }
+  ol, ul { margin: 4px 0 8px; padding-left: 22px; }
+  li { margin: 2px 0; }
+  .passo { font-weight: 700; color: var(--azul); }
+  .diagrama { border: 1px solid var(--linha); border-radius: 6px; padding: 10px; margin: 8px 0 12px; page-break-inside: avoid; }
+  .diagrama .linha { display: flex; gap: 10px; align-items: stretch; }
+  .bloco { flex: 1; border: 1px solid var(--linha); border-radius: 5px; padding: 7px 9px; font-size: 9.5pt; }
+  .bloco b { display: block; margin-bottom: 3px; }
+  .seta { align-self: center; font-size: 9pt; color: var(--suave); text-align: center; width: 90px; }
+  .capa-info td:first-child { width: 34%; font-weight: 600; }
+  .rodape { color: var(--suave); font-size: 8.5pt; margin-top: 18px; }
+</style>
+</head>
+<body>
+
+<section class="primeira">
+<h1>Guia da nuvem do axctg3</h1>
+<div class="sub">Gerar versão nova · colocar na nuvem · acessar o banco · trocar o IP na Magalu<br>
+Versão do guia: 13/11/2026 (servidor rodando a versão 1.1.0)</div>
+
+<h3>Como ler este guia</h3>
+<p>Cada bloco de comando tem uma etiqueta dizendo <b>onde</b> ele deve ser digitado:</p>
+<p>
+<span class="onde win">Windows</span> PowerShell no seu PC &nbsp;&nbsp;
+<span class="onde vm">VM</span> dentro da VM, depois de entrar por <code>ssh</code> &nbsp;&nbsp;
+<span class="onde web">Navegador</span> site ou console da Magalu
+</p>
+<p>Regra do Linux que vale para a VM: <b>comando que deu certo normalmente não diz nada</b>; só o erro fala.
+As linhas em cinza que começam com <code>#</code> são comentários: não precisam ser digitadas.</p>
+<p>Para colar no PowerShell, use o botão direito do mouse. Na janela do SSH (que também é o PowerShell), idem.
+Cuidado com linhas longas: se a colagem quebrar a linha, o pedaço final roda sozinho e dá erro. Na dúvida, cole uma linha de cada vez.</p>
+
+<h3>Dados fixos</h3>
+<table class="capa-info">
+<tr><td>Site</td><td><code>https://axctg3.axialsoftware.com.br</code></td></tr>
+<tr><td>IP da VM (Magalu, região br-se1)</td><td><code>201.23.79.163</code></td></tr>
+<tr><td>Usuário na VM</td><td><code>ubuntu</code></td></tr>
+<tr><td>Chave SSH (com senha)</td><td><code>C:\Users\capan\.ssh\id_ed25519</code></td></tr>
+<tr><td>Pasta do axctg3 na VM</td><td><code>~/axctg3</code> (arquivos <code>docker-compose.yml</code>, <code>Caddyfile</code>, <code>.env</code>)</td></tr>
+<tr><td>Projeto no PC</td><td><code>C:\projetos\jmix\axctg3</code></td></tr>
+<tr><td>Imagens geradas</td><td><code>C:\axctg3-imagens</code></td></tr>
+<tr><td>Backups da nuvem</td><td><code>C:\backups\axctg3-nuvem</code> (diário às 12:45, guarda os 14 últimos; log em <code>backup.log</code>)</td></tr>
+</table>
+
+<h3>As peças, em uma figura</h3>
+<div class="diagrama">
+  <div class="linha">
+    <div class="bloco"><b>Seu PC (Windows)</b>
+      Código do axctg3, Docker Desktop, os scripts <code>gerar-imagem.ps1</code> e <code>backup-nuvem.ps1</code>,
+      o exportador do Axial.</div>
+    <div class="seta">SSH (porta 22)<br>só do IP de casa<br>&rarr;</div>
+    <div class="bloco"><b>VM na Magalu (Ubuntu)</b>
+      Três <i>containers</i>:<br>
+      &bull; <code>axctg3-caddy</code>: HTTPS (portas 80/443)<br>
+      &bull; <code>axctg3-app</code>: o axctg3<br>
+      &bull; <code>axctg3-postgres</code>: o banco</div>
+  </div>
+  <p style="margin:8px 0 0">Os usuários entram pelo site (HTTPS). O banco e o app <b>não</b> ficam expostos à internet: só se chega a eles pelo SSH.</p>
+</div>
+
+<h3>Vocabulário mínimo</h3>
+<table>
+<tr><th style="width:22%">Termo</th><th>O que é</th></tr>
+<tr><td>Imagem</td><td>O axctg3 empacotado com o Java, pronto para rodar. Tem um nome e uma versão: <code>axctg3:1.1.0</code>.</td></tr>
+<tr><td>Container</td><td>Uma imagem rodando. Pode ser recriado à vontade; não guarda dados.</td></tr>
+<tr><td>Volume</td><td>Onde os dados ficam guardados (banco, logos, certificados). Sobrevive à troca de versão.</td></tr>
+<tr><td><code>.tar</code></td><td>A imagem gravada num arquivo, para levar até a VM.</td></tr>
+<tr><td><code>.env</code></td><td>Arquivo na VM com a versão em uso (<code>AXCTG3_VERSAO</code>) e a senha do banco. Não vai para o git.</td></tr>
+<tr><td>SSH / túnel</td><td>Conexão segura até a VM. O túnel leva uma porta do seu PC até uma porta dentro da VM.</td></tr>
+<tr><td>Grupo de segurança</td><td>O firewall da Magalu: lista de portas abertas e de quem pode usá-las.</td></tr>
+<tr><td>Changelog (Liquibase)</td><td>Alteração na estrutura do banco que o axctg3 aplica sozinho ao subir uma versão nova.</td></tr>
+</table>
+</section>
+
+<section>
+<h2>1. Preparar uma versão nova do axctg3</h2>
+<p>Resultado: um arquivo <code>C:\axctg3-imagens\axctg3-X.Y.Z.tar</code>, pronto para levar à nuvem.</p>
+
+<h3>Antes de começar</h3>
+<ul>
+<li>O código que vai para a nuvem está na branch <code>main</code>, com tudo commitado e os testes passando.</li>
+<li>O <b>Docker Desktop</b> está aberto (ícone da baleia na bandeja do Windows, parado, sem animação).</li>
+</ul>
+
+<h3><span class="passo">Passo 1.</span> Escolher o número da versão</h3>
+<p>Formato <code>X.Y.Z</code>. A versão no ar hoje é a <b>1.1.0</b>. Sugestão:</p>
+<ul>
+<li>só correções: aumenta o último número (1.1.0 &rarr; <b>1.1.1</b>);</li>
+<li>novidades: aumenta o do meio e zera o último (1.1.0 &rarr; <b>1.2.0</b>).</li>
+</ul>
+<p>Cada imagem gerada precisa de um número novo: o script recusa repetir.
+Para ver as versões já usadas:</p>
+<span class="onde win">Windows</span>
+<pre>cd C:\projetos\jmix\axctg3
+git tag</pre>
+
+<h3><span class="passo">Passo 2.</span> Ver se a versão nova altera o banco</h3>
+<p>Isso muda o plano de volta (seção 2, "Voltar para a versão anterior"). Troque <code>v1.1.0</code> pela versão que está no ar:</p>
+<span class="onde win">Windows</span>
+<pre>git log --oneline v1.1.0..HEAD -- src/main/resources/br/com/axialsoftware/axctg3/liquibase</pre>
+<ul>
+<li><b>Nada listado:</b> sem alteração no banco; voltar de versão é simples.</li>
+<li><b>Alguma linha listada:</b> a versão nova altera o banco ao subir; voltar exige restaurar o backup. Anote isso.</li>
+</ul>
+
+<h3><span class="passo">Passo 3.</span> Gerar a imagem</h3>
+<span class="onde win">Windows</span>
+<pre>cd C:\projetos\jmix\axctg3
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\gerar-imagem.ps1 -Versao 1.2.0</pre>
+<p>Leva alguns minutos (compila o projeto e monta a imagem). Termina com uma linha como:</p>
+<pre>==&gt; Pronto: C:\axctg3-imagens\axctg3-1.2.0.tar (700 MB)</pre>
+
+<h3><span class="passo">Passo 4.</span> Marcar a versão no git</h3>
+<p>Registra exatamente qual código está dentro da imagem:</p>
+<span class="onde win">Windows</span>
+<pre>git tag v1.2.0
+git push origin v1.2.0</pre>
+<p>(Ou peça ao Claude para fazer a tag.)</p>
+
+<h3>Se der erro</h3>
+<table>
+<tr><th style="width:42%">Mensagem</th><th>O que fazer</th></tr>
+<tr><td><code>A imagem axctg3:1.2.0 ja existe</code></td><td>Esse número já foi usado. Escolha o próximo.</td></tr>
+<tr><td>Erro falando de <code>docker</code>, <code>pipe</code> ou <code>daemon</code></td><td>O Docker Desktop não está aberto ou ainda está iniciando. Abra, espere a baleia parar e repita.</td></tr>
+<tr><td><code>BUILD FAILED</code></td><td>O código não compila. Não continue: chame o Claude com a mensagem de erro.</td></tr>
+</table>
+</section>
+
+<section>
+<h2>2. Colocar a versão nova na nuvem</h2>
+<div class="caixa aviso">Durante a troca, o site fica fora do ar por um ou dois minutos (mostra <b>502</b>). Faça num horário em que ninguém esteja usando.</div>
+
+<h3><span class="passo">Passo 1.</span> Backup antes de tudo</h3>
+<span class="onde win">Windows</span>
+<pre>cd C:\projetos\jmix\axctg3
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\backup-nuvem.ps1
+Get-Content C:\backups\axctg3-nuvem\backup.log -Tail 1</pre>
+<p>A última linha precisa dizer <b>OK</b> com a data e hora de agora. Se disser <b>ERRO</b> ou der <code>Connection timed out</code>,
+o IP de casa mudou: veja a seção 4 e só depois continue.</p>
+
+<h3><span class="passo">Passo 2.</span> Enviar a imagem para a VM</h3>
+<span class="onde win">Windows</span>
+<pre>scp C:\axctg3-imagens\axctg3-1.2.0.tar ubuntu@201.23.79.163:~/axctg3/</pre>
+<p>Mostra o progresso e termina em <b>100%</b>. Leva alguns minutos, conforme a velocidade de envio da sua internet.</p>
+<div class="caixa aviso"><b>Só quando o Claude avisar</b> que a versão mudou também os arquivos da pasta <code>deploy\nuvem</code>
+(como aconteceu na troca para o Postgres 18), envie-os também:
+<pre style="margin-bottom:0">scp C:\projetos\jmix\axctg3\deploy\nuvem\docker-compose.yml ubuntu@201.23.79.163:~/axctg3/
+scp C:\projetos\jmix\axctg3\deploy\nuvem\Caddyfile ubuntu@201.23.79.163:~/axctg3/</pre>
+Para conferir você mesmo: <code>git diff --stat v1.1.0..HEAD -- deploy/nuvem</code> (nada listado = não precisa).</div>
+
+<h3><span class="passo">Passo 3.</span> Entrar na VM</h3>
+<span class="onde win">Windows</span>
+<pre>ssh ubuntu@201.23.79.163</pre>
+<p>O cursor passa a mostrar <code>ubuntu@axctg3teste:~$</code>. A partir daqui, os comandos rodam na VM.</p>
+
+<h3><span class="passo">Passo 4.</span> Carregar a imagem e trocar a versão</h3>
+<span class="onde vm">VM</span>
+<pre>cd ~/axctg3
+docker load -i axctg3-1.2.0.tar         <span class="com"># responde "Loaded image: axctg3:1.2.0"</span>
+docker images axctg3                    <span class="com"># a versão antiga continua lá: é o que permite voltar</span>
+sed -i 's/^AXCTG3_VERSAO=.*/AXCTG3_VERSAO=1.2.0/' .env
+grep AXCTG3_VERSAO .env                 <span class="com"># tem que mostrar AXCTG3_VERSAO=1.2.0</span>
+docker compose up -d                    <span class="com"># recria só o app; banco e Caddy não são tocados</span></pre>
+
+<h3><span class="passo">Passo 5.</span> Acompanhar a subida</h3>
+<span class="onde vm">VM</span>
+<pre>docker compose logs -f app</pre>
+<p>Espere aparecer <code>Started Axctg3Application</code>. Depois aperte <b>Ctrl+C</b>: isso só sai do log, o app continua rodando.
+Se aparecer <code>APPLICATION FAILED TO START</code>, vá para "Voltar para a versão anterior".</p>
+
+<h3><span class="passo">Passo 6.</span> Conferir no navegador</h3>
+<span class="onde web">Navegador</span>
+<p>Abra <code>https://axctg3.axialsoftware.com.br</code>, entre e olhe o <b>rodapé do menu lateral</b>: tem que mostrar
+"Versão 1.2.0" com a data e hora em que a imagem foi gerada.</p>
+
+<h3><span class="passo">Passo 7.</span> Limpeza</h3>
+<p>O disco da VM tem 20 GB. Apague o <code>.tar</code> (a imagem já foi carregada) e as versões <b>mais antigas que a anterior</b>
+(guarde sempre a anterior, para poder voltar):</p>
+<span class="onde vm">VM</span>
+<pre>rm axctg3-1.2.0.tar
+docker images axctg3                    <span class="com"># lista as versões guardadas</span>
+docker image rm axctg3:1.0.1            <span class="com"># exemplo: só versões mais antigas que a anterior</span>
+exit                                    <span class="com"># sai da VM</span></pre>
+
+<h3>Voltar para a versão anterior (rollback)</h3>
+<p><b>Se a versão nova não alterou o banco</b> (passo 2 da seção 1 sem nada listado), basta repetir o passo 4 com a versão antiga:</p>
+<span class="onde vm">VM</span>
+<pre>cd ~/axctg3
+sed -i 's/^AXCTG3_VERSAO=.*/AXCTG3_VERSAO=1.1.0/' .env
+docker compose up -d
+docker compose logs -f app              <span class="com"># espere "Started Axctg3Application"; Ctrl+C</span></pre>
+<div class="caixa perigo"><b>Se a versão nova alterou o banco</b>, a versão antiga pode não funcionar com o banco alterado.
+Voltar exige também <b>restaurar o backup do passo 1</b>, o que desfaz tudo o que foi gravado depois dele.
+Chame o Claude antes; a receita está no Apêndice.</div>
+</section>
+
+<section>
+<h2>3. Abrir o acesso ao banco da nuvem</h2>
+<p>O Postgres da nuvem só aceita conexões de dentro da VM. Para o exportador do Axial gravar os lotes de importação,
+abra um <b>túnel SSH</b>: a porta <b>5434</b> do seu PC passa a levar à porta 5432 dentro da VM.</p>
+
+<h3><span class="passo">Passo 1.</span> Abrir o túnel</h3>
+<span class="onde win">Windows</span>
+<pre>ssh -N -o ServerAliveInterval=30 -L 5434:localhost:5432 ubuntu@201.23.79.163</pre>
+<p><b>Deixe a janela aberta.</b> O cursor fica parado e nada aparece: isso é o normal, quer dizer que o túnel está ativo. Pode minimizar.</p>
+
+<h3><span class="passo">Passo 2.</span> Usar</h3>
+<p>Rode o exportador do Axial normalmente: ele grava em <code>localhost:5434</code>.
+A primeira conexão do dia costuma demorar um pouco mais; não é travamento.</p>
+
+<h3><span class="passo">Passo 3.</span> Fechar</h3>
+<p>Quando terminar, aperte <b>Ctrl+C</b> na janela do túnel.</p>
+
+<h3>O que cada parte do comando faz</h3>
+<table>
+<tr><th style="width:38%">Parte</th><th>Função</th></tr>
+<tr><td><code>-N</code></td><td>Não abre um terminal na VM, só cria o túnel.</td></tr>
+<tr><td><code>-o ServerAliveInterval=30</code></td><td>Manda um sinal a cada 30 s para a rede não derrubar o túnel enquanto a consulta lenta do Firebird roda.</td></tr>
+<tr><td><code>-L 5434:localhost:5432</code></td><td>A porta 5434 do PC leva à porta 5432 dentro da VM.</td></tr>
+<tr><td><code>ubuntu@201.23.79.163</code></td><td>Usuário e IP da VM.</td></tr>
+</table>
+
+<h3>Problemas comuns</h3>
+<table>
+<tr><th style="width:38%">Sintoma</th><th>O que fazer</th></tr>
+<tr><td><code>Connection timed out</code></td><td>O IP de casa mudou. Siga a seção 4.</td></tr>
+<tr><td>Pede a senha da chave (<i>passphrase</i>)</td><td>O ssh-agent do Windows perdeu a chave. Rode <code>ssh-add</code> uma vez e digite a senha.</td></tr>
+<tr><td>O túnel caiu no meio da exportação</td><td>Abra de novo (passo 1) e exporte de novo: o exportador substitui o lote que ainda não foi importado.</td></tr>
+<tr><td><code>bind ... Address already in use</code></td><td>Já existe um túnel aberto na 5434, em outra janela. Use aquele ou feche-o.</td></tr>
+</table>
+
+<div class="caixa perigo">Nunca abra a porta 5432 (banco) nem a 8085 (app) no grupo de segurança da Magalu. O acesso a eles é sempre pelo túnel.</div>
+
+<h3>Ver se a VM está de pé</h3>
+<span class="onde win">Windows</span>
+<pre>ssh ubuntu@201.23.79.163 "docker ps"</pre>
+<p>Tem que listar <code>axctg3-caddy</code>, <code>axctg3-app</code> e <code>axctg3-postgres</code> com <code>(healthy)</code>.</p>
+</section>
+
+<section>
+<h2>4. Alterar o seu IP na Magalu</h2>
+<p>A porta 22 (SSH) da VM só aceita conexões do IP da sua casa. Esse IP é dinâmico: a operadora pode trocá-lo depois de
+queda de energia, troca de modem ou quando quiser.</p>
+
+<h3>Como saber que o IP mudou</h3>
+<ul>
+<li><code>ssh</code>, <code>scp</code> e o túnel dão <code>Connection timed out</code>;</li>
+<li>o backup diário falha: aparece <b>ERRO</b> no <code>C:\backups\axctg3-nuvem\backup.log</code>;</li>
+<li>o <b>site continua funcionando</b> normalmente: as portas 80/443 são abertas para todos.</li>
+</ul>
+
+<h3><span class="passo">Passo 1.</span> Descobrir o IP novo</h3>
+<span class="onde web">Navegador</span>
+<p>Abra <code>https://api.ipify.org</code>. A página mostra só o seu IP atual, por exemplo <code>187.106.242.87</code>.</p>
+
+<h3><span class="passo">Passo 2.</span> Criar a regra nova</h3>
+<span class="onde web">Navegador</span>
+<ol>
+<li>Entre no console da Magalu Cloud e confira que a região selecionada é <b>br-se1</b>.</li>
+<li>Abra o <b>grupo de segurança</b> da VM <code>axctg3teste</code> (é o que tem as regras das portas 22, 80 e 443).</li>
+<li>Crie uma regra nova de <b>entrada</b>:
+  <table style="margin-top:4px">
+  <tr><td style="width:38%">Direção</td><td>Entrada (ingress)</td></tr>
+  <tr><td>Protocolo</td><td>TCP</td></tr>
+  <tr><td>Porta</td><td>22</td></tr>
+  <tr><td>Origem (CIDR)</td><td>o IP novo seguido de <code>/32</code>, por exemplo <code>187.106.242.87/32</code></td></tr>
+  </table>
+  <code>/32</code> quer dizer "só este endereço".</li>
+</ol>
+<div class="caixa aviso">Na Magalu <b>não dá para editar</b> uma regra: cria-se a nova e exclui-se a antiga.
+Crie a nova <b>primeiro</b>. Excluir antes e errar um dígito tranca você para fora.</div>
+
+<h3><span class="passo">Passo 3.</span> Testar</h3>
+<span class="onde win">Windows</span>
+<pre>ssh ubuntu@201.23.79.163 "echo ok"</pre>
+<p>Tem que responder <code>ok</code>. Se ainda der <code>Connection timed out</code>, confira o IP e o <code>/32</code> da regra.</p>
+
+<h3><span class="passo">Passo 4.</span> Excluir a regra antiga</h3>
+<span class="onde web">Navegador</span>
+<p>No mesmo grupo de segurança, exclua a regra da porta 22 com o IP <b>antigo</b>. Recarregue a página e confira que ela sumiu:
+já aconteceu de a exclusão não ser efetivada na primeira tentativa.</p>
+
+<h3><span class="passo">Passo 5.</span> Recuperar o backup perdido</h3>
+<p>Se o backup diário falhou nos dias em que o IP estava errado, rode um agora e confira a linha <b>OK</b>:</p>
+<span class="onde win">Windows</span>
+<pre>cd C:\projetos\jmix\axctg3
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\backup-nuvem.ps1
+Get-Content C:\backups\axctg3-nuvem\backup.log -Tail 1</pre>
+
+<div class="caixa perigo">Nunca use <code>0.0.0.0/0</code> (o mundo todo) na regra da porta 22: robôs da internet ficam tentando senhas no SSH.
+As regras das portas 80 e 443 ficam como estão (<code>0.0.0.0/0</code>), porque o site é público.</div>
+
+<h3>Conferência opcional: como o resto do mundo vê a VM</h3>
+<span class="onde web">Navegador</span>
+<p><code>https://check-host.net/check-tcp?host=201.23.79.163:22</code> testa a partir de servidores em vários países:
+tem que dar <code>Connection timed out</code> na porta 22. Trocando <code>:22</code> por <code>:443</code>, tem que conectar.</p>
+</section>
+
+<section>
+<h2>Apêndice: restaurar um backup na VM</h2>
+<div class="caixa perigo">Substitui o banco inteiro da nuvem pelo do backup: tudo o que foi gravado depois dele se perde.
+Use só para desfazer uma atualização que deu errado, e de preferência com o Claude acompanhando.</div>
+
+<p>Troque <code>&lt;pasta&gt;</code> pelo nome da pasta do backup, por exemplo <code>20261113-095643</code>.</p>
+<span class="onde win">Windows</span>
+<pre>scp C:\backups\axctg3-nuvem\&lt;pasta&gt;\axctg3.dump ubuntu@201.23.79.163:~/axctg3/
+scp C:\backups\axctg3-nuvem\&lt;pasta&gt;\arquivos.tgz ubuntu@201.23.79.163:~/axctg3/
+ssh ubuntu@201.23.79.163</pre>
+
+<span class="onde vm">VM</span>
+<pre>cd ~/axctg3
+docker compose stop app
+docker cp axctg3.dump axctg3-postgres:/tmp/base.dump
+docker exec axctg3-postgres dropdb -U postgres axctg3
+docker exec axctg3-postgres createdb -U postgres axctg3
+docker exec axctg3-postgres pg_restore -U postgres -d axctg3 --no-owner /tmp/base.dump
+docker exec axctg3-postgres rm /tmp/base.dump
+docker run --rm -v axctg3_arquivos:/dados -v ~/axctg3:/origem postgres:18 sh -c "rm -rf /dados/* &amp;&amp; tar xzf /origem/arquivos.tgz -C /dados"
+docker compose start app
+docker compose logs -f app              <span class="com"># espere "Started Axctg3Application"; Ctrl+C</span>
+rm axctg3.dump arquivos.tgz
+exit</pre>
+<p>Para voltar também de versão, troque a versão no <code>.env</code> (seção 2, "Voltar para a versão anterior") <b>antes</b> do
+<code>docker compose start app</code>, e use <code>docker compose up -d</code> no lugar do <code>start</code>.</p>
+
+<h2 style="margin-top:22px">Resumo de bolso</h2>
+<table>
+<tr><th style="width:30%">Tarefa</th><th>Comandos</th></tr>
+<tr><td>Gerar versão</td><td><code>scripts\gerar-imagem.ps1 -Versao X.Y.Z</code> &rarr; <code>git tag vX.Y.Z</code> &rarr; <code>git push origin vX.Y.Z</code></td></tr>
+<tr><td>Pôr na nuvem</td><td>backup &rarr; <code>scp</code> do <code>.tar</code> &rarr; <code>ssh</code> &rarr; <code>docker load</code> &rarr; <code>sed</code> no <code>.env</code> &rarr; <code>docker compose up -d</code> &rarr; log &rarr; conferir rodapé &rarr; <code>rm</code> do <code>.tar</code></td></tr>
+<tr><td>Túnel do banco</td><td><code>ssh -N -o ServerAliveInterval=30 -L 5434:localhost:5432 ubuntu@201.23.79.163</code> (Ctrl+C fecha)</td></tr>
+<tr><td>IP mudou</td><td><code>api.ipify.org</code> &rarr; regra nova da 22 com <code>IP/32</code> &rarr; testar <code>ssh ... "echo ok"</code> &rarr; excluir a antiga &rarr; backup</td></tr>
+<tr><td>Chave pedindo senha</td><td><code>ssh-add</code></td></tr>
+<tr><td>VM de pé?</td><td><code>ssh ubuntu@201.23.79.163 "docker ps"</code></td></tr>
+</table>
+<p class="rodape">Registros detalhados de como a nuvem foi montada: <code>docs/NUVEM-CONVERSA-2026-10-01.md</code> e
+<code>docs/NUVEM-CONVERSA-2026-10-06.md</code>. Fonte deste guia: <code>docs/GUIA-NUVEM.html</code>.</p>
+</section>
+
+</body>
+</html>
