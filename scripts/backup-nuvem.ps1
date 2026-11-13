@@ -82,6 +82,8 @@ try {
 }
 catch {
     Log "ERRO: $_"
+    # Alerta na tela na hora (janela propria, nao segura este script).
+    Start-Process powershell.exe -WindowStyle Hidden -ArgumentList "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$PSScriptRoot\verificar-backups.ps1`"", "-SemEspera"
     # Backup pela metade nao conta: some com a pasta local para nao confundir num restore.
     if (Test-Path $local) { Remove-Item -Recurse -Force $local }
     $codigo = 1

@@ -52,5 +52,7 @@ try {
 }
 catch {
     Log "ERRO: $_"
+    # Alerta na tela na hora (janela propria, nao segura este script).
+    Start-Process powershell.exe -WindowStyle Hidden -ArgumentList "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$PSScriptRoot\verificar-backups.ps1`"", "-SemEspera"
     exit 1
 }

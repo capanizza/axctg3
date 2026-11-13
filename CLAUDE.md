@@ -62,6 +62,12 @@ three files are kept identical apart from this header — mirror any change to a
   Setup history: `docs/NUVEM-CONVERSA-2026-10-01.md` and `-2026-10-06.md`.
   Daily backup from Windows over SSH: `scripts/backup-nuvem.ps1` (task "axctg3 backup
   nuvem", 12:45, needs the key in the Windows ssh-agent) → `C:\backups\axctg3-nuvem`.
+  Both backups are watched by `scripts/verificar-backups.ps1` (task "axctg3 verificar backups",
+  20 min after logon and daily 13:15; the backup scripts also call it with `-SemEspera` on
+  failure): a last log line `ERRO` or no `OK` in 30 h pops a TopMost window. It is UTF-8
+  **with BOM** (accented text; PS 5.1 reads BOM-less .ps1 as ANSI) — keep the BOM if you edit
+  it; `-Teste` shows the window without reading the logs. Before that, a month of failures
+  (2026-10-08 → 11-12) sat unread in `backup.log`.
 - NEVER use `bootRun` as a verification gate — it does not exit and will hang the turn.
   Gate 2 is `clean test`. See below for the cases where starting the app IS the point.
 

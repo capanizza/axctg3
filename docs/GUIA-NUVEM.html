@@ -69,7 +69,7 @@ Cuidado com linhas longas: se a colagem quebrar a linha, o pedaço final roda so
 <tr><td>Pasta do axctg3 na VM</td><td><code>~/axctg3</code> (arquivos <code>docker-compose.yml</code>, <code>Caddyfile</code>, <code>.env</code>)</td></tr>
 <tr><td>Projeto no PC</td><td><code>C:\projetos\jmix\axctg3</code></td></tr>
 <tr><td>Imagens geradas</td><td><code>C:\axctg3-imagens</code></td></tr>
-<tr><td>Backups da nuvem</td><td><code>C:\backups\axctg3-nuvem</code> (diário às 12:45, guarda os 14 últimos; log em <code>backup.log</code>)</td></tr>
+<tr><td>Backups da nuvem</td><td><code>C:\backups\axctg3-nuvem</code> (diário às 12:45, guarda os 14 últimos; log em <code>backup.log</code>). Se falhar, abre um alerta na tela.</td></tr>
 </table>
 
 <h3>As peças, em uma figura</h3>
@@ -275,7 +275,7 @@ queda de energia, troca de modem ou quando quiser.</p>
 <h3>Como saber que o IP mudou</h3>
 <ul>
 <li><code>ssh</code>, <code>scp</code> e o túnel dão <code>Connection timed out</code>;</li>
-<li>o backup diário falha: aparece <b>ERRO</b> no <code>C:\backups\axctg3-nuvem\backup.log</code>;</li>
+<li>o backup diário falha: abre na tela a janela <b>"axctg3 - problema no backup"</b> (e fica <b>ERRO</b> no <code>C:\backups\axctg3-nuvem\backup.log</code>);</li>
 <li>o <b>site continua funcionando</b> normalmente: as portas 80/443 são abertas para todos.</li>
 </ul>
 
@@ -320,6 +320,18 @@ Get-Content C:\backups\axctg3-nuvem\backup.log -Tail 1</pre>
 <div class="caixa perigo">Nunca use <code>0.0.0.0/0</code> (o mundo todo) na regra da porta 22: robôs da internet ficam tentando senhas no SSH.
 As regras das portas 80 e 443 ficam como estão (<code>0.0.0.0/0</code>), porque o site é público.</div>
 
+<h3>O alerta do backup</h3>
+<p>A tarefa <b>"axctg3 verificar backups"</b> confere os backups da nuvem e do banco de dev 20 minutos depois que você entra no
+Windows e todo dia às 13:15. Os próprios backups também a chamam na hora em que falham. Quando há problema, abre por cima
+de tudo a janela <b>"axctg3 - problema no backup"</b>, que fica até você clicar em OK. Ela aparece quando:</p>
+<ul>
+<li>o último backup deu <b>ERRO</b> (o texto do erro aparece na janela); ou</li>
+<li>não há backup bom há mais de <b>30 horas</b> (PC desligado, tarefa desativada).</li>
+</ul>
+<p>A própria janela lista o que verificar. Quando está tudo bem, nada aparece. Para ver a janela de exemplo:</p>
+<span class="onde win">Windows</span>
+<pre>powershell -NoProfile -ExecutionPolicy Bypass -File C:\projetos\jmix\axctg3\scripts\verificar-backups.ps1 -Teste</pre>
+
 <h3>Conferência opcional: como o resto do mundo vê a VM</h3>
 <span class="onde web">Navegador</span>
 <p><code>https://check-host.net/check-tcp?host=201.23.79.163:22</code> testa a partir de servidores em vários países:
@@ -361,6 +373,7 @@ exit</pre>
 <tr><td>Túnel do banco</td><td><code>ssh -N -o ServerAliveInterval=30 -L 5434:localhost:5432 ubuntu@201.23.79.163</code> (Ctrl+C fecha)</td></tr>
 <tr><td>IP mudou</td><td><code>api.ipify.org</code> &rarr; regra nova da 22 com <code>IP/32</code> &rarr; testar <code>ssh ... "echo ok"</code> &rarr; excluir a antiga &rarr; backup</td></tr>
 <tr><td>Chave pedindo senha</td><td><code>ssh-add</code></td></tr>
+<tr><td>Alerta de backup</td><td>janela "axctg3 - problema no backup": siga a lista dela; teste com <code>scripts\verificar-backups.ps1 -Teste</code></td></tr>
 <tr><td>VM de pé?</td><td><code>ssh ubuntu@201.23.79.163 "docker ps"</code></td></tr>
 </table>
 <p class="rodape">Registros detalhados de como a nuvem foi montada: <code>docs/NUVEM-CONVERSA-2026-10-01.md</code> e
